@@ -864,7 +864,7 @@ export class WhatsappDirectLine extends GBService {
         {
           type: 'HEADER',
           format: mediaType.toUpperCase(), // Use IMAGE or VIDEO format
-          example: { header_handle: [handleMedia] }
+          example: { header_handle: [handleMedia], header_url: ['https://pragmatismo.com.br/gb-logo.png'] }
         },
         {
           type: 'BODY',
