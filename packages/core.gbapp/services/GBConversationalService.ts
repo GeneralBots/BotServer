@@ -650,7 +650,7 @@ export class GBConversationalService {
 
     if (text.endsWith('-zap')) {
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbkb`);
-      const localName = path.join('work', packagePath, 'articles', text);
+      const localName = path.join('work', packagePath, 'articles', text + '.docx');
       let loader = new DocxLoader(localName);
       let doc = await loader.load();
       text = doc[0].pageContent;
