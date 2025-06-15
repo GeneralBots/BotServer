@@ -43,6 +43,7 @@ import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService.js';
 import { MicrosoftAppCredentials } from 'botframework-connector';
+import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { GBConfigService } from './GBConfigService.js';
 import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
@@ -52,7 +53,7 @@ import { createWriteStream, createReadStream } from 'fs';
 import fs from 'fs/promises';
 import twilio from 'twilio';
 import Nexmo from 'nexmo';
-import { join } from 'path';
+import path, { join } from 'path';
 import shell from 'any-shell-escape';
 import { exec } from 'child_process';
 import prism from 'prism-media';
@@ -473,7 +474,7 @@ export class GBConversationalService {
     return new Promise<string>(async (resolve, reject) => {
       try {
         const oggFile = new Readable();
-        oggFile._read = () => {}; // _read is required but you can noop it
+        oggFile._read = () => { }; // _read is required but you can noop it
         oggFile.push(buffer);
         oggFile.push(null);
 
@@ -646,6 +647,14 @@ export class GBConversationalService {
       text.toLowerCase().endsWith('.png') ||
       text.toLowerCase().endsWith('.mp4') ||
       text.toLowerCase().endsWith('.mov');
+
+    if (text.endsWith('-zap')) {
+      let packagePath = GBUtil.getGBAIPath(min.botId, `gbkb`);
+      const localName = path.join('work', packagePath, 'articles', text);
+      let loader = new DocxLoader(localName);
+      let doc = await loader.load();
+      text = doc[0].pageContent;
+    }
     let mediaFile = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
     let mediaType = mediaFile.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
 
@@ -1201,8 +1210,8 @@ export class GBConversationalService {
 
   public async sendTextWithOptions(min: GBMinInstance, step, text, translate, keepTextList, user) {
     let sec = new SecService();
-    
-    if (!user){
+
+    if (!user) {
       user = await sec.getUserFromSystemId(step.context.activity.from.id);
     }
     await this['sendTextWithOptionsAndUser'](min, user, step, text, true, null);
@@ -1252,11 +1261,11 @@ export class GBConversationalService {
       analytics.createMessage(min.instance.instanceId, conversation, null, text);
     }
 
-    if (!isNaN(user.userSystemId)){
+    if (!isNaN(user.userSystemId)) {
 
-      await min.whatsAppDirectLine.sendToDevice(user.userSystemId,         text);
+      await min.whatsAppDirectLine.sendToDevice(user.userSystemId, text);
     }
-    else{
+    else {
       await step.context.sendActivity(text);
 
     }
@@ -1281,23 +1290,23 @@ export class GBConversationalService {
    */
   public async sendOnConversation(min: GBMinInstance, user: GuaribasUser, message: any) {
     if (GBConfigService.get('GB_MODE') === 'legacy') {
-        const ref = JSON.parse(user.conversationReference);
-        MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
-        await min.bot['continueConversation'](ref, async t1 => {
-          const ref2 = TurnContext.getConversationReference(t1.activity);
-          await min.bot.continueConversation(ref2, async t2 => {
-            await t2.sendActivity(message);
-          });
+      const ref = JSON.parse(user.conversationReference);
+      MicrosoftAppCredentials.trustServiceUrl(ref.serviceUrl);
+      await min.bot['continueConversation'](ref, async t1 => {
+        const ref2 = TurnContext.getConversationReference(t1.activity);
+        await min.bot.continueConversation(ref2, async t2 => {
+          await t2.sendActivity(message);
         });
-      
+      });
+
     } else {
 
       const ref = JSON.parse(user.conversationReference);
       await min.bot['continueConversation'](ref, async (t1) => {
-          const ref2 = TurnContext.getConversationReference(t1.activity);
-          await min.bot.continueConversation(ref2, async (t2) => {
-              await t2.sendActivity(message);
-          });
+        const ref2 = TurnContext.getConversationReference(t1.activity);
+        await min.bot.continueConversation(ref2, async (t2) => {
+          await t2.sendActivity(message);
+        });
       });
 
       if (message['buttons'] || message['sections']) {

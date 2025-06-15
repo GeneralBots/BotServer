@@ -716,7 +716,7 @@ export class WhatsappDirectLine extends GBService {
     return `${attachment.content.title} - ${attachment.content.text}`;
   }
 
-  public async sendFileToDevice(to, url, filename, caption, chatId, isViewOnce = false) {
+  public async sendFileToDevice(to, url, filename, caption, chatId, isViewOnce = true) {
     let options;
     switch (this.provider) {
       case 'meta':
@@ -864,7 +864,7 @@ export class WhatsappDirectLine extends GBService {
         {
           type: 'HEADER',
           format: mediaType.toUpperCase(), // Use IMAGE or VIDEO format
-          example: { header_handle: [handleMedia], header_url: ['https://pragmatismo.com.br/gb-logo.png'] }
+          example: { header_handle: [handleMedia] }
         },
         {
           type: 'BODY',
