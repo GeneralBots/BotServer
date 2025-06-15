@@ -654,6 +654,7 @@ export class GBConversationalService {
       let loader = new DocxLoader(localName);
       let doc = await loader.load();
       text = doc[0].pageContent;
+      template = template + '_docx';
     }
     let mediaFile = !isMedia ? /(.*)\n/gim.exec(text)[0].trim() : text;
     let mediaType = mediaFile.toLowerCase().endsWith('.mp4') || text.toLowerCase().endsWith('.mov') ? 'video' : 'image';
