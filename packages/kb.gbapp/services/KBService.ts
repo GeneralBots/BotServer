@@ -1032,8 +1032,12 @@ export class KBService implements IGBKBService {
         '--no-default-browser-check'
       ];
 
+      browser = await puppeteer.launch({
+        headless: true,
+        executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
+        args
+      });
 
-      browser = await puppeteer.launch({ headless: false, args: args });
     }
     const page = await browser.newPage();
     try {
@@ -1087,10 +1091,11 @@ export class KBService implements IGBKBService {
         '--no-default-browser-check'
       ];
 
-      let browser = await puppeteer.launch({ headless: true, 
+      let browser = await puppeteer.launch({
+        headless: true,
         executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
-        
-        args });
+        args
+      });
       const page = await this.getFreshPage(browser, website);
 
       let logo = await this.getLogoByPage(min, page);
