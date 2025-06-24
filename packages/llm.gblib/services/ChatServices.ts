@@ -281,7 +281,7 @@ export class ChatServices {
         maxRetries: 2,
       });
     } else {
-      const azureOpenAIKey = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Key', null, true);
+      const azureOpenAIKey = process.env.AZURE_OPEN_AI_KEY;
       const azureOpenAILLMModel = await (min.core as any)['getParam'](
         min.instance,
         'Azure Open AI LLM Model',
@@ -295,12 +295,19 @@ export class ChatServices {
         null,
         true
       );
+      const azureOpenAIEndPoint = await (min.core as any)['getParam'](
+        min.instance,
+        'Azure Open AI Endpoint',
+        null,
+        true
+      );
 
       model = new ChatOpenAI({
         azureOpenAIApiKey: azureOpenAIKey,
         azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
         azureOpenAIApiDeploymentName: azureOpenAILLMModel,
         azureOpenAIApiVersion: azureOpenAIVersion,
+        azureOpenAIBasePath: azureOpenAIEndPoint,
         temperature: 0,
       });
     }
