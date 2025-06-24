@@ -30,7 +30,7 @@ jobs:
         sudo cp -r ./* /opt/gbo/bin/bot/botserver
         
 
-    - name: Install production dependencies in deployment location
+    - name: Building BotServer
       run: |
         echo "[General Bots Deployer] Building BotServer..."
         # rm -rf /opt/gbo/bin/bot/botserver/node_modules
@@ -43,7 +43,4 @@ jobs:
     - name: Restart Bots Deployer
       run: |
         echo "[General Bots Deployer] Restarting..."
-        sudo systemctl stop bot
-        echo "[General Bots Deployer] Stopped."
-        sudo systemctl start bot
-        echo "[General Bots Deployer] Started."
+        lxc restart pragmatismo-bot
