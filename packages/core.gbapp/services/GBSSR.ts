@@ -118,7 +118,7 @@ export class GBSSR {
     return {
       args: args,
       ignoreHTTPSErrors: true,
-      headless: false,
+      headless: process.env.CHROME_HEADLESS === 'true',
       defaultViewport: null,
       executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
       ignoreDefaultArgs: ['--enable-automation', '--enable-blink-features=IdleDetection']

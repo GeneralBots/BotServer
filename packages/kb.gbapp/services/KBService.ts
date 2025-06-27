@@ -1033,7 +1033,7 @@ export class KBService implements IGBKBService {
       ];
 
       browser = await puppeteer.launch({
-        headless: true,
+        headless: process.env.CHROME_HEADLESS === 'true',
         executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
         args
       });
@@ -1092,11 +1092,11 @@ export class KBService implements IGBKBService {
       ];
 
       let browser = await puppeteer.launch({
-        headless: true,
+        headless: process.env.CHROME_HEADLESS === 'true',
         executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
         args
       });
-      const page = await this.getFreshPage(browser, website);
+      let page = await this.getFreshPage(browser, website);
 
       let logo = await this.getLogoByPage(min, page);
       if (logo) {
@@ -1183,6 +1183,7 @@ export class KBService implements IGBKBService {
       }
 
       // Extract dominant colors from the screenshot
+       page = await this.getFreshPage(browser, website);
 
       await page.screenshot({ path: 'screenshot.png' });
       const colors = await getColors('screenshot.png');
@@ -1207,6 +1208,8 @@ export class KBService implements IGBKBService {
       page.setCacheEnabled(false);
 
       const visited = new Set<string>();
+       page = await this.getFreshPage(browser, website);
+
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page, websiteIgnoreUrls, maxDocuments));
 
       await browser.close();

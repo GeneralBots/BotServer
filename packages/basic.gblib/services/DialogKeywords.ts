@@ -95,7 +95,7 @@ export class DialogKeywords {
     // Launch Puppeteer to render the chart
 
     const browser = await puppeteer.launch({
-      headless: true,
+      headless: process.env.CHROME_HEADLESS === 'true',
       executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
     }
     );
