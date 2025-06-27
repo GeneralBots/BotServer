@@ -336,6 +336,9 @@ export class GBSSR {
       if (GBServer.globals.wwwroot && url === '/') {
         packagePath = GBServer.globals.wwwroot + "/index.html"; // TODO.
       }
+      if (!min && !url.startsWith("/images") && GBServer.globals.wwwroot) {
+        packagePath = path.join(GBServer.globals.wwwroot, url);
+      }
       if (!min && !url.startsWith("/static") && GBServer.globals.wwwroot) {
         packagePath = path.join(GBServer.globals.wwwroot, url);
       }
