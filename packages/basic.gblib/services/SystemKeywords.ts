@@ -1005,33 +1005,33 @@ export class SystemKeywords {
     let address;
     let body = { values: [[]] };
 
-    // Check if first column is ID
-    const firstCell = await client
-      .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A1')`)
-      .get();
+    // TODO: Check if first column is ID
+    // const firstCell = await client
+    //   .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A1')`)
+    //   .get();
 
-    const hasIdColumn = firstCell.text.toLowerCase() === 'id';
+    // const hasIdColumn = firstCell.text.toLowerCase() === 'id';
 
-    // If ID exists in args[0] and we have an ID column, try to find and update the row
-    let rowUpdated = false;
-    if (hasIdColumn && args[0]) {
-      const allRows = await client
-        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/usedRange`)
-        .get();
+    // // If ID exists in args[0] and we have an ID column, try to find and update the row
+    // let rowUpdated = false;
+    // if (hasIdColumn && args[0]) {
+    //   const allRows = await client
+    //     .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/usedRange`)
+    //     .get();
 
-      for (let i = 1; i < allRows.values.length; i++) {
-        if (allRows.values[i][0] === args[0]) {
-          // Update existing row
-          address = `A${i + 1}:${this.numberToLetters(args.length - 1)}${i + 1}`;
-          for (let j = 0; j < args.length; j++) {
-            body.values[0][j] = args[j];
-          }
-          rowUpdated = true;
-          break;
-        }
-      }
-    }
-
+    //   for (let i = 1; i < allRows.values.length; i++) {
+    //     if (allRows.values[i][0] === args[0]) {
+    //       // Update existing row
+    //       address = `A${i + 1}:${this.numberToLetters(args.length - 1)}${i + 1}`;
+    //       for (let j = 0; j < args.length; j++) {
+    //         body.values[0][j] = args[j];
+    //       }
+    //       rowUpdated = true;
+    //       break;
+    //     }
+    //   }
+    // }
+    const rowUpdated = false;
     // If no row was updated, add a new row
     if (!rowUpdated) {
       await client
