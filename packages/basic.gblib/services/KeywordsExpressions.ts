@@ -579,6 +579,14 @@ export class KeywordsExpressions {
         return `${$1} = await dk.hear({pid: pid, kind:"email"})`;
       }
     ];
+    
+    keywords[i++] = [
+      /^\s*hear (\w+\$*) as\s*number/gim,
+      ($0, $1) => {
+        return `${$1} = await dk.hear({pid: pid, kind:"integer"})`;
+      }
+    ];
+
 
     keywords[i++] = [
       /^\s*hear (\w+\$*) as\s*integer/gim,

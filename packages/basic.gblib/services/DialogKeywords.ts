@@ -1104,7 +1104,7 @@ export class DialogKeywords {
         // In case of unmatch, asks the person to try again.
 
         if (result === null) {
-          await this.talk({ pid, text: `Escolha por favor um dos itens sugeridos.` });
+          await this.talk({ pid, text: `Digite por favor um dos itens sugeridos ou uma parte do texto.` });
           return await this.hear({ pid, kind, args });
         }
       } else if (kind === 'file') {
