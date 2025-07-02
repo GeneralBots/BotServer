@@ -259,21 +259,21 @@ export class WhatsappDirectLine extends GBService {
 
       default:
 
-        if (this.whatsappServiceUrl){
+        if (this.whatsappServiceUrl) {
 
-        GBLog.verbose(`GBWhatsapp: Checking server...`);
-        let url = urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`;
-        const options = {
-          url: url,
-          method: 'GET'
-        };
+          GBLog.verbose(`GBWhatsapp: Checking server...`);
+          let url = urlJoin(this.whatsappServiceUrl, 'status') + `?token=${this.min.instance.whatsappServiceKey}`;
+          const options = {
+            url: url,
+            method: 'GET'
+          };
 
-        const res = await fetch(url, options);
-        const json = await res.json();
-        return json['accountStatus'] === 'authenticated';
-      }
-      
-      return true;
+          const res = await fetch(url, options);
+          const json = await res.json();
+          return json['accountStatus'] === 'authenticated';
+        }
+
+        return true;
     }
   }
 
@@ -734,17 +734,17 @@ export class WhatsappDirectLine extends GBService {
           await this.sendImageViewOnce(to, url, caption);
         }
         else {
-          
-            const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
-            const fileExtension = path.extname(url).toLowerCase();
 
-            if (['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.ods', '.csv'].includes(fileExtension)) {
+          const driver = createBot(whatsappServiceNumber, whatsappServiceKey);
+          const fileExtension = path.extname(url).toLowerCase();
+
+          if (['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.ods', '.csv'].includes(fileExtension)) {
             await driver.sendDocument(to, url, { caption: caption });
-            } else if (['.mp3', '.wav', '.ogg', '.aac', '.m4a'].includes(fileExtension)) {
+          } else if (['.mp3', '.wav', '.ogg', '.aac', '.m4a'].includes(fileExtension)) {
             await driver.sendAudio(to, url);
-            } else {
+          } else {
             await driver.sendImage(to, url, { caption: caption });
-            }
+          }
         }
         break;
 
@@ -763,7 +763,7 @@ export class WhatsappDirectLine extends GBService {
         break;
     }
     GBLogEx.info(this.min, `File ${url} sent to ${to}.`);
-    
+
   }
 
   public async sendAudioToDevice(to, url) {
@@ -931,51 +931,51 @@ export class WhatsappDirectLine extends GBService {
   }
 
   // New method to send button list
-private async sendButtonList(to: string, buttons: string[]) {
-  const baseUrl = 'https://graph.facebook.com/v20.0';
-  const accessToken = this.whatsappServiceKey;
-  const sendMessageEndpoint = `${baseUrl}/${this.whatsappServiceNumber}/messages`;
+  private async sendButtonList(to: string, buttons: string[]) {
+    const baseUrl = 'https://graph.facebook.com/v20.0';
+    const accessToken = this.whatsappServiceKey;
+    const sendMessageEndpoint = `${baseUrl}/${this.whatsappServiceNumber}/messages`;
 
-  const messageData = {
-    messaging_product: 'whatsapp',
-    recipient_type: 'individual',
-    to: to,
-    type: 'interactive',
-    interactive: {
-      type: 'button',
-      body: {
-        text: 'Please select an option:'
-      },
-      action: {
-        buttons: buttons.map((button, index) => ({
-          type: 'reply',
-          reply: {
-            id: `button_${index + 1}`,
-            title: button
-          }
-        }))
+    const messageData = {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: to,
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: {
+          text: 'Please select an option:'
+        },
+        action: {
+          buttons: buttons.map((button, index) => ({
+            type: 'reply',
+            reply: {
+              id: `button_${index + 1}`,
+              title: button
+            }
+          }))
+        }
       }
+    };
+
+    const response = await fetch(sendMessageEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(messageData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Failed to send button list: ${JSON.stringify(errorData)}`);
     }
-  };
 
-  const response = await fetch(sendMessageEndpoint, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(messageData)
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(`Failed to send button list: ${JSON.stringify(errorData)}`);
+    const result = await response.json();
+    GBLogEx.info(this.min, 'Button list sent successfully:' + JSON.stringify(result));
+    return result;
   }
-
-  const result = await response.json();
-  GBLogEx.info(this.min, 'Button list sent successfully:' + JSON.stringify(result));
-  return result;
-}
 
 
   public async sendToDevice(to: any, msg: string, conversationId, isViewOnce = false) {
@@ -1173,20 +1173,20 @@ private async sendButtonList(to: string, buttons: string[]) {
 
 
       if (process.env.AUDIO_DISABLED !== 'true') {
-      if (provider ==='meta'){
-              
-        const buf = await this.downloadAudio(req, min);
+        if (provider === 'meta') {
 
-        text = await GBConversationalService.getTextFromAudioBuffer(
-          this.min.instance.speechKey,
-          this.min.instance.cloudLocation,
-          buf,
-          user.locale
-        );
+          const buf = await this.downloadAudio(req, min);
+
+          text = await GBConversationalService.getTextFromAudioBuffer(
+            this.min.instance.speechKey,
+            this.min.instance.cloudLocation,
+            buf,
+            user.locale
+          );
 
 
-      }else if (req.type === 'ptt') {
-          
+        } else if (req.type === 'ptt') {
+
           const media = await req.downloadMedia();
           const buf = Buffer.from(media.data, 'base64');
 
@@ -1200,9 +1200,9 @@ private async sendButtonList(to: string, buttons: string[]) {
           req.body = text;
 
         }
-      
+
       }
-      
+
       let activeMin;
 
       // Processes group behaviour.
@@ -1501,152 +1501,196 @@ private async sendButtonList(to: string, buttons: string[]) {
   }
 
   public async downloadAudio(req, min) {
-      // Extract the audio ID from the request body
-      const audioId = req.body.entry[0].changes[0].value.messages[0].audio.id;
-      
-      // User access token from min.whatsappServiceKey
-      const userAccessToken = GBServer.globals.minBoot.instance.whatsappServiceKey;
-  
-      // Meta WhatsApp Business API endpoint for downloading media
-      const metaApiUrl =         `https://graph.facebook.com/v20.0/${audioId}`;
-      // Fetch the media URL using the audio ID
-      const mediaUrlResponse = await fetch(metaApiUrl, {
-        headers: {
-          Authorization: `Bearer ${userAccessToken}`,
-        },
-      });
-  
-      if (!mediaUrlResponse.ok) {
-        throw new Error(`Failed to fetch media URL: ${mediaUrlResponse.statusText}`);
-      }
-  
-      const mediaUrlData = await mediaUrlResponse.json();
-      const mediaUrl = mediaUrlData.url;
-  
-      if (!mediaUrl) {
-        throw new Error('Media URL not found in the response');
-      }
-  
-      // Download the audio file
-      const res = await fetch(mediaUrl, {
-        headers: {
-          Authorization: `Bearer ${userAccessToken}`,
-        },
-      });
-  
-      if (!res.ok) {
-        throw new Error(`Failed to download audio: ${res.statusText}`);
-      }
-      let buf: any = Buffer.from(await res.arrayBuffer());
-      return buf;
+    // Extract the audio ID from the request body
+    const audioId = req.body.entry[0].changes[0].value.messages[0].audio.id;
+
+    // User access token from min.whatsappServiceKey
+    const userAccessToken = GBServer.globals.minBoot.instance.whatsappServiceKey;
+
+    // Meta WhatsApp Business API endpoint for downloading media
+    const metaApiUrl = `https://graph.facebook.com/v20.0/${audioId}`;
+    // Fetch the media URL using the audio ID
+    const mediaUrlResponse = await fetch(metaApiUrl, {
+      headers: {
+        Authorization: `Bearer ${userAccessToken}`,
+      },
+    });
+
+    if (!mediaUrlResponse.ok) {
+      throw new Error(`Failed to fetch media URL: ${mediaUrlResponse.statusText}`);
+    }
+
+    const mediaUrlData = await mediaUrlResponse.json();
+    const mediaUrl = mediaUrlData.url;
+
+    if (!mediaUrl) {
+      throw new Error('Media URL not found in the response');
+    }
+
+    // Download the audio file
+    const res = await fetch(mediaUrl, {
+      headers: {
+        Authorization: `Bearer ${userAccessToken}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to download audio: ${res.statusText}`);
+    }
+    let buf: any = Buffer.from(await res.arrayBuffer());
+    return buf;
   }
 
-  public async getLatestCampaignReport() {
+public async getLatestCampaignReport() {
     const businessAccountId = this.whatsappBusinessManagerId;
     const userAccessToken = this.whatsappServiceKey;
 
     if (!(businessAccountId && userAccessToken)) {
-        return 'No statistics available for marketing templates.';
+      return 'No statistics available for marketing templates.';
     }
 
     try {
-        // Step 1: Fetch templates with edit time ordering
-        const statsResponse = await fetch(
+      // Step 1: Fetch templates with edit time ordering
+      const statsResponse = await fetch(
+        `https://graph.facebook.com/v21.0/${businessAccountId}?` +
+        `fields=message_templates{id,name,category,language,status,created_time,last_edited_time}&` +
+        `access_token=${userAccessToken}`
+      );
+
+      let data = await statsResponse.json();
+      if (!statsResponse.ok) {
+        throw new Error(data.error?.message || 'Failed to fetch templates');
+      }
+      console.log(GBUtil.toYAML(data));
+
+      data = data.message_templates?.data || [];
+
+      // Check if message_templates is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected message_templates to be an array, but got:', data.message_templates);
+        return 'Invalid response format for message templates.';
+      }
+
+      if (data.length === 0) {
+        throw new Error('No template statistics found');
+      }
+
+      // Filter for marketing templates and get the latest 15 edited ones
+      const marketingTemplates = data
+        .filter(template => template.category?.toUpperCase() === 'MARKETING')
+        .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime())
+        .slice(0, 15); // Get only the latest 15 templates
+
+      if (marketingTemplates.length === 0) {
+        return 'No marketing templates found.';
+      }
+
+      // Step 2: Fetch analytics for all templates
+      const startTime = Math.floor(Date.now() / 1000) - 86400 * 7; // Last 7 days
+      const endTime = Math.floor(Date.now() / 1000);
+      
+      const templateIds = marketingTemplates.map(template => template.id);
+      const templateResults = [];
+
+      // Fetch analytics for each template
+      for (const template of marketingTemplates) {
+        try {
+          const analyticsResponse = await fetch(
             `https://graph.facebook.com/v21.0/${businessAccountId}?` +
-            `fields=message_templates{id,name,category,language,status,created_time,last_edited_time}&` +
+            `fields=template_analytics.start(${startTime}).end(${endTime}).granularity(DAILY).metric_types(sent,delivered,read,clicked).template_ids([${template.id}])&` +
             `access_token=${userAccessToken}`
-        );
+          );
 
-        let data = await statsResponse.json();
-        if (!statsResponse.ok) {
-            throw new Error(data.error?.message || 'Failed to fetch templates');
-        }
-        console.log(GBUtil.toYAML(data));
+          const analyticsData = await analyticsResponse.json();
+          
+          if (!analyticsResponse.ok) {
+            console.warn(`Failed to fetch analytics for template ${template.name}: ${analyticsData.error?.message}`);
+            // Add template with no analytics data
+            templateResults.push({
+              template,
+              analytics: { sent: 0, delivered: 0, read: 0, clicked: 0 }
+            });
+            continue;
+          }
 
-        data = data.message_templates?.data || [];
-
-        // Check if message_templates is an array
-        if (!Array.isArray(data)) {
-            console.error('Expected message_templates to be an array, but got:', data.message_templates);
-            return 'Invalid response format for message templates.';
-        }
-
-        if (data.length === 0) {
-            throw new Error('No template statistics found');
-        }
-
-        // Filter for marketing templates and get the latest edited one
-        const marketingTemplates = data
-            .filter(template => template.category?.toUpperCase() === 'MARKETING')
-            .sort((a, b) => new Date(b.last_edited_time).getTime() - new Date(a.last_edited_time).getTime());
-
-        if (marketingTemplates.length === 0) {
-            return 'No marketing templates found.';
-        }
-
-        const latestTemplate = marketingTemplates[0];
-        const templateId = latestTemplate.id;
-
-        // Step 2: Fetch template analytics for the last 7 days
-        const startTime = Math.floor(Date.now() / 1000) - 86400 * 7; // Last 7 days
-        const endTime = Math.floor(Date.now() / 1000);
-
-        const analyticsResponse = await fetch(
-            `https://graph.facebook.com/v21.0/${businessAccountId}?` +
-            `fields=template_analytics.start(${startTime}).end(${endTime}).granularity(DAILY).metric_types(sent,delivered,read,clicked).template_ids([${templateId}])&` +
-            `access_token=${userAccessToken}`
-        );
-
-        const analyticsData = await analyticsResponse.json();
-        console.log(GBUtil.toYAML(analyticsData));
-
-        if (!analyticsResponse.ok) {
-            throw new Error(analyticsData.error?.message || 'Failed to fetch analytics');
-        }
-
-        const dataPoints = analyticsData.template_analytics?.data[0]?.data_points || [];
-        if (dataPoints.length === 0) {
-            return 'No analytics data available for the specified template.';
-        }
-
-        // Aggregate the data points for the latest template and the last 7 days
-        const aggregatedData = dataPoints.reduce((acc, dataPoint) => {
+          const dataPoints = analyticsData.template_analytics?.data[0]?.data_points || [];
+          
+          // Aggregate the data points for this template
+          const aggregatedData = dataPoints.reduce((acc, dataPoint) => {
             acc.sent += dataPoint.sent || 0;
             acc.delivered += dataPoint.delivered || 0;
             acc.read += dataPoint.read || 0;
             acc.clicked += (dataPoint.clicked?.reduce((sum, item) => sum + item.count, 0)) || 0;
             return acc;
-        }, { sent: 0, delivered: 0, read: 0, clicked: 0 });
+          }, { sent: 0, delivered: 0, read: 0, clicked: 0 });
 
-        // Calculate read rate and click rate
-        const readRate = aggregatedData.delivered > 0 ? ((aggregatedData.read / aggregatedData.delivered) * 100).toFixed(2) : 0;
-        const clickRate = aggregatedData.delivered > 0 ? ((aggregatedData.clicked / aggregatedData.delivered) * 100).toFixed(2) : 0;
+          templateResults.push({
+            template,
+            analytics: aggregatedData
+          });
 
+        } catch (error) {
+          console.warn(`Error fetching analytics for template ${template.name}:`, error.message);
+          // Add template with no analytics data
+          templateResults.push({
+            template,
+            analytics: { sent: 0, delivered: 0, read: 0, clicked: 0 }
+          });
+        }
+      }
+
+      // Format the results
+      let report = `*📊 Latest 15 Marketing Templates Report (Last 7 Days)*\n\n`;
+      
+      templateResults.forEach((result, index) => {
+        const { template, analytics } = result;
+        
+        // Calculate rates
+        const readRate = analytics.delivered > 0 ? ((analytics.read / analytics.delivered) * 100).toFixed(2) : 0;
+        const clickRate = analytics.delivered > 0 ? ((analytics.clicked / analytics.delivered) * 100).toFixed(2) : 0;
+        
         // Format the date
-        const lastEditedDate = latestTemplate.last_edited_time
-            ? new Date(latestTemplate.last_edited_time).toLocaleDateString('en-US', {
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric'
-              })
-            : 'Not available';
+        const lastEditedDate = template.last_edited_time
+          ? new Date(template.last_edited_time).toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric'
+          })
+          : 'Not available';
 
-        return `Template Name: *${latestTemplate.name}*
-Category: *${latestTemplate.category?.toUpperCase()}*
-Language: *${latestTemplate.language?.replace('-', '_').toUpperCase() || 'pt_BR'}*
-Status: *${latestTemplate.status?.toUpperCase()}*
-Messages Sent: *${aggregatedData.sent.toLocaleString()}*
-Messages Delivered: *${aggregatedData.delivered.toLocaleString()}*
-Message Read Rate: *${readRate}% (${aggregatedData.read.toLocaleString()})*
-Message Click Rate: *${clickRate}% (${aggregatedData.clicked.toLocaleString()})*
-Top Block Reason: *${latestTemplate.rejection_reason || '––'}*
-Last Edited: *${lastEditedDate}*`;
+        report += `*${index + 1}. ${template.name}*
+Language: *${template.language?.replace('-', '_').toUpperCase() || 'pt_BR'}*
+Status: *${template.status?.toUpperCase()}*
+📤 Sent: *${analytics.sent.toLocaleString()}*
+📬 Delivered: *${analytics.delivered.toLocaleString()}*
+👁️ Read Rate: *${readRate}% (${analytics.read.toLocaleString()})*
+🔗 Click Rate: *${clickRate}% (${analytics.clicked.toLocaleString()})*
+📅 Last Edited: *${lastEditedDate}*
+
+`;
+      });
+
+      // Add summary statistics
+      const totalSent = templateResults.reduce((sum, result) => sum + result.analytics.sent, 0);
+      const totalDelivered = templateResults.reduce((sum, result) => sum + result.analytics.delivered, 0);
+      const totalRead = templateResults.reduce((sum, result) => sum + result.analytics.read, 0);
+      const totalClicked = templateResults.reduce((sum, result) => sum + result.analytics.clicked, 0);
+      
+      const overallReadRate = totalDelivered > 0 ? ((totalRead / totalDelivered) * 100).toFixed(2) : 0;
+      const overallClickRate = totalDelivered > 0 ? ((totalClicked / totalDelivered) * 100).toFixed(2) : 0;
+
+      report += `*📈 Overall Summary*
+Total Messages Sent: *${totalSent.toLocaleString()}*
+Total Messages Delivered: *${totalDelivered.toLocaleString()}*
+Overall Read Rate: *${overallReadRate}%*
+Overall Click Rate: *${overallClickRate}%*`;
+
+      return report;
 
     } catch (error) {
-        console.error('Error fetching WhatsApp template statistics:', error.message);
-        return `Error fetching statistics: ${error.message}`;
+      console.error('Error fetching WhatsApp template statistics:', error.message);
+      return `Error fetching statistics: ${error.message}`;
     }
-}
-
+  }
 
 }
