@@ -1315,6 +1315,9 @@ export class GBMinService {
           if (!(await sec.getParam(user, 'welcomed'))) {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
             if (startDialog) {
+                      const t = new SystemKeywords();
+              t.setMemoryContext({pid:pid,erase:true});
+s
               await sec.setParam(userId, 'welcomed', 'true');
               GBLogEx.info(
                 min,
@@ -1354,6 +1357,9 @@ export class GBMinService {
             ) {
 
               const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
+              const t = new SystemKeywords();
+              t.setMemoryContext({pid:pid,erase:true});
+
               step.context.activity['pid'] = pid;
 
               min['conversationWelcomed'][step.context.activity.conversation.id] = true;
@@ -1687,6 +1693,9 @@ export class GBMinService {
         !step.context.activity['group']
       ) {
         await sec.setParam(userId, 'welcomed', 'true');
+        const t = new SystemKeywords();
+              t.setMemoryContext({pid:pid,erase:true});
+
         min['conversationWelcomed'][step.context.activity.conversation.id] = true;
         GBLogEx.info(
           min,
