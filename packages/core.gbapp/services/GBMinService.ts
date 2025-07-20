@@ -1317,7 +1317,6 @@ export class GBMinService {
             if (startDialog) {
                       const t = new SystemKeywords();
               t.setMemoryContext({pid:pid,erase:true});
-s
               await sec.setParam(userId, 'welcomed', 'true');
               GBLogEx.info(
                 min,
