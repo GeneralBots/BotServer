@@ -103,7 +103,6 @@
     "@sendgrid/mail": "8.1.3",
     "@sequelize/core": "7.0.0-alpha.37",
     "@sequelize/postgres": "^7.0.0-alpha.43",
-    "@types/node": "22.5.2",
     "@types/validator": "13.12.1",
     "adm-zip": "0.5.16",
     "ai2html": "^0.121.1",
@@ -256,6 +255,9 @@
     "zod-to-json-schema": "3.23.2"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^24.1.0",
+    "@types/node-fetch": "^2.6.12",
     "@types/qrcode": "1.5.5",
     "@types/url-join": "4.0.3",
     "@typescript-eslint/eslint-plugin": "8.4.0",

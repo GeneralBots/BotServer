@@ -27,13 +27,18 @@
         "node_modules/pragmatismo-io-framework/*"
       ]
     },
+    "types": [
+      "node",
+      "lodash",
+      "node-fetch"
+    ],
     "sourceMap": true,
     "target": "ESNext",
     "typeRoots": [
       "node_modules/@types"
     ]
   },
-  "include": [    
+  "include": [
     "src/**/*",
     "packages/*.gbapp/**/*",
     "packages/*.gblib/**/*",
@@ -43,5 +48,5 @@
     "dist",
     "node_modules",
     "**/*.test.ts"
-    ]
+  ]
 }

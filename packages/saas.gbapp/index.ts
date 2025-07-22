@@ -48,17 +48,17 @@ export class SaaSPackage implements IGBPackage {
     return [NewUserDialog.getDialog(min),
     NewUserDialog.getBotNameDialog(min),
     NewUserDialog.getBotTemplateDialog(min),
-    
+
     NewUserDialog.getPlanSelectionDialog(min),
-    
+
     ];
   }
 
   async loadPackage(core: IGBCoreService, sequelize: Sequelize): Promise<void> {
     sequelize.addModels([GBOnlineSubscription]);
-    
-    core.setEntryPointDialog('/welcome_saas');
-
+    if (process.env.DISABLE_SAAS_WELCOME !== 'true') {
+      core.setEntryPointDialog('/welcome_saas');
+    }
 
   }
 
