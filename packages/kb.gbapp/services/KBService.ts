@@ -1263,7 +1263,7 @@ export class KBService implements IGBKBService {
       await CollectionUtil.asyncForEach(files, async file => {
     
         let filePath = typeof file === 'string' ? file : path.join(file.root, file.name);
-
+ 
         if (filePath) {
 
           let content = null;
