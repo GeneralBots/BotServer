@@ -1242,7 +1242,12 @@ export class KBService implements IGBKBService {
 
     }
 
+    GBLogEx.info(min, `Added ${files.length} from site...`);
+    
     files = await walkPromise(urlJoin(localPath, 'docs'));
+
+  GBLogEx.info(min, `Add ${files.length} files being processed...`);
+    
 
     // const gbdrive = path.join(process.env.PWD, 'work', GBUtil.getGBAIPath(min.botId, 'gbdrive'));
     // files = files.concat(await walkPromise(gbdrive));
@@ -1256,8 +1261,10 @@ export class KBService implements IGBKBService {
       shouldSave = true;
       GBLogEx.info(min, `Add embeddings from packages, ${files.length} files being processed...`);
       await CollectionUtil.asyncForEach(files, async file => {
+    
+        let filePath = typeof file === 'string' ? file : path.join(file.root, file.name);
 
-        if (file.root) {
+        if (filePath) {
 
           let content = null;
           let filePath = path.join(file.root, file.name);
