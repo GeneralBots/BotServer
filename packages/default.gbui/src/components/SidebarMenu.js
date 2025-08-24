@@ -28,59 +28,51 @@
 |                                                                             |
 \*****************************************************************************/
 
-import React from "react";
+import React from 'react';
 
 class SideBarMenu extends React.Component {
   send(command) {
-    window.botConnection
-      .postActivity({
-        type: "event",
-        name: command,
-        locale: "en-us",
-        textFormat: "plain",
-        timestamp: new Date().toISOString()
-      });
+    window.botConnection.postActivity({
+      type: 'event',
+      name: command,
+      locale: 'en-us',
+      textFormat: 'plain',
+      timestamp: new Date().toISOString()
+    });
   }
 
   render() {
     return (
       <div>
         <div className="titleSideBarMenu">
-          <img
-            className="pragmatismoLogo"
-            src={this.props.instance.logo}
-            alt="General Bots Logo" />
-
+          <img className="pragmatismoLogo" width="64px" src={this.props.instance.logo} alt="General Bots Logo" />
         </div>
         <div className="SidebarMenu">
           <div className="IconsMenu">
             <div className="iconMenu">
-              <span className="iconText" onClick={() => this.send("showFAQ")}>
+              <span className="iconText" onClick={() => this.send('showFAQ')}>
                 FAQ
               </span>
             </div>
             <div className="iconMenu">
-              <span className="iconText"
-                onClick={() => window.open(`https://pragmatismo.sharepoint.com/sites/bots/Online/${this.props.instance.botId}.gbai`)}
+              <span
+                className="iconText"
+                onClick={() =>
+                  window.open(`https://drive.pragmatismo.com.br/browser/${this.props.instance.botId}.gbai`)
+                }
               >
                 Drive
               </span>
             </div>
             <div className="iconMenu">
-              <span
-                className="iconText"
-                onClick={() => this.send("showSubjects")}>
+              <span className="iconText" onClick={() => this.send('showSubjects')}>
                 Subjects
               </span>
             </div>
             <div className="iconMenu">
-              <span
-                className="iconText"
-                onClick={() => window.open('mailto:talk@pragmatismo.com.br')}
-              >
+              <span className="iconText" onClick={() => window.open('mailto:talk@pragmatismo.com.br')}>
                 Suggestions
               </span>
-
             </div>
           </div>
         </div>

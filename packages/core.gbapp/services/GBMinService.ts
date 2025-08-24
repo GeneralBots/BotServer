@@ -162,16 +162,15 @@ export class GBMinService {
     // Servers default UI on root address '/' if web enabled.
 
     if (process.env.DISABLE_WEB !== 'true' || process.env.ENABLE_INSTANCE_ON_URL) {
-
       // Servers the bot information object via HTTP so clients can get
       // instance information stored on server.
-      GBServer.globals.server.use(cors({
-        origin: 'https://gb6.pragmatismo.com.br',
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'
-          , 'x-ms-bot-agent'
-        ]
-      }));
+      GBServer.globals.server.use(
+        cors({
+          origin: 'https://gb6.pragmatismo.com.br',
+          methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+          allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with', 'x-ms-bot-agent']
+        })
+      );
       GBServer.globals.server.get('/instances/:botId', this.handleGetInstanceForClient.bind(this));
     }
 
@@ -213,14 +212,11 @@ export class GBMinService {
       const user = await sec.ensureUser(min, 'testuser', 'testuser', '', 'test', 'testuser', null);
       const pid = GBVMService.createProcessInfo(user, min, 'api', null);
 
-      const response = await client.apis.Conversations.Conversations_StartConversation(
-        {
-          userSystemId: user.userSystemId,
-          userName: user.userName,
-          pid: pid
-        }
-
-      );
+      const response = await client.apis.Conversations.Conversations_StartConversation({
+        userSystemId: user.userSystemId,
+        userName: user.userName,
+        pid: pid
+      });
       const conversationId = response.obj.conversationId;
       GBServer.globals.debugConversationId = conversationId;
 
@@ -239,7 +235,7 @@ export class GBMinService {
               name: 'test',
               channelIdEx: 'web',
               pid: pid
-            },
+            }
           }
         });
 
@@ -286,7 +282,7 @@ export class GBMinService {
   /**
    * Unmounts the bot web site (default.gbui) secure domain, if any.
    */
-  public async unloadDomain(instance: IGBInstance) { }
+  public async unloadDomain(instance: IGBInstance) {}
 
   /**
    * Mount the instance by creating an BOT Framework bot object,
@@ -497,7 +493,6 @@ export class GBMinService {
             </body>
             </html>
           `);
-
           } else {
             GBLogEx.info(min, `Payment not completed for session ${sessionId}`);
             res.status(402).json({
@@ -511,7 +506,6 @@ export class GBMinService {
           res.status(500).json({
             success: false,
             error: error.message
-
           });
         }
       })
@@ -520,7 +514,6 @@ export class GBMinService {
 
     GBServer.globals.server
       .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
-
         const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
 
         const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
@@ -529,7 +522,6 @@ export class GBMinService {
           GBLogEx.info(min, `WhatsApp: ${status.recipient_id} ${status.status}`);
           return;
         }
-
 
         if (req.query['hub.mode'] === 'subscribe') {
           const val = req.query['hub.verify_token'];
@@ -550,13 +542,10 @@ export class GBMinService {
         // Not meta, multiples bots on root bot.
 
         if (!req.body.object) {
-
           if (req.body.To) {
-
             const to = req.body.To.replace(/whatsapp\:\+/gi, '');
             whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
-          }
-          else {
+          } else {
             const minBoot = GBServer.globals.minBoot as GBMinInstance;
             whatsAppDirectLine = minBoot.whatsAppDirectLine;
           }
@@ -568,53 +557,49 @@ export class GBMinService {
       })
       .bind(min);
 
-      GBServer.globals.server
-      .all(`/${min.instance.botId}/meeting-token`, async (req, res) => {
+    GBServer.globals.server.all(`/${min.instance.botId}/meeting-token`, async (req, res) => {
+      try {
+        // Add to your route handler
+        res.setHeader('Access-Control-Allow-Origin', '*');
 
-        try {
-          // Add to your route handler
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          
-          // 1. Validate request
-          const { room, identity, name } = req.query;
-          GBLog.info(`Meeting token asked. ${room} ${identity} ${name}`);
-          if (!room || !identity) {
-            return res.status(400).json({ error: 'Missing required parameters: room, identity' });
-          }
-    
-          // 2. Get API keys from config (replace with your actual config access)
-          const apiKey = process.env.LIVEKIT_API_KEY;
-          const apiSecret = process.env.LIVEKIT_API_SECRET;
-          if (!apiKey || !apiSecret) {
-            return res.status(500).json({ error: 'Server misconfigured' });
-          }
-    
-          // 3. Generate token
-          
-          const token = new AccessToken(apiKey, apiSecret, {
-            identity: identity.toString(),
-            name: name?.toString() || identity.toString()
-          });
-    
-          // 4. Set permissions
-          token.addGrant({
-            roomJoin: true,
-            room: room.toString(),
-            canPublish: true,
-            canSubscribe: true,
-            canPublishData: true
-          });
-    
-          // 6. Return JWT
-          const jwt = await token.toJwt();
-          res.json({ token: jwt });
-    
-        } catch (err) {
-          GBLog.error(`Meeting token generation failed: ${err}`);
-          res.status(500).json({ error: 'Token generation failed' });
+        // 1. Validate request
+        const { room, identity, name } = req.query;
+        GBLog.info(`Meeting token asked. ${room} ${identity} ${name}`);
+        if (!room || !identity) {
+          return res.status(400).json({ error: 'Missing required parameters: room, identity' });
         }
-      });
 
+        // 2. Get API keys from config (replace with your actual config access)
+        const apiKey = process.env.LIVEKIT_API_KEY;
+        const apiSecret = process.env.LIVEKIT_API_SECRET;
+        if (!apiKey || !apiSecret) {
+          return res.status(500).json({ error: 'Server misconfigured' });
+        }
+
+        // 3. Generate token
+
+        const token = new AccessToken(apiKey, apiSecret, {
+          identity: identity.toString(),
+          name: name?.toString() || identity.toString()
+        });
+
+        // 4. Set permissions
+        token.addGrant({
+          roomJoin: true,
+          room: room.toString(),
+          canPublish: true,
+          canSubscribe: true,
+          canPublishData: true
+        });
+
+        // 6. Return JWT
+        const jwt = await token.toJwt();
+        res.json({ token: jwt });
+      } catch (err) {
+        GBLog.error(`Meeting token generation failed: ${err}`);
+        res.status(500).json({ error: 'Token generation failed' });
+      }
+    });
 
     GBDeployer.mountGBKBAssets(`${botId}.gbkb`, botId, `${botId}.gbkb`);
 
@@ -643,8 +628,6 @@ export class GBMinService {
   private createCheckHealthAddress(server: any, min: GBMinInstance, instance: IGBInstance) {
     server.get(`/${min.instance.botId}/check`, async (req, res) => {
       try {
-
-
         // GB is OK, so 200.
 
         res.status(200).send(`General Bot ${min.botId} is healthly.`);
@@ -786,8 +769,9 @@ export class GBMinService {
         min.instance.authenticatorTenant,
         '/oauth2/authorize'
       );
-      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${min.instance.marketplaceId
-        }&redirect_uri=${urlJoin(process.env.BOT_URL, min.instance.botId, 'token')}`;
+      authorizationUrl = `${authorizationUrl}?response_type=code&client_id=${
+        min.instance.marketplaceId
+      }&redirect_uri=${urlJoin(process.env.BOT_URL, min.instance.botId, 'token')}`;
       GBLogEx.info(min, `HandleOAuthRequests: ${authorizationUrl}.`);
       res.redirect(authorizationUrl);
     });
@@ -825,7 +809,7 @@ export class GBMinService {
 
       let logo = this.core.getParam(instance, 'Logo', null);
 
-      logo = logo ? urlJoin(instance.botId, 'cache', logo) : 'images/logo-gb.png';
+      logo = logo ? urlJoin(instance.botId, 'cache', logo) : 'https://pragmatismo.com.br/icons/general-bots-text.svg';
 
       let config = {
         instanceId: instance.instanceId,
@@ -850,7 +834,6 @@ export class GBMinService {
             ? process.env.BOT_URL
             : `http://localhost:${GBConfigService.get('PORT')}`;
         config['domain'] = urlJoin(url, 'directline', botId);
-
       } else {
         const webchatTokenContainer = await this.getWebchatToken(instance);
         config['conversationId'] = webchatTokenContainer.conversationId;
@@ -922,10 +905,7 @@ export class GBMinService {
         : GBConfigService.get('MARKETPLACE_SECRET')
     };
     if (GBConfigService.get('GB_MODE') !== 'legacy') {
-
-      const url =
-        process.env.BOT_URL ||
-        `http://localhost:${GBConfigService.get('PORT')}`;
+      const url = process.env.BOT_URL || `http://localhost:${GBConfigService.get('PORT')}`;
 
       startRouter(GBServer.globals.server, instance.botId);
       config['clientOptions'] = { baseUri: url };
@@ -980,8 +960,7 @@ export class GBMinService {
     min.sandBoxMap = {};
     min['scheduleMap'] = {};
     min['conversationWelcomed'] = {};
-    if (await min.core.getParam(min.instance, 'Answer Mode', null) &&
-      !min['vectorStore']) {
+    if ((await min.core.getParam(min.instance, 'Answer Mode', null)) && !min['vectorStore']) {
       const gbkbPath = GBUtil.getGBAIPath(min.botId, 'gbkb');
       min['vectorStorePath'] = path.join('work', gbkbPath, 'docs-vectorized');
       min['vectorStore'] = await this.deployer.loadOrCreateEmptyVectorStore(min);
@@ -1154,7 +1133,6 @@ export class GBMinService {
     // Default activity processing and handler.
 
     const handler = async context => {
-
       // Handle activity text issues.
 
       if (!context.activity.text) {
@@ -1170,8 +1148,11 @@ export class GBMinService {
       let member = context.activity.recipient;
 
       if (context.activity.type === 'conversationUpdate') {
-        if (context.activity.membersAdded && context.activity.membersAdded.length > 0 &&
-          context.activity.membersAdded[0].id === context.activity.recipient.id) {
+        if (
+          context.activity.membersAdded &&
+          context.activity.membersAdded.length > 0 &&
+          context.activity.membersAdded[0].id === context.activity.recipient.id
+        ) {
           GBLogEx.info(min, `Bot added to conversation: ${member.name}`);
 
           return;
@@ -1194,7 +1175,6 @@ export class GBMinService {
         let pid = GBMinService.pidsConversation[conversationId];
 
         if (!pid) {
-
           pid = step.context.activity['pid'];
           if (!pid) {
             pid = WhatsappDirectLine.pidByNumber[context.activity.from.id];
@@ -1209,19 +1189,13 @@ export class GBMinService {
         const auth = min.core.getParam(min.instance, 'Enable Authentication', false);
 
         if (auth) {
-          const res = await t.find({ pid: pid, handle: "users.csv", args: [`key={member.id}`] });
+          const res = await t.find({ pid: pid, handle: 'users.csv', args: [`key={member.id}`] });
 
           if (!res) {
-            await min.conversationalService.sendText(
-              min,
-              step,
-              'Sorry, not authorized.'
-            );
+            await min.conversationalService.sendText(min, step, 'Sorry, not authorized.');
             res.end();
-
           }
         }
-
 
         // First time processing.
 
@@ -1258,8 +1232,6 @@ export class GBMinService {
           await sec.updateConversationReferenceById(userId, conversationReference);
 
           if (step.context.activity.channelId !== 'msteams') {
-
-
             const service = new KBService(min.core.sequelize);
             const data = await service.getFaqBySubjectArray(min.instance.instanceId, 'faq', undefined);
             if (data.length > 0) {
@@ -1267,17 +1239,13 @@ export class GBMinService {
                 playerType: 'bullet',
                 data: data.slice(0, 10)
               });
-
-              
             }
           }
         }
 
-
         const notes = min.core.getParam(min.instance, 'Notes', null);
         if (await this.handleUploads(min, step, user, params, notes != null)) {
           return;
-
         }
 
         // Required for MSTEAMS handling of persisted conversations.
@@ -1315,8 +1283,8 @@ export class GBMinService {
           if (!(await sec.getParam(user, 'welcomed'))) {
             const startDialog = min.core.getParam(min.instance, 'Start Dialog', null);
             if (startDialog) {
-                      const t = new SystemKeywords();
-              t.setMemoryContext({pid:pid,erase:true});
+              const t = new SystemKeywords();
+              t.setMemoryContext({ pid: pid, erase: true });
               await sec.setParam(userId, 'welcomed', 'true');
               GBLogEx.info(
                 min,
@@ -1335,8 +1303,7 @@ export class GBMinService {
 
         if (context.activity.type === 'installationUpdate') {
           GBLogEx.info(min, `Bot installed on Teams.`);
-        } else if (context.activity.type === 'conversationUpdate' ){
- 
+        } else if (context.activity.type === 'conversationUpdate') {
           // Calls onNewSession event on each .gbapp package.
 
           await CollectionUtil.asyncForEach(appPackages, async e => {
@@ -1350,14 +1317,10 @@ export class GBMinService {
 
             await step.beginDialog('/');
           } else {
-            if (
-              !GBMinService.userMobile(step) &&
-              !min['conversationWelcomed'][step.context.activity.conversation.id]
-            ) {
-
+            if (!GBMinService.userMobile(step) && !min['conversationWelcomed'][step.context.activity.conversation.id]) {
               const pid = GBVMService.createProcessInfo(user, min, step.context.activity.channelId, null, step);
               const t = new SystemKeywords();
-              t.setMemoryContext({pid:pid,erase:true});
+              t.setMemoryContext({ pid: pid, erase: true });
 
               step.context.activity['pid'] = pid;
 
@@ -1371,16 +1334,12 @@ export class GBMinService {
             }
           }
         } else if (context.activity.type === 'message') {
-
-
-
           // Required for F0 handling of persisted conversations.
 
           GBLogEx.info(
             min,
             `Human: pid:${pid} ${context.activity.from.id} ${GBUtil.toYAML(WhatsappDirectLine.pidByNumber)} ${context.activity.text} (type: ${context.activity.type}, name: ${context.activity.name}, channelId: ${context.activity.channelId})`
           );
-
 
           // Processes messages activities.
 
@@ -1440,12 +1399,13 @@ export class GBMinService {
     );
 
     if (context.activity.name === 'showSubjects') {
-      await step.replaceDialog('/answer', { query: `Show a list of subjects you can help me in ${contentLocale} language.` });
-
-
+      await step.replaceDialog('/answer', {
+        query: `Show a list of subjects you can help me in ${contentLocale} language.`
+      });
     } else if (context.activity.name === 'showFAQ') {
-      await step.replaceDialog('/answer', { query: `Show a FAQ for me about how can you help me in a bullet list, in ${contentLocale} language.` });
-
+      await step.replaceDialog('/answer', {
+        query: `Show a FAQ for me about how can you help me in a bullet list, in ${contentLocale} language.`
+      });
     } else if (context.activity.name === 'answerEvent') {
       await step.beginDialog('/answerEvent', <AskDialogArgs>{
         questionId: context.activity.data,
@@ -1531,7 +1491,6 @@ export class GBMinService {
       const successfulSaves = await Promise.all(promises);
       async function replyForReceivedAttachments(attachmentData) {
         if (attachmentData) {
-
           // In case of not having HEAR activated before, it is
           // a upload with no Dialog, so run Auto Save to .gbdrive.
 
@@ -1575,16 +1534,16 @@ export class GBMinService {
           name: string;
         }
 
-        const results = await successfulSaves.reduce(async (accum: GBFile[], item) => {
+        const results = (await successfulSaves.reduce(async (accum: GBFile[], item) => {
           const result: GBFile = {
             data: await fs.readFile(successfulSaves[0]['filename']),
             filename: successfulSaves[0]['filename'],
             name: successfulSaves[0]['name'],
-            url: successfulSaves[0]['url'],
+            url: successfulSaves[0]['url']
           };
           accum.push(result);
           return accum;
-        }, []) as GBFile[];
+        }, [])) as GBFile[];
 
         if (min.cbMap[user.userId] && min.cbMap[user.userId].promise == '!GBHEAR') {
           if (results.length > 1) {
@@ -1693,7 +1652,7 @@ export class GBMinService {
       ) {
         await sec.setParam(userId, 'welcomed', 'true');
         const t = new SystemKeywords();
-              t.setMemoryContext({pid:pid,erase:true});
+        t.setMemoryContext({ pid: pid, erase: true });
 
         min['conversationWelcomed'][step.context.activity.conversation.id] = true;
         GBLogEx.info(
@@ -1701,9 +1660,6 @@ export class GBMinService {
           `Auto start (4) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
         );
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
-
-
-
       }
     }
 
@@ -1803,8 +1759,9 @@ export class GBMinService {
           try {
             await step.continueDialog();
           } catch (error) {
-            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${error.error ? (error.error.stack ? error.error.stack : '') : ''
-              }`;
+            const msg = `ERROR: ${error.message} ${error.stack} ${error.error ? error.error.body : ''} ${
+              error.error ? (error.error.stack ? error.error.stack : '') : ''
+            }`;
             GBLog.error(msg);
             await min.conversationalService.sendText(
               min,
@@ -1927,10 +1884,10 @@ export class GBMinService {
       pingSendTimeout: null,
       keepAliveTimeout: null,
       listeners: {
-        unsubscribed(subscriptions: number): void { },
-        subscribed(subscriptions: number): void { },
-        disconnected(remoteId: string, connections: number): void { },
-        connected(remoteId: string, connections: number): void { },
+        unsubscribed(subscriptions: number): void {},
+        subscribed(subscriptions: number): void {},
+        disconnected(remoteId: string, connections: number): void {},
+        connected(remoteId: string, connections: number): void {},
         messageIn(...params): void {
           params.shift();
         },
