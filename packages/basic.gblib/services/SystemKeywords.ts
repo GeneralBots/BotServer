@@ -177,22 +177,22 @@ export class SystemKeywords {
     if (date) {
       return array
         ? array.sort((a, b) => {
-          const c = new Date(a[memberName]);
-          const d = new Date(b[memberName]);
-          return c.getTime() - d.getTime();
-        })
+            const c = new Date(a[memberName]);
+            const d = new Date(b[memberName]);
+            return c.getTime() - d.getTime();
+          })
         : null;
     } else {
       return array
         ? array.sort((a, b) => {
-          if (a[memberName] < b[memberName]) {
-            return -1;
-          }
-          if (a[memberName] > b[memberName]) {
-            return 1;
-          }
-          return 0;
-        })
+            if (a[memberName] < b[memberName]) {
+              return -1;
+            }
+            if (a[memberName] > b[memberName]) {
+              return 1;
+            }
+            return 0;
+          })
         : array;
     }
   }
@@ -386,23 +386,19 @@ export class SystemKeywords {
 
       const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-      return { localName, url};
-
+      return { localName, url };
     } catch (error) {
       GBLogEx.error(min, `Error converting file to PDF: ${error}`);
       throw new Error('PDF conversion failed');
     }
   }
 
-
   public async asPdf({ pid, data }) {
-
     let file;
 
     if (data.url) {
       file = await this.convertWithLibreOffice(pid, data.localName);
-    }
-    else {
+    } else {
       file = await this.renderTable(pid, data, true, false);
     }
 
@@ -827,7 +823,7 @@ export class SystemKeywords {
     const minRef = min;
 
     await retry(
-      async (bail) => {
+      async bail => {
         const t = this.getTableFromName(tableName, minRef);
         try {
           await t.bulkCreate(rowsDest);
@@ -908,7 +904,7 @@ export class SystemKeywords {
         port: parseInt(process.env.DRIVE_PORT || '9000', 10),
         useSSL: process.env.DRIVE_USE_SSL === 'true',
         accessKey: process.env.DRIVE_ACCESSKEY,
-        secretKey: process.env.DRIVE_SECRET,
+        secretKey: process.env.DRIVE_SECRET
       });
 
       const gbaiName = GBUtil.getGBAIPath(min.botId);
@@ -1035,7 +1031,9 @@ export class SystemKeywords {
     // If no row was updated, add a new row
     if (!rowUpdated) {
       await client
-        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')/insert`)
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A2:DX2')/insert`
+        )
         .post({});
       address = `A2:${this.numberToLetters(args.length - 1)}2`;
       for (let j = 0; j < args.length; j++) {
@@ -1046,7 +1044,9 @@ export class SystemKeywords {
     await retry(
       async bail => {
         const result = await client
-          .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
+          .api(
+            `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
+          )
           .patch(body);
 
         if (result.status != 200) {
@@ -1318,8 +1318,8 @@ export class SystemKeywords {
       let res;
       let packagePath = GBUtil.getGBAIPath(min.botId, `gbdata`);
 
+      let csvFile = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
       if (GBConfigService.get('GB_MODE') === 'gbcluster') {
-
         const fileUrl = urlJoin('/', `${min.botId}.gbdata`, file);
         GBLogEx.info(min, `Direct data from .csv: ${fileUrl}.`);
 
@@ -1330,7 +1330,7 @@ export class SystemKeywords {
           port: parseInt(process.env.DRIVE_PORT || '9000', 10),
           useSSL: process.env.DRIVE_USE_SSL === 'true',
           accessKey: process.env.DRIVE_ACCESSKEY,
-          secretKey: process.env.DRIVE_SECRET,
+          secretKey: process.env.DRIVE_SECRET
         });
 
         const gbaiName = GBUtil.getGBAIPath(min.botId);
@@ -1343,9 +1343,10 @@ export class SystemKeywords {
         );
 
         await minioClient.fGetObject(bucketName, fileUrl, localName);
+
+        csvFile = localName;
       }
 
-      const csvFile = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
       const data = await fs.readFile(csvFile, 'utf8');
 
       const firstLine = data.split('\n')[0];
@@ -1869,13 +1870,9 @@ export class SystemKeywords {
     const srcPath = urlJoin(root, src);
     const dstPath = urlJoin(packagePath, dest);
 
-
     if (path.extname(srcPath) === 'ai') {
-
       // TODO: To be done.
-
     } else {
-
       // Checks if the destination contains subfolders that
       // need to be created.
 
@@ -2170,8 +2167,7 @@ export class SystemKeywords {
       const url = template['@microsoft.graph.downloadUrl'];
       const res = await fetch(url);
       return Buffer.from(await res.arrayBuffer());
-    }
-    else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
+    } else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
       // GBCluster mode - using MinIO
       const minioClient = this.createMinioClient();
       const bucketName = (process.env.DRIVE_ORG_PREFIX + botId + '.gbai').toLowerCase();
@@ -2179,14 +2175,16 @@ export class SystemKeywords {
 
       return new Promise((resolve, reject) => {
         const chunks: Uint8Array[] = [];
-        minioClient.getObject(bucketName, filePath).then(stream => {
-          stream.on('data', chunk => chunks.push(new Uint8Array(chunk)));
-          stream.on('end', () => resolve(Buffer.concat(chunks)));
-          stream.on('error', reject);
-        }).catch(reject);
+        minioClient
+          .getObject(bucketName, filePath)
+          .then(stream => {
+            stream.on('data', chunk => chunks.push(new Uint8Array(chunk)));
+            stream.on('end', () => resolve(Buffer.concat(chunks)));
+            stream.on('error', reject);
+          })
+          .catch(reject);
       });
-    }
-    else {
+    } else {
       // Default mode - direct filesystem access
       const gbdriveName = GBUtil.getGBAIPath(botId, 'gbdrive');
       const templatePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, templateName);
@@ -2208,8 +2206,7 @@ export class SystemKeywords {
       const url = ref['@microsoft.graph.downloadUrl'];
       const response = await fetch(url);
       return Buffer.from(await response.arrayBuffer());
-    }
-    else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
+    } else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
       const minioClient = this.createMinioClient();
       const bucketName = (process.env.DRIVE_ORG_PREFIX + botId + '.gbai').toLowerCase();
       const filePath = urlJoin(gbaiName, `${botId}.gbdrive`, imagePath);
@@ -2225,8 +2222,7 @@ export class SystemKeywords {
           reject(err);
         }
       });
-    }
-    else {
+    } else {
       const gbdriveName = GBUtil.getGBAIPath(botId, 'gbdrive');
       const fullPath = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, imagePath);
       return fs.readFile(fullPath);
@@ -2239,7 +2235,7 @@ export class SystemKeywords {
       port: parseInt(process.env.DRIVE_PORT || '9000', 10),
       useSSL: process.env.DRIVE_USE_SSL === 'true',
       accessKey: process.env.DRIVE_ACCESSKEY,
-      secretKey: process.env.DRIVE_SECRET,
+      secretKey: process.env.DRIVE_SECRET
     });
   }
 
@@ -2334,10 +2330,7 @@ export class SystemKeywords {
     return { localName, url, data: outputBuffer };
   }
 
-
-  public screenCapture(pid) {
-
-  }
+  public screenCapture(pid) {}
 
   private numberToLetters(num) {
     let letters = '';
@@ -2688,17 +2681,14 @@ export class SystemKeywords {
     GBLogEx.info(min, `BlueSky Automation: ${text}.`);
   }
 
-
   /**
    */
   public async answer({ pid, text }) {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    const answer = await ChatServices.answerByLLM(pid, min, user, text)
+    const answer = await ChatServices.answerByLLM(pid, min, user, text);
     GBLogEx.info(min, `ANSWER ${text} TO ${answer}`);
     return answer.answer;
   }
-
-
 
   /**
    * HEAR description
@@ -2859,7 +2849,6 @@ export class SystemKeywords {
   }
 
   public async getExtensionInfo(ext: any): Promise<any> {
-
     // TODO: Load exts.
 
     let array = []; // exts.filter((v, i, a) => a[i]['extension'] === ext);
@@ -3120,17 +3109,16 @@ export class SystemKeywords {
   }
 
   public async convertAI2HTML(aiFilePath) {
-
     // Convert the AI file to HTML and assets
     const result = await ai2html.convertFile(aiFilePath, {
       outputFormat: 'html',
       outputWriteMethod: 'write-file',
       outputPath: path.dirname(aiFilePath),
-      useDocumentSettings: true,
+      useDocumentSettings: true
     });
 
     // Get the generated HTML file path
-    const htmlFilePath = result.outputFiles.find((file) => file.endsWith('.html')).filePath;
+    const htmlFilePath = result.outputFiles.find(file => file.endsWith('.html')).filePath;
 
     // Read the HTML content
     const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
@@ -3142,9 +3130,7 @@ export class SystemKeywords {
     await fs.writeFile(cacheFilePath, htmlContent);
 
     return cacheFilePath;
-
   }
-
 
   public async refreshDataSourceCache({ pid, connectionName }) {
     const { min, user, params, step } = await DialogKeywords.getProcessInfo(pid);
@@ -3171,25 +3157,25 @@ export class SystemKeywords {
     const tables = await GBUtil.listTables(dialect, con);
 
     // Function to map source database datatypes to SQLite-compatible datatypes
-    const mapToSQLiteType = (columnType) => {
+    const mapToSQLiteType = columnType => {
       const typeMapping = {
-        'VARCHAR': DataTypes.STRING,
-        'CHAR': DataTypes.STRING,
-        'TEXT': DataTypes.TEXT,
-        'TINYINT': DataTypes.INTEGER,
-        'SMALLINT': DataTypes.INTEGER,
-        'MEDIUMINT': DataTypes.INTEGER,
-        'INT': DataTypes.INTEGER,
-        'INTEGER': DataTypes.INTEGER,
-        'BIGINT': DataTypes.BIGINT,
-        'FLOAT': DataTypes.FLOAT,
-        'DOUBLE': DataTypes.DOUBLE,
-        'DECIMAL': DataTypes.DECIMAL,
-        'DATE': DataTypes.DATE,
-        'DATETIME': DataTypes.DATE,
-        'TIMESTAMP': DataTypes.DATE,
-        'BLOB': DataTypes.BLOB,
-        'BOOLEAN': DataTypes.BOOLEAN,
+        VARCHAR: DataTypes.STRING,
+        CHAR: DataTypes.STRING,
+        TEXT: DataTypes.TEXT,
+        TINYINT: DataTypes.INTEGER,
+        SMALLINT: DataTypes.INTEGER,
+        MEDIUMINT: DataTypes.INTEGER,
+        INT: DataTypes.INTEGER,
+        INTEGER: DataTypes.INTEGER,
+        BIGINT: DataTypes.BIGINT,
+        FLOAT: DataTypes.FLOAT,
+        DOUBLE: DataTypes.DOUBLE,
+        DECIMAL: DataTypes.DECIMAL,
+        DATE: DataTypes.DATE,
+        DATETIME: DataTypes.DATE,
+        TIMESTAMP: DataTypes.DATE,
+        BLOB: DataTypes.BLOB,
+        BOOLEAN: DataTypes.BOOLEAN
         // Add more mappings as needed
       };
 
