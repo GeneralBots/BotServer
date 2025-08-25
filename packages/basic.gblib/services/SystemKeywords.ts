@@ -1336,6 +1336,7 @@ export class SystemKeywords {
         const gbaiName = GBUtil.getGBAIPath(min.botId);
         const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
         const localName = path.join(
+          process.env.PWD,
           'work',
           gbaiName,
           'cache',
@@ -1348,6 +1349,7 @@ export class SystemKeywords {
         GBLogEx.info(min, `Downloaded .csv: ${csvFile}.`);
       }
 
+      GBLogEx.info(min, `Reading .csv: ${csvFile}.`);
       const data = await fs.readFile(csvFile, 'utf8');
 
       const firstLine = data.split('\n')[0];
