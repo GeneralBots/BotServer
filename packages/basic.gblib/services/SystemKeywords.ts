@@ -1345,6 +1345,7 @@ export class SystemKeywords {
         await minioClient.fGetObject(bucketName, fileUrl, localName);
 
         csvFile = localName;
+        GBLogEx.info(min, `Downloaded .csv: ${csvFile}.`);
       }
 
       const data = await fs.readFile(csvFile, 'utf8');
@@ -1352,6 +1353,9 @@ export class SystemKeywords {
       const firstLine = data.split('\n')[0];
       const headers = firstLine.split(',');
       const db = await csvdb(csvFile, headers, ',');
+
+      GBLogEx.info(min, `READ .csv: ${csvFile}.`);
+
       if (args[0]) {
         const systemFilter = await SystemKeywords.getFilter(args[0]);
         let filter = {};
@@ -1360,6 +1364,8 @@ export class SystemKeywords {
       } else {
         res = await db.get();
       }
+
+      GBLogEx.info(min, `ROWS: ${res.length}.`);
 
       return res.length > 1 ? res : res[0];
     } else {
