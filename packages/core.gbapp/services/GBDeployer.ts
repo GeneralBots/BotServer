@@ -270,21 +270,18 @@ export class GBDeployer implements IGBDeployer {
    * Verifies if bot exists on bot catalog.
    */
   public async botExists(botId: string): Promise<boolean> {
-
     if (GBConfigService.get('GB_MODE') !== 'legacy') {
       const where = { botId: botId };
 
-      return await GuaribasInstance.findOne({
-        where: where
-      }) !== null;
-
-    }
-    else {
-
+      return (
+        (await GuaribasInstance.findOne({
+          where: where
+        })) !== null
+      );
+    } else {
       const service = await AzureDeployerService.createInstance(this);
 
       return await service.botExists(botId);
-
     }
   }
 
@@ -339,33 +336,68 @@ export class GBDeployer implements IGBDeployer {
   public async loadOrCreateEmptyVectorStore(min: GBMinInstance): Promise<HNSWLib> {
     let vectorStore: HNSWLib;
 
-    const azureOpenAIKey = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Key', null, true);
-    const azureOpenAIVersion = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Version', null, true);
-    const azureOpenAIApiInstanceName = await (min.core as any)['getParam'](
-      min.instance,
-      'Azure Open AI Instance',
-      null,
-      true
-    );
-    const azureOpenAIEmbeddingModel = await (min.core as any)['getParam'](
-      min.instance,
-      'Azure Open AI Embedding Model',
-      null,
-      true
-    );
+    // Get AI mode (default to 'azure' for backward compatibility)
+    const aiMode = (await (min.core as any)['getParam'](min.instance, 'AI Mode', 'azure', true)) || 'azure';
 
     let embedding;
-    if (!azureOpenAIEmbeddingModel) {
-      return;
-    }
 
-    embedding = new OpenAIEmbeddings({
-      maxConcurrency: 5,
-      azureOpenAIApiKey: azureOpenAIKey,
-      azureOpenAIApiDeploymentName: azureOpenAIEmbeddingModel,
-      azureOpenAIApiVersion: azureOpenAIVersion,
-      azureOpenAIApiInstanceName: azureOpenAIApiInstanceName
-    });
+    if (aiMode === 'local') {
+      // Local embedding configuration
+      const localEmbeddingEndpoint = await (min.core as any)['getParam'](
+        min.instance,
+        'Local Embedding Endpoint',
+        'http://localhost:5858/v1',
+        true
+      );
+      const localEmbeddingModel = await (min.core as any)['getParam'](
+        min.instance,
+        'Local Embedding Model',
+        'model',
+        true
+      );
+
+      if (!localEmbeddingEndpoint || !localEmbeddingModel) {
+        GBLogEx.error(min, 'Local embedding configuration incomplete. Please set Local Embedding Endpoint and Model.');
+        return;
+      }
+
+      embedding = new OpenAIEmbeddings({
+        maxConcurrency: 5,
+        openAIApiKey: 'null', // Required field but not used for local
+        modelName: localEmbeddingModel,
+        configuration: {
+          baseURL: localEmbeddingEndpoint
+        }
+      } as any);
+    } else {
+      // Azure OpenAI configuration (original code)
+      const azureOpenAIKey = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Key', null, true);
+      const azureOpenAIVersion = await (min.core as any)['getParam'](min.instance, 'Azure Open AI Version', null, true);
+      const azureOpenAIApiInstanceName = await (min.core as any)['getParam'](
+        min.instance,
+        'Azure Open AI Instance',
+        null,
+        true
+      );
+      const azureOpenAIEmbeddingModel = await (min.core as any)['getParam'](
+        min.instance,
+        'Azure Open AI Embedding Model',
+        null,
+        true
+      );
+
+      if (!azureOpenAIEmbeddingModel) {
+        return;
+      }
+
+      embedding = new OpenAIEmbeddings({
+        maxConcurrency: 5,
+        azureOpenAIApiKey: azureOpenAIKey,
+        azureOpenAIApiDeploymentName: azureOpenAIEmbeddingModel,
+        azureOpenAIApiVersion: azureOpenAIVersion,
+        azureOpenAIApiInstanceName: azureOpenAIApiInstanceName
+      });
+    }
 
     try {
       vectorStore = await HNSWLib.load(min['vectorStorePath'], embedding);
@@ -376,7 +408,7 @@ export class GBDeployer implements IGBDeployer {
         {}, // Optional metadata
         embedding,
         {
-          'space': 'cosine',
+          space: 'cosine'
         } as any
       );
       const dir = path.dirname(min['vectorStorePath']);
@@ -494,15 +526,16 @@ export class GBDeployer implements IGBDeployer {
     } else {
       return [];
     }
-    1
+    1;
     await asyncPromise.eachSeries(rows, async (line: any) => {
       if (line && line.length > 0) {
         const key = line[1];
         let value = line[2];
 
-
         if (key && value) {
-          if (value.text) { value = value.text };
+          if (value.text) {
+            value = value.text;
+          }
           obj[key] = value;
         }
       }
@@ -521,7 +554,8 @@ export class GBDeployer implements IGBDeployer {
     localPath: string,
     remotePath: string,
     baseUrl: string = null,
-    client = null, onlyTextFiles = false
+    client = null,
+    onlyTextFiles = false
   ): Promise<any> {
     const storageMode = process.env.GB_MODE;
 
@@ -531,7 +565,7 @@ export class GBDeployer implements IGBDeployer {
         port: parseInt(process.env.DRIVE_PORT || '9000', 10),
         useSSL: process.env.DRIVE_USE_SSL === 'true',
         accessKey: process.env.DRIVE_ACCESSKEY,
-        secretKey: process.env.DRIVE_SECRET,
+        secretKey: process.env.DRIVE_SECRET
       });
 
       const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
@@ -566,7 +600,6 @@ export class GBDeployer implements IGBDeployer {
             }
           }
 
-
           if (download) {
             await minioClient.fGetObject(bucketName, obj.name, itemPath);
             await fs.utimes(itemPath, new Date(), new Date(obj.lastModified));
@@ -585,7 +618,7 @@ export class GBDeployer implements IGBDeployer {
           await fs.mkdir(pathBase, { recursive: true });
         }
 
-        await CollectionUtil.asyncForEach(parts, async (item) => {
+        await CollectionUtil.asyncForEach(parts, async item => {
           pathBase = path.join(pathBase, item);
           if (!(await GBUtil.exists(pathBase))) {
             await fs.mkdir(pathBase, { recursive: true });
@@ -609,7 +642,7 @@ export class GBDeployer implements IGBDeployer {
           return null;
         }
 
-        await CollectionUtil.asyncForEach(documents, async (item) => {
+        await CollectionUtil.asyncForEach(documents, async item => {
           const itemPath = path.join(localPath, remotePath, item.name);
 
           if (item.folder) {
@@ -639,7 +672,6 @@ export class GBDeployer implements IGBDeployer {
         });
       }
     }
-
   }
 
   /**
@@ -699,11 +731,9 @@ export class GBDeployer implements IGBDeployer {
           await GBUtil.copyIfNewerRecursive(filePath, packageWorkFolder, false);
         }
       } else {
-
         if (packageType === '.gbdrive' || packageType === '.gbdata') {
           await this.downloadFolder(min, path.join('work', `${gbai}`), packageName, undefined, undefined, true);
-        }
-        else {
+        } else {
           await this.downloadFolder(min, path.join('work', `${gbai}`), packageName);
         }
       }
