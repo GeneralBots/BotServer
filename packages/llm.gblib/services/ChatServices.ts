@@ -187,7 +187,7 @@ export class ChatServices {
     if (sanitizedQuestion === '' || !vectorStore) {
       return '';
     }
-    let documents = await vectorStore.similaritySearch(sanitizedQuestion, numDocuments);
+    let documents = await vectorStore.similaritySearch(sanitizedQuestion, parseInt(numDocuments));
     const uniqueDocuments = {};
     const MAX_DOCUMENTS = numDocuments;
 
