@@ -31,9 +31,9 @@
 'use strict';
 
 import path from 'path';
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib-legacy';
 import { DialogKeywords } from './DialogKeywords.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import urlJoin from 'url-join';
 import { GBServer } from '../../../src/app.js';
@@ -71,7 +71,7 @@ export class ImageProcessingServices {
     const { min, user } = await DialogKeywords.getProcessInfo(pid);
 
     let paths = [];
-    await CollectionUtil.asyncForEach(files, async file => {
+    await GBUtil.asyncForEach(files, async file => {
       const gbfile = DialogKeywords.getFileByHandle(file);
       paths.push(gbfile.path);
     });

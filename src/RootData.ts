@@ -32,7 +32,7 @@
  * @fileoverview General Bots server core.
  */
 'use strict';
-import { GBMinInstance, IGBInstance } from 'botlib';
+import { GBMinInstance, IGBInstance } from 'botlib-legacy';
 import { GBMinService } from '../packages/core.gbapp/services/GBMinService.js';
 
 /**

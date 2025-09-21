@@ -34,7 +34,7 @@
 
 'use strict';
 
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib-legacy';
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';

@@ -28,7 +28,7 @@
 |                                                                             |
 \*****************************************************************************/
 
-import { GBService } from 'botlib';
+import { GBService } from 'botlib-legacy';
 import fs from 'fs/promises'; 
 import AdmZip from 'adm-zip';
 

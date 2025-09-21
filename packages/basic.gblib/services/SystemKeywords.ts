@@ -33,16 +33,14 @@ import ComputerVisionClient from '@azure/cognitiveservices-computervision';
 import ApiKeyCredentials from '@azure/ms-rest-js';
 import { BlobServiceClient, BlockBlobClient, StorageSharedKeyCredential } from '@azure/storage-blob';
 import { DataTypes, Sequelize } from '@sequelize/core';
-import ai2html from 'ai2html';
 import alasql from 'alasql';
 import retry from 'async-retry';
-import { GBLog } from 'botlib';
+import { GBLog } from 'botlib-legacy';
 import csvdb from 'csv-database';
 import Docxtemplater from 'docxtemplater';
 import Excel from 'exceljs';
 import { Page } from 'facebook-nodejs-business-sdk';
 import fs from 'fs/promises';
-import { IgApiClient } from 'instagram-private-api';
 import { BufferWindowMemory } from 'langchain/memory';
 import _ from 'lodash';
 import mime from 'mime-types';
@@ -51,7 +49,7 @@ import path from 'path';
 import { pdfToPng, PngPageOutput } from 'pdf-to-png-converter';
 import PizZip from 'pizzip';
 import pptxTemplaterModule from 'pptxtemplater';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import urlJoin from 'url-join';
 import { setFlagsFromString } from 'v8';
 import { runInNewContext } from 'vm';
@@ -442,7 +440,6 @@ export class SystemKeywords {
         useSystemFonts: false,
         viewportScale: 2.0,
         pagesToProcess: [1],
-        strictPagesToProcess: false,
         verbosityLevel: 0
       });
 
@@ -1162,7 +1159,7 @@ export class SystemKeywords {
     let filter;
     const operators = [/\<\=/, /\<\>/, /\>\=/, /\</, /\>/, /\blike\b/, /\bnot in\b/, /\bin\b/, /\=/];
     let done = false;
-    await CollectionUtil.asyncForEach(operators, async op => {
+    await GBUtil.asyncForEach(operators, async op => {
       var re = new RegExp(op, 'gi');
       const parts = text.split(re);
 
@@ -1404,7 +1401,7 @@ export class SystemKeywords {
     }
 
     let filterIndex = 0;
-    await CollectionUtil.asyncForEach(args, async arg => {
+    await GBUtil.asyncForEach(args, async arg => {
       const filter = await SystemKeywords.getFilter(arg);
       if (!filter) {
         throw new Error(`FIND filter has an error: ${arg} check this and publish .gbdialog again.`);
@@ -1447,7 +1444,7 @@ export class SystemKeywords {
     let rowCount = 0;
     for (; foundIndex < rows.length; foundIndex++) {
       let filterAcceptCount = 0;
-      await CollectionUtil.asyncForEach(filters, async filter => {
+      await GBUtil.asyncForEach(filters, async filter => {
         let result = rows[foundIndex][filter.columnIndex];
         let wholeWord = true;
         if (user && params && params.wholeWord) {
@@ -1514,7 +1511,7 @@ export class SystemKeywords {
                 const hr = Number.parseInt(filter.value.split(':')[0]);
                 let lastHour = Number.parseInt(e[0]);
                 let found = false;
-                await CollectionUtil.asyncForEach(e, async hour => {
+                await GBUtil.asyncForEach(e, async hour => {
                   if (!found && lastHour <= hr && hr <= hour) {
                     filterAcceptCount++;
                     found = true;
@@ -1709,7 +1706,7 @@ export class SystemKeywords {
 
     // Creates each subfolder.
 
-    await CollectionUtil.asyncForEach(parts, async item => {
+    await GBUtil.asyncForEach(parts, async item => {
       // Calls drive API.
 
       const body = {
@@ -2902,7 +2899,7 @@ export class SystemKeywords {
 
     // Navigate files / directory to recurse.
 
-    await CollectionUtil.asyncForEach(documents, async item => {
+    await GBUtil.asyncForEach(documents, async item => {
       if (item.folder) {
         remotePath = urlJoin(remotePath, item.name);
         array = [...array, ...(await this.dirFolder({ pid, remotePath, baseUrl, client, array }))];
@@ -3020,18 +3017,6 @@ export class SystemKeywords {
     fs.unlink(tempFilePath);
   }
 
-  public async postToInstagram({ pid, username, password, imagePath, caption }) {
-    const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
-
-    const ig = new IgApiClient();
-    ig.state.generateDevice(username);
-    await ig.account.login(username, password);
-    const imageBuffer = await fs.readFile(imagePath);
-    const publishResult = await ig.publish.photo({ file: imageBuffer, caption });
-
-    GBLogEx.info(min, `Image posted on IG: ${publishResult}`);
-  }
-
   public async setAnswerMode({ pid, mode }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
 
@@ -3116,30 +3101,6 @@ export class SystemKeywords {
     await this.setMemoryContext({ pid, erase: true });
   }
 
-  public async convertAI2HTML(aiFilePath) {
-    // Convert the AI file to HTML and assets
-    const result = await ai2html.convertFile(aiFilePath, {
-      outputFormat: 'html',
-      outputWriteMethod: 'write-file',
-      outputPath: path.dirname(aiFilePath),
-      useDocumentSettings: true
-    });
-
-    // Get the generated HTML file path
-    const htmlFilePath = result.outputFiles.find(file => file.endsWith('.html')).filePath;
-
-    // Read the HTML content
-    const htmlContent = await fs.readFile(htmlFilePath, 'utf8');
-
-    // Save the HTML and assets to a cache directory
-    const cacheDir = path.join('work', 'cache');
-    await fs.mkdir(cacheDir, { recursive: true });
-    const cacheFilePath = path.join(cacheDir, path.basename(htmlFilePath));
-    await fs.writeFile(cacheFilePath, htmlContent);
-
-    return cacheFilePath;
-  }
-
   public async refreshDataSourceCache({ pid, connectionName }) {
     const { min, user, params, step } = await DialogKeywords.getProcessInfo(pid);
 
@@ -3153,8 +3114,8 @@ export class SystemKeywords {
 
     // Step 2: Connect to SQLite (Local)
     const sqlite = new Sequelize({
-      dialect: 'sqlite',
-      storage: sqliteFilePath
+      dialect: 'sqlite3',
+      url: `file://${sqliteFilePath}`
     });
 
     // Get the connection details from the min object

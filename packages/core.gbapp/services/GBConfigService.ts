@@ -30,7 +30,7 @@
 
 'use strict';
 
-import { GBLog } from 'botlib';
+import { GBLog } from 'botlib-legacy';
 import * as en from 'dotenv-extended';
 import path from 'path';
 

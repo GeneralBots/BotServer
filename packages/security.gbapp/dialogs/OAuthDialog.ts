@@ -35,7 +35,7 @@
 'use strict';
 
 import { TokenResponse } from 'botbuilder';
-import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
+import { GBLog, GBMinInstance, IGBDialog } from 'botlib-legacy';
 import { Messages } from '../strings.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 

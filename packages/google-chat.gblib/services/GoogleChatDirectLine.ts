@@ -31,8 +31,8 @@
 import Swagger from 'swagger-client';
 import { google } from 'googleapis';
 import { PubSub } from '@google-cloud/pubsub';
-import fs from 'fs/promises'; 
-import { GBLog, GBMinInstance, GBService } from 'botlib';
+import fs from 'fs/promises';
+import { GBLog, GBMinInstance, GBService } from 'botlib-legacy';
 import { GBServer } from '../../../src/app.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
@@ -57,7 +57,7 @@ export class GoogleChatDirectLine extends GBService {
   GoogleClientPrivateKey: any;
   GoogleProjectId: any;
 
-  constructor (
+  constructor(
     min: GBMinInstance,
     botId,
     directLineSecret,
@@ -84,14 +84,14 @@ export class GoogleChatDirectLine extends GBService {
     });
   }
 
-  public static async asyncForEach (array, callback) {
+  public static async asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
       await callback(array[index], index, array);
     }
   }
 
-  public async setup (setUrl) {
-    this.directLineClient =  await GBUtil.getDirectLineClient(this.min);
+  public async setup(setUrl) {
+    this.directLineClient = await GBUtil.getDirectLineClient(this.min);
     const client = await this.directLineClient;
 
     client.clientAuthorizations.add(
@@ -109,15 +109,15 @@ export class GoogleChatDirectLine extends GBService {
     }
   }
 
-  public async resetConversationId (key) {
+  public async resetConversationId(key) {
     GoogleChatDirectLine.conversationIds[key] = undefined;
   }
 
-  public async check () {
+  public async check() {
     GBLogEx.info(0, `GBGoogleChat: Checking server...`);
   }
 
-  public async receiver (message) {
+  public async receiver(message) {
     const event = JSON.parse(Buffer.from(message.data, 'binary').toString());
 
     let from = '';
@@ -158,7 +158,7 @@ export class GoogleChatDirectLine extends GBService {
     }
   }
 
-  public inputMessage (client, conversationId, threadName, text, from, fromName) {
+  public inputMessage(client, conversationId, threadName, text, from, fromName) {
     return client.Conversations.Conversations_PostActivity({
       conversationId: conversationId,
       activity: {
@@ -175,7 +175,7 @@ export class GoogleChatDirectLine extends GBService {
     });
   }
 
-  public pollMessages (client, conversationId, threadName, from, fromName) {
+  public pollMessages(client, conversationId, threadName, from, fromName) {
     GBLogEx.info(0, `GBGoogleChat: Starting message polling(${from}, ${conversationId}).`);
 
     let watermark: any;
@@ -195,7 +195,7 @@ export class GoogleChatDirectLine extends GBService {
     setInterval(worker, this.pollInterval);
   }
 
-  public async printMessages (activities, conversationId, threadName, from, fromName) {
+  public async printMessages(activities, conversationId, threadName, from, fromName) {
     if (activities && activities.length) {
       // Ignore own messages.
 
@@ -211,7 +211,7 @@ export class GoogleChatDirectLine extends GBService {
     }
   }
 
-  public async printMessage (activity, conversationId, threadName, from, fromName) {
+  public async printMessage(activity, conversationId, threadName, from, fromName) {
     let output = '';
 
     if (activity.text) {
@@ -235,14 +235,14 @@ export class GoogleChatDirectLine extends GBService {
     await this.sendToDevice(from, conversationId, threadName, output);
   }
 
-  public async sendToDevice (from: string, conversationId: string, threadName, msg: string) {
+  public async sendToDevice(from: string, conversationId: string, threadName, msg: string) {
     try {
       let threadParts = threadName.split('/');
       let spaces = threadParts[1];
       let threadKey = threadParts[3];
       const scopes = ['https://www.googleapis.com/auth/chat.bot'];
 
-      const jwtClient = new google.auth.JWT(this.GoogleClientEmail, null, this.GoogleClientPrivateKey, scopes, null);
+      const jwtClient = new google.auth.JWT(this.GoogleClientEmail);
       await jwtClient.authorize();
       const chat = google.chat({ version: 'v1', auth: jwtClient });
 
@@ -253,14 +253,14 @@ export class GoogleChatDirectLine extends GBService {
           text: msg
         }
       });
-    
+
       GBLogEx.info(0, `Message [${msg}] sent to ${from}: `);
     } catch (error) {
       GBLog.error(`Error sending message to GoogleChat provider ${error.message}`);
     }
   }
 
-  public async sendToDeviceEx (to, conversationId, threadName, text, locale) {
+  public async sendToDeviceEx(to, conversationId, threadName, text, locale) {
     const minBoot = GBServer.globals.minBoot as any;
 
     text = await minBoot.conversationalService.translate(minBoot, text, locale);

@@ -37,12 +37,12 @@
 import { GBServer } from '../../../src/app.js';
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBLog, GBMinInstance, IGBDialog, IGBPackage } from 'botlib';
+import { GBLog, GBMinInstance, IGBDialog, IGBPackage } from 'botlib-legacy';
 import { Messages } from '../strings.js';
 import { KBService } from './../services/KBService.js';
 import { GuaribasAnswer } from '../models/index.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
@@ -140,7 +140,7 @@ export class AskDialog extends IGBDialog {
             message: text,
             user: user ? user['dataValues'] : null
           };
-          await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+          await GBUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
             if ((nextDialog = await e.onExchangeData(min, 'handleAnswer', data))) {
               handled = true;
             }
@@ -174,10 +174,7 @@ export class AskDialog extends IGBDialog {
         }
       },
       async step => {
-
-
-        min = GBServer.globals.minInstances.find(p=> p.botId === min.botId);
-
+        min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
 
         let answer;
         const member = step.context.activity.from;

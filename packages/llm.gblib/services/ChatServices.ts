@@ -47,15 +47,15 @@ import {
 import { RunnableSequence } from '@langchain/core/runnables';
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { convertToOpenAITool } from '@langchain/core/utils/function_calling';
-import { ChatOpenAI } from '@langchain/openai';
+import { AzureOpenAI, ChatOpenAI } from '@langchain/openai';
 import { SqlDatabase } from 'langchain/sql_db';
 import { DataSource } from 'typeorm';
-import { GBMinInstance } from 'botlib';
+import { GBMinInstance } from 'botlib-legacy';
 import fs from 'fs/promises';
 import { BufferWindowMemory } from 'langchain/memory';
 import path from 'path';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
@@ -137,7 +137,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     if (!sources) {
       GBLogEx.verbose(this.min, `LLM JSON output sources is NULL.`);
     } else {
-      await CollectionUtil.asyncForEach(sources, async source => {
+      await GBUtil.asyncForEach(sources, async source => {
         let found = false;
 
         if (securityEnabled) {
@@ -281,12 +281,6 @@ export class ChatServices {
       model = new ChatOpenAI({
         model: process.env.LOCAL_LLM_MODEL,
         apiKey: 'empty',
-        azureOpenAIApiDeploymentName: 'v1',
-        azureOpenAIApiInstanceName: 'v1',
-        azureOpenAIApiKey: 'empty',
-        azureOpenAIApiVersion: 'empty',
-        azureOpenAIBasePath: process.env.LOCAL_LLM_ENDPOINT,
-        openAIApiKey: 'empty',
         configuration: {
           baseURL: process.env.LOCAL_LLM_ENDPOINT
         }
@@ -298,7 +292,7 @@ export class ChatServices {
       const azureOpenAIApiInstanceName = process.env.AZURE_OPEN_AI_INSTANCE;
       const azureOpenAIEndPoint = process.env.AZURE_OPEN_AI_ENDPOINT;
 
-      model = new ChatOpenAI({
+      model = new AzureOpenAI({
         azureOpenAIApiKey: azureOpenAIKey,
         azureOpenAIApiInstanceName: azureOpenAIApiInstanceName,
         azureOpenAIApiDeploymentName: azureOpenAILLMModel,
@@ -756,7 +750,7 @@ export class ChatServices {
     let functions = [];
 
     // Adds .gbdialog as functions if any to LLM Functions.
-    await CollectionUtil.asyncForEach(Object.keys(min.scriptMap), async script => {
+    await GBUtil.asyncForEach(Object.keys(min.scriptMap), async script => {
       const packagePath = GBUtil.getGBAIPath(min.botId, 'gbdialog', null);
       const jsonFile = path.join('work', packagePath, `${script}.json`);
 

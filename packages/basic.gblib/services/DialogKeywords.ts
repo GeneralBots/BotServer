@@ -31,7 +31,7 @@
 'use strict';
 
 import { ActivityTypes } from 'botbuilder';
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib-legacy';
 import * as df from 'date-diff';
 import fs from 'fs/promises';
 import libphonenumber from 'google-libphonenumber';
@@ -39,9 +39,8 @@ import { Jimp } from 'jimp';
 import jsQR from 'jsqr';
 import mammoth from 'mammoth';
 import mime from 'mime-types';
-import tesseract from 'node-tesseract-ocr';
 import path from 'path';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import puppeteer, { executablePath } from 'puppeteer';
 import qrcode from 'qrcode';
 import urlJoin from 'url-join';
@@ -64,7 +63,6 @@ import { Client } from 'minio';
 import nodemailer from 'nodemailer';
 const { List, Buttons } = pkg;
 
-
 /**
  * Default check interval for user replay
  */
@@ -82,9 +80,9 @@ export class DialogKeywords {
 
     const llmPrompt = `
     You are given the following data: ${JSON.stringify(data)}.
-    
+
     Based on this data, generate a configuration for a Billboard.js chart. The output should be valid JSON, following Billboard.js conventions. Ensure the JSON is returned without markdown formatting, explanations, or comments.
-    
+
     The chart should be ${prompt}. Return only the one-line only JSON configuration, nothing else.`;
 
     // Send the prompt to the LLM and get the response
@@ -96,9 +94,8 @@ export class DialogKeywords {
 
     const browser = await puppeteer.launch({
       headless: process.env.CHROME_HEADLESS === 'true',
-      executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
-    }
-    );
+      executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath()
+    });
     const page = await browser.newPage();
 
     // Load Billboard.js styles and scripts
@@ -115,7 +112,7 @@ export class DialogKeywords {
     const content = await page.$('.bb');
     const gbaiName = GBUtil.getGBAIPath(min.botId);
     const localName = path.join('work', gbaiName, 'cache', `chart${GBAdminService.getRndReadableIdentifier()}.jpg`);
-    await content.screenshot({ path: localName, omitBackground: true });
+    await content.screenshot({ path: localName, omitBackground: true } as any);
     await browser.close();
     const url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
     GBLogEx.info(min, `Visualization: Chart generated at ${url}.`);
@@ -203,18 +200,7 @@ export class DialogKeywords {
    * Returns the OCR of image file.
    *
    */
-  public async getOCR({ pid, localFile }) {
-    const { min, user } = await DialogKeywords.getProcessInfo(pid);
-    GBLogEx.info(min, `OCR processing on ${localFile}.`);
-
-    const config = {
-      lang: 'eng',
-      oem: 1,
-      psm: 3
-    };
-
-    return await tesseract.recognize(localFile, config);
-  }
+  public async getOCR({ pid, localFile }) {}
 
   /**
    * Returns the today data filled in dd/mm/yyyy or mm/dd/yyyy.
@@ -258,28 +244,28 @@ export class DialogKeywords {
    *
    * @example EXIT
    */
-  public async exit({ }) { }
+  public async exit({}) {}
 
   /**
    * Get active tasks.
    *
    * @example list = ACTIVE TASKS
    */
-  public async getActiveTasks({ pid }) { }
+  public async getActiveTasks({ pid }) {}
 
   /**
    * Creates a new deal.
    *
    * @example CREATE DEAL dealname,contato,empresa,amount
    */
-  public async createDeal({ pid, dealName, contact, company, amount }) { }
+  public async createDeal({ pid, dealName, contact, company, amount }) {}
 
   /**
    * Finds contacts in XRM.
    *
    * @example list = FIND CONTACT "Sandra"
    */
-  public async fndContact({ pid, name }) { }
+  public async fndContact({ pid, name }) {}
 
   public getContentLocaleWithCulture(contentLocale) {
     switch (contentLocale) {
@@ -587,18 +573,17 @@ export class DialogKeywords {
     }
 
     if (GBConfigService.get('GB_MODE') !== 'legacy') {
-
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_SERVER || 'localhost',
         port: parseInt(process.env.EMAIL_PORT || '587', 10),
         secure: false,
         auth: {
-          user: process.env.EMAIL_USER ,
-          pass: process.env.EMAIL_PASS ,
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
         },
         tls: {
-          rejectUnauthorized: (process.env.EMAIL_REJECT_UNAUTHORIZED === 'true'),
-        },
+          rejectUnauthorized: process.env.EMAIL_REJECT_UNAUTHORIZED === 'true'
+        }
       });
 
       const mailOptions = {
@@ -606,16 +591,15 @@ export class DialogKeywords {
         to: to,
         subject: subject,
         text: body,
-        html: body,
+        html: body
         // headers: {
         //   'List-Unsubscribe': `<mailto:${config.unsubscribeEmail}?subject=Unsubscribe>`,
         //   'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
         // }
-        };
+      };
 
       await transporter.sendMail(mailOptions);
       GBLogEx.info(min, `E-mail ${to} (${subject}) sent via NodeMailer.`);
-
     } else {
       let { client } = await GBDeployer.internalGetDriveClient(min);
 
@@ -725,7 +709,7 @@ export class DialogKeywords {
     proc.roles = role;
 
     // Checks access.
-    
+
     const file = process.env.GB_MODE === 'legacy' ? 'People.xlsx' : 'people.csv';
     const filters = [file, `${role}=x`, `id=${user.userSystemId}`];
     const people = await sys.find({ pid, handle: null, args: filters });
@@ -953,7 +937,7 @@ export class DialogKeywords {
    * @example MENU
    *
    */
-  public async showMenu({ }) {
+  public async showMenu({}) {
     // https://github.com/GeneralBots/BotServer/issues/237
     // return await beginDialog('/menu');
   }
@@ -1016,7 +1000,7 @@ export class DialogKeywords {
 
         if (args.length > 3) {
           let section = { title: '', rows: [] };
-          await CollectionUtil.asyncForEach(args, async arg => {
+          await GBUtil.asyncForEach(args, async arg => {
             i++;
             section.rows.push({ title: arg, id: `button${i}` });
           });
@@ -1024,7 +1008,7 @@ export class DialogKeywords {
           await this.talk({ pid: pid, text: list });
         } else {
           let buttons = [];
-          await CollectionUtil.asyncForEach(args, async arg => {
+          await GBUtil.asyncForEach(args, async arg => {
             i++;
             buttons.push({ body: arg, id: `button${i}` });
           });
@@ -1095,7 +1079,7 @@ export class DialogKeywords {
         // Search the answer in one of valid list items loaded from sheeet.
 
         result = null;
-        await CollectionUtil.asyncForEach(list, async item => {
+        await GBUtil.asyncForEach(list, async item => {
           if (GBConversationalService.kmpSearch(answer, item) != -1) {
             result = item;
           }
@@ -1239,14 +1223,13 @@ export class DialogKeywords {
         const imageData = {
           data: new Uint8ClampedArray(image.bitmap.data),
           width: image.bitmap.width,
-          height: image.bitmap.height,
+          height: image.bitmap.height
         };
 
         // Use jsQR to decode the QR code
         const decodedQR = jsQR(imageData.data, imageData.width, imageData.height);
 
         result = decodedQR.data;
-
       } else if (kind === 'zipcode') {
         const extractEntity = (text: string) => {
           text = text.replace(/\-/gi, '');
@@ -1270,7 +1253,7 @@ export class DialogKeywords {
       } else if (kind === 'menu') {
         const list = args;
         result = null;
-        await CollectionUtil.asyncForEach(list, async item => {
+        await GBUtil.asyncForEach(list, async item => {
           if (GBConversationalService.kmpSearch(answer, item) != -1) {
             result = item;
           }
@@ -1299,7 +1282,7 @@ export class DialogKeywords {
           { name: 'alemão', code: 'de' }
         ];
 
-        await CollectionUtil.asyncForEach(list, async item => {
+        await GBUtil.asyncForEach(list, async item => {
           if (
             GBConversationalService.kmpSearch(answer.toLowerCase(), item.name.toLowerCase()) != -1 ||
             GBConversationalService.kmpSearch(answer.toLowerCase(), item.code.toLowerCase()) != -1
@@ -1408,9 +1391,7 @@ export class DialogKeywords {
     const conversation = min['apiConversations'][pid];
     const client = await GBUtil.getDirectLineClient(min);
     conversation.client = client;
-    const response = await client.apis.Conversations.Conversations_StartConversation(
-
-    );
+    const response = await client.apis.Conversations.Conversations_StartConversation();
     conversation.conversationId = response.obj.conversationId;
 
     return await GBVMService.callVM('start', min, null, pid);
@@ -1440,7 +1421,6 @@ export class DialogKeywords {
     GBLogEx.info(min, `TALK '${text} step:${step}'.`);
 
     if (user) {
-
       text = await min.conversationalService.translate(
         min,
         text,
@@ -1474,7 +1454,6 @@ export class DialogKeywords {
     let nameOnly;
     let localName;
     const gbaiName = GBUtil.getGBAIPath(min.botId);
-
 
     // Web automation.
 
@@ -1510,10 +1489,7 @@ export class DialogKeywords {
 
     // .gbdrive direct sending.
     else {
-
-
       if (GBConfigService.get('GB_MODE') === 'legacy') {
-
         const ext = path.extname(filename);
         const gbaiName = GBUtil.getGBAIPath(min.botId);
 
@@ -1541,10 +1517,7 @@ export class DialogKeywords {
 
         url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
       } else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
-
-
         const ext = path.extname(filename);
-        
 
         const fileUrl = urlJoin('/', `${min.botId}.gbdrive`, filename);
         GBLogEx.info(min, `Direct send from .gbdrive: ${fileUrl} to ${mobile}.`);
@@ -1556,27 +1529,17 @@ export class DialogKeywords {
           port: parseInt(process.env.DRIVE_PORT || '9000', 10),
           useSSL: process.env.DRIVE_USE_SSL === 'true',
           accessKey: process.env.DRIVE_ACCESSKEY,
-          secretKey: process.env.DRIVE_SECRET,
+          secretKey: process.env.DRIVE_SECRET
         });
-        
+
         const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
-        localName = path.join(
-          'work',
-          gbaiName,
-          'cache',
-          `${GBAdminService.getNumberIdentifier()}-${fileOnly}`
-        );
+        localName = path.join('work', gbaiName, 'cache', `${GBAdminService.getNumberIdentifier()}-${fileOnly}`);
 
         await minioClient.fGetObject(bucketName, fileUrl, localName);
 
-        
         url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
         GBLogEx.info(min, `Exposing ${localName} to ${url}...`);
-
-      }
-
-
-      else {
+      } else {
         const gbdriveName = GBUtil.getGBAIPath(min.botId, 'gbdrive');
         localName = path.join(GBConfigService.get('STORAGE_LIBRARY'), gbdriveName, filename);
       }
@@ -1585,7 +1548,7 @@ export class DialogKeywords {
         GBLogEx.info(min, `Converting PDF to images...`);
         const pngs = await GBUtil.pdfPageAsImage(min, localName, undefined);
 
-        await CollectionUtil.asyncForEach(pngs, async png => {
+        await GBUtil.asyncForEach(pngs, async png => {
           await GBUtil.sleepRandom();
           // Prepare a cache to be referenced by Bot Framework.
 
@@ -1600,9 +1563,6 @@ export class DialogKeywords {
             contentUrl: url
           });
 
-          
-
-
           if (!isNaN(mobile)) {
             await min.whatsAppDirectLine.sendFileToDevice(mobile, url, filename, caption, undefined, true, true);
           } else {
@@ -1612,7 +1572,6 @@ export class DialogKeywords {
 
         return;
       }
-
     }
 
     if (!url) {
@@ -1625,7 +1584,6 @@ export class DialogKeywords {
       const localName = path.join('work', gbaiName, 'cache', `tmp${GBAdminService.getRndReadableIdentifier()}.${ext}`);
       url = urlJoin(GBServer.globals.publicAddress, min.botId, 'cache', path.basename(localName));
 
-      
       await fs.writeFile(localName, new Uint8Array(buf), { encoding: null });
     }
 

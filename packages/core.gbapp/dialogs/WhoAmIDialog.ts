@@ -36,7 +36,7 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib-legacy';
 import { GBConversationalService } from '../services/GBConversationalService.js';
 import { Messages } from '../strings.js';
 /**
@@ -49,7 +49,7 @@ export class WhoAmIDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup (bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/whoAmI', [
         async step => {

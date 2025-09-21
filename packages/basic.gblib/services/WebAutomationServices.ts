@@ -34,7 +34,7 @@ import urlJoin from 'url-join';
 import fs from 'fs/promises'; 
 import path from 'path';
 import url from 'url';
-import { GBLog } from 'botlib';
+import { GBLog } from 'botlib-legacy';
 import { GBServer } from '../../../src/app.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBSSR } from '../../core.gbapp/services/GBSSR.js';

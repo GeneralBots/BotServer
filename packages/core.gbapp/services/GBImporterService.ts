@@ -34,7 +34,7 @@
 
 'use strict';
 
-import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
+import { GBMinInstance, IGBCoreService, IGBInstance } from 'botlib-legacy';
 import { CreateOptions } from 'sequelize/types';
 import fs from 'fs/promises'; 
 import urlJoin from 'url-join';

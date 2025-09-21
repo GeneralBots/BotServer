@@ -36,7 +36,7 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib-legacy';
 import { GBServer } from '../../../src/app.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBConversationalService } from '../services/GBConversationalService.js';

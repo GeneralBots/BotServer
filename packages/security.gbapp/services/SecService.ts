@@ -1,16 +1,15 @@
 import { ConversationReference } from 'botbuilder';
-import { GBLog, GBMinInstance, GBService, IGBInstance } from 'botlib';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBLog, GBMinInstance, GBService, IGBInstance } from 'botlib-legacy';
+
 import { GuaribasUser } from '../models/index.js';
 import { FindOptions } from 'sequelize';
 import { DialogKeywords } from '../../../packages/basic.gblib/services/DialogKeywords.js';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import mkdirp from 'mkdirp';
 import urlJoin from 'url-join';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GBServer } from '../../../src/app.js';
 import { GBUtil } from '../../../src/util.js';
-
 
 /**
  * Security service layer.
@@ -25,11 +24,10 @@ export class SecService extends GBService {
     displayName: string,
     email: string
   ): Promise<GuaribasUser> {
-
     const gbaiPath = GBUtil.getGBAIPath(min.botId);
-    const dir = urlJoin ('work',gbaiPath, 'users', userSystemId);
+    const dir = urlJoin('work', gbaiPath, 'users', userSystemId);
 
-    if (!await GBUtil.exists(dir)) {
+    if (!(await GBUtil.exists(dir))) {
       mkdirp.sync(dir);
     }
 
@@ -45,7 +43,7 @@ export class SecService extends GBService {
 
     const systemPromptFile = urlJoin(dir, 'systemPrompt.txt');
     if (await GBUtil.exists(systemPromptFile)) {
-      user[ 'systemPrompt'] = await fs.readFile(systemPromptFile);
+      user['systemPrompt'] = await fs.readFile(systemPromptFile);
     }
 
     user.instanceId = min.instance.instanceId;
@@ -54,8 +52,8 @@ export class SecService extends GBService {
     user.displayName = displayName;
     user.email = email;
     user.defaultChannel = channelName;
-    GBServer.globals.users [user.userId] = user;
-    if(user.changed()){
+    GBServer.globals.users[user.userId] = user;
+    if (user.changed()) {
       await user.save();
     }
     return user;
@@ -79,7 +77,7 @@ export class SecService extends GBService {
     const user = await GuaribasUser.findOne(options);
 
     user.conversationReference = conversationReference;
-    GBServer.globals.users [user.userId] = user;
+    GBServer.globals.users[user.userId] = user;
     return await user.save();
   }
 
@@ -88,7 +86,7 @@ export class SecService extends GBService {
     const user = await GuaribasUser.findOne(options);
 
     user.conversationReference = conversationReference;
-    GBServer.globals.users [user.userId] = user;
+    GBServer.globals.users[user.userId] = user;
     return await user.save();
   }
 
@@ -99,7 +97,7 @@ export class SecService extends GBService {
       }
     });
     user.locale = locale;
-    GBServer.globals.users [user.userId] = user;
+    GBServer.globals.users[user.userId] = user;
     return await user.save();
   }
 
@@ -110,7 +108,7 @@ export class SecService extends GBService {
       }
     });
     user.hearOnDialog = dialogName;
-    GBServer.globals.users [user.userId] = user;
+    GBServer.globals.users[user.userId] = user;
     return await user.save();
   }
 
@@ -121,7 +119,7 @@ export class SecService extends GBService {
       }
     });
     user.instanceId = instanceId;
-    GBServer.globals.users [user.userId] = user;
+    GBServer.globals.users[user.userId] = user;
     return await user.save();
   }
 
@@ -167,11 +165,11 @@ export class SecService extends GBService {
       agent.instanceId = user.instanceId;
       agent.agentMode = 'self';
       agent.agentSystemId = null;
-      GBServer.globals.users [agent.userId] = user;
+      GBServer.globals.users[agent.userId] = user;
       await agent.save();
     }
 
-    GBServer.globals.users [user.userId] = user;
+    GBServer.globals.users[user.userId] = user;
     await user.save();
 
     return user;
@@ -203,13 +201,8 @@ export class SecService extends GBService {
         list = list.split(';');
       }
 
-      await CollectionUtil.asyncForEach(list, async item => {
-        if (
-          item !== undefined &&
-          !agentSystemId &&
-          item !== userSystemId &&
-          !(await this.isAgentSystemId(item))
-        ) {
+      await GBUtil.asyncForEach(list, async item => {
+        if (item !== undefined && !agentSystemId && item !== userSystemId && !(await this.isAgentSystemId(item))) {
           agentSystemId = item;
         }
       });
@@ -263,7 +256,6 @@ export class SecService extends GBService {
     });
   }
 
-
   /**
    * Get a dynamic param from user. Dynamic params are defined in .gbdialog SET
    * variables and other semantics during conversation.
@@ -315,7 +307,7 @@ export class SecService extends GBService {
     }
     obj[name] = value;
     user.params = JSON.stringify(obj);
-    GBServer.globals.users [userId] = user;
+    GBServer.globals.users[userId] = user;
     return await user.save();
   }
 }

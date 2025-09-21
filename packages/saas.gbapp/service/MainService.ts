@@ -1,7 +1,7 @@
 // BotServer/packages/saas.gbapp/service/MainService.ts
 import { GBOnlineSubscription } from '../model/MainModel.js';
-import { GBMinInstance, GBLog } from 'botlib';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBMinInstance, GBLog } from 'botlib-legacy';
+
 import urlJoin from 'url-join';
 import { GBOService } from './GBOService.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';

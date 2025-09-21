@@ -34,7 +34,7 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance, IGBDialog } from 'botlib';
+import { GBLog, GBMinInstance, IGBDialog } from 'botlib-legacy';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { Messages } from '../strings.js';
 import libphonenumber from 'google-libphonenumber';

@@ -34,27 +34,45 @@
 
 'use strict';
 
-import { AuthenticationContext, TokenResponse } from 'adal-node';
-import { GBError, GBLog, GBMinInstance, IGBAdminService, IGBCoreService, IGBDeployer, IGBInstance } from 'botlib';
+import {
+  GBError,
+  GBLog,
+  GBMinInstance,
+  IGBAdminService,
+  IGBCoreService,
+  IGBDeployer,
+  IGBInstance
+} from 'botlib-legacy';
 import { FindOptions } from 'sequelize/types';
 import urlJoin from 'url-join';
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';
 import { GuaribasInstance } from '../../core.gbapp/models/GBModel.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
 import { GBSharePointService } from '../../sharepoint.gblib/services/SharePointService.js';
 import { GuaribasAdmin } from '../models/AdminModel.js';
-import msRestAzure from 'ms-rest-azure';
 import path from 'path';
 import { caseSensitive_Numbs_SpecialCharacters_PW, lowercase_PW } from 'super-strong-password-generator';
 import crypto from 'crypto';
-import fs from 'fs/promises'; 
+import fs from 'fs/promises';
 import { GBServer } from '../../../src/app.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GBUtil } from '../../../src/util.js';
+
+let msRestAzure: any = null;
+
+try {
+  const msRestAzure = await import('ms-rest-azure');
+} catch (error) {}
+
+let AuthenticationContext: any = null;
+
+try {
+  const adal = await import('adal-node');
+  AuthenticationContext = adal.AuthenticationContext;
+} catch (error) {}
 
 /**
  * Services for server administration.
@@ -174,20 +192,6 @@ export class GBAdminService implements IGBAdminService {
     const localFolder = path.join('work', gbaiPath);
 
     await deployer['deployPackage2'](min, user, localFolder, true);
-
-  }
-  public static async rebuildIndexPackageCommand(min: GBMinInstance, deployer: GBDeployer) {
-    const service = await AzureDeployerService.createInstance(deployer);
-    const searchIndex = min.instance.searchIndex
-      ? min.instance.searchIndex
-      : GBServer.globals.minBoot.instance.searchIndex;
-    await deployer.rebuildIndex(min.instance, service.getKBSearchSchema(searchIndex));
-  }
-
-  public static async syncBotServerCommand(min: GBMinInstance, deployer: GBDeployer) {
-    const serverName = `${min.instance.botId}-server`;
-    const service = await AzureDeployerService.createInstance(deployer);
-    service.syncBotServerRepository(min.instance.botId, serverName);
   }
 
   public async setValue(instanceId: number, key: string, value: string) {
@@ -316,7 +320,7 @@ export class GBAdminService implements IGBAdminService {
               if (err !== null) {
                 reject(err);
               } else {
-                const token = res as TokenResponse;
+                const token = res;
                 try {
                   await this.setValue(instanceId, `${tokenName}accessToken`, token.accessToken);
                   await this.setValue(instanceId, `${tokenName}refreshToken`, token.refreshToken);

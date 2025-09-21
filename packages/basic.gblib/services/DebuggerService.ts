@@ -30,7 +30,7 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance } from 'botlib';
+import { GBLog, GBMinInstance } from 'botlib-legacy';
 import { GBServer } from '../../../src/app.js';
 import fs from 'fs/promises'; 
 import SwaggerClient from 'swagger-client';

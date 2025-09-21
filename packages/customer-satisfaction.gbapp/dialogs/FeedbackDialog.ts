@@ -36,7 +36,7 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib-legacy';
 import { GBMinService } from '../../core.gbapp/services/GBMinService.js';
 import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsService.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
@@ -103,7 +103,6 @@ export class FeedbackDialog extends IGBDialog {
             await min.userProfile.set(step.context, profile);
 
             if (agentSystemId.indexOf('@') !== -1) {
-
               // Agent is from Teams or Google Chat.
 
               const agent = await sec.getUserFromSystemId(agentSystemId);
@@ -168,8 +167,6 @@ export class FeedbackDialog extends IGBDialog {
 
             await sec.updateHumanAgent(userSystemId, min.instance.instanceId, null);
             await sec.updateHumanAgent(manualUser.userSystemId, min.instance.instanceId, null);
-
-
           } else if (user.agentMode === 'human') {
             const agent = await sec.getUserFromSystemId(user.agentSystemId);
 
@@ -198,7 +195,6 @@ export class FeedbackDialog extends IGBDialog {
 
             await sec.updateHumanAgent(user.userSystemId, min.instance.instanceId, null);
             await sec.updateHumanAgent(agent.userSystemId, min.instance.instanceId, null);
-
           } else {
             if (user.userSystemId.charAt(2) === ':' || userSystemId.indexOf('@') > -1) {
               // Agent is from Teams or Google Chat.

@@ -36,12 +36,13 @@
 
 import { BotAdapter } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib-legacy';
 import { Messages } from '../strings.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBServer } from '../../../src/app.js';
 import { GBConversationalService } from '../services/GBConversationalService.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBUtil } from '../../../src/util.js';
+
 /**
  * Dialog for the bot explains about itself.
  */
@@ -52,7 +53,7 @@ export class LanguageDialog extends IGBDialog {
    * @param bot The bot adapter.
    * @param min The minimal bot instance data.
    */
-  public static setup (bot: BotAdapter, min: GBMinInstance) {
+  public static setup(bot: BotAdapter, min: GBMinInstance) {
     min.dialogs.add(
       new WaterfallDialog('/language', [
         async step => {
@@ -69,7 +70,7 @@ export class LanguageDialog extends IGBDialog {
           return await min.conversationalService.prompt(min, step, Messages[locale].which_language);
         },
         async step => {
-          const locale = step.context.activity.locale;          
+          const locale = step.context.activity.locale;
 
           const list = [
             { name: 'english', code: 'en' },
@@ -90,7 +91,7 @@ export class LanguageDialog extends IGBDialog {
           let translatorLocale = null;
           const text = step.context.activity['originalText'];
 
-          await CollectionUtil.asyncForEach(list, async item => {
+          await GBUtil.asyncForEach(list, async item => {
             if (
               GBConversationalService.kmpSearch(text.toLowerCase(), item.name.toLowerCase()) != -1 ||
               GBConversationalService.kmpSearch(text.toLowerCase(), item.code.toLowerCase()) != -1
@@ -100,7 +101,7 @@ export class LanguageDialog extends IGBDialog {
           });
 
           let sec = new SecService();
-          let user = await  sec.getUserFromSystemId(step.context.activity.from.id);
+          let user = await sec.getUserFromSystemId(step.context.activity.from.id);
           user = await sec.updateUserLocale(user.userId, translatorLocale);
 
           await min.conversationalService.sendText(min, step, Messages[locale].language_chosen);

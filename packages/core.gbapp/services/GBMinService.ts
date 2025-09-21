@@ -68,7 +68,7 @@ import {
   IGBCoreService,
   IGBInstance,
   IGBPackage
-} from 'botlib';
+} from 'botlib-legacy';
 import cliProgress from 'cli-progress';
 import removeRoute from 'express-remove-route';
 import fs from 'fs/promises';
@@ -76,7 +76,7 @@ import Koa from 'koa';
 import mkdirp from 'mkdirp';
 import { NlpManager } from 'node-nlp';
 import path from 'path';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import SwaggerClient from 'swagger-client';
 import urlJoin from 'url-join';
 import wash from 'washyourmouthoutwithsoap';
@@ -179,7 +179,7 @@ export class GBMinService {
     let i = 1;
     const minInstances = [];
 
-    await CollectionUtil.asyncForEach(
+    await GBUtil.asyncForEach(
       instances,
       (async instance => {
         try {
@@ -222,7 +222,7 @@ export class GBMinService {
 
       const steps = process.env.TEST_MESSAGE.split(';');
 
-      await CollectionUtil.asyncForEach(steps, async step => {
+      await GBUtil.asyncForEach(steps, async step => {
         client.apis.Conversations.Conversations_PostActivity({
           conversationId: conversationId,
           activity: {
@@ -829,10 +829,7 @@ export class GBMinService {
       };
 
       if (GBConfigService.get('GB_MODE') !== 'legacy') {
-        const url =
-          process.env.BOT_URL && !process.env.BOT_URL.includes('ngrok')
-            ? process.env.BOT_URL
-            : `http://localhost:${GBConfigService.get('PORT')}`;
+        const url = process.env.BOT_URL ? process.env.BOT_URL : `http://localhost:${GBConfigService.get('PORT')}`;
         config['domain'] = urlJoin(url, 'directline', botId);
       } else {
         const webchatTokenContainer = await this.getWebchatToken(instance);
@@ -991,7 +988,7 @@ export class GBMinService {
 
     // Creates a hub of services available in .gbapps.
 
-    await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+    await GBUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       let services: ConcatArray<never>;
       if ((services = await e.onExchangeData(min, 'getServices', null))) {
         min.gbappServices = { ...min.gbappServices, ...services };
@@ -1066,7 +1063,7 @@ export class GBMinService {
   private async invokeLoadBot(appPackages: IGBPackage[], sysPackages: IGBPackage[], min: GBMinInstance) {
     // Calls loadBot event in all .gbapp packages.
 
-    await CollectionUtil.asyncForEach(sysPackages, async p => {
+    await GBUtil.asyncForEach(sysPackages, async p => {
       p.sysPackages = sysPackages;
       if (p.getDialogs !== undefined) {
         const dialogs = await p.getDialogs(min);
@@ -1082,7 +1079,7 @@ export class GBMinService {
 
     // Adds all dialogs from .gbapps into global dialo list for this minimal instance.
 
-    await CollectionUtil.asyncForEach(appPackages, async p => {
+    await GBUtil.asyncForEach(appPackages, async p => {
       p.sysPackages = sysPackages;
       await p.loadBot(min);
       if (p.getDialogs !== undefined) {
@@ -1306,7 +1303,7 @@ export class GBMinService {
         } else if (context.activity.type === 'conversationUpdate') {
           // Calls onNewSession event on each .gbapp package.
 
-          await CollectionUtil.asyncForEach(appPackages, async e => {
+          await GBUtil.asyncForEach(appPackages, async e => {
             await e.onNewSession(min, step);
           });
 
@@ -1572,7 +1569,7 @@ export class GBMinService {
     context.activity.text = context.activity.text.replace(/\<at\>.*\<\/at\>\s/gi, '');
 
     let data = { query: context.activity.text };
-    await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+    await GBUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(min, 'handleRawInput', data);
     });
     context.activity.text = data.query;
@@ -1784,7 +1781,7 @@ export class GBMinService {
               message: message ? message['dataValues'] : null,
               user: user ? user.dataValues : null
             };
-            await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+            await GBUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
               if (!nextDialog) {
                 nextDialog = await e.onExchangeData(min, 'handleAnswer', data);
               }
@@ -1826,10 +1823,10 @@ export class GBMinService {
     await close();
 
     let proxies = {};
-    await CollectionUtil.asyncForEach(mins, async min => {
+    await GBUtil.asyncForEach(mins, async min => {
       let dialogs = {};
 
-      await CollectionUtil.asyncForEach(Object.values(min.scriptMap), async script => {
+      await GBUtil.asyncForEach(Object.values(min.scriptMap), async script => {
         const api = min.core.getParam(min.instance, 'Server API', null);
         if (api) {
           dialogs[script] = async data => {

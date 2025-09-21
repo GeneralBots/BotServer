@@ -32,7 +32,6 @@
  * @fileoverview General Bots server core.
  */
 
-import { AzureText } from 'pragmatismo-io-framework';
 import { FindOptions } from 'sequelize/types';
 import { GBServer } from '../../../src/app.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
@@ -42,7 +41,7 @@ import { GuaribasConversation, GuaribasConversationMessage } from '../models/ind
  * Base services for Bot Analytics.
  */
 export class AnalyticsService {
-  public async createConversation (user: GuaribasUser): Promise<GuaribasConversation> {
+  public async createConversation(user: GuaribasUser): Promise<GuaribasConversation> {
     const conversation = new GuaribasConversation();
     conversation.startedBy = user;
     conversation.startedByUserId = user.userId;
@@ -51,41 +50,22 @@ export class AnalyticsService {
     return await conversation.save();
   }
 
-  public async updateConversationSuggestion (
+  public async updateConversationSuggestion(
     instanceId: number,
     conversationId: string,
     feedback: string,
     locale: string
   ): Promise<number> {
     const minBoot = GBServer.globals.minBoot as any;
-    const rate = await AzureText.getSentiment(
-      minBoot.instance.textAnalyticsKey ? minBoot.instance.textAnalyticsKey : minBoot.instance.textAnalyticsKey,
-      minBoot.instance.textAnalyticsEndpoint
-        ? minBoot.instance.textAnalyticsEndpoint
-        : minBoot.instance.textAnalyticsEndpoint,
-      locale,
-      feedback
-    );
-
-    const options = <FindOptions>{ where: {} };
-    options.where = { conversationId: conversationId, instanceId: instanceId };
-    const item = await GuaribasConversation.findOne(options);
-
-    item.feedback = feedback;
-    item.rate = rate;
-    item.rateDate = new Date();
-    await item.save();
-
-    return rate;
+    return 0;
   }
 
-  public async createMessage (
+  public async createMessage(
     instanceId: number,
     conversationId: number,
     userId: number,
     content: string
   ): Promise<GuaribasConversationMessage> {
-    
     const message = GuaribasConversationMessage.build();
     message.content = typeof content === 'object' ? JSON.stringify(content) : content;
     message.instanceId = instanceId;

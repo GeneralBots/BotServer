@@ -38,7 +38,7 @@ import urlJoin from 'url-join';
 
 import { BotAdapter, CardFactory, MessageFactory } from 'botbuilder';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib-legacy';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { GuaribasSubject } from '../models/index.js';
 import { KBService } from '../services/KBService.js';

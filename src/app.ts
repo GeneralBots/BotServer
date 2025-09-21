@@ -37,7 +37,7 @@
 import { Mutex } from 'async-mutex';
 import auth from 'basic-auth';
 import bodyParser from 'body-parser';
-import { GBLog, GBMinInstance, IGBCoreService, IGBInstance } from 'botlib';
+import { GBLog, GBMinInstance, IGBCoreService, IGBInstance } from 'botlib-legacy';
 import child_process from 'child_process';
 import express from 'express';
 import fs from 'fs/promises';
@@ -48,7 +48,6 @@ import mkdirp from 'mkdirp';
 import { default as Path, default as path } from 'path';
 import swaggerUI from 'swagger-ui-dist';
 import { GBAdminService } from '../packages/admin.gbapp/services/GBAdminService.js';
-import { AzureDeployerService } from '../packages/azuredeployer.gbapp/services/AzureDeployerService.js';
 import { GBConfigService } from '../packages/core.gbapp/services/GBConfigService.js';
 import { GBConversationalService } from '../packages/core.gbapp/services/GBConversationalService.js';
 import { GBCoreService } from '../packages/core.gbapp/services/GBCoreService.js';
@@ -165,7 +164,6 @@ export class GBServer {
           const core: IGBCoreService = new GBCoreService();
           const importer: GBImporter = new GBImporter(core);
           const deployer: GBDeployer = new GBDeployer(core, importer);
-          let azureDeployer: AzureDeployerService;
 
           // Ensure that local proxy is setup.
 
@@ -186,27 +184,14 @@ export class GBServer {
 
           // Creates a boot instance or load it from storage.
 
-          if (GBConfigService.get('GB_MODE') === 'legacy') {
-            await core.initStorage();
-            // [GBServer.globals.bootInstance, azureDeployer] = await core['createBootInstanceEx'](
-            //   core,
-            //   null,
-            //   GBServer.globals.publicAddress,
-            //   deployer,
-            //   GBConfigService.get('FREE_TIER')
-            // );
-            // await core.saveInstance(GBServer.globals.bootInstance);
-          }
-          else {
-            await core.initStorage();
-          }
+          await core.initStorage();
 
           // Deploys system and user packages.
 
           GBLogEx.info(0, `Deploying System packages...`);
           GBServer.globals.sysPackages = await core.loadSysPackages(core);
           GBLogEx.info(0, `Connecting to Bot Storage...`);
-          await core.checkStorage(azureDeployer);
+          await core.checkStorage(null);
           await deployer.deployPackages(core, server, GBServer.globals.appPackages);
           await core.syncDatabaseStructure();
 
@@ -217,11 +202,7 @@ export class GBServer {
           }
 
           GBLogEx.info(0, `Publishing instances...`);
-          const instances: IGBInstance[] = await core.loadAllInstances(
-            core,
-            azureDeployer,
-            GBServer.globals.publicAddress
-          );
+          const instances: IGBInstance[] = await core.loadAllInstances(core, null, GBServer.globals.publicAddress);
 
           if (instances.length === 0) {
             if (GBConfigService.get('GB_MODE') === 'legacy') {
@@ -235,11 +216,6 @@ export class GBServer {
               instances.push(instance);
               GBServer.globals.minBoot.instance = instances[0];
               GBServer.globals.bootInstance = instances[0];
-              await deployer.deployBotOnAzure(instance, GBServer.globals.publicAddress);
-
-              // Runs the search even with empty content to create structure.
-
-              await azureDeployer['runSearch'](instance);
             }
           }
 
@@ -250,8 +226,7 @@ export class GBServer {
 
           // Just sync if not using LOAD_ONLY.
 
-          if (GBConfigService.get('GB_MODE') !== 'legacy'
-            && !process.env.LOAD_ONLY) {
+          if (GBConfigService.get('GB_MODE') !== 'legacy' && !process.env.LOAD_ONLY) {
             await core['ensureFolders'](instances, deployer);
           }
           GBServer.globals.bootInstance = instances[0];
@@ -289,7 +264,6 @@ export class GBServer {
                 return proxy.web(req, res, { target: 'http://localhost:1111' }); // Express server
               } else if (host === process.env.ROUTER_1) {
                 return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_1_PORT}` });
-
               } else if (host === process.env.ROUTER_2) {
                 return proxy.web(req, res, { target: `http://localhost:${process.env.ROUTER_2_PORT}` });
               } else {
@@ -378,10 +352,7 @@ export class GBServer {
 }
 
 function shutdown() {
-
   GBLogEx.info(0, 'General Bots server is now shutdown.');
 
   process.exit(0);
-
 }
-

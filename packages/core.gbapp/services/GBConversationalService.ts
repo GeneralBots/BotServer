@@ -36,7 +36,7 @@
 
 import { MessageFactory, RecognizerResult, TurnContext } from 'botbuilder';
 import { LuisRecognizer } from 'botbuilder-ai';
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib-legacy';
 import { GBServer } from '../../../src/app.js';
 import { Readable } from 'stream';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
@@ -45,19 +45,15 @@ import { AnalyticsService } from '../../analytics.gblib/services/AnalyticsServic
 import { MicrosoftAppCredentials } from 'botframework-connector';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { GBConfigService } from './GBConfigService.js';
-import { CollectionUtil, AzureText } from 'pragmatismo-io-framework';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { GBMinService } from './GBMinService.js';
 import urlJoin from 'url-join';
 import { createWriteStream, createReadStream } from 'fs';
 import fs from 'fs/promises';
 import twilio from 'twilio';
-import Nexmo from 'nexmo';
 import path, { join } from 'path';
-import shell from 'any-shell-escape';
 import { exec } from 'child_process';
 import prism from 'prism-media';
-
 
 import SpeechToTextV1 from 'ibm-watson/speech-to-text/v1.js';
 import TextToSpeechV1 from 'ibm-watson/text-to-speech/v1.js';
@@ -66,6 +62,8 @@ import * as marked from 'marked';
 import Translate from '@google-cloud/translate';
 import { GBUtil } from '../../../src/util.js';
 import { GBLogEx } from './GBLogEx.js';
+
+import shell from 'any-shell-escape';
 
 /**
  * Provides basic services for handling messages and dispatching to back-end
@@ -401,25 +399,6 @@ export class GBConversationalService {
 
         return Promise.reject(new Error(msg));
       }
-    } else {
-      if (min.instance.smsKey && min.instance.smsSecret) {
-        return new Promise((resolve: any, reject: any): any => {
-          const nexmo = new Nexmo({
-            apiKey: min.instance.smsKey,
-            apiSecret: min.instance.smsSecret
-          });
-          // tslint:disable-next-line:no-unsafe-any
-          nexmo.message.sendSms(min.instance.smsServiceNumber, mobile, text, {}, (err, data) => {
-            const message = data.messages ? data.messages[0] : {};
-            if (err || message['error-text']) {
-              GBLog.error(`error sending SMS to ${mobile}: ${message['error-text']}`);
-              reject(message['error-text']);
-            } else {
-              resolve(data);
-            }
-          });
-        });
-      }
     }
   }
 
@@ -474,7 +453,7 @@ export class GBConversationalService {
     return new Promise<string>(async (resolve, reject) => {
       try {
         const oggFile = new Readable();
-        oggFile._read = () => { }; // _read is required but you can noop it
+        oggFile._read = () => {}; // _read is required but you can noop it
         oggFile.push(buffer);
         oggFile.push(null);
 
@@ -602,7 +581,7 @@ export class GBConversationalService {
       renderer: renderer,
       gfm: true,
       breaks: false,
-      pedantic: false,
+      pedantic: false
     });
 
     // MSFT Translator breaks markdown, so we need to manually fix it:
@@ -944,7 +923,7 @@ export class GBConversationalService {
       // FIX MSFT NLP issue.
 
       if (nlp.entities) {
-        await CollectionUtil.asyncForEach(Object.keys(nlp.entities), async key => {
+        await GBUtil.asyncForEach(Object.keys(nlp.entities), async key => {
           if (key !== '$instance') {
             let entity = nlp.entities[key];
             if (Array.isArray(entity[0])) {
@@ -964,31 +943,12 @@ export class GBConversationalService {
   }
 
   public async getLanguage(min: GBMinInstance, text: string): Promise<string> {
-    const key = min.core.getParam<string>(min.instance, 'textAnalyticsKey', null);
-    if (!key) {
-      return process.env.DEFAULT_USER_LANGUAGE;
-    }
-    let language = await AzureText.getLocale(
-      key,
-      min.core.getParam<string>(min.instance, 'textAnalyticsEndpoint', null),
-      text
-    );
-
-    return language === '(Unknown)' ? 'en' : language;
+    // TODO: Azure removed.
+    return process.env.DEFAULT_USER_LANGUAGE;
   }
 
   public async spellCheck(min: GBMinInstance, text: string): Promise<string> {
-    const key = min.core.getParam<string>(min.instance, 'spellcheckerKey', null);
-
-    if (key) {
-      text = text.charAt(0).toUpperCase() + text.slice(1);
-      const data = await AzureText.getSpelledText(key, text);
-      if (data !== text) {
-        GBLogEx.info(min, `Spelling>: ${data}`);
-        text = data;
-      }
-    }
-
+    // TODO: Azure removed.
     return text;
   }
 
@@ -1091,7 +1051,7 @@ export class GBConversationalService {
       keepTextList = keepTextList.concat(keepText.split(';'));
     }
     const replacements = [];
-    await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+    await GBUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       const result = await e.onExchangeData(min, 'getKeepText', {});
       if (result) {
         keepTextList = keepTextList.concat(result);
@@ -1118,7 +1078,7 @@ export class GBConversationalService {
     if (keepTextList) {
       keepTextList = keepTextList.filter(p => p.trim() !== '');
       let i = 0;
-      await CollectionUtil.asyncForEach(keepTextList, item => {
+      await GBUtil.asyncForEach(keepTextList, item => {
         const it = GBConversationalService.removeDiacritics(item);
         const noAccentText = GBConversationalService.removeDiacritics(textProcessed);
 
@@ -1175,7 +1135,7 @@ export class GBConversationalService {
 
     if (keepTextList) {
       let i = 0;
-      await CollectionUtil.asyncForEach(replacements, item => {
+      await GBUtil.asyncForEach(replacements, item => {
         i++;
         text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
       });
@@ -1219,7 +1179,6 @@ export class GBConversationalService {
   }
 
   public async sendTextWithOptionsAndUser(min: GBMinInstance, user, step, text, translate, keepTextList) {
-
     let replacements = [];
 
     // To fix MSFT bug.
@@ -1227,7 +1186,7 @@ export class GBConversationalService {
     if (keepTextList) {
       keepTextList = keepTextList.filter(p => p.trim() !== '');
       let i = 0;
-      await CollectionUtil.asyncForEach(keepTextList, item => {
+      await GBUtil.asyncForEach(keepTextList, item => {
         if (text.toLowerCase().indexOf(item.toLowerCase()) != -1) {
           const replacementToken = GBAdminService['getNumberIdentifier']();
           replacements[i] = { text: item, replacementToken: replacementToken };
@@ -1246,7 +1205,7 @@ export class GBConversationalService {
 
     if (keepTextList) {
       let i = 0;
-      await CollectionUtil.asyncForEach(replacements, item => {
+      await GBUtil.asyncForEach(replacements, item => {
         i++;
         text = text.replace(new RegExp(`${item.replacementToken}`, 'gi'), item.text);
       });
@@ -1263,12 +1222,9 @@ export class GBConversationalService {
     }
 
     if (!isNaN(user.userSystemId)) {
-
       await min.whatsAppDirectLine.sendToDevice(user.userSystemId, text);
-    }
-    else {
+    } else {
       await step.context.sendActivity(text);
-
     }
   }
   public async broadcast(min: GBMinInstance, message: string) {
@@ -1276,7 +1232,7 @@ export class GBConversationalService {
 
     const service = new SecService();
     const users = await service.getAllUsers(min.instance.instanceId);
-    await CollectionUtil.asyncForEach(users, async user => {
+    await GBUtil.asyncForEach(users, async user => {
       if (user.conversationReference) {
         await this.sendOnConversation(min, user, message);
       } else {
@@ -1299,21 +1255,18 @@ export class GBConversationalService {
           await t2.sendActivity(message);
         });
       });
-
     } else {
-
       const ref = JSON.parse(user.conversationReference);
-      await min.bot['continueConversation'](ref, async (t1) => {
+      await min.bot['continueConversation'](ref, async t1 => {
         const ref2 = TurnContext.getConversationReference(t1.activity);
-        await min.bot.continueConversation(ref2, async (t2) => {
+        await min.bot.continueConversation(ref2, async t2 => {
           await t2.sendActivity(message);
         });
       });
 
       if (message['buttons'] || message['sections']) {
         await min['whatsAppDirectLine'].sendToDevice(user.userSystemId, message, user.conversationReference);
-      }
-      else if (user.conversationReference && user.conversationReference.startsWith('spaces')) {
+      } else if (user.conversationReference && user.conversationReference.startsWith('spaces')) {
         await min['googleDirectLine'].sendToDevice(user.userSystemId, null, user.conversationReference, message);
       }
     }

@@ -3,12 +3,17 @@ import { spawn } from 'child_process';
 import CDP from 'chrome-remote-interface';
 import {} from 'child_process';
 import net from 'net';
-import { GBLog } from 'botlib';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBLog } from 'botlib-legacy';
+
 import { GBServer } from '../../../../src/app.js';
 import { DebuggerService } from '../DebuggerService.js';
-import finalStream from 'final-stream';
 import { GBLogEx } from '../../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../../src/util.js';
+
+let finalStream: any = null;
+try {
+  finalStream = await import('final-stream');
+} catch {}
 
 const waitUntil = condition => {
   if (condition()) {
@@ -208,7 +213,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
                 const variables = await Runtime.getProperties({ objectId: scopeObjectId });
                 let variablesText = '';
                 if (variables && variables.result) {
-                  await CollectionUtil.asyncForEach(variables.result, async v => {
+                  await GBUtil.asyncForEach(variables.result, async v => {
                     if (!systemVariables.filter(x => x === v.name)[0]) {
                       if (v.value.value) {
                         variablesText = `${variablesText} \n ${v.name}: ${v.value.value}`;
@@ -229,7 +234,7 @@ export const createVm2Pool = ({ min, max, ...limits }) => {
                   GBLog.verbose(`Configuring breakpoints if any for ${limits.botId}...`);
                   // Waits for debugger and setup breakpoints.
 
-                  await CollectionUtil.asyncForEach(GBServer.globals.debuggers[limits.botId].breaks, async brk => {
+                  await GBUtil.asyncForEach(GBServer.globals.debuggers[limits.botId].breaks, async brk => {
                     try {
                       const { breakpointId } = await client.Debugger.setBreakpoint({
                         location: {

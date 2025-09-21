@@ -41,7 +41,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { NextFunction, Request, Response } from 'express';
 import urljoin from 'url-join';
-import { GBMinInstance } from 'botlib';
+import { GBMinInstance } from 'botlib-legacy';
 import { GBServer } from '../../../src/app.js';
 import { GBLogEx } from './GBLogEx.js';
 import urlJoin from 'url-join';
@@ -125,11 +125,10 @@ export class GBSSR {
     };
   }
 
-
   public static async createBrowser(profilePath): Promise<any> {
     const opts = await this.preparePuppeteer(profilePath);
     puppeteer.use(hidden());
-    puppeteer.use(require("puppeteer-extra-plugin-minmax")());
+    puppeteer.use(require('puppeteer-extra-plugin-minmax')());
     const browser = await puppeteer.launch(opts);
     return browser;
   }
@@ -172,9 +171,6 @@ export class GBSSR {
         }
       });
 
-      await page.setExtraHTTPHeaders({
-        'ngrok-skip-browser-warning': '1'
-      });
       const response = await page.goto(url, {
         timeout: 120000,
         waitUntil: 'networkidle0'
@@ -282,40 +278,35 @@ export class GBSSR {
     let onlyChars: any = /\/([A-Za-z0-9\-\_]+)\/*/.exec(req.originalUrl);
     onlyChars = onlyChars ? onlyChars[1] : minBoot.botId;
 
-    let botId =
-      req.originalUrl && req.originalUrl === '/' ?
-        minBoot.botId :
-        onlyChars;
-
+    let botId = req.originalUrl && req.originalUrl === '/' ? minBoot.botId : onlyChars;
 
     let min: GBMinInstance =
       req.url === '/'
         ? minBoot
         : GBServer.globals.minInstances.filter(p => p.instance.botId.toLowerCase() === botId.toLowerCase())[0];
     if (!min) {
-      min = req.url === '/'
-        ? minBoot
-        : GBServer.globals.minInstances.filter(p =>
-          p.instance.activationCode ? p.instance.activationCode.toLowerCase() === botId.toLowerCase()
-            : null)[0];
+      min =
+        req.url === '/'
+          ? minBoot
+          : GBServer.globals.minInstances.filter(p =>
+              p.instance.activationCode ? p.instance.activationCode.toLowerCase() === botId.toLowerCase() : null
+            )[0];
     }
     if (!min) {
       botId = minBoot.botId;
     }
 
-
     let packagePath = GBUtil.getGBAIPath(botId, `gbui`);
 
     // Checks if the bot has an .gbui published or use default.gbui.
 
-    if (!await GBUtil.exists(packagePath)) {
+    if (!(await GBUtil.exists(packagePath))) {
       packagePath = path.join(process.env.PWD, 'packages', `default.gbui`, 'build');
     }
     let parts = req.url.replace(`/${botId}`, '').split('?');
     let url = parts[0];
 
-    if (min && req.originalUrl && prerender && exclude && await GBUtil.exists(packagePath)) {
-
+    if (min && req.originalUrl && prerender && exclude && (await GBUtil.exists(packagePath))) {
       // Reads from static HTML when a bot is crawling.
 
       packagePath = path.join(process.env.PWD, 'work', packagePath, 'index.html');
@@ -323,7 +314,6 @@ export class GBSSR {
       res.status(200).send(html);
       return true;
     } else {
-
       // Servers default.gbui web application.
 
       packagePath = path.join(
@@ -334,12 +324,12 @@ export class GBSSR {
         url === '/' || url === '' ? `index.html` : url
       );
       if (GBServer.globals.wwwroot && url === '/') {
-        packagePath = GBServer.globals.wwwroot + "/index.html"; // TODO.
+        packagePath = GBServer.globals.wwwroot + '/index.html'; // TODO.
       }
-      if (!min && !url.startsWith("/images") && GBServer.globals.wwwroot) {
+      if (!min && !url.startsWith('/images') && GBServer.globals.wwwroot) {
         packagePath = path.join(GBServer.globals.wwwroot, url);
       }
-      if (!min && !url.startsWith("/static") && GBServer.globals.wwwroot) {
+      if (!min && !url.startsWith('/static') && GBServer.globals.wwwroot) {
         packagePath = path.join(GBServer.globals.wwwroot, url);
       }
       if (await GBUtil.exists(packagePath)) {
@@ -348,13 +338,11 @@ export class GBSSR {
           html = html.replace(/\{p\}/gi, min.botId);
           html = html.replace(/\{botId\}/gi, min.botId);
 
-          const theme =
-            `theme-${await (min.core as any)['getParam'](min.instance, 'Theme Color', 'grey')}`;
+          const theme = `theme-${await (min.core as any)['getParam'](min.instance, 'Theme Color', 'grey')}`;
 
           html = html.replace(/\{themeColor\}/gi, theme);
 
-          html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme :
-            'default.gbtheme');
+          html = html.replace(/\{theme\}/gi, min.instance.theme ? min.instance.theme : 'default.gbtheme');
           html = html.replace(/\{title\}/gi, min.instance.title);
           res.send(html).end();
         } else {

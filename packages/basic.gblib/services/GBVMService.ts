@@ -30,16 +30,15 @@
 
 'use strict';
 
-import { GBMinInstance, GBService, IGBCoreService, GBLog } from 'botlib';
+import { GBMinInstance, GBService, IGBCoreService, GBLog } from 'botlib-legacy';
 import fs from 'fs/promises';
 import * as ji from 'just-indent';
 import { GBServer } from '../../../src/app.js';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import { ScheduleServices } from './ScheduleServices.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import urlJoin from 'url-join';
-import { PostgresDialect } from '@sequelize/postgres';
 import { NodeVM, VMScript } from 'vm2';
 import { createVm2Pool } from './vm2-process/index.js';
 import { watch } from 'fs';
@@ -53,7 +52,7 @@ import { KeywordsExpressions } from './KeywordsExpressions.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GuaribasUser } from '../../security.gbapp/models/index.js';
 import { SystemKeywords } from './SystemKeywords.js';
-import { Sequelize, QueryTypes } from '@sequelize/core';
+import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { GBUtil } from '../../../src/util.js';
@@ -73,7 +72,7 @@ export class GBVMService extends GBService {
     const ignore = path.join('work', GBUtil.getGBAIPath(min.botId, 'gbdialog'), 'node_modules');
     const files = await walkPromise(folder, { ignore: [ignore] });
 
-    await CollectionUtil.asyncForEach(files, async file => {
+    await GBUtil.asyncForEach(files, async file => {
       if (!file) {
         return;
       }
@@ -205,7 +204,7 @@ export class GBVMService extends GBService {
               "author": "${min.botId} owner.",
               "license": "ISC",
               "dependencies": {
-                
+
                 "encoding": "0.1.13",
                 "isomorphic-fetch": "3.0.0",
                 "punycode": "2.1.1",
@@ -245,17 +244,16 @@ export class GBVMService extends GBService {
       const logging: boolean | Function =
         GBConfigService.get('STORAGE_LOGGING') === 'true'
           ? (str: string): void => {
-            GBLogEx.info(min, str);
-          }
+              GBLogEx.info(min, str);
+            }
           : false;
 
       const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
       const acquire = parseInt(GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT'));
       let sequelizeOptions;
 
-
       // Simple function to convert all object keys to lowercase
-      const toLowerCase = (obj) => {
+      const toLowerCase = obj => {
         if (!obj) return obj;
         if (typeof obj !== 'object') return obj;
 
@@ -263,10 +261,9 @@ export class GBVMService extends GBService {
           acc[key.toLowerCase()] = obj[key];
           return acc;
         }, {});
-      }
+      };
 
       if (dialect === 'postgres') {
-
         sequelizeOptions = {
           host: host,
           port: port,
@@ -278,8 +275,7 @@ export class GBVMService extends GBService {
             connectTimeout: 10000,
             query_timeout: 10000,
             statement_timeout: 10000,
-            idle_in_transaction_session_timeout: 10000,
-
+            idle_in_transaction_session_timeout: 10000
           },
           pool: {
             max: 1,
@@ -300,17 +296,17 @@ export class GBVMService extends GBService {
             // Convert all table names to lowercase
             freezeTableName: true,
             hooks: {
-              beforeSave: (options) => {
+              beforeSave: options => {
                 if (options.where) {
                   options.where = toLowerCase(options.where);
                 }
               },
-              beforeDestroy: (options) => {
+              beforeDestroy: options => {
                 if (options.where) {
                   options.where = toLowerCase(options.where);
                 }
               },
-              beforeFind: (options) => {
+              beforeFind: options => {
                 if (options.where) {
                   options.where = toLowerCase(options.where);
                 }
@@ -324,7 +320,8 @@ export class GBVMService extends GBService {
                   options.tableName = options.tableName.toLowerCase();
                 } else {
                   options.tableName = options.modelName.toLowerCase();
-                } for (const attr in attributes) {
+                }
+                for (const attr in attributes) {
                   const lowered = attr.toLowerCase();
                   if (attr !== lowered) {
                     attributes[lowered] = attributes[attr];
@@ -333,14 +330,9 @@ export class GBVMService extends GBService {
                 }
               }
             }
-          },
-
+          }
         };
-
-
-      }
-      else {
-
+      } else {
         sequelizeOptions = {
           define: {
             charset: 'utf8',
@@ -463,7 +455,6 @@ export class GBVMService extends GBService {
         if (!con) {
           GBLogEx.debug(min, `Invalid connection specified: ${min.bot} ${tableName} ${connectionName}.`);
         } else {
-
           // Field checking, syncs if there is any difference.
 
           const seq = con ? con : minBoot.core.sequelize;
@@ -471,7 +462,6 @@ export class GBVMService extends GBService {
           if (seq) {
             const model = seq.models[tableName];
             if (model) {
-
               // Except Id, checks if has same number of fields.
 
               let equals = 0;
@@ -543,7 +533,6 @@ export class GBVMService extends GBService {
   }
 
   public async translateBASIC(mainName, filename: any, min: GBMinInstance) {
-
     // Converts General Bots BASIC into regular VBS
 
     let basicCode: string = await fs.readFile(filename, 'utf8');
@@ -557,7 +546,7 @@ export class GBVMService extends GBService {
     await s.deleteScheduleIfAny(min, mainName);
 
     let i = 1;
-    await CollectionUtil.asyncForEach(schedules, async syntax => {
+    await GBUtil.asyncForEach(schedules, async syntax => {
       if (s) {
         await s.createOrUpdateSchedule(min, syntax, `${mainName};${i++}`);
       }
@@ -610,7 +599,6 @@ export class GBVMService extends GBService {
     code = ji.default(code, '  ');
 
     await fs.writeFile(jsfile, code);
-
   }
 
   private async executeTasks(min, tasks) {
@@ -812,10 +800,9 @@ export class GBVMService extends GBService {
           const oldLine = line;
           line = line.replace(keywords[j][0], keywords[j][1]);
 
-          if(line != oldLine){
+          if (line != oldLine) {
             break;
           }
-
         }
       }
 
@@ -1009,7 +996,7 @@ export class GBVMService extends GBService {
     const strFind = ' Client ID';
     const tokens = await min.core['findParam'](min.instance, strFind);
     let tokensList = [];
-    await CollectionUtil.asyncForEach(tokens, async t => {
+    await GBUtil.asyncForEach(tokens, async t => {
       const tokenName = t.replace(strFind, '');
       tokensList.push(tokenName);
     });
@@ -1036,10 +1023,10 @@ export class GBVMService extends GBService {
     try {
       if (GBConfigService.get('GBVM') !== false) {
         return await (async () => {
-          return await new Promise((resolve) => {
+          return await new Promise(resolve => {
             sandbox['resolve'] = resolve;
             // TODO: #411 sandbox['reject'] = reject;
-            sandbox['reject'] = () => { };
+            sandbox['reject'] = () => {};
 
             const vm1 = new NodeVM({
               allowAsync: true,

@@ -1,10 +1,11 @@
 // BotServer/packages/saas.gbapp/dialog/NewUserDialog.ts
-import { IGBDialog, GBMinInstance } from 'botlib';
+import { IGBDialog, GBMinInstance } from 'botlib-legacy';
 import { Messages } from '../strings.js';
 import { MainService } from '../service/MainService.js';
 import { SaaSPackage } from '../index.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import { GBOService } from '../service/GBOService.js';
+import { GBUtil } from '../../../src/util.js';
 
 export class NewUserDialog extends IGBDialog {
   static getPlanSelectionDialog(min: GBMinInstance) {
@@ -80,7 +81,7 @@ export class NewUserDialog extends IGBDialog {
           const list = await gboService.listTemplates(min);
 
           let templateMessage = undefined;
-          await CollectionUtil.asyncForEach(list, async item => {
+          await GBUtil.asyncForEach(list, async item => {
             if (item.name !== 'Shared.gbai') {
               templateMessage = templateMessage ? `${templateMessage}\n- ${item.name}` : `- ${item.name}`;
             }
@@ -94,7 +95,7 @@ export class NewUserDialog extends IGBDialog {
           const list = step.activeDialog.state.options.templateList;
           let template = null;
           let gboService = new GBOService();
-          await CollectionUtil.asyncForEach(list, async item => {
+          await GBUtil.asyncForEach(list, async item => {
             if (gboService.kmpSearch(step.context.activity.originalText, item.name) != -1) {
               template = item.name;
             }
@@ -105,7 +106,7 @@ export class NewUserDialog extends IGBDialog {
             return await step.replaceDialog('/welcome_saas_bottemplate', step.activeDialog.state.options);
           } else {
             step.activeDialog.state.options.templateName = template;
-            
+
             const service = new MainService();
             const result: any = await service.startSubscriptionProcess(
               min,
@@ -123,14 +124,10 @@ export class NewUserDialog extends IGBDialog {
             } else {
               await step.context.sendActivity(`Please complete your payment here: ${result.paymentUrl}`);
               await step.context.sendActivity('I will check for payment completion every few seconds...');
-              
+
               try {
-                const finalResult = await service.waitForPaymentCompletion(
-                  min,
-                  result.subscriptionId,
-                  template
-                );
-                
+                const finalResult = await service.waitForPaymentCompletion(min, result.subscriptionId, template);
+
                 await step.context.sendActivity(`Payment verified and bot created successfully!`);
                 await step.context.sendActivity(`Access your bot here: ${finalResult.botUrl}`);
                 return await step.replaceDialog('/ask', { isReturning: true });

@@ -30,14 +30,15 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance, GBService } from 'botlib';
+import { GBLog, GBMinInstance, GBService } from 'botlib-legacy';
 import { GBServer } from '../../../src/app.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import { GuaribasSchedule } from '../../core.gbapp/models/GBModel.js';
 
 import cron from 'node-cron';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
+import { GBUtil } from '../../../src/util.js';
 
 /**
  * @fileoverview Schedule Services.
@@ -110,7 +111,7 @@ export class ScheduleServices extends GBService {
       let i = 0;
       let lastName = '';
 
-      await CollectionUtil.asyncForEach(schedules, async item => {
+      await GBUtil.asyncForEach(schedules, async item => {
         if (item.name === lastName) {
           item.name = item.name + ++i;
         } else {

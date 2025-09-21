@@ -33,8 +33,8 @@ import urlJoin from 'url-join';
 import path from 'path';
 import fs from 'fs/promises';
 import Fs from 'fs';
-import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBLog, GBMinInstance, GBService, IGBPackage } from 'botlib-legacy';
+
 import { GBServer } from '../../../src/app.js';
 import { GBConversationalService } from '../../core.gbapp/services/GBConversationalService.js';
 import { SecService } from '../../security.gbapp/services/SecService.js';
@@ -220,7 +220,7 @@ export class WhatsappDirectLine extends GBService {
             // TODO: await client.pupPage['minimize']();
             // Keeps the chat list cleaned.
             const chats = await client.getChats();
-            await CollectionUtil.asyncForEach(chats, async chat => {
+            await GBUtil.asyncForEach(chats, async chat => {
               const wait = Math.floor(Math.random() * 5000) + 1000;
               await GBUtil.sleep(wait);
               if (chat.isGroup) {
@@ -442,7 +442,7 @@ export class WhatsappDirectLine extends GBService {
 
     // Processes .gbapp message interception.
 
-    await CollectionUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
+    await GBUtil.asyncForEach(this.min.appPackages, async (e: IGBPackage) => {
       await e.onExchangeData(this.min, 'whatsappMessage', { from, fromName });
     });
 
@@ -692,7 +692,7 @@ export class WhatsappDirectLine extends GBService {
     }
 
     if (activity.attachments) {
-      await CollectionUtil.asyncForEach(activity.attachments, async attachment => {
+      await GBUtil.asyncForEach(activity.attachments, async attachment => {
         switch (attachment.contentType) {
           case 'application/vnd.microsoft.card.hero':
             output += `\n${this.renderHeroCard(attachment)}`;
@@ -1003,7 +1003,7 @@ export class WhatsappDirectLine extends GBService {
             } else {
               messages = msg.match(/(.|[\r\n]){1,4096}/g);
 
-              await CollectionUtil.asyncForEach(messages, async msg => {
+              await GBUtil.asyncForEach(messages, async msg => {
 
                 await this.sendTextMessage(to, msg);
 
@@ -1021,7 +1021,7 @@ export class WhatsappDirectLine extends GBService {
 
             messages = msg.match(/(.|[\r\n]){1,1000}/g);
 
-            await CollectionUtil.asyncForEach(messages, async msg => {
+            await GBUtil.asyncForEach(messages, async msg => {
               await GBUtil.sleep(3000);
               await this.customClient.messages.create({
                 body: msg,

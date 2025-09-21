@@ -34,7 +34,7 @@
 
 'use strict';
 
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib-legacy';
 import { Sequelize } from 'sequelize-typescript';
 import { GuaribasConversation, GuaribasConversationMessage } from './models/index.js';
 

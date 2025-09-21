@@ -28,29 +28,28 @@
 |                                                                             |
 \*****************************************************************************/
 
-"use strict"
+'use strict';
 
-import { IGBPackage, GBMinInstance, IGBCoreService, GBLog, IGBAdminService, GBDialogStep } from 'botlib'
-import { Sequelize } from 'sequelize-typescript'
-import { GBOnlineSubscription } from './model/MainModel.js'
+import { IGBPackage, GBMinInstance, IGBCoreService, GBLog, IGBAdminService, GBDialogStep } from 'botlib-legacy';
+import { Sequelize } from 'sequelize-typescript';
+import { GBOnlineSubscription } from './model/MainModel.js';
 
-import { CollectionUtil } from 'pragmatismo-io-framework';
-import { NewUserDialog } from './dialog/NewUserDialog.js'
-import { GBOService } from './service/GBOService.js'
+import { NewUserDialog } from './dialog/NewUserDialog.js';
+import { GBOService } from './service/GBOService.js';
 
 export class SaaSPackage implements IGBPackage {
-  sysPackages: IGBPackage[]
+  sysPackages: IGBPackage[];
   adminService: IGBAdminService;
   public static welcomes = {};
-  instanceId: any
+  instanceId: any;
 
   public getDialogs(min: GBMinInstance) {
-    return [NewUserDialog.getDialog(min),
-    NewUserDialog.getBotNameDialog(min),
-    NewUserDialog.getBotTemplateDialog(min),
+    return [
+      NewUserDialog.getDialog(min),
+      NewUserDialog.getBotNameDialog(min),
+      NewUserDialog.getBotTemplateDialog(min),
 
-    NewUserDialog.getPlanSelectionDialog(min),
-
+      NewUserDialog.getPlanSelectionDialog(min)
     ];
   }
 
@@ -59,7 +58,6 @@ export class SaaSPackage implements IGBPackage {
     if (process.env.DISABLE_SAAS_WELCOME !== 'true') {
       core.setEntryPointDialog('/welcome_saas');
     }
-
   }
 
   /**
@@ -74,24 +72,17 @@ export class SaaSPackage implements IGBPackage {
 
     this.adminService = min.adminService;
     this.instanceId = min.instanceId;
-
   }
 
   /**
- * Called by scheduler to send notification message to phones.
- * @param sendToDevice The function used to notify.
- */
-  private async notifyJob(sendToDevice) {
+   * Called by scheduler to send notification message to phones.
+   * @param sendToDevice The function used to notify.
+   */
+  private async notifyJob(sendToDevice) {}
 
-  }
-
-
-  async unloadPackage(core: IGBCoreService): Promise<void> {
-
-  }
+  async unloadPackage(core: IGBCoreService): Promise<void> {}
 
   async loadBot(min: GBMinInstance): Promise<void> {
-
     let gboService = new GBOService();
 
     // Gets the sendToDevice method of whatsapp.gblib and setups scheduler.
@@ -103,19 +94,13 @@ export class SaaSPackage implements IGBPackage {
     }
   }
 
-  async unloadBot(min: GBMinInstance): Promise<void> {
+  async unloadBot(min: GBMinInstance): Promise<void> {}
 
-  }
-
-  async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {
-
-  }
+  async onNewSession(min: GBMinInstance, step: GBDialogStep): Promise<void> {}
 
   public async onExchangeData(min: GBMinInstance, kind: string, data: any) {
-
     switch (kind) {
-      case "whatsappMessage":
-
+      case 'whatsappMessage':
         const from = data.from;
         const fromName = data.fromName;
         SaaSPackage.welcomes[from] = fromName;
@@ -126,5 +111,4 @@ export class SaaSPackage implements IGBPackage {
         break;
     }
   }
-
 }

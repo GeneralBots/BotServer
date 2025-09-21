@@ -34,7 +34,7 @@
 
 'use strict';
 
-import { GBLog, IGBInstance } from 'botlib';
+import { GBLog, IGBInstance } from 'botlib-legacy';
 import { GuaribasLog } from '../models/GBModel.js';
 import { GBServer } from '../../../src/app.js';
 import { GBConfigService } from './GBConfigService.js';

@@ -37,18 +37,17 @@
 import crypto from 'crypto';
 import urlJoin from 'url-join';
 import { WaterfallDialog } from 'botbuilder-dialogs';
-import { GBMinInstance, IGBDialog } from 'botlib';
+import { GBMinInstance, IGBDialog } from 'botlib-legacy';
 import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { GBImporter } from '../../core.gbapp/services/GBImporterService.js';
 import { Messages } from '../strings.js';
 import { GBAdminService } from '../services/GBAdminService.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import { SecService } from '../../security.gbapp/services/SecService.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import { GBServer } from '../../../src/app.js';
 import { GBLogEx } from '../../core.gbapp/services/GBLogEx.js';
 import { GBUtil } from '../../../src/util.js';
-
 
 class AdminDialog extends IGBDialog {
   public static isIntentYes(locale, utterance) {
@@ -87,7 +86,7 @@ class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const sensitive = step.context.activity['originalText'];
 
-          if (await GBUtil.comparePassword( sensitive, min.instance.adminPass)) {
+          if (await GBUtil.comparePassword(sensitive, min.instance.adminPass)) {
             await min.conversationalService.sendText(min, step, Messages[locale].welcome);
 
             return await step.endDialog(true);
@@ -121,7 +120,7 @@ class AdminDialog extends IGBDialog {
           const locale = step.context.activity.locale;
           const sensitive = step.context.activity['originalText'];
 
-          if (await GBUtil.comparePassword( sensitive, min.instance.adminPass)) {
+          if (await GBUtil.comparePassword(sensitive, min.instance.adminPass)) {
             await min.conversationalService.sendText(min, step, Messages[locale].welcome);
 
             return await min.conversationalService.prompt(min, step, Messages[locale].which_task);
@@ -224,7 +223,8 @@ class AdminDialog extends IGBDialog {
           await min.conversationalService.sendText(min, step, logs);
           return await step.replaceDialog('/ask', { isReturning: true });
         }
-      ]));
+      ])
+    );
 
     min.dialogs.add(
       new WaterfallDialog('/publish', [
@@ -302,7 +302,7 @@ class AdminDialog extends IGBDialog {
             packages.push(filename);
           }
 
-          await CollectionUtil.asyncForEach(packages, async packageName => {
+          await GBUtil.asyncForEach(packages, async packageName => {
             let cmd1;
 
             if (
@@ -330,26 +330,17 @@ class AdminDialog extends IGBDialog {
             }
             let sec = new SecService();
             const member = step.context.activity.from;
-            const user = await sec.ensureUser(
-              min,
-              member.id,
-              member.name,
-              '',
-              'web',
-              member.name,
-              null
-            );
+            const user = await sec.ensureUser(min, member.id, member.name, '', 'web', member.name, null);
 
             await GBAdminService.deployPackageCommand(min, user, cmd1, deployer);
 
             // .gbot updates severals keys in instantece, so min must be updated.
 
-            const activeMin = GBServer.globals.minInstances.find(p=> p.botId === min.botId);
+            const activeMin = GBServer.globals.minInstances.find(p => p.botId === min.botId);
 
-            if (activeMin){
-                min = activeMin;
+            if (activeMin) {
+              min = activeMin;
             }
-
           });
           await min.conversationalService.sendText(min, step, `Training is finished.`);
 
@@ -389,11 +380,15 @@ class AdminDialog extends IGBDialog {
       new WaterfallDialog('/setupSecurity', [
         async step => {
           min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
-          const tokenName = step.activeDialog.state.tokenName = step.options['args'];
+          const tokenName = (step.activeDialog.state.tokenName = step.options['args']);
           if (tokenName) {
-            step.activeDialog.state.clientId = min.core.getParam<string>(min.instance, `${tokenName} Client ID`, null),
-              step.activeDialog.state.host = min.core.getParam<string>(min.instance, `${tokenName} Host`, null),
-              step.activeDialog.state.tenant = min.core.getParam<string>(min.instance, `${tokenName} Tenant`, null)
+            ((step.activeDialog.state.clientId = min.core.getParam<string>(
+              min.instance,
+              `${tokenName} Client ID`,
+              null
+            )),
+              (step.activeDialog.state.host = min.core.getParam<string>(min.instance, `${tokenName} Host`, null)),
+              (step.activeDialog.state.tenant = min.core.getParam<string>(min.instance, `${tokenName} Tenant`, null)));
           }
           if (step.context.activity.channelId !== 'msteams' && process.env.ENABLE_AUTH) {
             return await step.beginDialog('/auth');
@@ -416,7 +411,7 @@ class AdminDialog extends IGBDialog {
           min = GBServer.globals.minInstances.find(p => p.botId === min.botId);
           if (step.activeDialog.state.tokenName) {
             return await step.next(step.options);
-                      }
+          }
           step.activeDialog.state.authenticatorTenant = step.context.activity['originalText'];
           const locale = step.context.activity.locale;
           const prompt = Messages[locale].enter_authenticator_authority_host_url;
@@ -445,13 +440,19 @@ class AdminDialog extends IGBDialog {
 
           min.adminService.setValue(min.instance.instanceId, `${tokenName}AntiCSRFAttackState`, state);
 
-          const redirectUri = urlJoin(process.env.BOT_URL, min.instance.botId,
-            tokenName ? `/token?value=${tokenName}` : '/token');
+          const redirectUri = urlJoin(
+            process.env.BOT_URL,
+            min.instance.botId,
+            tokenName ? `/token?value=${tokenName}` : '/token'
+          );
           const scope = tokenName ? '' : 'https://graph.microsoft.com/.default';
-          const host = tokenName ? step.activeDialog.state.host : 'https://login.microsoftonline.com'
+          const host = tokenName ? step.activeDialog.state.host : 'https://login.microsoftonline.com';
           const tenant = tokenName ? step.activeDialog.state.tenant : min.instance.authenticatorTenant;
-          const clientId = tokenName ? step.activeDialog.state.clientId : (min.instance.marketplaceId ? 
-              min.instance.marketplaceId : GBConfigService.get('MARKETPLACE_ID'));
+          const clientId = tokenName
+            ? step.activeDialog.state.clientId
+            : min.instance.marketplaceId
+              ? min.instance.marketplaceId
+              : GBConfigService.get('MARKETPLACE_ID');
           const oauth2 = tokenName ? 'oauth' : 'oauth2';
           const url = `${host}/${tenant}/${oauth2}/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&state=${state}&response_mode=query`;
 

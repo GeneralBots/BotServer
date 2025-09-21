@@ -42,16 +42,14 @@ import urlJoin from 'url-join';
 import { Client } from 'minio';
 
 import fs from 'fs/promises';
-import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib';
-import { AzureSearch } from 'pragmatismo-io-framework';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+import { GBError, GBLog, GBMinInstance, IGBCoreService, IGBDeployer, IGBInstance, IGBPackage } from 'botlib-legacy';
+
 import { GBServer } from '../../../src/app.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
 import Excel from 'exceljs';
 import asyncPromise from 'async-promises';
 import { GuaribasInstance, GuaribasPackage } from '../models/GBModel.js';
 import { GBAdminService } from './../../admin.gbapp/services/GBAdminService.js';
-import { AzureDeployerService } from './../../azuredeployer.gbapp/services/AzureDeployerService.js';
 import { KBService } from './../../kb.gbapp/services/KBService.js';
 import { GBConfigService } from './GBConfigService.js';
 import { GBImporter } from './GBImporterService.js';
@@ -60,7 +58,7 @@ import MicrosoftGraph from '@microsoft/microsoft-graph-client';
 import { GBLogEx } from './GBLogEx.js';
 import { GBUtil } from '../../../src/util.js';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
-import { OpenAIEmbeddings } from '@langchain/openai';
+import { AzureOpenAIEmbeddings, OpenAIEmbeddings } from '@langchain/openai';
 import { GBMinService } from './GBMinService.js';
 
 /**
@@ -157,7 +155,7 @@ export class GBDeployer implements IGBDeployer {
       const getDirectories = async source =>
         (await fs.readdir(source)).map(name => path.join(source, name)).filter(isDirectory);
       const dirs = await getDirectories(directory);
-      await CollectionUtil.asyncForEach(dirs, async element => {
+      await GBUtil.asyncForEach(dirs, async element => {
         // For each folder, checks its extensions looking for valid packages.
 
         if (element === '.') {
@@ -190,7 +188,7 @@ export class GBDeployer implements IGBDeployer {
     // Start the process of searching.
 
     GBLogEx.info(0, `Deploying Application packages...`);
-    await CollectionUtil.asyncForEach(paths, async e => {
+    await GBUtil.asyncForEach(paths, async e => {
       GBLogEx.info(0, `Looking in: ${e}...`);
       await scanPackageDirectory(e);
     });
@@ -222,25 +220,6 @@ export class GBDeployer implements IGBDeployer {
     const instance = await this.importer.createBotInstance(botId);
     const bootInstance = GBServer.globals.bootInstance;
 
-    if (GBConfigService.get('GB_MODE') === 'legacy') {
-      // Gets the access token to perform service operations.
-
-      const accessToken = await (GBServer.globals.minBoot.adminService as any)['acquireElevatedToken'](
-        bootInstance.instanceId,
-        true
-      );
-
-      // Creates the MSFT application that will be associated to the bot.
-
-      const service = await AzureDeployerService.createInstance(this);
-      const application = await service.createApplication(accessToken, botId);
-
-      // Fills new instance base information and get App secret.
-
-      instance.marketplaceId = (application as any).appId;
-      instance.marketplacePassword = await service.createApplicationSecret(accessToken, (application as any).id);
-    }
-
     instance.adminPass = await GBUtil.hashPassword(GBAdminService.getRndPassword());
     instance.title = botId;
     instance.activationCode = instance.botId.substring(0, 15);
@@ -252,9 +231,6 @@ export class GBDeployer implements IGBDeployer {
     // Saves bot information to the store.
 
     await this.core.saveInstance(instance);
-    if (GBConfigService.get('GB_MODE') === 'legacy') {
-      await this.deployBotOnAzure(instance, GBServer.globals.publicAddress);
-    }
 
     // Makes available bot to the channels and .gbui interfaces.
 
@@ -278,59 +254,8 @@ export class GBDeployer implements IGBDeployer {
           where: where
         })) !== null
       );
-    } else {
-      const service = await AzureDeployerService.createInstance(this);
-
-      return await service.botExists(botId);
+      return false;
     }
-  }
-
-  /**
-   * Performs all tasks of deploying a new bot on the cloud.
-   */
-  public async deployBotOnAzure(instance: IGBInstance, publicAddress: string): Promise<IGBInstance> {
-    // Reads base configuration from environent file.
-
-    const service = await AzureDeployerService.createInstance(this);
-    const username = GBConfigService.get('CLOUD_USERNAME');
-    const password = GBConfigService.get('CLOUD_PASSWORD');
-    const accessToken = await GBAdminService.getADALTokenFromUsername(username, password);
-    const group = GBConfigService.get('CLOUD_GROUP') ?? GBConfigService.get('BOT_ID');
-    const subscriptionId = GBConfigService.get('CLOUD_SUBSCRIPTIONID');
-
-    // If the bot already exists, just update the endpoint.
-
-    if (await service.botExists(instance.botId)) {
-      await service.updateBot(
-        instance.botId,
-        group,
-        instance.title,
-        instance.description,
-        `${publicAddress}/api/messages/${instance.botId}`
-      );
-    } else {
-      // Internally create resources on cloud provider.
-
-      instance = await service.internalDeployBot(
-        instance,
-        accessToken,
-        instance.botId,
-        instance.title,
-        group,
-        instance.description,
-        `${publicAddress}/api/messages/${instance.botId}`,
-        'global',
-        instance.nlpAppId,
-        instance.nlpKey,
-        instance.marketplaceId,
-        instance.marketplacePassword,
-        subscriptionId
-      );
-    }
-
-    // Saves final instance object and returns it.
-
-    return await this.core.saveInstance(instance);
   }
 
   public async loadOrCreateEmptyVectorStore(min: GBMinInstance): Promise<HNSWLib> {
@@ -390,7 +315,7 @@ export class GBDeployer implements IGBDeployer {
         return;
       }
 
-      embedding = new OpenAIEmbeddings({
+      embedding = new AzureOpenAIEmbeddings({
         maxConcurrency: 5,
         azureOpenAIApiKey: azureOpenAIKey,
         azureOpenAIApiDeploymentName: azureOpenAIEmbeddingModel,
@@ -425,23 +350,14 @@ export class GBDeployer implements IGBDeployer {
    * Performs the NLP publishing process on remote service.
    */
   public async publishNLP(instance: IGBInstance): Promise<void> {
-    const service = await AzureDeployerService.createInstance(this);
-    const res = await service.publishNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
-    if (res.status !== 200 && res.status !== 201) {
-      throw res.bodyAsText;
-    }
+    // TODO: Azure removed.
   }
 
   /**
    * Trains NLP on the remote service.
    */
   public async trainNLP(instance: IGBInstance): Promise<void> {
-    const service = await AzureDeployerService.createInstance(this);
-    const res = await service.trainNLP(instance.cloudLocation, instance.nlpAppId, instance.nlpAuthoringKey);
-    if (res.status !== 200 && res.status !== 202) {
-      throw res.bodyAsText;
-    }
-    GBUtil.sleep(5000);
+    // TODO: Azure removed.
   }
 
   /**
@@ -465,27 +381,13 @@ export class GBDeployer implements IGBDeployer {
    * Refreshes NLP entities on the remote service.
    */
   public async refreshNLPEntity(instance: IGBInstance, listName, listData): Promise<void> {
-    const service = await AzureDeployerService.createInstance(this);
-    const res = await service.refreshEntityList(
-      instance.cloudLocation,
-      instance.nlpAppId,
-      listName,
-      instance.nlpAuthoringKey,
-      listData
-    );
-    if (res.status !== 200) {
-      throw res.bodyAsText;
-    }
+    // Azure removed.
   }
 
   /**
    * Deploys a bot to the storage from a .gbot folder.
    */
-  public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {
-    const packageName = path.basename(localPath);
-    const instance = await this.importer.importIfNotExistsBotPackage(undefined, packageName, localPath);
-    await this.deployBotOnAzure(instance, publicAddress);
-  }
+  public async deployBotFromLocalPath(localPath: string, publicAddress: string): Promise<void> {}
 
   /**
    * Loads all para from tabular file Config.xlsx.
@@ -618,7 +520,7 @@ export class GBDeployer implements IGBDeployer {
           await fs.mkdir(pathBase, { recursive: true });
         }
 
-        await CollectionUtil.asyncForEach(parts, async item => {
+        await GBUtil.asyncForEach(parts, async item => {
           pathBase = path.join(pathBase, item);
           if (!(await GBUtil.exists(pathBase))) {
             await fs.mkdir(pathBase, { recursive: true });
@@ -642,7 +544,7 @@ export class GBDeployer implements IGBDeployer {
           return null;
         }
 
-        await CollectionUtil.asyncForEach(documents, async item => {
+        await GBUtil.asyncForEach(documents, async item => {
           const itemPath = path.join(localPath, remotePath, item.name);
 
           if (item.folder) {
@@ -680,11 +582,7 @@ export class GBDeployer implements IGBDeployer {
   public async undeployBot(botId: string, packageName: string): Promise<void> {
     // Deletes Bot registration on cloud.
 
-    const service = await AzureDeployerService.createInstance(this);
     const group = GBConfigService.get('BOT_ID');
-    if (await service.botExists(botId)) {
-      await service.deleteBot(botId, group);
-    }
 
     // Unbinds resources and listeners.
 
@@ -742,7 +640,7 @@ export class GBDeployer implements IGBDeployer {
     // Asks for each .gbapp if it will handle the package publishing.
 
     const _this = this;
-    await CollectionUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
+    await GBUtil.asyncForEach(min.appPackages, async (e: IGBPackage) => {
       // If it will be handled, create a temporary service layer to be
       // called by .gbapp and manage the associated package row.
 
@@ -785,7 +683,7 @@ export class GBDeployer implements IGBDeployer {
           // Find all tokens in .gbot Config.
           const strFind = ' Driver';
           const conns = await min.core['findParam'](min.instance, strFind);
-          await CollectionUtil.asyncForEach(conns, async t => {
+          await GBUtil.asyncForEach(conns, async t => {
             const connectionName = t.replace(strFind, '').trim();
             let con = {};
             con['name'] = connectionName;
@@ -942,61 +840,7 @@ export class GBDeployer implements IGBDeployer {
    * Performs automation of the Indexer (Azure Search) and rebuild
    * its index based on .gbkb structure.
    */
-  public async rebuildIndex(instance: IGBInstance, searchSchema: any) {
-    const key = instance.searchKey ? instance.searchKey : GBServer.globals.minBoot.instance.searchKey;
-    GBLogEx.info(instance.instanceId, `rebuildIndex running...`);
-
-    if (!key) {
-      return;
-    }
-    const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
-    const searchIndexer = instance.searchIndexer
-      ? instance.searchIndexer
-      : GBServer.globals.minBoot.instance.searchIndexer;
-    const host = instance.searchHost ? instance.searchHost : GBServer.globals.minBoot.instance.searchHost;
-
-    // Prepares search.
-
-    const search = new AzureSearch(key, host, searchIndex, searchIndexer);
-    const connectionString = GBDeployer.getConnectionStringFromInstance(GBServer.globals.minBoot.instance);
-    const dsName = 'gb';
-
-    // Removes any previous index.
-
-    try {
-      await search.deleteDataSource(dsName);
-    } catch (error) {
-      // If it is a 404 there is nothing to delete as it is the first creation.
-
-      if (error.code !== 404) {
-        throw error;
-      }
-    }
-
-    // Removes the index.
-
-    try {
-      await search.deleteIndex();
-    } catch (error) {
-      // If it is a 404 there is nothing to delete as it is the first creation.
-
-      if (error.code !== 404 && error.code !== 'OperationNotAllowed') {
-        throw error;
-      }
-    }
-
-    // Creates the data source and index on the cloud.
-
-    try {
-      await search.createDataSource(dsName, dsName, 'GuaribasQuestion', 'azuresql', connectionString);
-    } catch (error) {
-      GBLog.error(error);
-      throw error;
-    }
-    await search.createIndex(searchSchema, dsName);
-
-    GBLogEx.info(instance.instanceId, `Released rebuildIndex mutex.`);
-  }
+  public async rebuildIndex(instance: IGBInstance, searchSchema: any) {}
 
   /**
    * Finds a storage package by using package name.
@@ -1175,7 +1019,7 @@ export class GBDeployer implements IGBDeployer {
     // Loops through all ready to load .gbapp packages.
 
     let appPackagesProcessed = 0;
-    await CollectionUtil.asyncForEach(gbappPackages, async e => {
+    await GBUtil.asyncForEach(gbappPackages, async e => {
       const filenameOnly = path.basename(e);
 
       // Skips .gbapp inside deploy folder.

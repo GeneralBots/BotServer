@@ -34,7 +34,7 @@
 
 'use strict';
 
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib-legacy';
 import urlJoin from 'url-join';
 import { FeedbackDialog } from './dialogs/FeedbackDialog.js';
 import { QualityDialog } from './dialogs/QualityDialog.js';

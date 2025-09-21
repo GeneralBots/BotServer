@@ -34,7 +34,7 @@
 
 'use strict';
 
-import { GBLog, GBMinInstance, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib';
+import { GBLog, GBMinInstance, IGBCoreService, IGBInstallationDeployer, IGBInstance, IGBPackage } from 'botlib-legacy';
 import fs from 'fs/promises';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { Op, Dialect } from 'sequelize';
@@ -42,7 +42,6 @@ import { GBServer } from '../../../src/app.js';
 import { GBAdminPackage } from '../../admin.gbapp/index.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
 import { GBAnalyticsPackage } from '../../analytics.gblib/index.js';
-import { StartDialog } from '../../azuredeployer.gbapp/dialogs/StartDialog.js';
 import { GBCorePackage } from '../../core.gbapp/index.js';
 import { GBCustomerSatisfactionPackage } from '../../customer-satisfaction.gbapp/index.js';
 import { GBKBPackage } from '../../kb.gbapp/index.js';
@@ -52,14 +51,10 @@ import { GBWhatsappPackage } from '../../whatsapp.gblib/index.js';
 import { GuaribasApplications, GuaribasInstance, GuaribasLog } from '../models/GBModel.js';
 import { GBConfigService } from './GBConfigService.js';
 import mkdirp from 'mkdirp';
-import { GBAzureDeployerPackage } from '../../azuredeployer.gbapp/index.js';
 import { GBSharePointPackage } from '../../sharepoint.gblib/index.js';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import { GBBasicPackage } from '../../basic.gblib/index.js';
 import { GBGoogleChatPackage } from '../../google-chat.gblib/index.js';
-import { GBHubSpotPackage } from '../../hubspot.gblib/index.js';
-import open from 'open';
-import ngrok from 'ngrok';
 import path from 'path';
 import { GBUtil } from '../../../src/util.js';
 import { GBLogEx } from './GBLogEx.js';
@@ -113,7 +108,7 @@ export class GBCoreService implements IGBCoreService {
   constructor() {
     this.adminService = new GBAdminService(this);
   }
-  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) { }
+  public async ensureInstances(instances: IGBInstance[], bootInstance: any, core: IGBCoreService) {}
 
   /**
    * Gets database config and connect to storage. Currently two databases
@@ -129,11 +124,9 @@ export class GBCoreService implements IGBCoreService {
     let password: string | undefined;
     let storage: string | undefined;
 
-
     if (!['mssql', 'postgres', 'sqlite'].includes(this.dialect)) {
       throw new Error(`Unknown or unsupported dialect: ${this.dialect}.`);
     }
-
 
     if (this.dialect === 'mssql' || this.dialect === 'postgres') {
       host = GBConfigService.get('STORAGE_SERVER');
@@ -159,26 +152,22 @@ export class GBCoreService implements IGBCoreService {
       }
     }
 
-
     const logging: boolean | Function =
       GBConfigService.get('STORAGE_LOGGING') === 'true'
         ? (str: string): void => {
-          GBLogEx.info(0, str);
-        }
+            GBLogEx.info(0, str);
+          }
         : false;
 
-
     const encrypt: boolean = GBConfigService.get('STORAGE_ENCRYPT') === 'true';
-
 
     const acquireStr = GBConfigService.get('STORAGE_ACQUIRE_TIMEOUT');
     const acquire = acquireStr ? parseInt(acquireStr, 10) : 10000; // Valor padrão de 10 segundos
 
-
     const sequelizeOptions: SequelizeOptions = {
       define: {
         freezeTableName: true,
-        timestamps: false,
+        timestamps: false
       },
       host: host,
       port: port,
@@ -186,21 +175,23 @@ export class GBCoreService implements IGBCoreService {
       dialect: this.dialect as Dialect,
       storage: storage,
       quoteIdentifiers: this.dialect === 'postgres',
-      dialectOptions: this.dialect === 'mssql' ? {
-        options: {
-          trustServerCertificate: true,
-          encrypt: encrypt,
-        },
-      } : {},
+      dialectOptions:
+        this.dialect === 'mssql'
+          ? {
+              options: {
+                trustServerCertificate: true,
+                encrypt: encrypt
+              }
+            }
+          : {},
       pool: {
         max: 5,
         min: 0,
         idle: 10000,
         evict: 10000,
-        acquire: acquire,
-      },
+        acquire: acquire
+      }
     };
-
 
     this.sequelize = new Sequelize(database, username, password, sequelizeOptions);
   }
@@ -257,7 +248,7 @@ export class GBCoreService implements IGBCoreService {
     };
     const list = await GuaribasLog.findAll(options);
     let out = 'General Bots Log\n';
-    await CollectionUtil.asyncForEach(list, async e => {
+    await GBUtil.asyncForEach(list, async e => {
       out = `${out}\n${e.createdAt} - ${e.message}`;
     });
     return out;
@@ -270,7 +261,7 @@ export class GBCoreService implements IGBCoreService {
     if (process.env.LOAD_ONLY) {
       const bots = process.env.LOAD_ONLY.split(`;`);
       const and = [];
-      await CollectionUtil.asyncForEach(bots, async e => {
+      await GBUtil.asyncForEach(bots, async e => {
         and.push({ botId: e });
       });
 
@@ -282,9 +273,11 @@ export class GBCoreService implements IGBCoreService {
       };
       return await GuaribasInstance.findAll(options as any);
     } else {
-      const options = { where: { state: 'active' }  ,
-      
-      order: [['instanceId', 'ASC']]};
+      const options = {
+        where: { state: 'active' },
+
+        order: [['instanceId', 'ASC']]
+      };
       return await GuaribasInstance.findAll(options as any);
     }
   }
@@ -341,31 +334,6 @@ ENDPOINT_UPDATE=true
 `;
 
     await fs.writeFile('.env', env);
-  }
-
-  /**
-   * Certifies that network servers will reach back the development machine
-   * when calling back from web services. This ensures that reverse proxy is
-   * established.
-   */
-  public async ensureProxy(port): Promise<string> {
-    try {
-      if (
-        (await GBUtil.exists('node_modules/ngrok/bin/ngrok.exe')) ||
-        (await GBUtil.exists('node_modules/.bin/ngrok'))
-      ) {
-        return await ngrok.connect({ port: port });
-      } else {
-        GBLog.warn('ngrok executable not found. Check installation or node_modules folder.');
-
-        return 'https://localhost';
-      }
-    } catch (error) {
-      // There are false positive from ngrok regarding to no memory, but it's just
-      // lack of connection.
-
-      throw new Error(`Error connecting to remote ngrok server, please check network connection. ${error.msg}`);
-    }
   }
 
   /**
@@ -439,7 +407,7 @@ ENDPOINT_UPDATE=true
     const apps = await GuaribasApplications.findAll(options);
 
     let matchingAppPackages = [];
-    await CollectionUtil.asyncForEach(appPackages, async appPackage => {
+    await GBUtil.asyncForEach(appPackages, async appPackage => {
       const filenameOnly = path.basename(appPackage.name);
       const matchedApp = apps.find(app => app.name === filenameOnly);
       if (matchedApp || filenameOnly.endsWith('.gblib')) {
@@ -464,7 +432,7 @@ ENDPOINT_UPDATE=true
       instances = await core.loadInstances();
       if (process.env.ENDPOINT_UPDATE === 'true') {
         const group = GBConfigService.get('CLOUD_GROUP') ?? GBConfigService.get('BOT_ID');
-        await CollectionUtil.asyncForEach(instances, async instance => {
+        await GBUtil.asyncForEach(instances, async instance => {
           GBLogEx.info(instance.instanceId, `Updating bot endpoint for ${instance.botId}...`);
           try {
             await installationDeployer.updateBotProxy(
@@ -517,7 +485,7 @@ ENDPOINT_UPDATE=true
     // Loads all system packages.
     const sysPackages: IGBPackage[] = [];
 
-    await CollectionUtil.asyncForEach(
+    await GBUtil.asyncForEach(
       [
         GBAdminPackage,
         GBCorePackage,
@@ -526,11 +494,9 @@ ENDPOINT_UPDATE=true
         GBCustomerSatisfactionPackage,
         GBAnalyticsPackage,
         GBWhatsappPackage,
-        GBAzureDeployerPackage,
         GBSharePointPackage,
         GBGoogleChatPackage,
         GBBasicPackage,
-        GBHubSpotPackage,
         SaaSPackage
       ],
       async e => {
@@ -550,88 +516,16 @@ ENDPOINT_UPDATE=true
    * Verifies that an complex global password has been specified
    * before starting the server.
    */
-  public ensureAdminIsSecured() { }
+  public ensureAdminIsSecured() {}
 
   public async createBootInstance(
     core: GBCoreService,
     installationDeployer: IGBInstallationDeployer,
     proxyAddress: string
-  ) {
-    return await this.createBootInstanceEx(
-      core,
-      installationDeployer,
-      proxyAddress,
-      null,
-      GBConfigService.get('FREE_TIER')
-    );
-  }
-  /**
-   * Creates the first bot instance (boot instance) used to "boot" the server.
-   * At least one bot is required to perform conversational administrative tasks.
-   * So a base main bot is always deployed and will act as root bot for
-   * configuration tree with three levels: .env > root bot > all other bots.
-   */
-  public async createBootInstanceEx(
-    core: GBCoreService,
-    installationDeployer: IGBInstallationDeployer,
-    proxyAddress: string,
-    deployer,
-    freeTier
-  ) {
-    GBLogEx.info(0, `Deploying cognitive infrastructure (on the cloud / on premises)...`);
-    try {
-      const { instance, credentials, subscriptionId, installationDeployer } = await StartDialog.createBaseInstance(
-        deployer,
-        freeTier
-      );
-      installationDeployer['core'] = this;
-      const changedInstance = await installationDeployer['deployFarm2'](
-        proxyAddress,
-        instance,
-        credentials,
-        subscriptionId
-      );
-      await this.writeEnv(changedInstance);
-      GBConfigService.init();
+  ) {}
 
-      GBLogEx.info(0, `File .env written. Preparing storage and search for the first time...`);
-      await this.openStorageFrontier(installationDeployer);
-      await this.initStorage();
+  public async openBrowserInDevelopment() {}
 
-      return [changedInstance, installationDeployer];
-    } catch (error) {
-      GBLog.warn(
-        `There is an error being thrown, so please cleanup any infrastructure objects
-            created during this procedure and .env before running again.`
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * Helper to get the web browser onpened in UI interfaces.
-   */
-  public openBrowserInDevelopment() {
-    if (process.env.NODE_ENV === 'development') {
-      open('http://localhost:4242');
-    }
-  }
-
-  /**
-   * SQL:
-   *
-   * // let sql: string = '' +
-   * //   'IF OBJECT_ID(\'[UserGroup]\', \'U\') IS NULL' +
-   * //   'CREATE TABLE [UserGroup] (' +
-   * //   '  [id] INTEGER NOT NULL IDENTITY(1,1),' +
-   * //   '  [userId] INTEGER NULL,' +
-   * //   '  [groupId] INTEGER NULL,' +
-   * //   '  [instanceId] INTEGER NULL,' +
-   * //   '  PRIMARY KEY ([id1], [id2]),' +
-   * //   '  FOREIGN KEY ([userId1], [userId2], [userId3]) REFERENCES [User] ([userId1], [userId2], [userId3]) ON DELETE NO ACTION,' +
-   * //   '  FOREIGN KEY ([groupId1], [groupId2]) REFERENCES [Group] ([groupId1], [groupId1]) ON DELETE NO ACTION,' +
-   * //   '  FOREIGN KEY ([instanceId]) REFERENCES [Instance] ([instanceId]) ON DELETE NO ACTION)'
-   */
   private createTableQueryOverride(tableName, attributes, options): string {
     let sql: string = this.createTableQuery.apply(this.queryGenerator, [tableName, attributes, options]);
     const re1 = /CREATE\s+TABLE\s+\[([^\]]*)\]/;
@@ -718,7 +612,9 @@ ENDPOINT_UPDATE=true
 
       // Get the current rows in column A
       let results = await client
-        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`)
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='A1:A${maxLines}')`
+        )
         .get();
 
       const rows = results.values;
@@ -748,11 +644,12 @@ ENDPOINT_UPDATE=true
 
       // Update or add the new value in the found address
       await client
-        .api(`${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`)
+        .api(
+          `${baseUrl}/drive/items/${document.id}/workbook/worksheets('${sheets.value[0].name}')/range(address='${address}')`
+        )
         .patch(body);
-    }
-    else if (GBConfigService.get('GB_MODE') === 'local') {
-          let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
+    } else if (GBConfigService.get('GB_MODE') === 'local') {
+      let packagePath = GBUtil.getGBAIPath(min.botId, `gbot`);
       const config = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, 'config.csv');
 
       const db = await csvdb(config, ['name', 'value'], ',');
@@ -862,6 +759,10 @@ ENDPOINT_UPDATE=true
     return list;
   }
 
+  public async ensureProxy(port: any): Promise<string> {
+    return '';
+  } // Azure removed.
+
   public async ensureFolders(instances, deployer: GBDeployer) {
     const storageMode = process.env.GB_MODE;
     let libraryPath = GBConfigService.get('STORAGE_LIBRARY');
@@ -872,7 +773,7 @@ ENDPOINT_UPDATE=true
         port: parseInt(process.env.DRIVE_PORT),
         useSSL: process.env.DRIVE_USE_SSL === 'true',
         accessKey: process.env.DRIVE_ACCESSKEY,
-        secretKey: process.env.DRIVE_SECRET,
+        secretKey: process.env.DRIVE_SECRET
       });
 
       await this.syncBotStorage(instances, 'default', deployer, libraryPath);
@@ -881,10 +782,8 @@ ENDPOINT_UPDATE=true
 
       for await (const bucket of bucketStream) {
         if (bucket.name.endsWith('.gbai') && bucket.name.startsWith(process.env.DRIVE_ORG_PREFIX)) {
-
           const botId = bucket.name.replace('.gbai', '').replace(process.env.DRIVE_ORG_PREFIX, '');
           await this.syncBotStorage(instances, botId, deployer, libraryPath);
-
         }
       }
     } else {
@@ -895,19 +794,16 @@ ENDPOINT_UPDATE=true
       await this.syncBotStorage(instances, 'default', deployer, libraryPath);
 
       const files = await fs.readdir(libraryPath);
-      await CollectionUtil.asyncForEach(files, async (file) => {
+      await GBUtil.asyncForEach(files, async file => {
         if (file.trim().toLowerCase() !== 'default.gbai' && file.charAt(0) !== '_') {
           let botId = file.replace(/\.gbai/, '');
           await this.syncBotStorage(instances, botId, deployer, libraryPath);
-
         }
       });
     }
   }
 
   private async syncBotStorage(instances: any, botId: any, deployer: GBDeployer, libraryPath: string) {
-
-
     let instance = instances.find(p => p.botId.toLowerCase().trim() === botId.toLowerCase().trim());
 
     if (process.env.GB_MODE === 'local') {

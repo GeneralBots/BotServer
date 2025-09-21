@@ -47,7 +47,7 @@ import {
   UpdatedAt
 } from 'sequelize-typescript';
 
-import { IGBInstance } from 'botlib';
+import { IGBInstance } from 'botlib-legacy';
 
 /**
  * Base instance data for a bot.

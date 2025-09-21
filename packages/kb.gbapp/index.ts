@@ -34,7 +34,7 @@
 
 'use strict';
 
-import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib';
+import { GBDialogStep, GBLog, GBMinInstance, IGBCoreService, IGBPackage } from 'botlib-legacy';
 import { Sequelize } from 'sequelize-typescript';
 import { AskDialog } from './dialogs/AskDialog.js';
 import { FaqDialog } from './dialogs/FaqDialog.js';

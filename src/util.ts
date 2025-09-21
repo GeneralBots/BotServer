@@ -1,4 +1,3 @@
-
 /**
  * @fileoverview General Bots local utility.
  * This file contains utility functions used across the General Bots project.
@@ -29,8 +28,6 @@ import { QueryTypes } from '@sequelize/core';
  * Utility class containing various helper functions for the General Bots project.
  */
 export class GBUtil {
-
-
   // When creating/updating a user (hashing before saving to DB)
   public static async hashPassword(password) {
     try {
@@ -39,6 +36,12 @@ export class GBUtil {
     } catch (err) {
       console.error('Error hashing password:', err);
       throw err;
+    }
+  }
+
+  public static async asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
     }
   }
 
@@ -116,8 +119,7 @@ export class GBUtil {
       };
       config.spec['host'] = `127.0.0.1:${GBConfigService.getServerPort()}`;
       config.spec['basePath'] = `/api/messages/${min.botId}`;
-      config.spec['schemes'] = ["http"];
-
+      config.spec['schemes'] = ['http'];
     } else {
       config = {
         spec: JSON.parse(await fs.readFile('directline-v2.json', 'utf8')),
@@ -150,9 +152,7 @@ export class GBUtil {
       styles: { '!!null': 'canonical' } // Optional: Customize null display
     } as any);
 
-
     //yamlString = yamlString.slice(0, 256); // Truncate to 1024 bytes
-
 
     return yamlString;
   }
@@ -242,20 +242,33 @@ export class GBUtil {
         const destEntry = path.join(dest, entry);
 
         // Recursively copy each entry
-        await this.copyIfNewerRecursive(srcEntry, destEntry ,onlyTextFiles);
+        await this.copyIfNewerRecursive(srcEntry, destEntry, onlyTextFiles);
       }
     } else {
-
       let skip = false;
 
-      if (onlyTextFiles && !(
-        src.endsWith('.txt') || src.endsWith('.json')
-        || src.endsWith('.csv') || src.endsWith('.xlsx') || src.endsWith('.xls')
-        || src.endsWith('.xlsm') || src.endsWith('.xlsb') || src.endsWith('.xml')
-        || src.endsWith('.html') || src.endsWith('.htm') || src.endsWith('.md')
-        || src.endsWith('.docx') || src.endsWith('.pdf')
-        || src.endsWith('.doc') || src.endsWith('.pptx') || src.endsWith('.ppt'))) {
-          skip = true;
+      if (
+        onlyTextFiles &&
+        !(
+          src.endsWith('.txt') ||
+          src.endsWith('.json') ||
+          src.endsWith('.csv') ||
+          src.endsWith('.xlsx') ||
+          src.endsWith('.xls') ||
+          src.endsWith('.xlsm') ||
+          src.endsWith('.xlsb') ||
+          src.endsWith('.xml') ||
+          src.endsWith('.html') ||
+          src.endsWith('.htm') ||
+          src.endsWith('.md') ||
+          src.endsWith('.docx') ||
+          src.endsWith('.pdf') ||
+          src.endsWith('.doc') ||
+          src.endsWith('.pptx') ||
+          src.endsWith('.ppt')
+        )
+      ) {
+        skip = true;
       }
 
       if (!skip) {
@@ -272,7 +285,6 @@ export class GBUtil {
           await fs.cp(src, dest, { force: true });
         }
       }
-
     }
   }
 
@@ -403,10 +415,7 @@ export class GBUtil {
 
   public static isContentPage(text: string): boolean {
     // Common patterns that indicate non-content pages
-    const nonContentPatterns = [
-      /^index$/i,
-      /^table of contents$/i,
-    ];
+    const nonContentPatterns = [/^index$/i, /^table of contents$/i];
 
     // Check if page is mostly dots, numbers or blank
     const isDotLeaderPage = text.replace(/\s+/g, '').match(/\.{10,}/);
@@ -418,21 +427,12 @@ export class GBUtil {
     const hasMinimalContent = wordCount > 10;
 
     // Check if page matches any non-content patterns
-    const isNonContent = nonContentPatterns.some(pattern =>
-      pattern.test(text.trim())
-    );
+    const isNonContent = nonContentPatterns.some(pattern => pattern.test(text.trim()));
 
     // Page is valid content if:
     // - Not mostly dots/numbers/blank
     // - Has minimal word count
     // - Doesn't match non-content patterns
-    return !isDotLeaderPage &&
-      !isNumbersPage &&
-      !isBlankPage &&
-      hasMinimalContent &&
-      !isNonContent;
+    return !isDotLeaderPage && !isNumbersPage && !isBlankPage && hasMinimalContent && !isNonContent;
   }
-
-
-
 }

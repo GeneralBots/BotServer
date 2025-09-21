@@ -47,7 +47,7 @@ import { CSVLoader } from '@langchain/community/document_loaders/fs/csv';
 import { DocxLoader } from '@langchain/community/document_loaders/fs/docx';
 import { EPubLoader } from '@langchain/community/document_loaders/fs/epub';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
-import svg2img from 'svg2img';
+
 import isICO from 'icojs';
 import getColors from 'get-image-colors';
 import { Document } from 'langchain/document';
@@ -62,18 +62,15 @@ import {
   IGBCoreService,
   IGBInstance,
   IGBKBService
-} from 'botlib';
+} from 'botlib-legacy';
 import mammoth from 'mammoth';
 import { parse } from 'node-html-parser';
 import pdf from 'pdf-extraction';
-import { CollectionUtil } from 'pragmatismo-io-framework';
+
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
-import textract from 'textract';
 import { GBUtil } from '../../../src/util.js';
 import { GBAdminService } from '../../admin.gbapp/services/GBAdminService.js';
-import { AzureDeployerService } from '../../azuredeployer.gbapp/services/AzureDeployerService.js';
-import webp from 'webp-converter';
 import os from 'os';
 import { DialogKeywords } from '../../basic.gblib/services/DialogKeywords.js';
 import { GBVMService } from '../../basic.gblib/services/GBVMService.js';
@@ -87,6 +84,29 @@ import { ChatServices } from '../../llm.gblib/services/ChatServices.js';
 import { GuaribasAnswer, GuaribasQuestion, GuaribasSubject } from '../models/index.js';
 import { GBConfigService } from './../../core.gbapp/services/GBConfigService.js';
 import { exec } from 'child_process';
+
+let webp: any = null;
+try {
+  webp = await import('webp-converter');
+} catch {}
+
+let svg2img: any = null;
+try {
+  const svg2imgModule = await import('svg2img');
+  svg2img = svg2imgModule.default || svg2imgModule;
+} catch {}
+
+let getColors: any = null;
+try {
+  const getColorsModule = await import('get-image-colors');
+  getColors = getColorsModule.default || getColorsModule;
+} catch {}
+
+let textract: any = null;
+try {
+  const textractModule = await import('textract');
+  textract = textractModule.default || textractModule;
+} catch {}
 
 /**
  * Result for quey on KB data.
@@ -624,7 +644,7 @@ export class KBService implements IGBKBService {
     const answersCreated = await GuaribasAnswer.bulkCreate(answers);
 
     let i = 0;
-    await CollectionUtil.asyncForEach(questions, async question => {
+    await GBUtil.asyncForEach(questions, async question => {
       question.answerId = answersCreated[i++].answerId;
     });
 
@@ -656,22 +676,19 @@ export class KBService implements IGBKBService {
     } else if (answer.endsWith('.ogg') && process.env.AUDIO_DISABLED !== 'true') {
       await this.playAudio(min, answer, channel, step, min.conversationalService);
     } else if (answer.startsWith('![')) {
-
       // Checks for text after the image markdown, after the element 4, there are text blocks.
 
       const removeMarkdownImages = (text: string) => {
         return text.replace(/!\[[^\]]*\](?:\([^)]*\)|\[[^\]]*\])/g, '').trim();
-      }
+      };
 
       if (removeMarkdownImages(answer)) {
         await min.conversationalService.sendText(min, step, answer);
-      }
-      else {
+      } else {
         const urlMatch = answer.match(/!?\[.*?\]\((.*?)\)/);
         const url = urlMatch ? urlMatch[1] : null;
-        await this.showImage(min, min.conversationalService, step, url, channel)
+        await this.showImage(min, min.conversationalService, step, url, channel);
       }
-
     } else {
       await min.conversationalService.sendText(min, step, answer);
     }
@@ -713,7 +730,6 @@ export class KBService implements IGBKBService {
     packageStorage: GuaribasPackage,
     instance: IGBInstance
   ): Promise<any> {
-
     // Imports subjects tree into database and return it.
 
     const subjectFile = urlJoin(localPath, 'subjects.json');
@@ -750,7 +766,7 @@ export class KBService implements IGBKBService {
     const files = await walkPromise(urlJoin(localPath, 'articles'));
     const data = { questions: [], answers: [] };
 
-    await CollectionUtil.asyncForEach(files, async file => {
+    await GBUtil.asyncForEach(files, async file => {
       if (file !== null && file.name.endsWith('.md')) {
         let content = await this.getAnswerTextByMediaName(instance.instanceId, file.name);
 
@@ -885,7 +901,7 @@ export class KBService implements IGBKBService {
 
       const answersCreated = await GuaribasAnswer.bulkCreate(data.answers);
       let i = 0;
-      await CollectionUtil.asyncForEach(data.questions, async question => {
+      await GBUtil.asyncForEach(data.questions, async question => {
         question.answerId = answersCreated[i++].answerId;
       });
       return await GuaribasQuestion.bulkCreate(data.questions);
@@ -899,11 +915,12 @@ export class KBService implements IGBKBService {
     depth: number,
     maxDepth: number,
     page: Page,
-    websiteIgnoreUrls, maxDocuments: number
+    websiteIgnoreUrls,
+    maxDocuments: number
   ): Promise<string[]> {
     try {
       if (
-        (maxDocuments < visited.size) ||
+        maxDocuments < visited.size ||
         (depth > maxDepth && !url.endsWith('pdf')) ||
         visited.has(url) ||
         url.endsWith('.jpg') ||
@@ -970,8 +987,7 @@ export class KBService implements IGBKBService {
 
       const childLinks = [];
       for (const link of filteredLinks) {
-        const links = await this.crawl(min, link,
-          visited, depth + 1, maxDepth, page, websiteIgnoreUrls, maxDocuments);
+        const links = await this.crawl(min, link, visited, depth + 1, maxDepth, page, websiteIgnoreUrls, maxDocuments);
         if (links) {
           childLinks.push(...links);
         }
@@ -1037,7 +1053,6 @@ export class KBService implements IGBKBService {
         executablePath: process.env.CHROME_PATH ? process.env.CHROME_PATH : executablePath(),
         args
       });
-
     }
     const page = await browser.newPage();
     try {
@@ -1068,7 +1083,10 @@ export class KBService implements IGBKBService {
     const MAX_DOCUMENTS = 15;
     const maxDocuments = min.core.getParam<number>(min.instance, 'Website Max Documents', MAX_DOCUMENTS);
     const websiteIgnoreUrls = min.core.getParam<[]>(min.instance, 'Website Ignore URLs', null);
-    GBLogEx.info(min, `Website: ${website}, Max Depth: ${maxDepth}, Website Max Documents: ${maxDocuments}, Ignore URLs: ${websiteIgnoreUrls}`);
+    GBLogEx.info(
+      min,
+      `Website: ${website}, Max Depth: ${maxDepth}, Website Max Documents: ${maxDocuments}, Ignore URLs: ${websiteIgnoreUrls}`
+    );
 
     let shouldSave = false;
 
@@ -1104,8 +1122,7 @@ export class KBService implements IGBKBService {
 
         const baseUrl = page.url().split('/').slice(0, 3).join('/');
 
-        logo = logo.startsWith('//') ? 'https:' + logo : (
-          logo.startsWith('https') ? logo : urlJoin(baseUrl, logo));
+        logo = logo.startsWith('//') ? 'https:' + logo : logo.startsWith('https') ? logo : urlJoin(baseUrl, logo);
 
         const logoBinary = await page.goto(logo);
         let buffer = await logoBinary.buffer();
@@ -1126,7 +1143,7 @@ export class KBService implements IGBKBService {
           await fs.writeFile(tempAvif, buffer);
 
           await new Promise((resolve, reject) => {
-            exec(`node_modules/ffmpeg-static/ffmpeg -i "${tempAvif}" "${tempPng}"`, (error) => {
+            exec(`node_modules/ffmpeg-static/ffmpeg -i "${tempAvif}" "${tempPng}"`, error => {
               if (error) reject(error);
               else resolve(null);
             });
@@ -1134,40 +1151,42 @@ export class KBService implements IGBKBService {
           buffer = await fs.readFile(tempPng);
 
           // Clean up temp files
-          await fs.unlink(tempAvif).catch(() => { });
-          await fs.unlink(tempPng).catch(() => { });
-
-        } else if (buffer.slice(0, 4).toString('hex') === '52494646' &&
-          buffer.slice(8, 12).toString('hex') === '57454250') {
-
+          await fs.unlink(tempAvif).catch(() => {});
+          await fs.unlink(tempPng).catch(() => {});
+        } else if (
+          buffer.slice(0, 4).toString('hex') === '52494646' &&
+          buffer.slice(8, 12).toString('hex') === '57454250'
+        ) {
           // Convert WebP to PNG using temporary files
           const tempWebP = path.join(os.tmpdir(), `temp-${Date.now()}.webp`);
           const tempPNG = path.join(os.tmpdir(), `temp-${Date.now()}.png`);
 
           await fs.writeFile(tempWebP, buffer);
-          await webp.dwebp(tempWebP, tempPNG, "-o");
+          await webp.dwebp(tempWebP, tempPNG, '-o');
 
           buffer = await fs.readFile(tempPNG);
-
         } else if (buffer.toString().includes('<svg')) {
-
           // For SVG files, convert using svg2img
 
           buffer = await new Promise((resolve, reject) => {
-            svg2img(buffer, {
-              resvg: {
-                fitTo: {
-                  mode: 'width', // or height
-                  value: 48,
-                },
+            svg2img(
+              buffer,
+              {
+                resvg: {
+                  fitTo: {
+                    mode: 'width', // or height
+                    value: 48
+                  }
+                }
+              },
+              (error: any, buffer: Buffer) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(buffer);
+                }
               }
-            }, (error: any, buffer: Buffer) => {
-              if (error) {
-                reject(error);
-              } else {
-                resolve(buffer);
-              }
-            });
+            );
           });
         }
 
@@ -1179,11 +1198,10 @@ export class KBService implements IGBKBService {
         const logoPath = path.join(packagePath, 'cache', logoFilename);
         await (image as any).write(logoPath);
         await min.core['setConfig'](min, 'Logo', logoFilename);
-
       }
 
       // Extract dominant colors from the screenshot
-       page = await this.getFreshPage(browser, website);
+      page = await this.getFreshPage(browser, website);
 
       await page.screenshot({ path: 'screenshot.png' });
       const colors = await getColors('screenshot.png');
@@ -1208,25 +1226,22 @@ export class KBService implements IGBKBService {
       page.setCacheEnabled(false);
 
       const visited = new Set<string>();
-       page = await this.getFreshPage(browser, website);
+      page = await this.getFreshPage(browser, website);
 
       files = files.concat(await this.crawl(min, website, visited, 0, maxDepth, page, websiteIgnoreUrls, maxDocuments));
 
       await browser.close();
 
-
       GBLogEx.info(min, `Vectorizing ${files.length} file(s)...`);
 
       if (await GBUtil.exists(min['vectorStorePath'])) {
-
-        GBLogEx.info(min, `Cleaning vector store: ${min['vectorStorePath']}...`)
+        GBLogEx.info(min, `Cleaning vector store: ${min['vectorStorePath']}...`);
         const gbkbPath = GBUtil.getGBAIPath(min.botId, 'gbkb');
         min['vectorStorePath'] = path.join('work', gbkbPath, 'docs-vectorized');
         min['vectorStore'] = await min.deployService['loadOrCreateEmptyVectorStore'](min);
-
       }
 
-      await CollectionUtil.asyncForEach(files, async file => {
+      await GBUtil.asyncForEach(files, async file => {
         let content = null;
         shouldSave = true;
 
@@ -1238,16 +1253,13 @@ export class KBService implements IGBKBService {
           GBLogEx.info(min, `Ignore processing of ${file}. ${GBUtil.toYAML(error)}`);
         }
       });
-
-
     }
 
     GBLogEx.info(min, `Added ${files.length} from site...`);
-    
+
     files = await walkPromise(urlJoin(localPath, 'docs'));
 
-  GBLogEx.info(min, `Add ${files.length} files being processed...`);
-    
+    GBLogEx.info(min, `Add ${files.length} files being processed...`);
 
     // const gbdrive = path.join(process.env.PWD, 'work', GBUtil.getGBAIPath(min.botId, 'gbdrive'));
     // files = files.concat(await walkPromise(gbdrive));
@@ -1256,26 +1268,26 @@ export class KBService implements IGBKBService {
     files = files.concat(await walkPromise(gbdata));
 
     if (files[0]) {
-
-      files = files.filter(p => { return p });
+      files = files.filter(p => {
+        return p;
+      });
       shouldSave = true;
       GBLogEx.info(min, `Add embeddings from packages, ${files.length} files being processed...`);
-      await CollectionUtil.asyncForEach(files, async file => {
-    
+      await GBUtil.asyncForEach(files, async file => {
         let filePath = typeof file === 'string' ? file : path.join(file.root, file.name);
- 
-        if (filePath) {
 
+        if (filePath) {
           let content = null;
           let filePath = path.join(file.root, file.name);
           try {
-
-            if (file.name.endsWith('.csv') || file.name.endsWith('.md')
-              || file.name.endsWith('.pdf') || file.name.endsWith('.docx') ||
-              file.name.endsWith('.epub') || file.name.endsWith('.txt')
-
+            if (
+              file.name.endsWith('.csv') ||
+              file.name.endsWith('.md') ||
+              file.name.endsWith('.pdf') ||
+              file.name.endsWith('.docx') ||
+              file.name.endsWith('.epub') ||
+              file.name.endsWith('.txt')
             ) {
-
               if (file.name.endsWith('.csv')) {
                 // Read first 1000 lines of CSV file
                 const csvContent = await fs.readFile(filePath, 'utf8');
@@ -1300,8 +1312,6 @@ export class KBService implements IGBKBService {
       await min['vectorStore'].save(min['vectorStorePath']);
     }
   }
-
-
 
   defaultRecursiveCharacterTextSplitter = new RecursiveCharacterTextSplitter({
     chunkSize: 700,
@@ -1363,7 +1373,7 @@ export class KBService implements IGBKBService {
   public async importKbTabularDirectory(localPath: string, min: GBMinInstance, packageId: number): Promise<any> {
     const files = await walkPromise(localPath);
 
-    await CollectionUtil.asyncForEach(files, async file => {
+    await GBUtil.asyncForEach(files, async file => {
       if (file !== null && (file.name.endsWith('.xlsx') || file.name.endsWith('.csv'))) {
         return await this.importKbTabularFile(urlJoin(file.root, file.name), min, packageId);
       }
@@ -1494,7 +1504,7 @@ export class KBService implements IGBKBService {
       GBConfigService.get('DEFAULT_CONTENT_LANGUAGE')
     );
 
-    await CollectionUtil.asyncForEach(questions, async question => {
+    await GBUtil.asyncForEach(questions, async question => {
       const text = question.content;
 
       const categoryReg = /.*\((.*)\).*/gi.exec(text);
@@ -1529,11 +1539,6 @@ export class KBService implements IGBKBService {
     await this.importKbPackage(min, localPath, p, instance);
     GBDeployer.mountGBKBAssets(packageName, min.botId, localPath);
 
-    if (GBConfigService.get('GB_MODE') === 'legacy') {
-      const service = await AzureDeployerService.createInstance(deployer);
-      const searchIndex = instance.searchIndex ? instance.searchIndex : GBServer.globals.minBoot.instance.searchIndex;
-      await deployer.rebuildIndex(instance, service.getKBSearchSchema(searchIndex));
-    }
     min['groupCache'] = await KBService.getGroupReplies(instance.instanceId);
     await KBService.RefreshNER(min);
 
@@ -1669,7 +1674,6 @@ export class KBService implements IGBKBService {
 
         return filePath; // Return the saved file path
       } else {
-
         const parsedUrl = new URL(url);
 
         // Get the last part of the URL path or default to 'index' if empty
@@ -1688,7 +1692,7 @@ export class KBService implements IGBKBService {
             });
           } else {
             request.abort().catch(() => {
-              // Ignore errors from requests that were already handled  
+              // Ignore errors from requests that were already handled
             });
           }
         });
