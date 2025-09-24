@@ -1203,10 +1203,11 @@ export class KBService implements IGBKBService {
       page = await this.getFreshPage(browser, website);
 
       await page.screenshot({ path: 'screenshot.png' });
-      const colors = await getColors('screenshot.png');
-      await min.core['setConfig'](min, 'Color1', colors[0].hex());
-      await min.core['setConfig'](min, 'Color2', colors[1].hex());
-
+      if (getColors) {
+        const colors = await getColors('screenshot.png');
+        await min.core['setConfig'](min, 'Color1', colors[0].hex());
+        await min.core['setConfig'](min, 'Color2', colors[1].hex());
+      }
       // Disables images in crawling.
 
       await page.setRequestInterception(true);
