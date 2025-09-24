@@ -1,6 +1,12 @@
-import { VMScript, NodeVM } from 'vm2';
 import crypto1 from 'crypto';
 import net1 from 'net';
+
+let NodeVM, VMScript;
+
+try {
+  const NodeVM = require('vm2').NodeVM;
+  const VMScript = require('vm2').VMScript;
+} catch {}
 
 const evaluate = async (script, scope) => {
   const vm = new NodeVM({
@@ -26,13 +32,12 @@ const server = net1.createServer(socket => {
   const buffer = [];
 
   const sync = async () => {
-    
     const request = buffer.join('').toString();
     console.log(request);
     if (request.includes('\n')) {
       try {
         const { code, scope } = JSON.parse(request);
-        
+
         const result = await evaluate(code, {
           ...scope,
           module: null
@@ -49,10 +54,8 @@ const server = net1.createServer(socket => {
     }
   };
   socket.on('error', err => {
-    
     console.log(err);
   });
-
 
   socket.on('data', data => {
     buffer.push(data);

@@ -12,7 +12,7 @@ import { GBUtil } from '../../../../src/util.js';
 
 let finalStream: any = null;
 try {
-  finalStream = await import('final-stream');
+  finalStream = require('final-stream');
 } catch {}
 
 const waitUntil = condition => {

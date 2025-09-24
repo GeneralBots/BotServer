@@ -49,7 +49,6 @@ import { EPubLoader } from '@langchain/community/document_loaders/fs/epub';
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 
 import isICO from 'icojs';
-import getColors from 'get-image-colors';
 import { Document } from 'langchain/document';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import puppeteer, { executablePath, Page } from 'puppeteer';
@@ -87,24 +86,24 @@ import { exec } from 'child_process';
 
 let webp: any = null;
 try {
-  webp = await import('webp-converter');
+  webp = require('webp-converter');
 } catch {}
 
 let svg2img: any = null;
 try {
-  const svg2imgModule = await import('svg2img');
+  const svg2imgModule = require('svg2img');
   svg2img = svg2imgModule.default || svg2imgModule;
 } catch {}
 
 let getColors: any = null;
 try {
-  const getColorsModule = await import('get-image-colors');
+  const getColorsModule = require('get-image-colors');
   getColors = getColorsModule.default || getColorsModule;
 } catch {}
 
 let textract: any = null;
 try {
-  const textractModule = await import('textract');
+  const textractModule = require('textract');
   textract = textractModule.default || textractModule;
 } catch {}
 

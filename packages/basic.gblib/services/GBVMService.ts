@@ -22,7 +22,7 @@
 | GNU Affero General Public License for more details.                         |
 |                                                                             |
 | "General Bots" is a registered trademark of pragmatismo.com.br.              |
-| The licensing of the program under the AGPLv3 does not imply a              |
+ The licensing of the program under the AGPLv3 does not imply a              |
 | trademark license. Therefore any rights, title and interest in              |
 | our trademarks remain entirely with us.                                     |
 |                                                                             |
@@ -39,10 +39,8 @@ import { GBDeployer } from '../../core.gbapp/services/GBDeployer.js';
 import { ScheduleServices } from './ScheduleServices.js';
 import { GBConfigService } from '../../core.gbapp/services/GBConfigService.js';
 import urlJoin from 'url-join';
-import { NodeVM, VMScript } from 'vm2';
 import { createVm2Pool } from './vm2-process/index.js';
 import { watch } from 'fs';
-import textract from 'textract';
 import walkPromise from 'walk-promise';
 import child_process from 'child_process';
 import path from 'path';
@@ -56,6 +54,21 @@ import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { GBUtil } from '../../../src/util.js';
+import { createRequire } from 'module';
+
+// Use .catch() instead of try/catch for dynamic imports
+const vm2 = await import('vm2' as string).catch(error => {
+  console.log('vm2 not available, running in limited mode');
+  return null;
+});
+const NodeVM = vm2?.NodeVM;
+const VMScript = vm2?.VMScript;
+
+let textract: any = null;
+try {
+  const textractModule = require('textract');
+  textract = textractModule.default || textractModule;
+} catch {}
 
 /**
  * @fileoverview  Decision was to priorize security(isolation) and debugging,
@@ -931,6 +944,11 @@ export class GBVMService extends GBService {
    * Executes the converted JavaScript from BASIC code inside execution context.
    */
   public static async callVM(text: string, min: GBMinInstance, step, pid, debug: boolean = false, params = []) {
+    if (!vm2) {
+      GBLogEx.info(0, 'VM is disabled.');
+      return;
+    }
+
     // Creates a class DialogKeywords which is the *this* pointer
     // in BASIC.
 

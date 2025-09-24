@@ -555,7 +555,7 @@ export class GBConversationalService {
 
     var renderer = new marked.Renderer();
     renderer['oldImage'] = renderer.image;
-    renderer.image = function (href, title, text) {
+    renderer.image = ({ href, title, text, tokens }) => {
       var videos = ['webm', 'mp4', 'mov'];
       var filetype = href.split('.').pop();
       if (videos.indexOf(filetype) > -1) {

@@ -34,7 +34,6 @@
 
 'use strict';
 import { createRpcServer } from '@push-rpc/core';
-import AuthenticationContext from 'adal-node';
 import arrayBufferToBuffer from 'arraybuffer-to-buffer';
 import { Semaphore } from 'async-mutex';
 import { AccessToken } from 'livekit-server-sdk';
@@ -49,7 +48,7 @@ import {
   TurnContext,
   UserState
 } from 'botbuilder';
-import { FacebookAdapter } from 'botbuilder-adapter-facebook';
+
 import {
   AttachmentPrompt,
   ConfirmPrompt,
@@ -107,6 +106,20 @@ import { GBDeployer } from './GBDeployer.js';
 import { GBLogEx } from './GBLogEx.js';
 import { GBSSR } from './GBSSR.js';
 import Stripe from 'stripe';
+
+let AuthenticationContext: any = null;
+
+try {
+  const adal = require('adal-node');
+  AuthenticationContext = adal.AuthenticationContext;
+} catch (error) {}
+
+let FacebookAdapter: any = null;
+
+try {
+  const facebook = require('botbuilder-adapter-facebook');
+  FacebookAdapter = facebook.FacebookAdapter;
+} catch (error) {}
 
 /**
  * Minimal service layer for a bot and encapsulation of BOT Framework calls.
@@ -457,106 +470,52 @@ export class GBMinService {
 
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
 
-    GBServer.globals.server
-      .all(`/${min.instance.botId}/paymentSuccess`, async (req, res) => {
-        try {
-          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-          GBLogEx.info(min, `Payment success webhook received for bot ${min.instance.botId}`);
+    if (process.env.WHATSAPP_ENABLED) {
+      GBServer.globals.server
+        .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
+          const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
 
-          const sessionId = req.query.session_id;
-          if (!sessionId) {
-            GBLogEx.info(min, 'No session_id parameter found in payment success callback');
-            return res.status(400).json({ success: false, error: 'Missing session_id parameter' });
+          const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
+
+          if (status) {
+            GBLogEx.info(min, `WhatsApp: ${status.recipient_id} ${status.status}`);
+            return;
           }
 
-          const session = await stripe.checkout.sessions.retrieve(sessionId);
+          if (req.query['hub.mode'] === 'subscribe') {
+            const val = req.query['hub.verify_token'];
 
-          if (session.payment_status === 'paid') {
-            GBLogEx.info(min, `Payment confirmed for session ${sessionId}`);
+            if (challenge && val === challenge) {
+              res.send(req.query['hub.challenge']);
+              res.status(200);
+            } else {
+              res.status(401);
+            }
+            res.end();
 
-            // Only for successful payment - send HTML to close window
-            res.send(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Payment Successful</title>
-              <script>
-                // Close the window after a short delay
-                setTimeout(() => {
-                    window.close();
-                }, 1000);
-              </script>
-            </head>
-            <body style="text-align: center; padding: 40px; font-family: Arial;">
-              <h1 style="color: #4CAF50;">Payment Successful!</h1>
-              <p>General Bots: Your transaction was completed successfully.</p>
-            </body>
-            </html>
-          `);
-          } else {
-            GBLogEx.info(min, `Payment not completed for session ${sessionId}`);
-            res.status(402).json({
-              success: false,
-              error: 'Payment not completed',
-              sessionId: sessionId
-            });
+            return;
           }
-        } catch (error) {
-          GBLogEx.error(min, `Error processing payment success: ${error.message}`);
-          res.status(500).json({
-            success: false,
-            error: error.message
-          });
-        }
-      })
-      .bind(min);
-    // Setups official handler for WhatsApp.
 
-    GBServer.globals.server
-      .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
-        const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
+          let whatsAppDirectLine = min.whatsAppDirectLine;
 
-        const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
+          // Not meta, multiples bots on root bot.
 
-        if (status) {
-          GBLogEx.info(min, `WhatsApp: ${status.recipient_id} ${status.status}`);
-          return;
-        }
-
-        if (req.query['hub.mode'] === 'subscribe') {
-          const val = req.query['hub.verify_token'];
-
-          if (challenge && val === challenge) {
-            res.send(req.query['hub.challenge']);
-            res.status(200);
-          } else {
-            res.status(401);
+          if (!req.body.object) {
+            if (req.body.To) {
+              const to = req.body.To.replace(/whatsapp\:\+/gi, '');
+              whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
+            } else {
+              const minBoot = GBServer.globals.minBoot as GBMinInstance;
+              whatsAppDirectLine = minBoot.whatsAppDirectLine;
+            }
           }
-          res.end();
 
-          return;
-        }
-
-        let whatsAppDirectLine = min.whatsAppDirectLine;
-
-        // Not meta, multiples bots on root bot.
-
-        if (!req.body.object) {
-          if (req.body.To) {
-            const to = req.body.To.replace(/whatsapp\:\+/gi, '');
-            whatsAppDirectLine = WhatsappDirectLine.botsByNumber[to];
-          } else {
-            const minBoot = GBServer.globals.minBoot as GBMinInstance;
-            whatsAppDirectLine = minBoot.whatsAppDirectLine;
+          if (whatsAppDirectLine) {
+            await whatsAppDirectLine.WhatsAppCallback(req, res, whatsAppDirectLine.botId);
           }
-        }
-
-        if (whatsAppDirectLine) {
-          await whatsAppDirectLine.WhatsAppCallback(req, res, whatsAppDirectLine.botId);
-        }
-      })
-      .bind(min);
-
+        })
+        .bind(min);
+    }
     GBServer.globals.server.all(`/${min.instance.botId}/meeting-token`, async (req, res) => {
       try {
         // Add to your route handler

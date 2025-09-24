@@ -64,13 +64,13 @@ import { GBUtil } from '../../../src/util.js';
 let msRestAzure: any = null;
 
 try {
-  const msRestAzure = await import('ms-rest-azure');
+  const msRestAzure = require('ms-rest-azure');
 } catch (error) {}
 
 let AuthenticationContext: any = null;
 
 try {
-  const adal = await import('adal-node');
+  const adal = require('adal-node');
   AuthenticationContext = adal.AuthenticationContext;
 } catch (error) {}
 
