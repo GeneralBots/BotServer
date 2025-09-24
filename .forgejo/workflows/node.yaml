@@ -2,45 +2,44 @@ name: GBCI
 run: git config --global http.sslVerify false
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
 
 jobs:
   build:
     runs-on: gbo
-    
+
     steps:
+      - name: Disable SSL verification (temporary)
+        run: git config --global http.sslVerify false
 
-    - name: Disable SSL verification (temporary)
-      run: git config --global http.sslVerify false
+      - uses: actions/checkout@v4
 
-    - uses: actions/checkout@v4
+      # - name: Setup Node.js
+      #    uses: actions/setup-node@v4
+      #    with:
+      #      node-version: '20'
+      #      cache: 'npm'
 
-    # - name: Setup Node.js
-    #    uses: actions/setup-node@v4
-    #    with:
-    #      node-version: '20' 
-    #      cache: 'npm'       
-    
-    - name: Copy files to deployment location
-      run: |
-        echo "[General Bots Deployer] Copying files to deploy location..."
-        sudo rm -rf /opt/gbo/bin/bot/botserver/dist
-        sudo cp -r ./* /opt/gbo/bin/bot/botserver
-        
+      - name: Copy files to deployment location
+        run: |
+          echo "[General Bots Deployer] Copying files to deploy location..."
+          sudo rm -rf /opt/gbo/bin/bot/botserver/dist
+          sudo rm /opt/gbo/bin/bot/botserver/package-lock.json
+          sudo cp -r ./* /opt/gbo/bin/bot/botserver
 
-    - name: Building BotServer
-      run: |
-        echo "[General Bots Deployer] Building BotServer..."
-        # rm -rf /opt/gbo/bin/bot/botserver/node_modules
-        cd /opt/gbo/bin/bot/botserver
-        sudo npm ci --production
-        npm run build-server
-        npm run build-gbui
-        
+      - name: Building BotServer
+        run: |
+          echo "[General Bots Deployer] Building BotServer..."
 
-    - name: Restart Bots Deployer
-      run: |
-        echo "[General Bots Deployer] Restarting..."
-        lxc restart pragmatismo-bot
+          rm -rf /opt/gbo/bin/bot/botserver/node_modules
+          cd /opt/gbo/bin/bot/botserver
+          sudo npm i
+          npm run build-server
+          npm run build-gbui
+
+      - name: Restart Bots Deployer
+        run: |
+          echo "[General Bots Deployer] Restarting..."
+          lxc restart pragmatismo-bot
