@@ -26,7 +26,7 @@ jobs:
         run: |
           echo "[General Bots Deployer] Copying files to deploy location..."
           sudo rm -rf /opt/gbo/bin/bot/botserver/dist
-          sudo rm /opt/gbo/bin/bot/botserver/package-lock.json
+          sudo rm -f /opt/gbo/bin/bot/botserver/package-lock.json
           sudo cp -r ./* /opt/gbo/bin/bot/botserver
 
       - name: Building BotServer
