@@ -344,7 +344,7 @@
     "rimraf": "6.0.1",
     "glob": "11.0.3",
     "fstream": "npm:fs-extra@11.0.0",
-    "puppeteer": "24.20.0",
+    "puppeteer": "23.2.2",
     "fluent-ffmpeg": "npm:ffmpeg-static@5.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz",
     "@nlpjs/xtables": {
