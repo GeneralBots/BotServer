@@ -1209,13 +1209,12 @@ export class KBService implements IGBKBService {
         await min.core['setConfig'](min, 'Color2', colors[1].hex());
       }
       // Disables images in crawling.
-
-      await page.setRequestInterception(true);
-      page.on('request', req => {
-        if (req.resourceType() === 'image' || req.resourceType() === 'stylesheet') {
-          req.abort();
+      await page.route('**/*', route => {
+        const type = route.request().resourceType();
+        if (type === 'image' || type === 'stylesheet') {
+          route.abort();
         } else {
-          req.continue();
+          route.continue();
         }
       });
 
