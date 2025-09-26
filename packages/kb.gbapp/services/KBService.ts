@@ -1208,14 +1208,23 @@ export class KBService implements IGBKBService {
         await min.core['setConfig'](min, 'Color1', colors[0].hex());
         await min.core['setConfig'](min, 'Color2', colors[1].hex());
       }
-      // Disables images in crawling.
-      await page.route('**/*', route => {
-        const type = route.request().resourceType();
-        if (type === 'image' || type === 'stylesheet') {
-          route.abort();
-        } else {
-          route.continue();
-        }
+
+      // Remove images and disable CSS after page loads
+      await page.evaluate(() => {
+        // Remove all images
+        document.querySelectorAll('img').forEach(img => img.remove());
+
+        // Disable all stylesheets
+        document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+          link['disabled'] = true;
+          link.remove();
+        });
+
+        // Remove inline styles
+        document.querySelectorAll('style').forEach(style => style.remove());
+
+        // Remove style attributes
+        document.querySelectorAll('[style]').forEach(el => el.removeAttribute('style'));
       });
 
       page.on('dialog', async dialog => {
