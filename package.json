@@ -96,7 +96,7 @@
     "botbuilder-ai": "4.23.3",
     "botbuilder-dialogs": "4.23.3",
     "botframework-connector": "4.23.3",
-    "botlib-legacy": "5.2.0",
+    "botlib-legacy": "5.3.0",
     "cd": "0.3.3",
     "chalk-animation": "2.0.3",
     "chrome-remote-interface": "0.33.3",
