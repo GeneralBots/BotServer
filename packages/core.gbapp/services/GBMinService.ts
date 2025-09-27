@@ -471,8 +471,9 @@ export class GBMinService {
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
 
     if (process.env.WHATSAPP_ENABLED) {
-      GBServer.globals.server
-        .post(`/${min.instance.botId}/whatsapp`, async (req, res) => {
+      GBServer.globals.server.post(
+        `/${min.instance.botId}/whatsapp`,
+        (async (req, res) => {
           const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
 
           const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
@@ -513,8 +514,8 @@ export class GBMinService {
           if (whatsAppDirectLine) {
             await whatsAppDirectLine.WhatsAppCallback(req, res, whatsAppDirectLine.botId);
           }
-        })
-        .bind(min);
+        }).bind(min)
+      );
     }
     GBServer.globals.server.all(`/${min.instance.botId}/meeting-token`, async (req, res) => {
       try {
