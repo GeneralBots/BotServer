@@ -472,7 +472,7 @@ export class GBMinService {
 
     if (process.env.WHATSAPP_ENABLED) {
       GBServer.globals.server
-        .all(`/${min.instance.botId}/whatsapp`, async (req, res) => {
+        .post(`/${min.instance.botId}/whatsapp`, async (req, res) => {
           const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
 
           const status = req.body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
