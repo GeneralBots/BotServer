@@ -471,7 +471,7 @@ export class GBMinService {
     this.createCheckHealthAddress(GBServer.globals.server, min, min.instance);
 
     if (process.env.WHATSAPP_ENABLED) {
-      GBServer.globals.server.post(
+      GBServer.globals.server.all(
         `/${min.instance.botId}/whatsapp`,
         (async (req, res) => {
           const challenge = (min.core['getParam'] as any)(min.instance, `Meta Challenge`, null, true);
