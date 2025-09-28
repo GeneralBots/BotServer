@@ -237,7 +237,7 @@ export class GBServer {
 
           GBServer.globals.webDavServer = await GBCoreService.createWebDavServer(minInstances);
 
-          server.all('*', async (req, res, next) => {
+          server.all(/.*/, async (req, res, next) => {
             const host = req.headers.host;
 
             if (req.originalUrl.startsWith('/logs')) {
