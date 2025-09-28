@@ -51,7 +51,6 @@
     "@babel/plugin-proposal-private-property-in-object": "@babel/plugin-transform-private-property-in-object",
     "@humanwhocodes/config-array": "@eslint/config-array",
     "@humanwhocodes/object-schema": "@eslint/object-schema",
-    "rollup-plugin-terser": "@rollup/plugin-terser",
     "redux-devtools-extension": "@redux-devtools/extension",
     "sourcemap-codec": "@jridgewell/sourcemap-codec",
     "inflight": "lru-cache",
