@@ -1691,19 +1691,6 @@ export class KBService implements IGBKBService {
 
         const fileName = `${flatLastPath}.html`;
         const filePath = path.join(directoryPath, fileName);
-        // Configure request interception before navigation
-        await page.setRequestInterception(true);
-        page.on('request', request => {
-          if (request.resourceType() === 'document') {
-            request.continue().catch(() => {
-              // Ignore errors from requests that were already handled
-            });
-          } else {
-            request.abort().catch(() => {
-              // Ignore errors from requests that were already handled
-            });
-          }
-        });
 
         // Navigate with strict timeout and wait for content
         // Navigate and get content even if page fails to load fully
@@ -1716,6 +1703,12 @@ export class KBService implements IGBKBService {
         } catch (err) {
           // Ignore timeout/navigation errors
         }
+
+        await page.evaluate(() => {
+          // Remove images, scripts, stylesheets, etc.
+          const elements = document.querySelectorAll('img, script, link[rel="stylesheet"]');
+          elements.forEach(el => el.remove());
+        });
 
         // Get whatever HTML content was loaded
         const htmlContent = await page.content();
