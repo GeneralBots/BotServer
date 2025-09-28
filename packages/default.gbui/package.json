@@ -23,6 +23,7 @@
     "react-scripts": "5.0.1",
     "react-super-seo": "1.1.9",
     "react-transition-group": "4.4.5",
+    "rollup-plugin-terser": "^7.0.2",
     "rxjs": "7.8.1",
     "url-join": "5.0.0",
     "webpack": "5.94.0"
