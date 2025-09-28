@@ -63,7 +63,6 @@
     "workbox-background-sync": "7.0.0",
     "workbox-google-analytics": "7.0.0",
     "svgo": "3.0.0",
-    "eslint": "9.10.0",
     "core-js": "3.38.0",
     "glob": "10.0.0"
   }
