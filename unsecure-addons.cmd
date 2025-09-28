@@ -9,4 +9,5 @@ npm install  \
     webp-converter \
     final-stream \
     @sequelize/sqlite3 \
+    sqlite3 \
     vm2@3.9.11

@@ -5,7 +5,6 @@
 /coverage
 /dist
 /docs
-/guaribas.log
 /guaribas.sqlite
 /node_modules
 /packages/default.gbui/build
@@ -21,14 +20,9 @@
 *.env
 .vscode/launch.json
 .wwebjs_auth
-GB.log
-gb.log
-GB.log.json
 yarn-error.log
 yarn-lock.json
 logo.svg
 screenshot.png
 data.db
 .wwebjs_cache
-*doula*
-*botpoc*
