@@ -3,7 +3,6 @@ use futures::StreamExt;
 use langchain_rust::{
     language_models::llm::LLM,
     llm::{claude::Claude, openai::OpenAI},
-    schemas::Message,
 };
 use serde_json::Value;
 use std::sync::Arc;
@@ -69,9 +68,10 @@ impl LLMProvider for OpenAIClient {
         _config: &Value,
         tx: mpsc::Sender<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let messages = vec![langchain_rust::schemas::Message::new_human_message(prompt)];
         let mut stream = self
             .client
-            .stream(prompt)
+            .stream(&messages)
             .await
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 
@@ -152,9 +152,10 @@ impl LLMProvider for AnthropicClient {
         _config: &Value,
         tx: mpsc::Sender<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let messages = vec![langchain_rust::schemas::Message::new_human_message(prompt)];
         let mut stream = self
             .client
-            .stream(prompt)
+            .stream(&messages)
             .await
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 

@@ -193,8 +193,9 @@ impl ToolManager {
         let bot_id = bot_id.to_string();
         let _script = tool.script.clone();
         let session_manager_clone = session_manager.clone();
-        let waiting_responses = self.waiting_responses.clone();
+        let _waiting_responses = self.waiting_responses.clone();
 
+        let tool_name_clone = tool_name.to_string();
         tokio::spawn(async move {
             // Simulate tool execution
             let response = BotResponse {
@@ -202,7 +203,7 @@ impl ToolManager {
                 user_id: user_id.clone(),
                 session_id: Uuid::new_v4().to_string(),
                 channel: "test".to_string(),
-                content: format!("Tool {} executed successfully", tool_name),
+                content: format!("Tool {} executed successfully", tool_name_clone),
                 message_type: "text".to_string(),
                 stream_token: None,
                 is_complete: true,

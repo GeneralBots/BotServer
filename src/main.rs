@@ -1,7 +1,8 @@
 use actix_cors::Cors;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
 use log::info;
+use std::error::Error as StdError;
 use std::sync::Arc;
 
 mod auth;
@@ -15,6 +16,7 @@ mod context;
 mod email;
 mod file;
 mod llm;
+mod llm_legacy;
 mod org;
 mod session;
 mod shared;
@@ -22,76 +24,117 @@ mod tools;
 mod web_automation;
 mod whatsapp;
 
-use crate::{config::AppConfig, shared::state::AppState};
+use crate::bot::{
+    create_session, get_session_history, get_sessions, index, set_mode_handler, static_files,
+    voice_start, voice_stop, websocket_handler, whatsapp_webhook, whatsapp_webhook_verify,
+};
+use crate::channels::{VoiceAdapter, WebChannelAdapter};
+use crate::config::AppConfig;
+use crate::email::{send_email, test_email};
+use crate::file::{download_file, list_file, upload_file};
+use crate::llm_legacy::llm::{
+    chat_completions_local, embeddings_local, generic_chat_completions, health,
+};
+use crate::shared::state::AppState;
+use crate::whatsapp::WhatsAppAdapter;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::init();
 
-    info!("🚀 Starting Bot Server...");
+    info!("Starting BotServer...");
 
     let config = AppConfig::from_env();
+    
+    let db_pool = match sqlx::postgres::PgPool::connect(&config.database_url()).await {
+        Ok(pool) => {
+            info!("Connected to main database");
+            pool
+        }
+        Err(e) => {
+            log::error!("Failed to connect to main database: {}", e);
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::ConnectionRefused,
+                format!("Database connection failed: {}", e),
+            ));
+        }
+    };
 
-    let db_pool = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&config.database_url())
-        .await
-        .expect("Failed to create database pool");
+    let db_custom_pool = match sqlx::postgres::PgPool::connect(&config.database_custom_url()).await {
+        Ok(pool) => {
+            info!("Connected to custom database");
+            pool
+        }
+        Err(e) => {
+            log::warn!("Failed to connect to custom database: {}", e);
+            None
+        }
+    };
 
-    let db_custom_pool = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&config.database_custom_url())
-        .await
-        .expect("Failed to create custom database pool");
+    let redis_client = match redis::Client::open("redis://127.0.0.1/") {
+        Ok(client) => {
+            info!("Connected to Redis");
+            Some(Arc::new(client))
+        }
+        Err(e) => {
+            log::warn!("Failed to connect to Redis: {}", e);
+            None
+        }
+    };
 
-    let redis_client = redis::Client::open("redis://127.0.0.1/").ok();
+    let minio_client = None;
 
-    let auth_service = auth::AuthService::new(db_pool.clone(), redis_client.clone().map(Arc::new));
-    let session_manager =
-        session::SessionManager::new(db_pool.clone(), redis_client.clone().map(Arc::new));
-
+    let auth_service = auth::AuthService::new(db_pool.clone(), redis_client.clone());
+    let session_manager = session::SessionManager::new(db_pool.clone(), redis_client.clone());
+    
     let tool_manager = tools::ToolManager::new();
-    let tool_api = Arc::new(tools::ToolApi::new());
-
-    let web_adapter = Arc::new(channels::WebChannelAdapter::new());
-    let voice_adapter = Arc::new(channels::VoiceAdapter::new(
-        "https://livekit.example.com".to_string(),
-        "api_key".to_string(),
-        "api_secret".to_string(),
-    ));
-
-    let whatsapp_adapter = Arc::new(whatsapp::WhatsAppAdapter::new(
-        "whatsapp_token".to_string(),
-        "phone_number_id".to_string(),
-        "verify_token".to_string(),
-    ));
-
     let llm_provider = Arc::new(llm::MockLLMProvider::new());
-
-    let orchestrator = Arc::new(bot::BotOrchestrator::new(
+    
+    let orchestrator = bot::BotOrchestrator::new(
         session_manager,
         tool_manager,
         llm_provider,
         auth_service,
-    ));
+    );
 
-    let browser_pool = Arc::new(web_automation::BrowserPool::new());
+    let web_adapter = Arc::new(WebChannelAdapter::new());
+    let voice_adapter = Arc::new(VoiceAdapter::new(
+        "https://livekit.example.com".to_string(),
+        "api_key".to_string(),
+        "api_secret".to_string(),
+    ));
+    
+    let whatsapp_adapter = Arc::new(WhatsAppAdapter::new(
+        "whatsapp_token".to_string(),
+        "phone_number_id".to_string(),
+        "verify_token".to_string(),
+    ));
+    
+    let tool_api = Arc::new(tools::ToolApi::new());
+
+    let browser_pool = match web_automation::BrowserPool::new(2).await {
+        Ok(pool) => Arc::new(pool),
+        Err(e) => {
+            log::warn!("Failed to create browser pool: {}", e);
+            Arc::new(web_automation::BrowserPool::new(0).await.unwrap())
+        }
+    };
 
     let app_state = AppState {
-        minio_client: None,
-        config: Some(config),
-        db: Some(db_pool),
-        db_custom: Some(db_custom_pool),
+        minio_client,
+        config: Some(config.clone()),
+        db: Some(db_pool.clone()),
+        db_custom: db_custom_pool,
         browser_pool,
-        orchestrator,
+        orchestrator: Arc::new(orchestrator),
         web_adapter,
         voice_adapter,
         whatsapp_adapter,
         tool_api,
     };
 
-    info!("🌐 Server running on {}:{}", "127.0.0.1", 8080);
+    info!("Starting server on {}:{}", config.server.host, config.server.port);
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -101,26 +144,30 @@ async fn main() -> std::io::Result<()> {
             .max_age(3600);
 
         App::new()
-            .app_data(web::Data::new(app_state.clone()))
             .wrap(cors)
-            .wrap(middleware::Logger::default())
-            .service(bot::websocket_handler)
-            .service(bot::whatsapp_webhook_verify)
-            .service(bot::whatsapp_webhook)
-            .service(bot::voice_start)
-            .service(bot::voice_stop)
-            .service(bot::create_session)
-            .service(bot::get_sessions)
-            .service(bot::get_session_history)
-            .service(bot::set_mode_handler)
-            .service(bot::index)
-            .service(bot::static_files)
-            .service(llm::chat_completions_local)
-            .service(llm::embeddings_local)
-            .service(llm::generic_chat_completions)
-            .service(llm::health)
+            .app_data(web::Data::new(app_state.clone()))
+            .service(index)
+            .service(static_files)
+            .service(websocket_handler)
+            .service(whatsapp_webhook_verify)
+            .service(whatsapp_webhook)
+            .service(voice_start)
+            .service(voice_stop)
+            .service(create_session)
+            .service(get_sessions)
+            .service(get_session_history)
+            .service(set_mode_handler)
+            .service(send_email)
+            .service(test_email)
+            .service(upload_file)
+            .service(list_file)
+            .service(download_file)
+            .service(health)
+            .service(chat_completions_local)
+            .service(embeddings_local)
+            .service(generic_chat_completions)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind((config.server.host.clone(), config.server.port))?
     .run()
     .await
 }

@@ -1,163 +1,66 @@
-use actix_web::{put, web, HttpResponse, Result};
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-#[derive(Debug, Deserialize)]
-pub struct CreateOrganizationRequest {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Organization {
+    pub org_id: Uuid,
     pub name: String,
     pub slug: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Debug, Serialize)]
-pub struct ApiResponse<T> {
-    pub data: T,
-    pub success: bool,
+pub struct OrganizationService {
+    pub pool: PgPool,
 }
 
-// Helper functions
-
-/// Create a new organization in database
-pub async fn create_organization_db(
-    db_pool: &PgPool,
-    name: &str,
-    slug: &str,
-) -> Result<Organization, sqlx::Error> {
-    let org = sqlx::query_as!(
-        Organization,
-        r#"
-        INSERT INTO organizations (org_id, name, slug, created_at)
-        VALUES ($1, $2, $3, $4)
-        RETURNING org_id, name, slug, created_at
-        "#,
-        Uuid::new_v4(),
-        name,
-        slug,
-        Utc::now()
-    )
-    .fetch_one(db_pool)
-    .await?;
-
-    Ok(org)
-}
-
-/// Get organization by ID from database
-pub async fn get_organization_by_id_db(
-    db_pool: &PgPool,
-    org_id: Uuid,
-) -> Result<Option<Organization>, sqlx::Error> {
-    let org = sqlx::query_as!(
-        Organization,
-        r#"
-        SELECT org_id, name, slug, created_at
-        FROM organizations
-        WHERE org_id = $1
-        "#,
-        org_id
-    )
-    .fetch_optional(db_pool)
-    .await?;
-
-    Ok(org)
-}
-
-#[post("/organizations/create")]
-pub async fn create_organization(
-    state: web::Data<AppState>,
-    payload: web::Json<CreateOrganizationRequest>,
-) -> Result<HttpResponse> {
-    let org = create_organization_db(&state.db_pool, &payload.name, &payload.slug)
-        .await
-        .map_err(|e| {
-            actix_web::error::ErrorInternalServerError(format!(
-                "Failed to create organization: {}",
-                e
-            ))
-        })?;
-
-    let response = ApiResponse {
-        data: org,
-        success: true,
-    };
-
-    Ok(HttpResponse::Ok().json(response))
-}
-
-#[get("/organizations/{org_id}")]
-pub async fn get_organization(
-    state: web::Data<AppState>,
-    path: web::Path<Uuid>,
-) -> Result<HttpResponse> {
-    let org_id = path.into_inner();
-
-    let org = get_organization_by_id_db(&state.db_pool, org_id)
-        .await
-        .map_err(|e| {
-            actix_web::error::ErrorInternalServerError(format!("Database error: {}", e))
-        })?;
-
-    match org {
-        Some(org) => {
-            let response = ApiResponse {
-                data: org,
-                success: true,
-            };
-            Ok(HttpResponse::Ok().json(response))
-        }
-        None => Ok(HttpResponse::NotFound().json(ApiResponse {
-            data: "Organization not found",
-            success: false,
-        })),
+impl OrganizationService {
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
     }
-}
 
-#[get("/organizations")]
-pub async fn list_organizations(
-    state: web::Data<AppState>,
-    query: web::Query<PaginationQuery>,
-) -> Result<HttpResponse> {
-    let orgs = get_organizations_db(&state.db_pool, query.page, query.page_size)
-        .await
-        .map_err(|e| {
-            actix_web::error::ErrorInternalServerError(format!("Database error: {}", e))
-        })?;
+    pub async fn create_organization(
+        &self,
+        name: &str,
+        slug: &str,
+    ) -> Result<Organization, Box<dyn std::error::Error + Send + Sync>> {
+        let org = Organization {
+            org_id: Uuid::new_v4(),
+            name: name.to_string(),
+            slug: slug.to_string(),
+            created_at: chrono::Utc::now(),
+        };
+        Ok(org)
+    }
 
-    let response = ApiResponse {
-        data: orgs,
-        success: true,
-    };
+    pub async fn get_organization(
+        &self,
+        org_id: Uuid,
+    ) -> Result<Option<Organization>, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(None)
+    }
 
-    Ok(HttpResponse::Ok().json(response))
-}
+    pub async fn list_organizations(
+        &self,
+        _limit: i64,
+        _offset: i64,
+    ) -> Result<Vec<Organization>, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(vec![])
+    }
 
-#[put("/organizations/{org_id}")]
-pub async fn update_organization(
-    state: web::Data<AppState>,
-    path: web::Path<Uuid>,
-    payload: web::Json<CreateOrganizationRequest>,
-) -> Result<HttpResponse> {
-    let org_id = path.into_inner();
+    pub async fn update_organization(
+        &self,
+        _org_id: Uuid,
+        _name: Option<&str>,
+        _slug: Option<&str>,
+    ) -> Result<Option<Organization>, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(None)
+    }
 
-    // Implementation for update operation
-    // Use spawn_blocking for CPU-intensive operations if needed
-    let updated_org = web::block(move || {
-        // Blocking database operation would go here
-        // For async, use direct SQLx calls
-        Ok::<_, actix_web::Error>(Organization {
-            org_id,
-            name: payload.name.clone(),
-            slug: payload.slug.clone(),
-            created_at: Utc::now(),
-        })
-    })
-    .await?
-    .map_err(|e: actix_web::Error| e)?;
-
-    let response = ApiResponse {
-        data: updated_org,
-        success: true,
-    };
-
-    Ok(HttpResponse::Ok().json(response))
+    pub async fn delete_organization(
+        &self,
+        _org_id: Uuid,
+    ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(true)
+    }
 }

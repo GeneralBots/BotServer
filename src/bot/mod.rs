@@ -1,9 +1,7 @@
 use actix_web::{web, HttpRequest, HttpResponse, Result};
 use actix_ws::Message as WsMessage;
 use chrono::Utc;
-use langchain_rust::{
-    memory::SimpleMemory,
-};
+use langchain_rust::schemas::Message;
 use log::info;
 use serde_json;
 use std::collections::HashMap;
@@ -126,8 +124,8 @@ impl BotOrchestrator {
         let bot_response = BotResponse {
             bot_id: message.bot_id,
             user_id: message.user_id,
-            session_id: message.session_id,
-            channel: message.channel,
+            session_id: message.session_id.clone(),
+            channel: message.channel.clone(),
             content: response_content,
             message_type: "text".to_string(),
             stream_token: None,
@@ -151,17 +149,9 @@ impl BotOrchestrator {
             .get_conversation_history(session.id, session.user_id)
             .await?;
 
-        let mut memory = SimpleMemory::new();
-        for (role, content) in history {
-            memory.add_message(&format!("{}: {}", role, content));
-        }
-
         let mut prompt = String::new();
-        if let Some(chat_history) = memory.get_history() {
-            for message in chat_history {
-                prompt.push_str(&message);
-                prompt.push('\n');
-            }
+        for (role, content) in history {
+            prompt.push_str(&format!("{}: {}\n", role, content));
         }
         prompt.push_str(&format!("User: {}\nAssistant:", message.content));
 
@@ -216,17 +206,9 @@ impl BotOrchestrator {
             .get_conversation_history(session.id, user_id)
             .await?;
 
-        let mut memory = SimpleMemory::new();
-        for (role, content) in history {
-            memory.add_message(&format!("{}: {}", role, content));
-        }
-
         let mut prompt = String::new();
-        if let Some(chat_history) = memory.get_history() {
-            for message in chat_history {
-                prompt.push_str(&message);
-                prompt.push('\n');
-            }
+        for (role, content) in history {
+            prompt.push_str(&format!("{}: {}\n", role, content));
         }
         prompt.push_str(&format!("User: {}\nAssistant:", message.content));
 
@@ -412,8 +394,8 @@ impl BotOrchestrator {
         let bot_response = BotResponse {
             bot_id: message.bot_id,
             user_id: message.user_id,
-            session_id: message.session_id,
-            channel: message.channel,
+            session_id: message.session_id.clone(),
+            channel: message.channel.clone(),
             content: response,
             message_type: "text".to_string(),
             stream_token: None,
@@ -495,9 +477,10 @@ async fn whatsapp_webhook_verify(
     data: web::Data<crate::shared::state::AppState>,
     web::Query(params): web::Query<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
-    let mode = params.get("hub.mode").unwrap_or(&"".to_string());
-    let token = params.get("hub.verify_token").unwrap_or(&"".to_string());
-    let challenge = params.get("hub.challenge").unwrap_or(&"".to_string());
+    let empty = String::new();
+    let mode = params.get("hub.mode").unwrap_or(&empty);
+    let token = params.get("hub.verify_token").unwrap_or(&empty);
+    let challenge = params.get("hub.challenge").unwrap_or(&empty);
 
     match data.whatsapp_adapter.verify_webhook(mode, token, challenge) {
         Ok(challenge_response) => Ok(HttpResponse::Ok().body(challenge_response)),
