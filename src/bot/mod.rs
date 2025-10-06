@@ -20,7 +20,7 @@ use uuid::Uuid;
 
 use crate::{
     auth::AuthService,
-    channels::{ChannelAdapter, VoiceAdapter, WebChannelAdapter},
+    channels::ChannelAdapter,
     chart::ChartGenerator,
     llm::LLMProvider,
     session::SessionManager,
@@ -158,7 +158,7 @@ impl BotOrchestrator {
         };
 
         if let Some(adapter) = self.channels.get(&message.channel) {
-            adapter.send_message(bot_response).await?;
+            adapter.send_message(bot_response).await;
         }
 
         Ok(())

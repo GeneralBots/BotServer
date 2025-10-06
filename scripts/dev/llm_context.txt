@@ -9,13 +9,13 @@ Consolidated LLM Context
 * Output must be **only the code**, nothing else.
 
 [package]
-name = "gbserver"
+name = "botserver"
 version = "0.1.0"
 edition = "2021"
 authors = ["Rodrigo Rodriguez <me@rodrigorodriguez.com>"]
 description = "General Bots Server"
 license = "AGPL-3.0"
-repository = "https://alm.pragmatismo.com.br/generalbots/gbserver"
+repository = "https://github.pragmatismo.com.br/generalbots/botserver"
 
 [features]
 default = ["postgres", "qdrant"]
@@ -107,15 +107,2019 @@ EOF
 
 ----
 
+use async_trait::async_trait;
+use chrono::Utc;
+use livekit::{DataPacketKind, Room, RoomOptions};
+use log::info;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::{mpsc, Mutex};
+
+use crate::shared::{BotResponse, UserMessage};
+
+#[async_trait]
+pub trait ChannelAdapter: Send + Sync {
+    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error>>;
+}
+
+pub struct WebChannelAdapter {
+    connections: Arc<Mutex<HashMap<String, mpsc::Sender<BotResponse>>>>,
+}
+
+impl WebChannelAdapter {
+    pub fn new() -> Self {
+        Self {
+            connections: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    pub async fn add_connection(&self, session_id: String, tx: mpsc::Sender<BotResponse>) {
+        self.connections.lock().await.insert(session_id, tx);
+    }
+
+    pub async fn remove_connection(&self, session_id: &str) {
+        self.connections.lock().await.remove(session_id);
+    }
+}
+
+#[async_trait]
+impl ChannelAdapter for WebChannelAdapter {
+    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error>> {
+        let connections = self.connections.lock().await;
+        if let Some(tx) = connections.get(&response.session_id) {
+            tx.send(response).await?;
+        }
+        Ok(())
+    }
+}
+
+pub struct VoiceAdapter {
+    livekit_url: String,
+    api_key: String,
+    api_secret: String,
+    rooms: Arc<Mutex<HashMap<String, Room>>>,
+    connections: Arc<Mutex<HashMap<String, mpsc::Sender<BotResponse>>>>,
+}
+
+impl VoiceAdapter {
+    pub fn new(livekit_url: String, api_key: String, api_secret: String) -> Self {
+        Self {
+            livekit_url,
+            api_key,
+            api_secret,
+            rooms: Arc::new(Mutex::new(HashMap::new())),
+            connections: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    pub async fn start_voice_session(
+        &self,
+        session_id: &str,
+        user_id: &str,
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        let token = AccessToken::with_api_key(&self.api_key, &self.api_secret)
+            .with_identity(user_id)
+            .with_name(user_id)
+            .with_room_name(session_id)
+            .with_room_join(true)
+            .to_jwt()?;
+
+        let room_options = RoomOptions {
+            auto_subscribe: true,
+            ..Default::default()
+        };
+
+        let (room, mut events) = Room::connect(&self.livekit_url, &token, room_options).await?;
+        self.rooms
+            .lock()
+            .await
+            .insert(session_id.to_string(), room.clone());
+
+        let rooms_clone = self.rooms.clone();
+        let connections_clone = self.connections.clone();
+        let session_id_clone = session_id.to_string();
+
+        tokio::spawn(async move {
+            while let Some(event) = events.recv().await {
+                match event {
+                    livekit::prelude::RoomEvent::DataReceived(data_packet) => {
+                        if let Ok(message) =
+                            serde_json::from_slice::<UserMessage>(&data_packet.data)
+                        {
+                            info!("Received voice message: {}", message.content);
+                            if let Some(tx) =
+                                connections_clone.lock().await.get(&message.session_id)
+                            {
+                                let _ = tx
+                                    .send(BotResponse {
+                                        bot_id: message.bot_id,
+                                        user_id: message.user_id,
+                                        session_id: message.session_id,
+                                        channel: "voice".to_string(),
+                                        content: format!("🎤 Voice: {}", message.content),
+                                        message_type: "voice".to_string(),
+                                        stream_token: None,
+                                        is_complete: true,
+                                    })
+                                    .await;
+                            }
+                        }
+                    }
+                    livekit::prelude::RoomEvent::TrackSubscribed(
+                        track,
+                        publication,
+                        participant,
+                    ) => {
+                        info!("Voice track subscribed from {}", participant.identity());
+                    }
+                    _ => {}
+                }
+            }
+            rooms_clone.lock().await.remove(&session_id_clone);
+        });
+
+        Ok(token)
+    }
+
+    pub async fn stop_voice_session(
+        &self,
+        session_id: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(room) = self.rooms.lock().await.remove(session_id) {
+            room.disconnect();
+        }
+        Ok(())
+    }
+
+    pub async fn add_connection(&self, session_id: String, tx: mpsc::Sender<BotResponse>) {
+        self.connections.lock().await.insert(session_id, tx);
+    }
+
+    pub async fn send_voice_response(
+        &self,
+        session_id: &str,
+        text: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(room) = self.rooms.lock().await.get(session_id) {
+            let voice_response = serde_json::json!({
+                "type": "voice_response",
+                "text": text,
+                "timestamp": Utc::now()
+            });
+
+            room.local_participant().publish_data(
+                serde_json::to_vec(&voice_response)?,
+                DataPacketKind::Reliable,
+                &[],
+            )?;
+        }
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl ChannelAdapter for VoiceAdapter {
+    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error>> {
+        info!("Sending voice response to: {}", response.user_id);
+        self.send_voice_response(&response.session_id, &response.content)
+            .await
+    }
+}
+
+use actix_web::{post, web, HttpRequest, HttpResponse, Result};
+use dotenv::dotenv;
+use log::{error, info};
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use std::env;
+use tokio::time::{sleep, Duration};
+
+// OpenAI-compatible request/response structures
+#[derive(Debug, Serialize, Deserialize)]
+struct ChatMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ChatCompletionRequest {
+    model: String,
+    messages: Vec<ChatMessage>,
+    stream: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ChatCompletionResponse {
+    id: String,
+    object: String,
+    created: u64,
+    model: String,
+    choices: Vec<Choice>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Choice {
+    message: ChatMessage,
+    finish_reason: String,
+}
+
+// Llama.cpp server request/response structures
+#[derive(Debug, Serialize, Deserialize)]
+struct LlamaCppRequest {
+    prompt: String,
+    n_predict: Option<i32>,
+    temperature: Option<f32>,
+    top_k: Option<i32>,
+    top_p: Option<f32>,
+    stream: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct LlamaCppResponse {
+    content: String,
+    stop: bool,
+    generation_settings: Option<serde_json::Value>,
+}
+
+pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
+{
+    let llm_local = env::var("LLM_LOCAL").unwrap_or_else(|_| "false".to_string());
+
+    if llm_local.to_lowercase() != "true" {
+        info!("ℹ️  LLM_LOCAL is not enabled, skipping local server startup");
+        return Ok(());
+    }
+
+    // Get configuration from environment variables
+    let llm_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
+    let embedding_url =
+        env::var("EMBEDDING_URL").unwrap_or_else(|_| "http://localhost:8082".to_string());
+    let llama_cpp_path = env::var("LLM_CPP_PATH").unwrap_or_else(|_| "~/llama.cpp".to_string());
+    let llm_model_path = env::var("LLM_MODEL_PATH").unwrap_or_else(|_| "".to_string());
+    let embedding_model_path = env::var("EMBEDDING_MODEL_PATH").unwrap_or_else(|_| "".to_string());
+
+    info!("🚀 Starting local llama.cpp servers...");
+    info!("📋 Configuration:");
+    info!("   LLM URL: {}", llm_url);
+    info!("   Embedding URL: {}", embedding_url);
+    info!("   LLM Model: {}", llm_model_path);
+    info!("   Embedding Model: {}", embedding_model_path);
+
+    // Check if servers are already running
+    let llm_running = is_server_running(&llm_url).await;
+    let embedding_running = is_server_running(&embedding_url).await;
+
+    if llm_running && embedding_running {
+        info!("✅ Both LLM and Embedding servers are already running");
+        return Ok(());
+    }
+
+    // Start servers that aren't running
+    let mut tasks = vec![];
+
+    if !llm_running && !llm_model_path.is_empty() {
+        info!("🔄 Starting LLM server...");
+        tasks.push(tokio::spawn(start_llm_server(
+            llama_cpp_path.clone(),
+            llm_model_path.clone(),
+            llm_url.clone(),
+        )));
+    } else if llm_model_path.is_empty() {
+        info!("⚠️  LLM_MODEL_PATH not set, skipping LLM server");
+    }
+
+    if !embedding_running && !embedding_model_path.is_empty() {
+        info!("🔄 Starting Embedding server...");
+        tasks.push(tokio::spawn(start_embedding_server(
+            llama_cpp_path.clone(),
+            embedding_model_path.clone(),
+            embedding_url.clone(),
+        )));
+    } else if embedding_model_path.is_empty() {
+        info!("⚠️  EMBEDDING_MODEL_PATH not set, skipping Embedding server");
+    }
+
+    // Wait for all server startup tasks
+    for task in tasks {
+        task.await??;
+    }
+
+    // Wait for servers to be ready with verbose logging
+    info!("⏳ Waiting for servers to become ready...");
+
+    let mut llm_ready = llm_running || llm_model_path.is_empty();
+    let mut embedding_ready = embedding_running || embedding_model_path.is_empty();
+
+    let mut attempts = 0;
+    let max_attempts = 60; // 2 minutes total
+
+    while attempts < max_attempts && (!llm_ready || !embedding_ready) {
+        sleep(Duration::from_secs(2)).await;
+
+        info!(
+            "🔍 Checking server health (attempt {}/{})...",
+            attempts + 1,
+            max_attempts
+        );
+
+        if !llm_ready && !llm_model_path.is_empty() {
+            if is_server_running(&llm_url).await {
+                info!("   ✅ LLM server ready at {}", llm_url);
+                llm_ready = true;
+            } else {
+                info!("   ❌ LLM server not ready yet");
+            }
+        }
+
+        if !embedding_ready && !embedding_model_path.is_empty() {
+            if is_server_running(&embedding_url).await {
+                info!("   ✅ Embedding server ready at {}", embedding_url);
+                embedding_ready = true;
+            } else {
+                info!("   ❌ Embedding server not ready yet");
+            }
+        }
+
+        attempts += 1;
+
+        if attempts % 10 == 0 {
+            info!(
+                "⏰ Still waiting for servers... (attempt {}/{})",
+                attempts, max_attempts
+            );
+        }
+    }
+
+    if llm_ready && embedding_ready {
+        info!("🎉 All llama.cpp servers are ready and responding!");
+        Ok(())
+    } else {
+        let mut error_msg = "❌ Servers failed to start within timeout:".to_string();
+        if !llm_ready && !llm_model_path.is_empty() {
+            error_msg.push_str(&format!("\n   - LLM server at {}", llm_url));
+        }
+        if !embedding_ready && !embedding_model_path.is_empty() {
+            error_msg.push_str(&format!("\n   - Embedding server at {}", embedding_url));
+        }
+        Err(error_msg.into())
+    }
+}
+
+async fn start_llm_server(
+    llama_cpp_path: String,
+    model_path: String,
+    url: String,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let port = url.split(':').last().unwrap_or("8081");
+
+    std::env::set_var("OMP_NUM_THREADS", "20");
+    std::env::set_var("OMP_PLACES", "cores");
+    std::env::set_var("OMP_PROC_BIND", "close");
+
+    // "cd {} && numactl --interleave=all ./llama-server -m {} --host 0.0.0.0 --port {} --threads 20 --threads-batch 40 --temp 0.7 --parallel 1 --repeat-penalty 1.1 --ctx-size 8192 --batch-size 8192 -n 4096 --mlock --no-mmap --flash-attn  --no-kv-offload  --no-mmap &",
+
+    let mut cmd = tokio::process::Command::new("sh");
+    cmd.arg("-c").arg(format!(
+        "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {} --n-gpu-layers 99 &",
+        llama_cpp_path, model_path, port
+    ));
+
+    cmd.spawn()?;
+    Ok(())
+}
+
+async fn start_embedding_server(
+    llama_cpp_path: String,
+    model_path: String,
+    url: String,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let port = url.split(':').last().unwrap_or("8082");
+
+    let mut cmd = tokio::process::Command::new("sh");
+    cmd.arg("-c").arg(format!(
+        "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {} --embedding --n-gpu-layers 99 &",
+        llama_cpp_path, model_path, port
+    ));
+
+    cmd.spawn()?;
+    Ok(())
+}
+
+async fn is_server_running(url: &str) -> bool {
+    let client = reqwest::Client::new();
+    match client.get(&format!("{}/health", url)).send().await {
+        Ok(response) => response.status().is_success(),
+        Err(_) => false,
+    }
+}
+
+// Convert OpenAI chat messages to a single prompt
+fn messages_to_prompt(messages: &[ChatMessage]) -> String {
+    let mut prompt = String::new();
+
+    for message in messages {
+        match message.role.as_str() {
+            "system" => {
+                prompt.push_str(&format!("System: {}\n\n", message.content));
+            }
+            "user" => {
+                prompt.push_str(&format!("User: {}\n\n", message.content));
+            }
+            "assistant" => {
+                prompt.push_str(&format!("Assistant: {}\n\n", message.content));
+            }
+            _ => {
+                prompt.push_str(&format!("{}: {}\n\n", message.role, message.content));
+            }
+        }
+    }
+
+    prompt.push_str("Assistant: ");
+    prompt
+}
+
+// Proxy endpoint
+#[post("/local/v1/chat/completions")]
+pub async fn chat_completions_local(
+    req_body: web::Json<ChatCompletionRequest>,
+    _req: HttpRequest,
+) -> Result<HttpResponse> {
+    dotenv().ok().unwrap();
+
+    // Get llama.cpp server URL
+    let llama_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
+
+    // Convert OpenAI format to llama.cpp format
+    let prompt = messages_to_prompt(&req_body.messages);
+
+    let llama_request = LlamaCppRequest {
+        prompt,
+        n_predict: Some(500), // Adjust as needed
+        temperature: Some(0.7),
+        top_k: Some(40),
+        top_p: Some(0.9),
+        stream: req_body.stream,
+    };
+
+    // Send request to llama.cpp server
+    let client = Client::builder()
+        .timeout(Duration::from_secs(120)) // 2 minute timeout
+        .build()
+        .map_err(|e| {
+            error!("Error creating HTTP client: {}", e);
+            actix_web::error::ErrorInternalServerError("Failed to create HTTP client")
+        })?;
+
+    let response = client
+        .post(&format!("{}/completion", llama_url))
+        .header("Content-Type", "application/json")
+        .json(&llama_request)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("Error calling llama.cpp server: {}", e);
+            actix_web::error::ErrorInternalServerError("Failed to call llama.cpp server")
+        })?;
+
+    let status = response.status();
+
+    if status.is_success() {
+        let llama_response: LlamaCppResponse = response.json().await.map_err(|e| {
+            error!("Error parsing llama.cpp response: {}", e);
+            actix_web::error::ErrorInternalServerError("Failed to parse llama.cpp response")
+        })?;
+
+        // Convert llama.cpp response to OpenAI format
+        let openai_response = ChatCompletionResponse {
+            id: format!("chatcmpl-{}", uuid::Uuid::new_v4()),
+            object: "chat.completion".to_string(),
+            created: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            model: req_body.model.clone(),
+            choices: vec![Choice {
+                message: ChatMessage {
+                    role: "assistant".to_string(),
+                    content: llama_response.content.trim().to_string(),
+                },
+                finish_reason: if llama_response.stop {
+                    "stop".to_string()
+                } else {
+                    "length".to_string()
+                },
+            }],
+        };
+
+        Ok(HttpResponse::Ok().json(openai_response))
+    } else {
+        let error_text = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
+
+        error!("Llama.cpp server error ({}): {}", status, error_text);
+
+        let actix_status = actix_web::http::StatusCode::from_u16(status.as_u16())
+            .unwrap_or(actix_web::http::StatusCode::INTERNAL_SERVER_ERROR);
+
+        Ok(HttpResponse::build(actix_status).json(serde_json::json!({
+            "error": {
+                "message": error_text,
+                "type": "server_error"
+            }
+        })))
+    }
+}
+
+// OpenAI Embedding Request - Modified to handle both string and array inputs
+#[derive(Debug, Deserialize)]
+pub struct EmbeddingRequest {
+    #[serde(deserialize_with = "deserialize_input")]
+    pub input: Vec<String>,
+    pub model: String,
+    #[serde(default)]
+    pub _encoding_format: Option<String>,
+}
+
+// Custom deserializer to handle both string and array inputs
+fn deserialize_input<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de::{self, Visitor};
+    use std::fmt;
+
+    struct InputVisitor;
+
+    impl<'de> Visitor<'de> for InputVisitor {
+        type Value = Vec<String>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a string or an array of strings")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(vec![value.to_string()])
+        }
+
+        fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(vec![value])
+        }
+
+        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: de::SeqAccess<'de>,
+        {
+            let mut vec = Vec::new();
+            while let Some(value) = seq.next_element::<String>()? {
+                vec.push(value);
+            }
+            Ok(vec)
+        }
+    }
+
+    deserializer.deserialize_any(InputVisitor)
+}
+
+// OpenAI Embedding Response
+#[derive(Debug, Serialize)]
+pub struct EmbeddingResponse {
+    pub object: String,
+    pub data: Vec<EmbeddingData>,
+    pub model: String,
+    pub usage: Usage,
+}
+
+#[derive(Debug, Serialize)]
+pub struct EmbeddingData {
+    pub object: String,
+    pub embedding: Vec<f32>,
+    pub index: usize,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Usage {
+    pub prompt_tokens: u32,
+    pub total_tokens: u32,
+}
+
+// Llama.cpp Embedding Request
+#[derive(Debug, Serialize)]
+struct LlamaCppEmbeddingRequest {
+    pub content: String,
+}
+
+// FIXED: Handle the stupid nested array format
+#[derive(Debug, Deserialize)]
+struct LlamaCppEmbeddingResponseItem {
+    pub index: usize,
+    pub embedding: Vec<Vec<f32>>, // This is the  up part - embedding is an array of arrays
+}
+
+// Proxy endpoint for embeddings
+#[post("/v1/embeddings")]
+pub async fn embeddings_local(
+    req_body: web::Json<EmbeddingRequest>,
+    _req: HttpRequest,
+) -> Result<HttpResponse> {
+    dotenv().ok();
+
+    // Get llama.cpp server URL
+    let llama_url =
+        env::var("EMBEDDING_URL").unwrap_or_else(|_| "http://localhost:8082".to_string());
+
+    let client = Client::builder()
+        .timeout(Duration::from_secs(120))
+        .build()
+        .map_err(|e| {
+            error!("Error creating HTTP client: {}", e);
+            actix_web::error::ErrorInternalServerError("Failed to create HTTP client")
+        })?;
+
+    // Process each input text and get embeddings
+    let mut embeddings_data = Vec::new();
+    let mut total_tokens = 0;
+
+    for (index, input_text) in req_body.input.iter().enumerate() {
+        let llama_request = LlamaCppEmbeddingRequest {
+            content: input_text.clone(),
+        };
+
+        let response = client
+            .post(&format!("{}/embedding", llama_url))
+            .header("Content-Type", "application/json")
+            .json(&llama_request)
+            .send()
+            .await
+            .map_err(|e| {
+                error!("Error calling llama.cpp server for embedding: {}", e);
+                actix_web::error::ErrorInternalServerError(
+                    "Failed to call llama.cpp server for embedding",
+                )
+            })?;
+
+        let status = response.status();
+
+        if status.is_success() {
+            // First, get the raw response text for debugging
+            let raw_response = response.text().await.map_err(|e| {
+                error!("Error reading response text: {}", e);
+                actix_web::error::ErrorInternalServerError("Failed to read response")
+            })?;
+
+            // Parse the response as a vector of items with nested arrays
+            let llama_response: Vec<LlamaCppEmbeddingResponseItem> =
+                serde_json::from_str(&raw_response).map_err(|e| {
+                    error!("Error parsing llama.cpp embedding response: {}", e);
+                    error!("Raw response: {}", raw_response);
+                    actix_web::error::ErrorInternalServerError(
+                        "Failed to parse llama.cpp embedding response",
+                    )
+                })?;
+
+            // Extract the embedding from the nested array bullshit
+            if let Some(item) = llama_response.get(0) {
+                // The embedding field contains Vec<Vec<f32>>, so we need to flatten it
+                // If it's [[0.1, 0.2, 0.3]], we want [0.1, 0.2, 0.3]
+                let flattened_embedding = if !item.embedding.is_empty() {
+                    item.embedding[0].clone() // Take the first (and probably only) inner array
+                } else {
+                    vec![] // Empty if no embedding data
+                };
+
+                // Estimate token count
+                let estimated_tokens = (input_text.len() as f32 / 4.0).ceil() as u32;
+                total_tokens += estimated_tokens;
+
+                embeddings_data.push(EmbeddingData {
+                    object: "embedding".to_string(),
+                    embedding: flattened_embedding,
+                    index,
+                });
+            } else {
+                error!("No embedding data returned for input: {}", input_text);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": {
+                        "message": format!("No embedding data returned for input {}", index),
+                        "type": "server_error"
+                    }
+                })));
+            }
+        } else {
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+
+            error!("Llama.cpp server error ({}): {}", status, error_text);
+
+            let actix_status = actix_web::http::StatusCode::from_u16(status.as_u16())
+                .unwrap_or(actix_web::http::StatusCode::INTERNAL_SERVER_ERROR);
+
+            return Ok(HttpResponse::build(actix_status).json(serde_json::json!({
+                "error": {
+                    "message": format!("Failed to get embedding for input {}: {}", index, error_text),
+                    "type": "server_error"
+                }
+            })));
+        }
+    }
+
+    // Build OpenAI-compatible response
+    let openai_response = EmbeddingResponse {
+        object: "list".to_string(),
+        data: embeddings_data,
+        model: req_body.model.clone(),
+        usage: Usage {
+            prompt_tokens: total_tokens,
+            total_tokens,
+        },
+    };
+
+    Ok(HttpResponse::Ok().json(openai_response))
+}
+
+// Health check endpoint
+#[actix_web::get("/health")]
+pub async fn health() -> Result<HttpResponse> {
+    let llama_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
+
+    if is_server_running(&llama_url).await {
+        Ok(HttpResponse::Ok().json(serde_json::json!({
+            "status": "healthy",
+            "llama_server": "running"
+        })))
+    } else {
+        Ok(HttpResponse::ServiceUnavailable().json(serde_json::json!({
+            "status": "unhealthy",
+            "llama_server": "not running"
+        })))
+    }
+}
+
+use log::error;
+
+use actix_web::{
+    web::{self, Bytes},
+    HttpResponse, Responder,
+};
+use anyhow::Result;
+use futures::StreamExt;
+use langchain_rust::{
+    chain::{Chain, LLMChainBuilder},
+    fmt_message, fmt_template,
+    language_models::llm::LLM,
+    llm::openai::OpenAI,
+    message_formatter,
+    prompt::HumanMessagePromptTemplate,
+    prompt_args,
+    schemas::messages::Message,
+    template_fstring,
+};
+
+use crate::{state::AppState, utils::azure_from_config};
+
+#[derive(serde::Deserialize)]
+struct ChatRequest {
+    input: String,
+}
+
+#[derive(serde::Serialize)]
+struct ChatResponse {
+    text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    action: Option<ChatAction>,
+}
+
+#[derive(serde::Serialize)]
+#[serde(tag = "type", content = "content")]
+enum ChatAction {
+    ReplyEmail { content: String },
+    // Add other action variants here as needed
+}
+
+#[actix_web::post("/chat")]
+pub async fn chat(
+    web::Json(request): web::Json<String>,
+    state: web::Data<AppState>,
+) -> Result<impl Responder, actix_web::Error> {
+    let azure_config = azure_from_config(&state.config.clone().unwrap().ai);
+    let open_ai = OpenAI::new(azure_config);
+
+    // Parse the context JSON
+    let context: serde_json::Value = match serde_json::from_str(&request) {
+        Ok(ctx) => ctx,
+        Err(_) => serde_json::json!({}),
+    };
+
+    // Check view type and prepare appropriate prompt
+    let view_type = context
+        .get("viewType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    let (prompt, might_trigger_action) = match view_type {
+        "email" => (
+            format!(
+                "Respond to this email: {}. Keep it professional and concise. \
+                If the email requires a response, provide one in the 'replyEmail' action format.",
+                request
+            ),
+            true,
+        ),
+        _ => (request, false),
+    };
+
+    let response_text = match open_ai.invoke(&prompt).await {
+        Ok(res) => res,
+        Err(err) => {
+            error!("Error invoking API: {}", err);
+            return Err(actix_web::error::ErrorInternalServerError(
+                "Failed to invoke OpenAI API",
+            ));
+        }
+    };
+
+    // Prepare response with potential action
+    let mut chat_response = ChatResponse {
+        text: response_text.clone(),
+        action: None,
+    };
+
+    // If in email view and the response looks like an email reply, add action
+    if might_trigger_action && view_type == "email" {
+        chat_response.action = Some(ChatAction::ReplyEmail {
+            content: response_text,
+        });
+    }
+
+    Ok(HttpResponse::Ok().json(chat_response))
+}
+
+#[actix_web::post("/stream")]
+pub async fn chat_stream(
+    web::Json(request): web::Json<ChatRequest>,
+    state: web::Data<AppState>,
+) -> Result<impl Responder, actix_web::Error> {
+    let azure_config = azure_from_config(&state.config.clone().unwrap().ai);
+    let open_ai = OpenAI::new(azure_config);
+
+    let prompt = message_formatter![
+        fmt_message!(Message::new_system_message(
+            "You are world class technical documentation writer."
+        )),
+        fmt_template!(HumanMessagePromptTemplate::new(template_fstring!(
+            "{input}", "input"
+        )))
+    ];
+
+    let chain = LLMChainBuilder::new()
+        .prompt(prompt)
+        .llm(open_ai)
+        .build()
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    let mut stream = chain
+        .stream(prompt_args! { "input" => request.input })
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    let actix_stream = async_stream::stream! {
+        while let Some(result) = stream.next().await {
+            match result {
+                Ok(value) => yield Ok::<_, actix_web::Error>(Bytes::from(value.content)),
+                Err(e) => yield Err(actix_web::error::ErrorInternalServerError(e)),
+            }
+        }
+    };
+
+    Ok(HttpResponse::Ok()
+        .content_type("text/event-stream")
+        .streaming(actix_stream))
+}
+
+pub mod llm_generic;
+pub mod llm_local;
+pub mod llm_provider;
+
+use async_trait::async_trait;
+use futures::StreamExt;
+use langchain_rust::{
+    language_models::llm::LLM,
+    llm::{claude::Claude, openai::OpenAI},
+    schemas::Message,
+};
+use serde_json::Value;
+use std::sync::Arc;
+use tokio::sync::mpsc;
+
+use crate::tools::ToolManager;
+
+#[async_trait]
+pub trait LLMProvider: Send + Sync {
+    async fn generate(
+        &self,
+        prompt: &str,
+        config: &Value,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn generate_stream(
+        &self,
+        prompt: &str,
+        config: &Value,
+        tx: mpsc::Sender<String>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+
+    // Add tool calling capability using LangChain tools
+    async fn generate_with_tools(
+        &self,
+        prompt: &str,
+        config: &Value,
+        available_tools: &[String],
+        tool_manager: Arc<ToolManager>,
+        session_id: &str,
+        user_id: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>>;
+}
+
+pub struct OpenAIClient {
+    client: OpenAI,
+}
+
+impl OpenAIClient {
+    pub fn new(client: OpenAI) -> Self {
+        Self { client }
+    }
+}
+
+#[async_trait]
+impl LLMProvider for OpenAIClient {
+    async fn generate(
+        &self,
+        prompt: &str,
+        _config: &Value,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let messages = vec![Message::new_human_message(prompt.to_string())];
+
+        let result = self
+            .client
+            .invoke(&messages)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+
+        Ok(result)
+    }
+
+    async fn generate_stream(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        mut tx: mpsc::Sender<String>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let messages = vec![Message::new_human_message(prompt.to_string())];
+
+        let mut stream = self
+            .client
+            .stream(&messages)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+
+        while let Some(result) = stream.next().await {
+            match result {
+                Ok(chunk) => {
+                    let content = chunk.content;
+                    if !content.is_empty() {
+                        let _ = tx.send(content.to_string()).await;
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Stream error: {}", e);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn generate_with_tools(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        available_tools: &[String],
+        _tool_manager: Arc<ToolManager>,
+        _session_id: &str,
+        _user_id: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        // Enhanced prompt with tool information
+        let tools_info = if available_tools.is_empty() {
+            String::new()
+        } else {
+            format!("\n\nAvailable tools: {}. You can suggest using these tools if they would help answer the user's question.", available_tools.join(", "))
+        };
+
+        let enhanced_prompt = format!("{}{}", prompt, tools_info);
+
+        let messages = vec![Message::new_human_message(enhanced_prompt)];
+
+        let result = self
+            .client
+            .invoke(&messages)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+
+        Ok(result)
+    }
+}
+
+pub struct AnthropicClient {
+    client: Claude,
+}
+
+impl AnthropicClient {
+    pub fn new(api_key: String) -> Self {
+        let client = Claude::default().with_api_key(api_key);
+        Self { client }
+    }
+}
+
+#[async_trait]
+impl LLMProvider for AnthropicClient {
+    async fn generate(
+        &self,
+        prompt: &str,
+        _config: &Value,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let messages = vec![Message::new_human_message(prompt.to_string())];
+
+        let result = self
+            .client
+            .invoke(&messages)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+
+        Ok(result)
+    }
+
+    async fn generate_stream(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        mut tx: mpsc::Sender<String>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let messages = vec![Message::new_human_message(prompt.to_string())];
+
+        let mut stream = self
+            .client
+            .stream(&messages)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+
+        while let Some(result) = stream.next().await {
+            match result {
+                Ok(chunk) => {
+                    let content = chunk.content;
+                    if !content.is_empty() {
+                        let _ = tx.send(content.to_string()).await;
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Stream error: {}", e);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn generate_with_tools(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        available_tools: &[String],
+        _tool_manager: Arc<ToolManager>,
+        _session_id: &str,
+        _user_id: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let tools_info = if available_tools.is_empty() {
+            String::new()
+        } else {
+            format!("\n\nAvailable tools: {}. You can suggest using these tools if they would help answer the user's question.", available_tools.join(", "))
+        };
+
+        let enhanced_prompt = format!("{}{}", prompt, tools_info);
+
+        let messages = vec![Message::new_human_message(enhanced_prompt)];
+
+        let result = self
+            .client
+            .invoke(&messages)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+
+        Ok(result)
+    }
+}
+
+pub struct MockLLMProvider;
+
+impl MockLLMProvider {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+#[async_trait]
+impl LLMProvider for MockLLMProvider {
+    async fn generate(
+        &self,
+        prompt: &str,
+        _config: &Value,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(format!("Mock response to: {}", prompt))
+    }
+
+    async fn generate_stream(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        mut tx: mpsc::Sender<String>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let response = format!("Mock stream response to: {}", prompt);
+        for word in response.split_whitespace() {
+            let _ = tx.send(format!("{} ", word)).await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        }
+        Ok(())
+    }
+
+    async fn generate_with_tools(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        available_tools: &[String],
+        _tool_manager: Arc<ToolManager>,
+        _session_id: &str,
+        _user_id: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let tools_list = if available_tools.is_empty() {
+            "no tools available".to_string()
+        } else {
+            available_tools.join(", ")
+        };
+        Ok(format!(
+            "Mock response with tools [{}] to: {}",
+            tools_list, prompt
+        ))
+    }
+}
+
+use log::info;
+
+use actix_web::{post, web, HttpRequest, HttpResponse, Result};
+use dotenv::dotenv;
+use regex::Regex;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use std::env;
+
+// OpenAI-compatible request/response structures
+#[derive(Debug, Serialize, Deserialize)]
+struct ChatMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ChatCompletionRequest {
+    model: String,
+    messages: Vec<ChatMessage>,
+    stream: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ChatCompletionResponse {
+    id: String,
+    object: String,
+    created: u64,
+    model: String,
+    choices: Vec<Choice>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Choice {
+    message: ChatMessage,
+    finish_reason: String,
+}
+
+#[post("/azure/v1/chat/completions")]
+async fn chat_completions(body: web::Bytes, _req: HttpRequest) -> Result<HttpResponse> {
+    // Always log raw POST data
+    if let Ok(body_str) = std::str::from_utf8(&body) {
+        info!("POST Data: {}", body_str);
+    } else {
+        info!("POST Data (binary): {:?}", body);
+    }
+
+    dotenv().ok();
+
+    // Environment variables
+    let azure_endpoint = env::var("AI_ENDPOINT")
+        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_ENDPOINT not set."))?;
+    let azure_key = env::var("AI_KEY")
+        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_KEY not set."))?;
+    let deployment_name = env::var("AI_LLM_MODEL")
+        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_LLM_MODEL not set."))?;
+
+    // Construct Azure OpenAI URL
+    let url = format!(
+        "{}/openai/deployments/{}/chat/completions?api-version=2025-01-01-preview",
+        azure_endpoint, deployment_name
+    );
+
+    // Forward headers
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(
+        "api-key",
+        reqwest::header::HeaderValue::from_str(&azure_key)
+            .map_err(|_| actix_web::error::ErrorInternalServerError("Invalid Azure key"))?,
+    );
+    headers.insert(
+        "Content-Type",
+        reqwest::header::HeaderValue::from_static("application/json"),
+    );
+
+    let body_str = std::str::from_utf8(&body).unwrap_or("");
+    info!("Original POST Data: {}", body_str);
+
+    // Remove the problematic params
+    let re =
+        Regex::new(r#","?\s*"(max_completion_tokens|parallel_tool_calls)"\s*:\s*[^,}]*"#).unwrap();
+    let cleaned = re.replace_all(body_str, "");
+    let cleaned_body = web::Bytes::from(cleaned.to_string());
+
+    info!("Cleaned POST Data: {}", cleaned);
+
+    // Send request to Azure
+    let client = Client::new();
+    let response = client
+        .post(&url)
+        .headers(headers)
+        .body(cleaned_body)
+        .send()
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    // Handle response based on status
+    let status = response.status();
+    let raw_response = response
+        .text()
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    // Log the raw response
+    info!("Raw Azure response: {}", raw_response);
+
+    if status.is_success() {
+        Ok(HttpResponse::Ok().body(raw_response))
+    } else {
+        // Handle error responses properly
+        let actix_status = actix_web::http::StatusCode::from_u16(status.as_u16())
+            .unwrap_or(actix_web::http::StatusCode::INTERNAL_SERVER_ERROR);
+
+        Ok(HttpResponse::build(actix_status).body(raw_response))
+    }
+}
+
+use log::{error, info};
+
+use actix_web::{post, web, HttpRequest, HttpResponse, Result};
+use dotenv::dotenv;
+use regex::Regex;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use std::env;
+
+// OpenAI-compatible request/response structures
+#[derive(Debug, Serialize, Deserialize)]
+struct ChatMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ChatCompletionRequest {
+    model: String,
+    messages: Vec<ChatMessage>,
+    stream: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ChatCompletionResponse {
+    id: String,
+    object: String,
+    created: u64,
+    model: String,
+    choices: Vec<Choice>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Choice {
+    message: ChatMessage,
+    finish_reason: String,
+}
+
+fn clean_request_body(body: &str) -> String {
+    // Remove problematic parameters that might not be supported by all providers
+    let re = Regex::new(r#","?\s*"(max_completion_tokens|parallel_tool_calls|top_p|frequency_penalty|presence_penalty)"\s*:\s*[^,}]*"#).unwrap();
+    re.replace_all(body, "").to_string()
+}
+
+#[post("/v1/chat/completions")]
+pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Result<HttpResponse> {
+    // Log raw POST data
+    let body_str = std::str::from_utf8(&body).unwrap_or_default();
+    info!("Original POST Data: {}", body_str);
+
+    dotenv().ok();
+
+    // Get environment variables
+    let api_key = env::var("AI_KEY")
+        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_KEY not set."))?;
+    let model = env::var("AI_LLM_MODEL")
+        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_LLM_MODEL not set."))?;
+    let endpoint = env::var("AI_ENDPOINT")
+        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_ENDPOINT not set."))?;
+
+    // Parse and modify the request body
+    let mut json_value: serde_json::Value = serde_json::from_str(body_str)
+        .map_err(|_| actix_web::error::ErrorInternalServerError("Failed to parse JSON"))?;
+
+    // Add model parameter
+    if let Some(obj) = json_value.as_object_mut() {
+        obj.insert("model".to_string(), serde_json::Value::String(model));
+    }
+
+    let modified_body_str = serde_json::to_string(&json_value)
+        .map_err(|_| actix_web::error::ErrorInternalServerError("Failed to serialize JSON"))?;
+
+    info!("Modified POST Data: {}", modified_body_str);
+
+    // Set up headers
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(
+        "Authorization",
+        reqwest::header::HeaderValue::from_str(&format!("Bearer {}", api_key))
+            .map_err(|_| actix_web::error::ErrorInternalServerError("Invalid API key format"))?,
+    );
+    headers.insert(
+        "Content-Type",
+        reqwest::header::HeaderValue::from_static("application/json"),
+    );
+
+    // Send request to the AI provider
+    let client = Client::new();
+    let response = client
+        .post(&endpoint)
+        .headers(headers)
+        .body(modified_body_str)
+        .send()
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    // Handle response
+    let status = response.status();
+    let raw_response = response
+        .text()
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    info!("Provider response status: {}", status);
+    info!("Provider response body: {}", raw_response);
+
+    // Convert response to OpenAI format if successful
+    if status.is_success() {
+        match convert_to_openai_format(&raw_response) {
+            Ok(openai_response) => Ok(HttpResponse::Ok()
+                .content_type("application/json")
+                .body(openai_response)),
+            Err(e) => {
+                error!("Failed to convert response format: {}", e);
+                // Return the original response if conversion fails
+                Ok(HttpResponse::Ok()
+                    .content_type("application/json")
+                    .body(raw_response))
+            }
+        }
+    } else {
+        // Return error as-is
+        let actix_status = actix_web::http::StatusCode::from_u16(status.as_u16())
+            .unwrap_or(actix_web::http::StatusCode::INTERNAL_SERVER_ERROR);
+
+        Ok(HttpResponse::build(actix_status)
+            .content_type("application/json")
+            .body(raw_response))
+    }
+}
+
+/// Converts provider response to OpenAI-compatible format
+fn convert_to_openai_format(provider_response: &str) -> Result<String, Box<dyn std::error::Error>> {
+    #[derive(serde::Deserialize)]
+    struct ProviderChoice {
+        message: ProviderMessage,
+        #[serde(default)]
+        finish_reason: Option<String>,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct ProviderMessage {
+        role: Option<String>,
+        content: String,
+    }
+
+    #[derive(serde::Deserialize)]
+    struct ProviderResponse {
+        id: Option<String>,
+        object: Option<String>,
+        created: Option<u64>,
+        model: Option<String>,
+        choices: Vec<ProviderChoice>,
+        usage: Option<ProviderUsage>,
+    }
+
+    #[derive(serde::Deserialize, Default)]
+    struct ProviderUsage {
+        prompt_tokens: Option<u32>,
+        completion_tokens: Option<u32>,
+        total_tokens: Option<u32>,
+    }
+
+    #[derive(serde::Serialize)]
+    struct OpenAIResponse {
+        id: String,
+        object: String,
+        created: u64,
+        model: String,
+        choices: Vec<OpenAIChoice>,
+        usage: OpenAIUsage,
+    }
+
+    #[derive(serde::Serialize)]
+    struct OpenAIChoice {
+        index: u32,
+        message: OpenAIMessage,
+        finish_reason: String,
+    }
+
+    #[derive(serde::Serialize)]
+    struct OpenAIMessage {
+        role: String,
+        content: String,
+    }
+
+    #[derive(serde::Serialize)]
+    struct OpenAIUsage {
+        prompt_tokens: u32,
+        completion_tokens: u32,
+        total_tokens: u32,
+    }
+
+    // Parse the provider response
+    let provider: ProviderResponse = serde_json::from_str(provider_response)?;
+
+    // Extract content from the first choice
+    let first_choice = provider.choices.get(0).ok_or("No choices in response")?;
+    let content = first_choice.message.content.clone();
+    let role = first_choice
+        .message
+        .role
+        .clone()
+        .unwrap_or_else(|| "assistant".to_string());
+
+    // Calculate token usage
+    let usage = provider.usage.unwrap_or_default();
+    let prompt_tokens = usage.prompt_tokens.unwrap_or(0);
+    let completion_tokens = usage
+        .completion_tokens
+        .unwrap_or_else(|| content.split_whitespace().count() as u32);
+    let total_tokens = usage
+        .total_tokens
+        .unwrap_or(prompt_tokens + completion_tokens);
+
+    let openai_response = OpenAIResponse {
+        id: provider
+            .id
+            .unwrap_or_else(|| format!("chatcmpl-{}", uuid::Uuid::new_v4().simple())),
+        object: provider
+            .object
+            .unwrap_or_else(|| "chat.completion".to_string()),
+        created: provider.created.unwrap_or_else(|| {
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+        }),
+        model: provider.model.unwrap_or_else(|| "llama".to_string()),
+        choices: vec![OpenAIChoice {
+            index: 0,
+            message: OpenAIMessage { role, content },
+            finish_reason: first_choice
+                .finish_reason
+                .clone()
+                .unwrap_or_else(|| "stop".to_string()),
+        }],
+        usage: OpenAIUsage {
+            prompt_tokens,
+            completion_tokens,
+            total_tokens,
+        },
+    };
+
+    serde_json::to_string(&openai_response).map_err(|e| e.into())
+}
+
+// Default implementation for ProviderUsage
+
+use async_trait::async_trait;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use log::info;
+
+use crate::shared::BotResponse;
+
+#[derive(Debug, Deserialize)]
+pub struct WhatsAppMessage {
+    pub entry: Vec<WhatsAppEntry>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WhatsAppEntry {
+    pub changes: Vec<WhatsAppChange>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WhatsAppChange {
+    pub value: WhatsAppValue,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WhatsAppValue {
+    pub contacts: Option<Vec<WhatsAppContact>>,
+    pub messages: Option<Vec<WhatsAppMessageData>>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WhatsAppContact {
+    pub profile: WhatsAppProfile,
+    pub wa_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WhatsAppProfile {
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WhatsAppMessageData {
+    pub from: String,
+    pub id: String,
+    pub timestamp: String,
+    pub text: Option<WhatsAppText>,
+    pub r#type: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WhatsAppText {
+    pub body: String,
+}
+
+#[derive(Serialize)]
+pub struct WhatsAppResponse {
+    pub messaging_product: String,
+    pub to: String,
+    pub text: WhatsAppResponseText,
+}
+
+#[derive(Serialize)]
+pub struct WhatsAppResponseText {
+    pub body: String,
+}
+
+pub struct WhatsAppAdapter {
+    client: Client,
+    access_token: String,
+    phone_number_id: String,
+    webhook_verify_token: String,
+    sessions: Arc<Mutex<HashMap<String, String>>>, // phone -> session_id
+}
+
+impl WhatsAppAdapter {
+    pub fn new(access_token: String, phone_number_id: String, webhook_verify_token: String) -> Self {
+        Self {
+            client: Client::new(),
+            access_token,
+            phone_number_id,
+            webhook_verify_token,
+            sessions: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    pub async fn get_session_id(&self, phone: &str) -> String {
+        let sessions = self.sessions.lock().await;
+        sessions.get(phone).cloned().unwrap_or_else(|| {
+            drop(sessions);
+            let session_id = uuid::Uuid::new_v4().to_string();
+            let mut sessions = self.sessions.lock().await;
+            sessions.insert(phone.to_string(), session_id.clone());
+            session_id
+        })
+    }
+
+    pub async fn send_whatsapp_message(&self, to: &str, body: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let url = format!(
+            "https://graph.facebook.com/v17.0/{}/messages",
+            self.phone_number_id
+        );
+
+        let response_data = WhatsAppResponse {
+            messaging_product: "whatsapp".to_string(),
+            to: to.to_string(),
+            text: WhatsAppResponseText {
+                body: body.to_string(),
+            },
+        };
+
+        let response = self.client
+            .post(&url)
+            .header("Authorization", format!("Bearer {}", self.access_token))
+            .json(&response_data)
+            .send()
+            .await?;
+
+        if response.status().is_success() {
+            info!("WhatsApp message sent to {}", to);
+        } else {
+            let error_text = response.text().await?;
+            log::error!("Failed to send WhatsApp message: {}", error_text);
+        }
+
+        Ok(())
+    }
+
+    pub async fn process_incoming_message(&self, message: WhatsAppMessage) -> Result<Vec<crate::shared::UserMessage>, Box<dyn std::error::Error>> {
+        let mut user_messages = Vec::new();
+
+        for entry in message.entry {
+            for change in entry.changes {
+                if let Some(messages) = change.value.messages {
+                    for msg in messages {
+                        if let Some(text) = msg.text {
+                            let session_id = self.get_session_id(&msg.from).await;
+
+                            let user_message = crate::shared::UserMessage {
+                                bot_id: "default_bot".to_string(),
+                                user_id: msg.from.clone(),
+                                session_id: session_id.clone(),
+                                channel: "whatsapp".to_string(),
+                                content: text.body,
+                                message_type: msg.r#type,
+                                media_url: None,
+                                timestamp: chrono::Utc::now(),
+                            };
+
+                            user_messages.push(user_message);
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(user_messages)
+    }
+
+    pub fn verify_webhook(&self, mode: &str, token: &str, challenge: &str) -> Result<String, Box<dyn std::error::Error>> {
+        if mode == "subscribe" && token == self.webhook_verify_token {
+            Ok(challenge.to_string())
+        } else {
+            Err("Invalid verification".into())
+        }
+    }
+}
+
+#[async_trait]
+impl super::channels::ChannelAdapter for WhatsAppAdapter {
+    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error>> {
+        info!("Sending WhatsApp response to: {}", response.user_id);
+        self.send_whatsapp_message(&response.user_id, &response.content).await
+    }
+}
+
+use std::env;
+
+#[derive(Clone)]
+pub struct AppConfig {
+    pub minio: MinioConfig,
+    pub server: ServerConfig,
+    pub database: DatabaseConfig,
+    pub database_custom: DatabaseConfig,
+    pub email: EmailConfig,
+    pub ai: AIConfig,
+    pub site_path: String,
+}
+
+#[derive(Clone)]
+pub struct DatabaseConfig {
+    pub username: String,
+    pub password: String,
+    pub server: String,
+    pub port: u32,
+    pub database: String,
+}
+
+#[derive(Clone)]
+pub struct MinioConfig {
+    pub server: String,
+    pub access_key: String,
+    pub secret_key: String,
+    pub use_ssl: bool,
+    pub bucket: String,
+}
+
+#[derive(Clone)]
+pub struct ServerConfig {
+    pub host: String,
+    pub port: u16,
+}
+
+#[derive(Clone)]
+pub struct EmailConfig {
+    pub from: String,
+    pub server: String,
+    pub port: u16,
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Clone)]
+pub struct AIConfig {
+    pub instance: String,
+    pub key: String,
+    pub version: String,
+    pub endpoint: String,
+}
+
+    
+impl AppConfig {
+    pub fn database_url(&self) -> String {
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            self.database.username,
+            self.database.password,
+            self.database.server,
+            self.database.port,
+            self.database.database
+        )
+    }
+
+        pub fn database_custom_url(&self) -> String {
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            self.database_custom.username,
+            self.database_custom.password,
+            self.database_custom.server,
+            self.database_custom.port,
+            self.database_custom.database
+        )
+    }
+
+
+    pub fn from_env() -> Self {
+        let database = DatabaseConfig {
+            username: env::var("TABLES_USERNAME").unwrap_or_else(|_| "user".to_string()),
+            password: env::var("TABLES_PASSWORD").unwrap_or_else(|_| "pass".to_string()),
+            server: env::var("TABLES_SERVER").unwrap_or_else(|_| "localhost".to_string()),
+            port: env::var("TABLES_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(5432),
+            database: env::var("TABLES_DATABASE").unwrap_or_else(|_| "db".to_string()),
+        };
+
+        let database_custom = DatabaseConfig {
+            username: env::var("CUSTOM_USERNAME").unwrap_or_else(|_| "user".to_string()),
+            password: env::var("CUSTOM_PASSWORD").unwrap_or_else(|_| "pass".to_string()),
+            server: env::var("CUSTOM_SERVER").unwrap_or_else(|_| "localhost".to_string()),
+            port: env::var("CUSTOM_PORT")
+                .ok()
+                .and_then(|p| p.parse().ok())
+                .unwrap_or(5432),
+            database: env::var("CUSTOM_DATABASE").unwrap_or_else(|_| "db".to_string()),
+        };
+
+        let minio = MinioConfig {
+            server: env::var("DRIVE_SERVER").expect("DRIVE_SERVER not set"),
+            access_key: env::var("DRIVE_ACCESSKEY").expect("DRIVE_ACCESSKEY not set"),
+            secret_key: env::var("DRIVE_SECRET").expect("DRIVE_SECRET not set"),
+            use_ssl: env::var("DRIVE_USE_SSL")
+                .unwrap_or_else(|_| "false".to_string())
+                .parse()
+                .unwrap_or(false),
+            bucket: env::var("DRIVE_ORG_PREFIX").unwrap_or_else(|_| "".to_string()),
+        };
+
+        let email = EmailConfig {
+            from: env::var("EMAIL_FROM").expect("EMAIL_FROM not set"),
+            server: env::var("EMAIL_SERVER").expect("EMAIL_SERVER not set"),
+            port: env::var("EMAIL_PORT")
+                .expect("EMAIL_PORT not set")
+                .parse()
+                .expect("EMAIL_PORT must be a number"),
+            username: env::var("EMAIL_USER").expect("EMAIL_USER not set"),
+            password: env::var("EMAIL_PASS").expect("EMAIL_PASS not set"),
+        };
+
+        let ai = AIConfig {
+            instance: env::var("AI_INSTANCE").expect("AI_INSTANCE not set"),
+            key: env::var("AI_KEY").expect("AI_KEY not set"),
+            version: env::var("AI_VERSION").expect("AI_VERSION not set"),
+            endpoint: env::var("AI_ENDPOINT").expect("AI_ENDPOINT not set"),
+        };
+
+        AppConfig {
+            minio,
+            server: ServerConfig {
+                host: env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
+                port: env::var("SERVER_PORT")
+                    .ok()
+                    .and_then(|p| p.parse().ok())
+                    .unwrap_or(8080),
+            },
+            database,
+            database_custom,
+            email,
+            ai,
+            site_path: env::var("SITES_ROOT").unwrap()
+        }
+    }
+}
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
+use redis::Client;
+use sqlx::{PgPool, Row}; // <-- required for .get()
+use std::sync::Arc;
+use uuid::Uuid;
+
+pub struct AuthService {
+    pub pool: PgPool,
+    pub redis: Option<Arc<Client>>,
+}
+
+impl AuthService {
+    #[allow(clippy::new_without_default)]
+    pub fn new(pool: PgPool, redis: Option<Arc<Client>>) -> Self {
+        Self { pool, redis }
+    }
+
+    pub async fn verify_user(
+        &self,
+        username: &str,
+        password: &str,
+    ) -> Result<Option<Uuid>, Box<dyn std::error::Error>> {
+        let user = sqlx::query(
+            "SELECT id, password_hash FROM users WHERE username = $1 AND is_active = true",
+        )
+        .bind(username)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        if let Some(row) = user {
+            let user_id: Uuid = row.get("id");
+            let password_hash: String = row.get("password_hash");
+
+            if let Ok(parsed_hash) = PasswordHash::new(&password_hash) {
+                if Argon2::default()
+                    .verify_password(password.as_bytes(), &parsed_hash)
+                    .is_ok()
+                {
+                    return Ok(Some(user_id));
+                }
+            }
+        }
+
+        Ok(None)
+    }
+
+    pub async fn create_user(
+        &self,
+        username: &str,
+        email: &str,
+        password: &str,
+    ) -> Result<Uuid, Box<dyn std::error::Error>> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = match argon2.hash_password(password.as_bytes(), &salt) {
+            Ok(ph) => ph.to_string(),
+            Err(e) => {
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    e.to_string(),
+                )))
+            }
+        };
+
+        let row = sqlx::query(
+            "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id",
+        )
+        .bind(username)
+        .bind(email)
+        .bind(&password_hash)
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(row.get::<Uuid, _>("id"))
+    }
+
+    pub async fn delete_user_cache(
+        &self,
+        username: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(redis_client) = &self.redis {
+            let mut conn = redis_client.get_multiplexed_async_connection().await?;
+            let cache_key = format!("auth:user:{}", username);
+
+            let _: () = redis::Cmd::del(&cache_key).query_async(&mut conn).await?;
+        }
+        Ok(())
+    }
+
+    pub async fn update_user_password(
+        &self,
+        user_id: Uuid,
+        new_password: &str,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = match argon2.hash_password(new_password.as_bytes(), &salt) {
+            Ok(ph) => ph.to_string(),
+            Err(e) => {
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    e.to_string(),
+                )))
+            }
+        };
+
+        sqlx::query("UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2")
+            .bind(&password_hash)
+            .bind(user_id)
+            .execute(&self.pool)
+            .await?;
+
+        if let Some(user_row) = sqlx::query("SELECT username FROM users WHERE id = $1")
+            .bind(user_id)
+            .fetch_optional(&self.pool)
+            .await?
+        {
+            let username: String = user_row.get("username");
+            self.delete_user_cache(&username).await?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Clone for AuthService {
+    fn clone(&self) -> Self {
+        Self {
+            pool: self.pool.clone(),
+            redis: self.redis.clone(),
+        }
+    }
+}
+
 use std::sync::Arc;
 
-use minio::s3::Client;
-
-use crate::{config::AppConfig, web_automator::BrowserPool};
+use crate::{
+    bot::BotOrchestrator, 
+    channels::{VoiceAdapter, WebChannelAdapter, WhatsAppAdapter},
+    config::AppConfig,
+    tools::ToolApi,
+    web_automation::BrowserPool
+};
 
 #[derive(Clone)]
 pub struct AppState {
-    pub minio_client: Option<Client>,
+    pub minio_client: Option<minio::s3::Client>,
     pub config: Option<AppConfig>,
     pub db: Option<sqlx::PgPool>,
     pub db_custom: Option<sqlx::PgPool>,
@@ -124,25 +2128,21 @@ pub struct AppState {
     pub web_adapter: Arc<WebChannelAdapter>,
     pub voice_adapter: Arc<VoiceAdapter>,
     pub whatsapp_adapter: Arc<WhatsAppAdapter>,
-    tool_api: Arc<ToolApi>, // Add this
+    pub tool_api: Arc<ToolApi>,
 }
-pub struct _BotState {
+
+pub struct BotState {
     pub language: String,
     pub work_folder: String,
 }
 
-use crate::config::AIConfig;
-use langchain_rust::llm::OpenAI;
-use langchain_rust::{language_models::llm::LLM, llm::AzureConfig};
-use log::error;
+use chrono::{DateTime, Utc};
+use langchain_rust::llm::AzureConfig;
 use log::{debug, warn};
 use rhai::{Array, Dynamic};
 use serde_json::{json, Value};
 use smartstring::SmartString;
-use sqlx::Column; // Required for .name() method
-use sqlx::TypeInfo; // Required for .type_info() method
-use sqlx::{postgres::PgRow, Row};
-use sqlx::{Decode, Type};
+use sqlx::{postgres::PgRow, Column, Decode, Row, Type, TypeInfo};
 use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
@@ -151,6 +2151,7 @@ use tokio::fs::File as TokioFile;
 use tokio_stream::StreamExt;
 use zip::ZipArchive;
 
+use crate::config::AIConfig;
 use reqwest::Client;
 use tokio::io::AsyncWriteExt;
 
@@ -167,16 +2168,14 @@ pub async fn call_llm(
     ai_config: &AIConfig,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let azure_config = azure_from_config(&ai_config.clone());
-    let open_ai = OpenAI::new(azure_config);
+    let open_ai = langchain_rust::llm::OpenAI::new(azure_config);
 
-    // Directly use the input text as prompt
     let prompt = text.to_string();
 
-    // Call LLM and return the raw text response
     match open_ai.invoke(&prompt).await {
         Ok(response_text) => Ok(response_text),
         Err(err) => {
-            error!("Error invoking LLM API: {}", err);
+            log::error!("Error invoking LLM API: {}", err);
             Err(Box::new(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 "Failed to invoke LLM API",
@@ -212,6 +2211,7 @@ pub fn extract_zip_recursive(
 
     Ok(())
 }
+
 pub fn row_to_json(row: PgRow) -> Result<Value, Box<dyn Error>> {
     let mut result = serde_json::Map::new();
     let columns = row.columns();
@@ -264,17 +2264,15 @@ where
 }
 
 fn handle_json(row: &PgRow, idx: usize, col_name: &str) -> Value {
-    // First try to get as Option<Value>
     match row.try_get::<Option<Value>, _>(idx) {
         Ok(Some(val)) => {
             debug!("Successfully read JSON column {} as Value", col_name);
             return val;
         }
         Ok(None) => return Value::Null,
-        Err(_) => (), // Fall through to other attempts
+        Err(_) => (),
     }
 
-    // Try as Option<String> that might contain JSON
     match row.try_get::<Option<String>, _>(idx) {
         Ok(Some(s)) => match serde_json::from_str(&s) {
             Ok(val) => val,
@@ -290,6 +2288,7 @@ fn handle_json(row: &PgRow, idx: usize, col_name: &str) -> Value {
         }
     }
 }
+
 pub fn json_value_to_dynamic(value: &Value) -> Dynamic {
     match value {
         Value::Null => Dynamic::UNIT,
@@ -317,16 +2316,12 @@ pub fn json_value_to_dynamic(value: &Value) -> Dynamic {
     }
 }
 
-/// Converts any value to an array - single values become single-element arrays
 pub fn to_array(value: Dynamic) -> Array {
     if value.is_array() {
-        // Already an array - return as-is
         value.cast::<Array>()
     } else if value.is_unit() || value.is::<()>() {
-        // Handle empty/unit case
         Array::new()
     } else {
-        // Convert single value to single-element array
         Array::from([value])
     }
 }
@@ -351,7 +2346,6 @@ pub async fn download_file(url: &str, output_path: &str) -> Result<(), Box<dyn s
     Ok(())
 }
 
-// Helper function to parse the filter string into SQL WHERE clause and parameters
 pub fn parse_filter(filter_str: &str) -> Result<(String, Vec<String>), Box<dyn Error>> {
     let parts: Vec<&str> = filter_str.split('=').collect();
     if parts.len() != 2 {
@@ -361,7 +2355,6 @@ pub fn parse_filter(filter_str: &str) -> Result<(String, Vec<String>), Box<dyn E
     let column = parts[0].trim();
     let value = parts[1].trim();
 
-    // Validate column name to prevent SQL injection
     if !column
         .chars()
         .all(|c| c.is_ascii_alphanumeric() || c == '_')
@@ -369,11 +2362,9 @@ pub fn parse_filter(filter_str: &str) -> Result<(String, Vec<String>), Box<dyn E
         return Err("Invalid column name in filter".into());
     }
 
-    // Return the parameterized query part and the value separately
     Ok((format!("{} = $1", column), vec![value.to_string()]))
 }
 
-// Parse filter without adding quotes
 pub fn parse_filter_with_offset(
     filter_str: &str,
     offset: usize,
@@ -398,7 +2389,7 @@ pub fn parse_filter_with_offset(
         }
 
         clauses.push(format!("{} = ${}", column, i + 1 + offset));
-        params.push(value.to_string()); // Store raw value without quotes
+        params.push(value.to_string());
     }
 
     Ok((clauses.join(" AND "), params))
@@ -410,7 +2401,7 @@ use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
-pub struct organization {
+pub struct Organization {
     pub org_id: Uuid,
     pub name: String,
     pub slug: String,
@@ -423,8 +2414,8 @@ pub struct Bot {
     pub name: String,
     pub status: BotStatus,
     pub config: serde_json::Value,
-    pub created_at: chrono::DateTime<Utc>,
-    pub updated_at: chrono::DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
@@ -459,22 +2450,13 @@ impl TriggerKind {
 #[derive(Debug, FromRow, Serialize, Deserialize)]
 pub struct Automation {
     pub id: Uuid,
-    pub kind: i32, // Using number for trigger type
+    pub kind: i32,
     pub target: Option<String>,
     pub schedule: Option<String>,
     pub param: String,
     pub is_active: bool,
     pub last_triggered: Option<DateTime<Utc>>,
 }
-
-pub mod models;
-pub mod state;
-pub mod utils;
-
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
-use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct UserSession {
@@ -532,7 +2514,14 @@ pub struct BotResponse {
     pub is_complete: bool,
 }
 
-use crate::{shared::state::AppState, whatsapp};
+pub mod models;
+pub mod state;
+pub mod utils;
+
+pub use models::*;
+pub use state::*;
+pub use utils::*;
+
 use actix_web::{web, HttpRequest, HttpResponse, Result};
 use actix_ws::Message as WsMessage;
 use chrono::Utc;
@@ -553,16 +2542,17 @@ use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 use uuid::Uuid;
 
-use crate::channels::{ChannelAdapter, VoiceAdapter, WebChannelAdapter};
-use crate::chart::ChartGenerator;
-use crate::llm::LLMProvider;
-use crate::session::SessionManager;
-use crate::tools::ToolManager;
-use crate::whatsapp::WhatsAppAdapter;
 use crate::{
     auth::AuthService,
+    channels::ChannelAdapter,
+    chart::ChartGenerator,
+    llm::LLMProvider,
+    session::SessionManager,
     shared::{BotResponse, UserMessage, UserSession},
+    tools::ToolManager,
+    whatsapp::WhatsAppAdapter,
 };
+
 pub struct BotOrchestrator {
     session_manager: SessionManager,
     tool_manager: ToolManager,
@@ -618,7 +2608,7 @@ impl BotOrchestrator {
         user_id: &str,
         bot_id: &str,
         mode: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.session_manager
             .update_answer_mode(user_id, bot_id, mode)
             .await?;
@@ -628,7 +2618,7 @@ impl BotOrchestrator {
     pub async fn process_message(
         &self,
         message: UserMessage,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!(
             "Processing message from channel: {}, user: {}",
             message.channel, message.user_id
@@ -692,7 +2682,7 @@ impl BotOrchestrator {
         };
 
         if let Some(adapter) = self.channels.get(&message.channel) {
-            adapter.send_message(bot_response).await?;
+            adapter.send_message(bot_response).await;
         }
 
         Ok(())
@@ -702,7 +2692,7 @@ impl BotOrchestrator {
         &self,
         message: &UserMessage,
         session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(vector_store) = &self.vector_store {
             let similar_docs = vector_store
                 .similarity_search(&message.content, 3, &VecStoreOptions::default())
@@ -732,7 +2722,7 @@ impl BotOrchestrator {
         &self,
         message: &UserMessage,
         session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(chart_generator) = &self.chart_generator {
             let chart_response = chart_generator
                 .generate_chart(&message.content, "bar")
@@ -761,7 +2751,7 @@ impl BotOrchestrator {
         &self,
         message: &UserMessage,
         _session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(sql_chain) = &self.sql_chain {
             let input_variables = prompt_args! {
                 "input" => message.content,
@@ -792,7 +2782,7 @@ impl BotOrchestrator {
         &self,
         message: &UserMessage,
         _session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         if message.content.to_lowercase().contains("calculator") {
             if let Some(_adapter) = self.channels.get(&message.channel) {
                 let (tx, _rx) = mpsc::channel(100);
@@ -807,7 +2797,13 @@ impl BotOrchestrator {
 
                 tokio::spawn(async move {
                     let _ = tool_manager
-                        .execute_tool("calculator", &user_id_str, &bot_id_str, session_manager, tx)
+                        .execute_tool_with_session(
+                            "calculator",
+                            &user_id_str,
+                            &bot_id_str,
+                            session_manager,
+                            tx,
+                        )
                         .await;
                 });
             }
@@ -832,7 +2828,7 @@ impl BotOrchestrator {
         &self,
         message: &UserMessage,
         session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         let history = self
             .session_manager
             .get_conversation_history(session.id, session.user_id)
@@ -868,7 +2864,7 @@ impl BotOrchestrator {
         &self,
         message: UserMessage,
         mut response_tx: mpsc::Sender<BotResponse>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("Streaming response for user: {}", message.user_id);
 
         let user_id = Uuid::parse_str(&message.user_id).unwrap_or_else(|_| Uuid::new_v4());
@@ -983,7 +2979,7 @@ impl BotOrchestrator {
     pub async fn get_user_sessions(
         &self,
         user_id: Uuid,
-    ) -> Result<Vec<UserSession>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
         self.session_manager.get_user_sessions(user_id).await
     }
 
@@ -991,7 +2987,7 @@ impl BotOrchestrator {
         &self,
         session_id: Uuid,
         user_id: Uuid,
-    ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error + Send + Sync>> {
         self.session_manager
             .get_conversation_history(session_id, user_id)
             .await
@@ -1000,185 +2996,7 @@ impl BotOrchestrator {
     pub async fn process_message_with_tools(
         &self,
         message: UserMessage,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        info!(
-            "Processing message with tools from user: {}",
-            message.user_id
-        );
-
-        let user_id = Uuid::parse_str(&message.user_id).unwrap_or_else(|_| Uuid::new_v4());
-        let bot_id = Uuid::parse_str(&message.bot_id)
-            .unwrap_or_else(|_| Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap());
-
-        let session = match self
-            .session_manager
-            .get_user_session(user_id, bot_id)
-            .await?
-        {
-            Some(session) => session,
-            None => {
-                self.session_manager
-                    .create_session(user_id, bot_id, "New Conversation")
-                    .await?
-            }
-        };
-
-        self.session_manager
-            .save_message(
-                session.id,
-                user_id,
-                "user",
-                &message.content,
-                &message.message_type,
-            )
-            .await?;
-
-        let is_tool_waiting = self
-            .tool_manager
-            .is_tool_waiting(&message.session_id)
-            .await
-            .unwrap_or(false);
-
-        if is_tool_waiting {
-            self.tool_manager
-                .provide_input(&message.session_id, &message.content)
-                .await?;
-
-            if let Ok(tool_output) = self.tool_manager.get_tool_output(&message.session_id).await {
-                for output in tool_output {
-                    let bot_response = BotResponse {
-                        bot_id: message.bot_id.clone(),
-                        user_id: message.user_id.clone(),
-                        session_id: message.session_id.clone(),
-                        channel: message.channel.clone(),
-                        content: output,
-                        message_type: "text".to_string(),
-                        stream_token: None,
-                        is_complete: true,
-                    };
-
-                    if let Some(adapter) = self.channels.get(&message.channel) {
-                        adapter.send_message(bot_response).await?;
-                    }
-                }
-            }
-            return Ok(());
-        }
-
-        let available_tools = self.tool_manager.list_tools();
-        let tools_context = if !available_tools.is_empty() {
-            format!("\n\nAvailable tools: {}. If the user needs calculations, suggest using the calculator tool.", available_tools.join(", "))
-        } else {
-            String::new()
-        };
-
-        let full_prompt = format!("{}{}", message.content, tools_context);
-
-        let response = if message.content.to_lowercase().contains("calculator")
-            || message.content.to_lowercase().contains("calculate")
-            || message.content.to_lowercase().contains("math")
-        {
-            match self
-                .tool_manager
-                .execute_tool("calculator", &message.session_id, &message.user_id)
-                .await
-            {
-                Ok(tool_result) => {
-                    self.session_manager
-                        .save_message(
-                            session.id,
-                            user_id,
-                            "assistant",
-                            &tool_result.output,
-                            "tool_start",
-                        )
-                        .await?;
-
-                    tool_result.output
-                }
-                Err(e) => {
-                    format!("I encountered an error starting the calculator: {}", e)
-                }
-            }
-        } else {
-            self.llm_provider
-                .generate(&full_prompt, &serde_json::Value::Null)
-                .await?
-        };
-
-        self.session_manager
-            .save_message(session.id, user_id, "assistant", &response, "text")
-            .await?;
-
-        let bot_response = BotResponse {
-            bot_id: message.bot_id,
-            user_id: message.user_id,
-            session_id: message.session_id,
-            channel: message.channel,
-            content: response,
-            message_type: "text".to_string(),
-            stream_token: None,
-            is_complete: true,
-        };
-
-        if let Some(adapter) = self.channels.get(&message.channel) {
-            adapter.send_message(bot_response).await?;
-        }
-
-        Ok(())
-    }
-
-    async fn tool_mode_handler(
-        &self,
-        message: &UserMessage,
-        _session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error>> {
-        if message.content.to_lowercase().contains("calculator") {
-            if let Some(_adapter) = self.channels.get(&message.channel) {
-                let (tx, _rx) = mpsc::channel(100);
-
-                self.register_response_channel(message.session_id.clone(), tx.clone())
-                    .await;
-
-                let tool_manager = self.tool_manager.clone();
-                let user_id_str = message.user_id.clone();
-                let bot_id_str = message.bot_id.clone();
-                let session_manager = self.session_manager.clone();
-
-                tokio::spawn(async move {
-                    let _ = tool_manager
-                        .execute_tool_with_session(
-                            "calculator",
-                            &user_id_str,
-                            &bot_id_str,
-                            session_manager,
-                            tx,
-                        )
-                        .await;
-                });
-            }
-            Ok("Starting calculator tool...".to_string())
-        } else {
-            let available_tools = self.tool_manager.list_tools();
-            let tools_context = if !available_tools.is_empty() {
-                format!("\n\nAvailable tools: {}. If the user needs calculations, suggest using the calculator tool.", available_tools.join(", "))
-            } else {
-                String::new()
-            };
-
-            let full_prompt = format!("{}{}", message.content, tools_context);
-
-            self.llm_provider
-                .generate(&full_prompt, &serde_json::Value::Null)
-                .await
-        }
-    }
-
-    // Fix the process_message_with_tools method
-    pub async fn process_message_with_tools(
-        &self,
-        message: UserMessage,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!(
             "Processing message with tools from user: {}",
             message.user_id
@@ -1311,7 +3129,7 @@ impl BotOrchestrator {
 async fn websocket_handler(
     req: HttpRequest,
     stream: web::Payload,
-    data: web::Data<AppState>,
+    data: web::Data<crate::shared::AppState>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let (res, mut session, mut msg_stream) = actix_ws::handle(&req, stream)?;
     let session_id = Uuid::new_v4().to_string();
@@ -1371,7 +3189,7 @@ async fn websocket_handler(
 
 #[actix_web::get("/api/whatsapp/webhook")]
 async fn whatsapp_webhook_verify(
-    data: web::Data<AppState>,
+    data: web::Data<crate::shared::AppState>,
     web::Query(params): web::Query<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
     let mode = params.get("hub.mode").unwrap_or(&"".to_string());
@@ -1386,8 +3204,8 @@ async fn whatsapp_webhook_verify(
 
 #[actix_web::post("/api/whatsapp/webhook")]
 async fn whatsapp_webhook(
-    data: web::Data<AppState>,
-    payload: web::Json<crate::services::whatsapp::WhatsAppMessage>,
+    data: web::Data<crate::shared::AppState>,
+    payload: web::Json<crate::whatsapp::WhatsAppMessage>,
 ) -> Result<HttpResponse> {
     match data
         .whatsapp_adapter
@@ -1411,7 +3229,7 @@ async fn whatsapp_webhook(
 
 #[actix_web::post("/api/voice/start")]
 async fn voice_start(
-    data: web::Data<AppState>,
+    data: web::Data<crate::shared::AppState>,
     info: web::Json<serde_json::Value>,
 ) -> Result<HttpResponse> {
     let session_id = info
@@ -1440,7 +3258,7 @@ async fn voice_start(
 
 #[actix_web::post("/api/voice/stop")]
 async fn voice_stop(
-    data: web::Data<AppState>,
+    data: web::Data<crate::shared::AppState>,
     info: web::Json<serde_json::Value>,
 ) -> Result<HttpResponse> {
     let session_id = info
@@ -1458,7 +3276,7 @@ async fn voice_stop(
 }
 
 #[actix_web::post("/api/sessions")]
-async fn create_session(_data: web::Data<AppState>) -> Result<HttpResponse> {
+async fn create_session(_data: web::Data<crate::shared::AppState>) -> Result<HttpResponse> {
     let session_id = Uuid::new_v4();
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "session_id": session_id,
@@ -1468,7 +3286,7 @@ async fn create_session(_data: web::Data<AppState>) -> Result<HttpResponse> {
 }
 
 #[actix_web::get("/api/sessions")]
-async fn get_sessions(data: web::Data<AppState>) -> Result<HttpResponse> {
+async fn get_sessions(data: web::Data<crate::shared::AppState>) -> Result<HttpResponse> {
     let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
     match data.orchestrator.get_user_sessions(user_id).await {
         Ok(sessions) => Ok(HttpResponse::Ok().json(sessions)),
@@ -1481,7 +3299,7 @@ async fn get_sessions(data: web::Data<AppState>) -> Result<HttpResponse> {
 
 #[actix_web::get("/api/sessions/{session_id}")]
 async fn get_session_history(
-    data: web::Data<AppState>,
+    data: web::Data<crate::shared::AppState>,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let session_id = path.into_inner();
@@ -1505,7 +3323,7 @@ async fn get_session_history(
 
 #[actix_web::post("/api/set_mode")]
 async fn set_mode_handler(
-    data: web::Data<AppState>,
+    data: web::Data<crate::shared::AppState>,
     info: web::Json<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
     let default_user = "default_user".to_string();
@@ -1557,12 +3375,13 @@ async fn static_files(req: HttpRequest) -> Result<HttpResponse> {
     }
 }
 
-use crate::shared::UserSession;
 use redis::{AsyncCommands, Client};
 use serde_json;
 use sqlx::{PgPool, Row};
 use std::sync::Arc;
 use uuid::Uuid;
+
+use crate::shared::UserSession;
 
 pub struct SessionManager {
     pub pool: PgPool,
@@ -1578,7 +3397,7 @@ impl SessionManager {
         &self,
         user_id: Uuid,
         bot_id: Uuid,
-    ) -> Result<Option<UserSession>, Box<dyn std::error::Error>> {
+    ) -> Result<Option<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(redis_client) = &self.redis {
             let mut conn = redis_client.get_multiplexed_async_connection().await?;
             let cache_key = format!("session:{}:{}", user_id, bot_id);
@@ -1615,7 +3434,7 @@ impl SessionManager {
         user_id: Uuid,
         bot_id: Uuid,
         title: &str,
-    ) -> Result<UserSession, Box<dyn std::error::Error>> {
+    ) -> Result<UserSession, Box<dyn std::error::Error + Send + Sync>> {
         let session = sqlx::query_as::<_, UserSession>(
             "INSERT INTO user_sessions (user_id, bot_id, title) VALUES ($1, $2, $3) RETURNING *",
         )
@@ -1642,7 +3461,7 @@ impl SessionManager {
         role: &str,
         content: &str,
         message_type: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let message_count: i64 =
             sqlx::query("SELECT COUNT(*) as count FROM message_history WHERE session_id = $1")
                 .bind(session_id)
@@ -1690,7 +3509,7 @@ impl SessionManager {
         &self,
         session_id: Uuid,
         user_id: Uuid,
-    ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error + Send + Sync>> {
         let messages = sqlx::query(
             "SELECT role, content_encrypted FROM message_history
              WHERE session_id = $1 AND user_id = $2
@@ -1712,7 +3531,7 @@ impl SessionManager {
     pub async fn get_user_sessions(
         &self,
         user_id: Uuid,
-    ) -> Result<Vec<UserSession>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
         let sessions = sqlx::query_as::<_, UserSession>(
             "SELECT * FROM user_sessions WHERE user_id = $1 ORDER BY updated_at DESC",
         )
@@ -1727,7 +3546,7 @@ impl SessionManager {
         user_id: &str,
         bot_id: &str,
         mode: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let user_uuid = Uuid::parse_str(user_id)?;
         let bot_uuid = Uuid::parse_str(bot_id)?;
 
@@ -1756,7 +3575,7 @@ impl SessionManager {
         user_id: &str,
         bot_id: &str,
         tool_name: Option<&str>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let user_uuid = Uuid::parse_str(user_id)?;
         let bot_uuid = Uuid::parse_str(bot_id)?;
 
@@ -1783,7 +3602,7 @@ impl SessionManager {
     pub async fn get_session_by_id(
         &self,
         session_id: Uuid,
-    ) -> Result<Option<UserSession>, Box<dyn std::error::Error>> {
+    ) -> Result<Option<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(redis_client) = &self.redis {
             let mut conn = redis_client.get_multiplexed_async_connection().await?;
             let cache_key = format!("session_by_id:{}", session_id);
@@ -1815,7 +3634,7 @@ impl SessionManager {
     pub async fn cleanup_old_sessions(
         &self,
         days_old: i32,
-    ) -> Result<u64, Box<dyn std::error::Error>> {
+    ) -> Result<u64, Box<dyn std::error::Error + Send + Sync>> {
         let result = sqlx::query(
             "DELETE FROM user_sessions
              WHERE updated_at < NOW() - INTERVAL '1 day' * $1",
@@ -1831,7 +3650,7 @@ impl SessionManager {
         user_id: &str,
         bot_id: &str,
         tool_name: Option<String>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let user_uuid = Uuid::parse_str(user_id)?;
         let bot_uuid = Uuid::parse_str(bot_id)?;
 
@@ -1865,7 +3684,6 @@ impl Clone for SessionManager {
     }
 }
 
-// src/tools/mod.rs
 use async_trait::async_trait;
 use redis::AsyncCommands;
 use rhai::{Engine, Scope};
@@ -1875,9 +3693,11 @@ use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 use uuid::Uuid;
 
-use crate::channels::ChannelAdapter;
-use crate::session::SessionManager;
-use crate::shared::BotResponse;
+use crate::{
+    channels::ChannelAdapter,
+    session::SessionManager,
+    shared::BotResponse,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolResult {
@@ -1902,18 +3722,20 @@ pub trait ToolExecutor: Send + Sync {
         tool_name: &str,
         session_id: &str,
         user_id: &str,
-    ) -> Result<ToolResult, Box<dyn std::error::Error>>;
+    ) -> Result<ToolResult, Box<dyn std::error::Error + Send + Sync>>;
     async fn provide_input(
         &self,
         session_id: &str,
         input: &str,
-    ) -> Result<(), Box<dyn std::error::Error>>;
-    async fn get_output(&self, session_id: &str)
-        -> Result<Vec<String>, Box<dyn std::error::Error>>;
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+    async fn get_output(
+        &self,
+        session_id: &str,
+    ) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>>;
     async fn is_waiting_for_input(
         &self,
         session_id: &str,
-    ) -> Result<bool, Box<dyn std::error::Error>>;
+    ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>>;
 }
 
 pub struct RedisToolExecutor {
@@ -1929,7 +3751,7 @@ impl RedisToolExecutor {
         web_adapter: Arc<dyn ChannelAdapter>,
         voice_adapter: Arc<dyn ChannelAdapter>,
         whatsapp_adapter: Arc<dyn ChannelAdapter>,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let client = redis::Client::open(redis_url)?;
         Ok(Self {
             redis_client: client,
@@ -1945,7 +3767,7 @@ impl RedisToolExecutor {
         user_id: &str,
         channel: &str,
         message: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let response = BotResponse {
             bot_id: "tool_bot".to_string(),
             user_id: user_id.to_string(),
@@ -1968,7 +3790,6 @@ impl RedisToolExecutor {
     fn create_rhai_engine(&self, session_id: String, user_id: String, channel: String) -> Engine {
         let mut engine = Engine::new();
 
-        // Clone for TALK function
         let tool_executor = Arc::new((
             self.redis_client.clone(),
             self.web_adapter.clone(),
@@ -2052,7 +3873,7 @@ impl RedisToolExecutor {
         engine
     }
 
-    async fn cleanup_session(&self, session_id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    async fn cleanup_session(&self, session_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut conn = self.redis_client.get_multiplexed_async_connection().await?;
 
         let keys = vec![
@@ -2077,7 +3898,7 @@ impl ToolExecutor for RedisToolExecutor {
         tool_name: &str,
         session_id: &str,
         user_id: &str,
-    ) -> Result<ToolResult, Box<dyn std::error::Error>> {
+    ) -> Result<ToolResult, Box<dyn std::error::Error + Send + Sync>> {
         let tool = get_tool(tool_name).ok_or_else(|| format!("Tool not found: {}", tool_name))?;
 
         let mut conn = self.redis_client.get_multiplexed_async_connection().await?;
@@ -2249,7 +4070,7 @@ impl ToolExecutor for RedisToolExecutor {
         &self,
         session_id: &str,
         input: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut conn = self.redis_client.get_multiplexed_async_connection().await?;
         let input_key = format!("tool:{}:input", session_id);
         conn.lpush(&input_key, input).await?;
@@ -2259,7 +4080,7 @@ impl ToolExecutor for RedisToolExecutor {
     async fn get_output(
         &self,
         session_id: &str,
-    ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
         let mut conn = self.redis_client.get_multiplexed_async_connection().await?;
         let output_key = format!("tool:{}:output", session_id);
         let messages: Vec<String> = conn.lrange(&output_key, 0, -1).await?;
@@ -2270,7 +4091,7 @@ impl ToolExecutor for RedisToolExecutor {
     async fn is_waiting_for_input(
         &self,
         session_id: &str,
-    ) -> Result<bool, Box<dyn std::error::Error>> {
+    ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
         let mut conn = self.redis_client.get_multiplexed_async_connection().await?;
         let waiting_key = format!("tool:{}:waiting", session_id);
         let exists: bool = conn.exists(&waiting_key).await?;
@@ -2407,7 +4228,7 @@ impl ToolManager {
         tool_name: &str,
         session_id: &str,
         user_id: &str,
-    ) -> Result<ToolResult, Box<dyn std::error::Error>> {
+    ) -> Result<ToolResult, Box<dyn std::error::Error + Send + Sync>> {
         let tool = self.get_tool(tool_name).ok_or("Tool not found")?;
 
         Ok(ToolResult {
@@ -2421,7 +4242,7 @@ impl ToolManager {
     pub async fn is_tool_waiting(
         &self,
         session_id: &str,
-    ) -> Result<bool, Box<dyn std::error::Error>> {
+    ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
         let waiting = self.waiting_responses.lock().await;
         Ok(waiting.contains_key(session_id))
     }
@@ -2430,7 +4251,7 @@ impl ToolManager {
         &self,
         session_id: &str,
         input: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.provide_user_response(session_id, "default_bot", input.to_string())
             .await
     }
@@ -2438,7 +4259,7 @@ impl ToolManager {
     pub async fn get_tool_output(
         &self,
         session_id: &str,
-    ) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    ) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(vec![])
     }
 
@@ -2449,7 +4270,7 @@ impl ToolManager {
         bot_id: &str,
         session_manager: SessionManager,
         channel_sender: mpsc::Sender<BotResponse>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let tool = self.get_tool(tool_name).ok_or("Tool not found")?;
         session_manager
             .set_current_tool(user_id, bot_id, Some(tool_name.to_string()))
@@ -2539,7 +4360,7 @@ impl ToolManager {
         user_id: &str,
         bot_id: &str,
         response: String,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let key = format!("{}:{}", user_id, bot_id);
         let mut waiting = self.waiting_responses.lock().await;
         if let Some(tx) = waiting.get_mut(&key) {
@@ -2553,6 +4374,14 @@ impl ToolManager {
 impl Default for ToolManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+pub struct ToolApi;
+
+impl ToolApi {
+    pub fn new() -> Self {
+        Self
     }
 }
 

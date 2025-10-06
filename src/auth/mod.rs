@@ -125,7 +125,6 @@ impl AuthService {
         Ok(())
     }
 }
-{{END_REWRITTEN_CODE}}
 
 impl Clone for AuthService {
     fn clone(&self) -> Self {

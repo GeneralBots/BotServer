@@ -1,11 +1,11 @@
 [package]
-name = "gbserver"
+name = "botserver"
 version = "0.1.0"
 edition = "2021"
 authors = ["Rodrigo Rodriguez <me@rodrigorodriguez.com>"]
 description = "General Bots Server"
 license = "AGPL-3.0"
-repository = "https://alm.pragmatismo.com.br/generalbots/gbserver"
+repository = "https://github.pragmatismo.com.br/generalbots/botserver"
 
 [features]
 default = ["postgres", "qdrant"]

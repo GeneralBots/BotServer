@@ -18,6 +18,11 @@ for file in "${prompts[@]}"; do
 done
 
 dirs=(
+   "src/channels" 
+   "src/llm"
+   "src/whatsapp"
+   "src/config"  
+    "src/auth"
     "src/shared"
     "src/bot"
     "src/session"

@@ -1,5 +1,5 @@
 use crate::basic::ScriptService;
-    use crate::shared::models::automation_model::{Automation, TriggerKind};
+use crate::shared::models::{Automation, TriggerKind};
 use crate::shared::state::AppState;
 use chrono::Datelike;
 use chrono::Timelike;
