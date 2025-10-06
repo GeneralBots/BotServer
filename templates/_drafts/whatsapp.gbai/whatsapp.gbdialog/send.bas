@@ -1,1 +1,0 @@
-SEND TEMPLATE TO "122233333333", "newsletter-zap.txt"

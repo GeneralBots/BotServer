@@ -1,2 +1,0 @@
-logo-gb.png
-Welcome to General Bots in WhatsApp templating system!

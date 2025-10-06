@@ -1,10 +1,10 @@
 name: GBCI
-run: git config --global http.sslVerify false
+
 on:
   push:
-    branches: ['main']
+    branches: ["main"]
   pull_request:
-    branches: ['main']
+    branches: ["main"]
 
 jobs:
   build:
@@ -16,30 +16,21 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      # - name: Setup Node.js
-      #    uses: actions/setup-node@v4
-      #    with:
-      #      node-version: '20'
-      #      cache: 'npm'
+      - name: Install Rust
+        uses: msrd0/rust-toolchain@v1
+        with:
+          toolchain: stable
 
-      - name: Copy files to deployment location
+      - name: Run build
         run: |
-          echo "[General Bots Deployer] Copying files to deploy location..."
-          sudo rm -rf /opt/gbo/bin/bot/botserver/dist
-          sudo rm -f /opt/gbo/bin/bot/botserver/package-lock.json
-          sudo cp -r ./* /opt/gbo/bin/bot/botserver
+          sudo cp  /opt/gbo/bin/system/.env .
+          cargo build --locked
 
-      - name: Building BotServer
+      - name: Deploy binary and restart
         run: |
-          echo "[General Bots Deployer] Building BotServer..."
+          lxc exec bot:pragmatismo-system -- systemctl stop system
 
-          rm -rf /opt/gbo/bin/bot/botserver/node_modules
-          cd /opt/gbo/bin/bot/botserver
-          sudo npm i
-          npm run build-server
-          npm run build-gbui
+          sudo cp ./target/debug/gbserver /opt/gbo/bin/system
+          sudo chmod +x /opt/gbo/bin/system/gbserver
 
-      - name: Restart Bots Deployer
-        run: |
-          echo "[General Bots Deployer] Restarting..."
-          lxc restart pragmatismo-bot
+          lxc exec bot:pragmatismo-system -- systemctl start system
