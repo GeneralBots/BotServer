@@ -4,7 +4,7 @@ use rhai::Engine;
 use serde_json::{json, Value};
 use sqlx::PgPool;
 
-use crate::shared::models::automation_model::TriggerKind;
+use crate::shared::models::TriggerKind;
 use crate::shared::state::AppState;
 
 pub fn set_schedule_keyword(state: &AppState, engine: &mut Engine) {

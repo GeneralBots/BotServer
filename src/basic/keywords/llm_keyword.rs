@@ -1,6 +1,6 @@
 use log::info;
 
-use crate::{shared::state::AppState, utils::call_llm};
+use crate::{shared::state::AppState, shared::utils::call_llm};
 use rhai::{Dynamic, Engine};
 
 pub fn llm_keyword(state: &AppState, engine: &mut Engine) {

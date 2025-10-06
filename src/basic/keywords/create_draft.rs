@@ -1,5 +1,6 @@
+use crate::email::fetch_latest_sent_to;
 use crate::email::save_email_draft;
-use crate::email::{fetch_latest_sent_to, SaveDraftRequest};
+use crate::email::SaveDraftRequest;
 use crate::shared::state::AppState;
 use rhai::Dynamic;
 use rhai::Engine;

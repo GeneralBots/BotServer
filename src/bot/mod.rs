@@ -1,7 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse, Result};
 use actix_ws::Message as WsMessage;
 use chrono::Utc;
-use langchain_rust::schemas::Message;
 use log::info;
 use serde_json;
 use std::collections::HashMap;
@@ -163,7 +162,7 @@ impl BotOrchestrator {
     pub async fn stream_response(
         &self,
         message: UserMessage,
-        mut response_tx: mpsc::Sender<BotResponse>,
+        response_tx: mpsc::Sender<BotResponse>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("Streaming response for user: {}", message.user_id);
 

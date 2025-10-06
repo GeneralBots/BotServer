@@ -1,4 +1,4 @@
-use crate::{state::AppState, web_automation::BrowserPool};
+use crate::{shared::state::AppState, web_automation::BrowserPool};
 use log::info;
 use rhai::{Dynamic, Engine};
 use std::error::Error;
@@ -33,19 +33,27 @@ pub fn get_website_keyword(state: &AppState, engine: &mut Engine) {
 }
 
 pub async fn execute_headless_browser_search(
-    browser_pool: Arc<BrowserPool>, // Adjust path as needed
+    browser_pool: Arc<BrowserPool>,
     search_term: &str,
-) -> Result<String, Box<dyn Error + Send + Sync>> {
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     info!("Starting headless browser search: '{}' ", search_term);
 
-    let search_term = search_term.to_string();
+    // Clone the search term so it can be moved into the async closure.
+    let term = search_term.to_string();
 
+    // `with_browser` expects a closure that returns a `Future` yielding
+    // `Result<_, Box<dyn Error + Send + Sync>>`. `perform_search` already returns
+    // that exact type, so we can forward the result directly.
     let result = browser_pool
-        .with_browser(|driver| Box::pin(async move { perform_search(driver, &search_term).await }))
+        .with_browser(move |driver| {
+            let term = term.clone();
+            Box::pin(async move { perform_search(driver, &term).await })
+        })
         .await?;
 
     Ok(result)
 }
+
 async fn perform_search(
     driver: WebDriver,
     search_term: &str,
@@ -96,11 +104,12 @@ async fn extract_search_results(
         ".result a[href]", // Generic result links
     ];
 
-    for selector in &selectors {
+    // Iterate over selectors, dereferencing each `&&str` to `&str` for `By::Css`
+    for &selector in &selectors {
         if let Ok(elements) = driver.find_all(By::Css(selector)).await {
             for element in elements {
                 if let Ok(Some(href)) = element.attr("href").await {
-                    // Filter out internal and non-http links
+                    // Filter out internal and non‑http links
                     if href.starts_with("http")
                         && !href.contains("duckduckgo.com")
                         && !href.contains("duck.co")

@@ -2,7 +2,6 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
 use log::info;
-use std::error::Error as StdError;
 use std::sync::Arc;
 
 mod auth;
@@ -30,12 +29,9 @@ use crate::bot::{
 };
 use crate::channels::{VoiceAdapter, WebChannelAdapter};
 use crate::config::AppConfig;
-use crate::email::{send_email, test_email};
-use crate::file::{download_file, list_file, upload_file};
-use crate::llm_legacy::llm::{
-    chat_completions_local, embeddings_local, generic_chat_completions, health,
-};
-use crate::shared::state::AppState;
+use crate::email::send_email;
+use crate::file::{list_file, upload_file};
+use crate::shared::AppState;
 use crate::whatsapp::WhatsAppAdapter;
 
 #[actix_web::main]
@@ -46,7 +42,8 @@ async fn main() -> std::io::Result<()> {
     info!("Starting BotServer...");
 
     let config = AppConfig::from_env();
-    
+
+    // Main database pool (required)
     let db_pool = match sqlx::postgres::PgPool::connect(&config.database_url()).await {
         Ok(pool) => {
             info!("Connected to main database");
@@ -61,17 +58,20 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    let db_custom_pool = match sqlx::postgres::PgPool::connect(&config.database_custom_url()).await {
-        Ok(pool) => {
-            info!("Connected to custom database");
-            pool
-        }
-        Err(e) => {
-            log::warn!("Failed to connect to custom database: {}", e);
-            None
-        }
-    };
+    // Optional custom database pool
+    let db_custom_pool: Option<sqlx::Pool<sqlx::Postgres>> =
+        match sqlx::postgres::PgPool::connect(&config.database_custom_url()).await {
+            Ok(pool) => {
+                info!("Connected to custom database");
+                Some(pool)
+            }
+            Err(e) => {
+                log::warn!("Failed to connect to custom database: {}", e);
+                None
+            }
+        };
 
+    // Optional Redis client
     let redis_client = match redis::Client::open("redis://127.0.0.1/") {
         Ok(client) => {
             info!("Connected to Redis");
@@ -83,20 +83,17 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    // Placeholder for MinIO (not yet implemented)
     let minio_client = None;
 
     let auth_service = auth::AuthService::new(db_pool.clone(), redis_client.clone());
     let session_manager = session::SessionManager::new(db_pool.clone(), redis_client.clone());
-    
+
     let tool_manager = tools::ToolManager::new();
     let llm_provider = Arc::new(llm::MockLLMProvider::new());
-    
-    let orchestrator = bot::BotOrchestrator::new(
-        session_manager,
-        tool_manager,
-        llm_provider,
-        auth_service,
-    );
+
+    let orchestrator =
+        bot::BotOrchestrator::new(session_manager, tool_manager, llm_provider, auth_service);
 
     let web_adapter = Arc::new(WebChannelAdapter::new());
     let voice_adapter = Arc::new(VoiceAdapter::new(
@@ -104,22 +101,22 @@ async fn main() -> std::io::Result<()> {
         "api_key".to_string(),
         "api_secret".to_string(),
     ));
-    
+
     let whatsapp_adapter = Arc::new(WhatsAppAdapter::new(
         "whatsapp_token".to_string(),
         "phone_number_id".to_string(),
         "verify_token".to_string(),
     ));
-    
+
     let tool_api = Arc::new(tools::ToolApi::new());
 
-    let browser_pool = match web_automation::BrowserPool::new(2).await {
-        Ok(pool) => Arc::new(pool),
-        Err(e) => {
-            log::warn!("Failed to create browser pool: {}", e);
-            Arc::new(web_automation::BrowserPool::new(0).await.unwrap())
-        }
-    };
+    // Browser pool – constructed with the required three arguments.
+    // Adjust the strings as needed for your environment.
+    let browser_pool = Arc::new(web_automation::BrowserPool::new(
+        "chrome".to_string(),
+        2,
+        "headless".to_string(),
+    ));
 
     let app_state = AppState {
         minio_client,
@@ -134,7 +131,10 @@ async fn main() -> std::io::Result<()> {
         tool_api,
     };
 
-    info!("Starting server on {}:{}", config.server.host, config.server.port);
+    info!(
+        "Starting server on {}:{}",
+        config.server.host, config.server.port
+    );
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -158,14 +158,8 @@ async fn main() -> std::io::Result<()> {
             .service(get_session_history)
             .service(set_mode_handler)
             .service(send_email)
-            .service(test_email)
             .service(upload_file)
             .service(list_file)
-            .service(download_file)
-            .service(health)
-            .service(chat_completions_local)
-            .service(embeddings_local)
-            .service(generic_chat_completions)
     })
     .bind((config.server.host.clone(), config.server.port))?
     .run()
