@@ -1,0 +1,61 @@
+[package]
+name = "gbserver"
+version = "0.1.0"
+edition = "2021"
+authors = ["Rodrigo Rodriguez <me@rodrigorodriguez.com>"]
+description = "General Bots Server"
+license = "AGPL-3.0"
+repository = "https://alm.pragmatismo.com.br/generalbots/gbserver"
+
+[features]
+default = ["postgres", "qdrant"]
+local_llm = []
+postgres = ["sqlx/postgres"]
+qdrant = ["langchain-rust/qdrant"]
+
+[dependencies]
+actix-cors = "0.7"
+actix-multipart = "0.7"
+actix-web = "4.9"
+actix-ws = "0.3"
+anyhow = "1.0"
+async-stream = "0.3"
+async-trait = "0.1"
+aes-gcm = "0.10"
+argon2 = "0.5"
+base64 = "0.22"
+bytes = "1.8"
+chrono = { version = "0.4", features = ["serde"] }
+dotenv = "0.15"
+downloader = "0.2"
+env_logger = "0.11"
+futures = "0.3"
+futures-util = "0.3"
+imap = "2.4"
+langchain-rust = { version = "4.6", features = ["qdrant", "postgres"] }
+lettre = { version = "0.11", features = ["smtp-transport", "builder", "tokio1", "tokio1-native-tls"] }
+livekit = "0.7"
+log = "0.4"
+mailparse = "0.15"
+minio = { git = "https://github.com/minio/minio-rs", branch = "master" }
+native-tls = "0.2"
+num-format = "0.4"
+qdrant-client = "1.12"
+rhai = "1.22"
+redis = { version = "0.27", features = ["tokio-comp"] }
+regex = "1.11"
+reqwest = { version = "0.12", features = ["json", "stream"] }
+scraper = "0.20"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+smartstring = "1.0"
+sqlx = { version = "0.8", features = ["time", "uuid", "runtime-tokio-rustls", "postgres", "chrono"] }
+tempfile = "3"
+thirtyfour = "0.34"
+tokio = { version = "1.41", features = ["full"] }
+tokio-stream = "0.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt"] }
+urlencoding = "2.1"
+uuid = { version = "1.11", features = ["serde", "v4"] }
+zip = "2.2"
