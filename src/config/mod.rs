@@ -52,7 +52,6 @@ pub struct AIConfig {
     pub endpoint: String,
 }
 
-    
 impl AppConfig {
     pub fn database_url(&self) -> String {
         format!(
@@ -65,7 +64,7 @@ impl AppConfig {
         )
     }
 
-        pub fn database_custom_url(&self) -> String {
+    pub fn database_custom_url(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}/{}",
             self.database_custom.username,
@@ -75,7 +74,6 @@ impl AppConfig {
             self.database_custom.database
         )
     }
-
 
     pub fn from_env() -> Self {
         let database = DatabaseConfig {
@@ -101,32 +99,32 @@ impl AppConfig {
         };
 
         let minio = MinioConfig {
-            server: env::var("DRIVE_SERVER").expect("DRIVE_SERVER not set"),
-            access_key: env::var("DRIVE_ACCESSKEY").expect("DRIVE_ACCESSKEY not set"),
-            secret_key: env::var("DRIVE_SECRET").expect("DRIVE_SECRET not set"),
+            server: env::var("DRIVE_SERVER").unwrap_or_else(|_| "localhost:9000".to_string()),
+            access_key: env::var("DRIVE_ACCESSKEY").unwrap_or_else(|_| "minioadmin".to_string()),
+            secret_key: env::var("DRIVE_SECRET").unwrap_or_else(|_| "minioadmin".to_string()),
             use_ssl: env::var("DRIVE_USE_SSL")
                 .unwrap_or_else(|_| "false".to_string())
                 .parse()
                 .unwrap_or(false),
-            bucket: env::var("DRIVE_ORG_PREFIX").unwrap_or_else(|_| "".to_string()),
+            bucket: env::var("DRIVE_ORG_PREFIX").unwrap_or_else(|_| "botserver".to_string()),
         };
 
         let email = EmailConfig {
-            from: env::var("EMAIL_FROM").expect("EMAIL_FROM not set"),
-            server: env::var("EMAIL_SERVER").expect("EMAIL_SERVER not set"),
+            from: env::var("EMAIL_FROM").unwrap_or_else(|_| "noreply@example.com".to_string()),
+            server: env::var("EMAIL_SERVER").unwrap_or_else(|_| "smtp.example.com".to_string()),
             port: env::var("EMAIL_PORT")
-                .expect("EMAIL_PORT not set")
+                .unwrap_or_else(|_| "587".to_string())
                 .parse()
-                .expect("EMAIL_PORT must be a number"),
-            username: env::var("EMAIL_USER").expect("EMAIL_USER not set"),
-            password: env::var("EMAIL_PASS").expect("EMAIL_PASS not set"),
+                .unwrap_or(587),
+            username: env::var("EMAIL_USER").unwrap_or_else(|_| "user".to_string()),
+            password: env::var("EMAIL_PASS").unwrap_or_else(|_| "pass".to_string()),
         };
 
         let ai = AIConfig {
-            instance: env::var("AI_INSTANCE").expect("AI_INSTANCE not set"),
-            key: env::var("AI_KEY").expect("AI_KEY not set"),
-            version: env::var("AI_VERSION").expect("AI_VERSION not set"),
-            endpoint: env::var("AI_ENDPOINT").expect("AI_ENDPOINT not set"),
+            instance: env::var("AI_INSTANCE").unwrap_or_else(|_| "gpt-4".to_string()),
+            key: env::var("AI_KEY").unwrap_or_else(|_| "key".to_string()),
+            version: env::var("AI_VERSION").unwrap_or_else(|_| "2023-12-01-preview".to_string()),
+            endpoint: env::var("AI_ENDPOINT").unwrap_or_else(|_| "https://api.openai.com".to_string()),
         };
 
         AppConfig {
@@ -142,7 +140,7 @@ impl AppConfig {
             database_custom,
             email,
             ai,
-            site_path: env::var("SITES_ROOT").unwrap()
+            site_path: env::var("SITES_ROOT").unwrap_or_else(|_| "./sites".to_string()),
         }
     }
 }

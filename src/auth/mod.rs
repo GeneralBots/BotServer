@@ -3,7 +3,7 @@ use argon2::{
     Argon2,
 };
 use redis::Client;
-use sqlx::{PgPool, Row}; // <-- required for .get()
+use sqlx::{PgPool, Row};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -13,7 +13,6 @@ pub struct AuthService {
 }
 
 impl AuthService {
-    #[allow(clippy::new_without_default)]
     pub fn new(pool: PgPool, redis: Option<Arc<Client>>) -> Self {
         Self { pool, redis }
     }
@@ -22,7 +21,7 @@ impl AuthService {
         &self,
         username: &str,
         password: &str,
-    ) -> Result<Option<Uuid>, Box<dyn std::error::Error>> {
+    ) -> Result<Option<Uuid>, Box<dyn std::error::Error + Send + Sync>> {
         let user = sqlx::query(
             "SELECT id, password_hash FROM users WHERE username = $1 AND is_active = true",
         )
@@ -52,7 +51,7 @@ impl AuthService {
         username: &str,
         email: &str,
         password: &str,
-    ) -> Result<Uuid, Box<dyn std::error::Error>> {
+    ) -> Result<Uuid, Box<dyn std::error::Error + Send + Sync>> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
         let password_hash = match argon2.hash_password(password.as_bytes(), &salt) {
@@ -80,7 +79,7 @@ impl AuthService {
     pub async fn delete_user_cache(
         &self,
         username: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if let Some(redis_client) = &self.redis {
             let mut conn = redis_client.get_multiplexed_async_connection().await?;
             let cache_key = format!("auth:user:{}", username);
@@ -94,7 +93,7 @@ impl AuthService {
         &self,
         user_id: Uuid,
         new_password: &str,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
         let password_hash = match argon2.hash_password(new_password.as_bytes(), &salt) {

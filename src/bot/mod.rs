@@ -2,13 +2,7 @@ use actix_web::{web, HttpRequest, HttpResponse, Result};
 use actix_ws::Message as WsMessage;
 use chrono::Utc;
 use langchain_rust::{
-    chain::{Chain, LLMChain},
-    llm::openai::OpenAI,
     memory::SimpleMemory,
-    prompt_args,
-    tools::{postgres::PostgreSQLEngine, SQLDatabaseBuilder},
-    vectorstore::qdrant::Qdrant as LangChainQdrant,
-    vectorstore::{VecStoreOptions, VectorStore},
 };
 use log::info;
 use serde_json;
@@ -21,12 +15,10 @@ use uuid::Uuid;
 use crate::{
     auth::AuthService,
     channels::ChannelAdapter,
-    chart::ChartGenerator,
     llm::LLMProvider,
     session::SessionManager,
     shared::{BotResponse, UserMessage, UserSession},
     tools::ToolManager,
-    whatsapp::WhatsAppAdapter,
 };
 
 pub struct BotOrchestrator {
@@ -36,9 +28,6 @@ pub struct BotOrchestrator {
     auth_service: AuthService,
     channels: HashMap<String, Arc<dyn ChannelAdapter>>,
     response_channels: Arc<Mutex<HashMap<String, mpsc::Sender<BotResponse>>>>,
-    chart_generator: Option<Arc<ChartGenerator>>,
-    vector_store: Option<Arc<LangChainQdrant>>,
-    sql_chain: Option<Arc<LLMChain>>,
 }
 
 impl BotOrchestrator {
@@ -47,9 +36,6 @@ impl BotOrchestrator {
         tool_manager: ToolManager,
         llm_provider: Arc<dyn LLMProvider>,
         auth_service: AuthService,
-        chart_generator: Option<Arc<ChartGenerator>>,
-        vector_store: Option<Arc<LangChainQdrant>>,
-        sql_chain: Option<Arc<LLMChain>>,
     ) -> Self {
         Self {
             session_manager,
@@ -58,9 +44,6 @@ impl BotOrchestrator {
             auth_service,
             channels: HashMap::new(),
             response_channels: Arc::new(Mutex::new(HashMap::new())),
-            chart_generator,
-            vector_store,
-            sql_chain,
         }
     }
 
@@ -134,13 +117,7 @@ impl BotOrchestrator {
             )
             .await?;
 
-        let response_content = match session.answer_mode.as_str() {
-            "document" => self.document_mode_handler(&message, &session).await?,
-            "chart" => self.chart_mode_handler(&message, &session).await?,
-            "database" => self.database_mode_handler(&message, &session).await?,
-            "tool" => self.tool_mode_handler(&message, &session).await?,
-            _ => self.direct_mode_handler(&message, &session).await?,
-        };
+        let response_content = self.direct_mode_handler(&message, &session).await?;
 
         self.session_manager
             .save_message(session.id, user_id, "assistant", &response_content, "text")
@@ -158,146 +135,10 @@ impl BotOrchestrator {
         };
 
         if let Some(adapter) = self.channels.get(&message.channel) {
-            adapter.send_message(bot_response).await;
+            adapter.send_message(bot_response).await?;
         }
 
         Ok(())
-    }
-
-    async fn document_mode_handler(
-        &self,
-        message: &UserMessage,
-        session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        if let Some(vector_store) = &self.vector_store {
-            let similar_docs = vector_store
-                .similarity_search(&message.content, 3, &VecStoreOptions::default())
-                .await?;
-
-            let mut enhanced_prompt = format!("User question: {}\n\n", message.content);
-
-            if !similar_docs.is_empty() {
-                enhanced_prompt.push_str("Relevant documents:\n");
-                for (i, doc) in similar_docs.iter().enumerate() {
-                    enhanced_prompt.push_str(&format!("[Doc {}]: {}\n", i + 1, doc.page_content));
-                }
-                enhanced_prompt.push_str(
-                    "\nPlease answer the user's question based on the provided documents.",
-                );
-            }
-
-            self.llm_provider
-                .generate(&enhanced_prompt, &serde_json::Value::Null)
-                .await
-        } else {
-            self.direct_mode_handler(message, session).await
-        }
-    }
-
-    async fn chart_mode_handler(
-        &self,
-        message: &UserMessage,
-        session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        if let Some(chart_generator) = &self.chart_generator {
-            let chart_response = chart_generator
-                .generate_chart(&message.content, "bar")
-                .await?;
-
-            self.session_manager
-                .save_message(
-                    session.id,
-                    session.user_id,
-                    "system",
-                    &format!("Generated chart for query: {}", message.content),
-                    "chart",
-                )
-                .await?;
-
-            Ok(format!(
-                "Chart generated for your query. Data retrieved: {}",
-                chart_response.sql_query
-            ))
-        } else {
-            self.document_mode_handler(message, session).await
-        }
-    }
-
-    async fn database_mode_handler(
-        &self,
-        message: &UserMessage,
-        _session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        if let Some(sql_chain) = &self.sql_chain {
-            let input_variables = prompt_args! {
-                "input" => message.content,
-            };
-
-            let result = sql_chain.invoke(input_variables).await?;
-            Ok(result.to_string())
-        } else {
-            let db_url = std::env::var("DATABASE_URL")?;
-            let engine = PostgreSQLEngine::new(&db_url).await?;
-            let db = SQLDatabaseBuilder::new(engine).build().await?;
-
-            let llm = OpenAI::default();
-            let chain = langchain_rust::chain::SQLDatabaseChainBuilder::new()
-                .llm(llm)
-                .top_k(5)
-                .database(db)
-                .build()?;
-
-            let input_variables = chain.prompt_builder().query(&message.content).build();
-            let result = chain.invoke(input_variables).await?;
-
-            Ok(result.to_string())
-        }
-    }
-
-    async fn tool_mode_handler(
-        &self,
-        message: &UserMessage,
-        _session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        if message.content.to_lowercase().contains("calculator") {
-            if let Some(_adapter) = self.channels.get(&message.channel) {
-                let (tx, _rx) = mpsc::channel(100);
-
-                self.register_response_channel(message.session_id.clone(), tx.clone())
-                    .await;
-
-                let tool_manager = self.tool_manager.clone();
-                let user_id_str = message.user_id.clone();
-                let bot_id_str = message.bot_id.clone();
-                let session_manager = self.session_manager.clone();
-
-                tokio::spawn(async move {
-                    let _ = tool_manager
-                        .execute_tool_with_session(
-                            "calculator",
-                            &user_id_str,
-                            &bot_id_str,
-                            session_manager,
-                            tx,
-                        )
-                        .await;
-                });
-            }
-            Ok("Starting calculator tool...".to_string())
-        } else {
-            let available_tools = self.tool_manager.list_tools();
-            let tools_context = if !available_tools.is_empty() {
-                format!("\n\nAvailable tools: {}. If the user needs calculations, suggest using the calculator tool.", available_tools.join(", "))
-            } else {
-                String::new()
-            };
-
-            let full_prompt = format!("{}{}", message.content, tools_context);
-
-            self.llm_provider
-                .generate(&full_prompt, &serde_json::Value::Null)
-                .await
-        }
     }
 
     async fn direct_mode_handler(
@@ -312,21 +153,14 @@ impl BotOrchestrator {
 
         let mut memory = SimpleMemory::new();
         for (role, content) in history {
-            match role.as_str() {
-                "user" => memory.add_user_message(&content),
-                "assistant" => memory.add_ai_message(&content),
-                _ => {}
-            }
+            memory.add_message(&format!("{}: {}", role, content));
         }
 
         let mut prompt = String::new();
-        if let Some(chat_history) = memory.get_chat_history() {
+        if let Some(chat_history) = memory.get_history() {
             for message in chat_history {
-                prompt.push_str(&format!(
-                    "{}: {}\n",
-                    message.message_type(),
-                    message.content()
-                ));
+                prompt.push_str(&message);
+                prompt.push('\n');
             }
         }
         prompt.push_str(&format!("User: {}\nAssistant:", message.content));
@@ -384,21 +218,14 @@ impl BotOrchestrator {
 
         let mut memory = SimpleMemory::new();
         for (role, content) in history {
-            match role.as_str() {
-                "user" => memory.add_user_message(&content),
-                "assistant" => memory.add_ai_message(&content),
-                _ => {}
-            }
+            memory.add_message(&format!("{}: {}", role, content));
         }
 
         let mut prompt = String::new();
-        if let Some(chat_history) = memory.get_chat_history() {
+        if let Some(chat_history) = memory.get_history() {
             for message in chat_history {
-                prompt.push_str(&format!(
-                    "{}: {}\n",
-                    message.message_type(),
-                    message.content()
-                ));
+                prompt.push_str(&message);
+                prompt.push('\n');
             }
         }
         prompt.push_str(&format!("User: {}\nAssistant:", message.content));
@@ -605,7 +432,7 @@ impl BotOrchestrator {
 async fn websocket_handler(
     req: HttpRequest,
     stream: web::Payload,
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let (res, mut session, mut msg_stream) = actix_ws::handle(&req, stream)?;
     let session_id = Uuid::new_v4().to_string();
@@ -665,7 +492,7 @@ async fn websocket_handler(
 
 #[actix_web::get("/api/whatsapp/webhook")]
 async fn whatsapp_webhook_verify(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     web::Query(params): web::Query<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
     let mode = params.get("hub.mode").unwrap_or(&"".to_string());
@@ -680,7 +507,7 @@ async fn whatsapp_webhook_verify(
 
 #[actix_web::post("/api/whatsapp/webhook")]
 async fn whatsapp_webhook(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     payload: web::Json<crate::whatsapp::WhatsAppMessage>,
 ) -> Result<HttpResponse> {
     match data
@@ -705,7 +532,7 @@ async fn whatsapp_webhook(
 
 #[actix_web::post("/api/voice/start")]
 async fn voice_start(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     info: web::Json<serde_json::Value>,
 ) -> Result<HttpResponse> {
     let session_id = info
@@ -734,7 +561,7 @@ async fn voice_start(
 
 #[actix_web::post("/api/voice/stop")]
 async fn voice_stop(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     info: web::Json<serde_json::Value>,
 ) -> Result<HttpResponse> {
     let session_id = info
@@ -752,7 +579,7 @@ async fn voice_stop(
 }
 
 #[actix_web::post("/api/sessions")]
-async fn create_session(_data: web::Data<crate::shared::AppState>) -> Result<HttpResponse> {
+async fn create_session(_data: web::Data<crate::shared::state::AppState>) -> Result<HttpResponse> {
     let session_id = Uuid::new_v4();
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "session_id": session_id,
@@ -762,7 +589,7 @@ async fn create_session(_data: web::Data<crate::shared::AppState>) -> Result<Htt
 }
 
 #[actix_web::get("/api/sessions")]
-async fn get_sessions(data: web::Data<crate::shared::AppState>) -> Result<HttpResponse> {
+async fn get_sessions(data: web::Data<crate::shared::state::AppState>) -> Result<HttpResponse> {
     let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
     match data.orchestrator.get_user_sessions(user_id).await {
         Ok(sessions) => Ok(HttpResponse::Ok().json(sessions)),
@@ -775,7 +602,7 @@ async fn get_sessions(data: web::Data<crate::shared::AppState>) -> Result<HttpRe
 
 #[actix_web::get("/api/sessions/{session_id}")]
 async fn get_session_history(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let session_id = path.into_inner();
@@ -799,7 +626,7 @@ async fn get_session_history(
 
 #[actix_web::post("/api/set_mode")]
 async fn set_mode_handler(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     info: web::Json<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
     let default_user = "default_user".to_string();

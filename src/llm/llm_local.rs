@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use tokio::time::{sleep, Duration};
 
-// OpenAI-compatible request/response structures
 #[derive(Debug, Serialize, Deserialize)]
 struct ChatMessage {
     role: String,
@@ -35,7 +34,6 @@ struct Choice {
     finish_reason: String,
 }
 
-// Llama.cpp server request/response structures
 #[derive(Debug, Serialize, Deserialize)]
 struct LlamaCppRequest {
     prompt: String,
@@ -53,8 +51,7 @@ struct LlamaCppResponse {
     generation_settings: Option<serde_json::Value>,
 }
 
-pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
-{
+pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let llm_local = env::var("LLM_LOCAL").unwrap_or_else(|_| "false".to_string());
 
     if llm_local.to_lowercase() != "true" {
@@ -62,7 +59,6 @@ pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Er
         return Ok(());
     }
 
-    // Get configuration from environment variables
     let llm_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
     let embedding_url =
         env::var("EMBEDDING_URL").unwrap_or_else(|_| "http://localhost:8082".to_string());
@@ -77,7 +73,6 @@ pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Er
     info!("   LLM Model: {}", llm_model_path);
     info!("   Embedding Model: {}", embedding_model_path);
 
-    // Check if servers are already running
     let llm_running = is_server_running(&llm_url).await;
     let embedding_running = is_server_running(&embedding_url).await;
 
@@ -86,7 +81,6 @@ pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Er
         return Ok(());
     }
 
-    // Start servers that aren't running
     let mut tasks = vec![];
 
     if !llm_running && !llm_model_path.is_empty() {
@@ -111,19 +105,17 @@ pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Er
         info!("⚠️  EMBEDDING_MODEL_PATH not set, skipping Embedding server");
     }
 
-    // Wait for all server startup tasks
     for task in tasks {
         task.await??;
     }
 
-    // Wait for servers to be ready with verbose logging
     info!("⏳ Waiting for servers to become ready...");
 
     let mut llm_ready = llm_running || llm_model_path.is_empty();
     let mut embedding_ready = embedding_running || embedding_model_path.is_empty();
 
     let mut attempts = 0;
-    let max_attempts = 60; // 2 minutes total
+    let max_attempts = 60;
 
     while attempts < max_attempts && (!llm_ready || !embedding_ready) {
         sleep(Duration::from_secs(2)).await;
@@ -188,8 +180,6 @@ async fn start_llm_server(
     std::env::set_var("OMP_PLACES", "cores");
     std::env::set_var("OMP_PROC_BIND", "close");
 
-    // "cd {} && numactl --interleave=all ./llama-server -m {} --host 0.0.0.0 --port {} --threads 20 --threads-batch 40 --temp 0.7 --parallel 1 --repeat-penalty 1.1 --ctx-size 8192 --batch-size 8192 -n 4096 --mlock --no-mmap --flash-attn  --no-kv-offload  --no-mmap &",
-
     let mut cmd = tokio::process::Command::new("sh");
     cmd.arg("-c").arg(format!(
         "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {} --n-gpu-layers 99 &",
@@ -225,7 +215,6 @@ async fn is_server_running(url: &str) -> bool {
     }
 }
 
-// Convert OpenAI chat messages to a single prompt
 fn messages_to_prompt(messages: &[ChatMessage]) -> String {
     let mut prompt = String::new();
 
@@ -250,32 +239,28 @@ fn messages_to_prompt(messages: &[ChatMessage]) -> String {
     prompt
 }
 
-// Proxy endpoint
 #[post("/local/v1/chat/completions")]
 pub async fn chat_completions_local(
     req_body: web::Json<ChatCompletionRequest>,
     _req: HttpRequest,
 ) -> Result<HttpResponse> {
-    dotenv().ok().unwrap();
+    dotenv().ok();
 
-    // Get llama.cpp server URL
     let llama_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
 
-    // Convert OpenAI format to llama.cpp format
     let prompt = messages_to_prompt(&req_body.messages);
 
     let llama_request = LlamaCppRequest {
         prompt,
-        n_predict: Some(500), // Adjust as needed
+        n_predict: Some(500),
         temperature: Some(0.7),
         top_k: Some(40),
         top_p: Some(0.9),
         stream: req_body.stream,
     };
 
-    // Send request to llama.cpp server
     let client = Client::builder()
-        .timeout(Duration::from_secs(120)) // 2 minute timeout
+        .timeout(Duration::from_secs(120))
         .build()
         .map_err(|e| {
             error!("Error creating HTTP client: {}", e);
@@ -301,7 +286,6 @@ pub async fn chat_completions_local(
             actix_web::error::ErrorInternalServerError("Failed to parse llama.cpp response")
         })?;
 
-        // Convert llama.cpp response to OpenAI format
         let openai_response = ChatCompletionResponse {
             id: format!("chatcmpl-{}", uuid::Uuid::new_v4()),
             object: "chat.completion".to_string(),
@@ -344,7 +328,6 @@ pub async fn chat_completions_local(
     }
 }
 
-// OpenAI Embedding Request - Modified to handle both string and array inputs
 #[derive(Debug, Deserialize)]
 pub struct EmbeddingRequest {
     #[serde(deserialize_with = "deserialize_input")]
@@ -354,7 +337,6 @@ pub struct EmbeddingRequest {
     pub _encoding_format: Option<String>,
 }
 
-// Custom deserializer to handle both string and array inputs
 fn deserialize_input<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -400,7 +382,6 @@ where
     deserializer.deserialize_any(InputVisitor)
 }
 
-// OpenAI Embedding Response
 #[derive(Debug, Serialize)]
 pub struct EmbeddingResponse {
     pub object: String,
@@ -422,20 +403,17 @@ pub struct Usage {
     pub total_tokens: u32,
 }
 
-// Llama.cpp Embedding Request
 #[derive(Debug, Serialize)]
 struct LlamaCppEmbeddingRequest {
     pub content: String,
 }
 
-// FIXED: Handle the stupid nested array format
 #[derive(Debug, Deserialize)]
 struct LlamaCppEmbeddingResponseItem {
     pub index: usize,
-    pub embedding: Vec<Vec<f32>>, // This is the  up part - embedding is an array of arrays
+    pub embedding: Vec<Vec<f32>>,
 }
 
-// Proxy endpoint for embeddings
 #[post("/v1/embeddings")]
 pub async fn embeddings_local(
     req_body: web::Json<EmbeddingRequest>,
@@ -443,7 +421,6 @@ pub async fn embeddings_local(
 ) -> Result<HttpResponse> {
     dotenv().ok();
 
-    // Get llama.cpp server URL
     let llama_url =
         env::var("EMBEDDING_URL").unwrap_or_else(|_| "http://localhost:8082".to_string());
 
@@ -455,7 +432,6 @@ pub async fn embeddings_local(
             actix_web::error::ErrorInternalServerError("Failed to create HTTP client")
         })?;
 
-    // Process each input text and get embeddings
     let mut embeddings_data = Vec::new();
     let mut total_tokens = 0;
 
@@ -480,13 +456,11 @@ pub async fn embeddings_local(
         let status = response.status();
 
         if status.is_success() {
-            // First, get the raw response text for debugging
             let raw_response = response.text().await.map_err(|e| {
                 error!("Error reading response text: {}", e);
                 actix_web::error::ErrorInternalServerError("Failed to read response")
             })?;
 
-            // Parse the response as a vector of items with nested arrays
             let llama_response: Vec<LlamaCppEmbeddingResponseItem> =
                 serde_json::from_str(&raw_response).map_err(|e| {
                     error!("Error parsing llama.cpp embedding response: {}", e);
@@ -496,17 +470,13 @@ pub async fn embeddings_local(
                     )
                 })?;
 
-            // Extract the embedding from the nested array bullshit
             if let Some(item) = llama_response.get(0) {
-                // The embedding field contains Vec<Vec<f32>>, so we need to flatten it
-                // If it's [[0.1, 0.2, 0.3]], we want [0.1, 0.2, 0.3]
                 let flattened_embedding = if !item.embedding.is_empty() {
-                    item.embedding[0].clone() // Take the first (and probably only) inner array
+                    item.embedding[0].clone()
                 } else {
-                    vec![] // Empty if no embedding data
+                    vec![]
                 };
 
-                // Estimate token count
                 let estimated_tokens = (input_text.len() as f32 / 4.0).ceil() as u32;
                 total_tokens += estimated_tokens;
 
@@ -544,7 +514,6 @@ pub async fn embeddings_local(
         }
     }
 
-    // Build OpenAI-compatible response
     let openai_response = EmbeddingResponse {
         object: "list".to_string(),
         data: embeddings_data,
@@ -558,7 +527,6 @@ pub async fn embeddings_local(
     Ok(HttpResponse::Ok().json(openai_response))
 }
 
-// Health check endpoint
 #[actix_web::get("/health")]
 pub async fn health() -> Result<HttpResponse> {
     let llama_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());

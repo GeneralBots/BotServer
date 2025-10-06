@@ -109,7 +109,7 @@ EOF
 
 use async_trait::async_trait;
 use chrono::Utc;
-use livekit::{DataPacketKind, Room, RoomOptions};
+use livekit::prelude::*;
 use log::info;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -202,7 +202,7 @@ impl VoiceAdapter {
         tokio::spawn(async move {
             while let Some(event) = events.recv().await {
                 match event {
-                    livekit::prelude::RoomEvent::DataReceived(data_packet) => {
+                    RoomEvent::DataReceived(data_packet) => {
                         if let Ok(message) =
                             serde_json::from_slice::<UserMessage>(&data_packet.data)
                         {
@@ -225,11 +225,7 @@ impl VoiceAdapter {
                             }
                         }
                     }
-                    livekit::prelude::RoomEvent::TrackSubscribed(
-                        track,
-                        publication,
-                        participant,
-                    ) => {
+                    RoomEvent::TrackSubscribed(track, publication, participant) => {
                         info!("Voice track subscribed from {}", participant.identity());
                     }
                     _ => {}
@@ -246,7 +242,7 @@ impl VoiceAdapter {
         session_id: &str,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(room) = self.rooms.lock().await.remove(session_id) {
-            room.disconnect();
+            room.disconnect().await;
         }
         Ok(())
     }
@@ -267,11 +263,13 @@ impl VoiceAdapter {
                 "timestamp": Utc::now()
             });
 
-            room.local_participant().publish_data(
-                serde_json::to_vec(&voice_response)?,
-                DataPacketKind::Reliable,
-                &[],
-            )?;
+            room.local_participant()
+                .publish_data(
+                    serde_json::to_vec(&voice_response)?,
+                    DataPacketKind::Reliable,
+                    &[],
+                )
+                .await?;
         }
         Ok(())
     }
@@ -294,7 +292,6 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use tokio::time::{sleep, Duration};
 
-// OpenAI-compatible request/response structures
 #[derive(Debug, Serialize, Deserialize)]
 struct ChatMessage {
     role: String,
@@ -323,7 +320,6 @@ struct Choice {
     finish_reason: String,
 }
 
-// Llama.cpp server request/response structures
 #[derive(Debug, Serialize, Deserialize)]
 struct LlamaCppRequest {
     prompt: String,
@@ -341,8 +337,7 @@ struct LlamaCppResponse {
     generation_settings: Option<serde_json::Value>,
 }
 
-pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
-{
+pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let llm_local = env::var("LLM_LOCAL").unwrap_or_else(|_| "false".to_string());
 
     if llm_local.to_lowercase() != "true" {
@@ -350,7 +345,6 @@ pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Er
         return Ok(());
     }
 
-    // Get configuration from environment variables
     let llm_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
     let embedding_url =
         env::var("EMBEDDING_URL").unwrap_or_else(|_| "http://localhost:8082".to_string());
@@ -365,7 +359,6 @@ pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Er
     info!("   LLM Model: {}", llm_model_path);
     info!("   Embedding Model: {}", embedding_model_path);
 
-    // Check if servers are already running
     let llm_running = is_server_running(&llm_url).await;
     let embedding_running = is_server_running(&embedding_url).await;
 
@@ -374,7 +367,6 @@ pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Er
         return Ok(());
     }
 
-    // Start servers that aren't running
     let mut tasks = vec![];
 
     if !llm_running && !llm_model_path.is_empty() {
@@ -399,19 +391,17 @@ pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Er
         info!("⚠️  EMBEDDING_MODEL_PATH not set, skipping Embedding server");
     }
 
-    // Wait for all server startup tasks
     for task in tasks {
         task.await??;
     }
 
-    // Wait for servers to be ready with verbose logging
     info!("⏳ Waiting for servers to become ready...");
 
     let mut llm_ready = llm_running || llm_model_path.is_empty();
     let mut embedding_ready = embedding_running || embedding_model_path.is_empty();
 
     let mut attempts = 0;
-    let max_attempts = 60; // 2 minutes total
+    let max_attempts = 60;
 
     while attempts < max_attempts && (!llm_ready || !embedding_ready) {
         sleep(Duration::from_secs(2)).await;
@@ -476,8 +466,6 @@ async fn start_llm_server(
     std::env::set_var("OMP_PLACES", "cores");
     std::env::set_var("OMP_PROC_BIND", "close");
 
-    // "cd {} && numactl --interleave=all ./llama-server -m {} --host 0.0.0.0 --port {} --threads 20 --threads-batch 40 --temp 0.7 --parallel 1 --repeat-penalty 1.1 --ctx-size 8192 --batch-size 8192 -n 4096 --mlock --no-mmap --flash-attn  --no-kv-offload  --no-mmap &",
-
     let mut cmd = tokio::process::Command::new("sh");
     cmd.arg("-c").arg(format!(
         "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {} --n-gpu-layers 99 &",
@@ -513,7 +501,6 @@ async fn is_server_running(url: &str) -> bool {
     }
 }
 
-// Convert OpenAI chat messages to a single prompt
 fn messages_to_prompt(messages: &[ChatMessage]) -> String {
     let mut prompt = String::new();
 
@@ -538,32 +525,28 @@ fn messages_to_prompt(messages: &[ChatMessage]) -> String {
     prompt
 }
 
-// Proxy endpoint
 #[post("/local/v1/chat/completions")]
 pub async fn chat_completions_local(
     req_body: web::Json<ChatCompletionRequest>,
     _req: HttpRequest,
 ) -> Result<HttpResponse> {
-    dotenv().ok().unwrap();
+    dotenv().ok();
 
-    // Get llama.cpp server URL
     let llama_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
 
-    // Convert OpenAI format to llama.cpp format
     let prompt = messages_to_prompt(&req_body.messages);
 
     let llama_request = LlamaCppRequest {
         prompt,
-        n_predict: Some(500), // Adjust as needed
+        n_predict: Some(500),
         temperature: Some(0.7),
         top_k: Some(40),
         top_p: Some(0.9),
         stream: req_body.stream,
     };
 
-    // Send request to llama.cpp server
     let client = Client::builder()
-        .timeout(Duration::from_secs(120)) // 2 minute timeout
+        .timeout(Duration::from_secs(120))
         .build()
         .map_err(|e| {
             error!("Error creating HTTP client: {}", e);
@@ -589,7 +572,6 @@ pub async fn chat_completions_local(
             actix_web::error::ErrorInternalServerError("Failed to parse llama.cpp response")
         })?;
 
-        // Convert llama.cpp response to OpenAI format
         let openai_response = ChatCompletionResponse {
             id: format!("chatcmpl-{}", uuid::Uuid::new_v4()),
             object: "chat.completion".to_string(),
@@ -632,7 +614,6 @@ pub async fn chat_completions_local(
     }
 }
 
-// OpenAI Embedding Request - Modified to handle both string and array inputs
 #[derive(Debug, Deserialize)]
 pub struct EmbeddingRequest {
     #[serde(deserialize_with = "deserialize_input")]
@@ -642,7 +623,6 @@ pub struct EmbeddingRequest {
     pub _encoding_format: Option<String>,
 }
 
-// Custom deserializer to handle both string and array inputs
 fn deserialize_input<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -688,7 +668,6 @@ where
     deserializer.deserialize_any(InputVisitor)
 }
 
-// OpenAI Embedding Response
 #[derive(Debug, Serialize)]
 pub struct EmbeddingResponse {
     pub object: String,
@@ -710,20 +689,17 @@ pub struct Usage {
     pub total_tokens: u32,
 }
 
-// Llama.cpp Embedding Request
 #[derive(Debug, Serialize)]
 struct LlamaCppEmbeddingRequest {
     pub content: String,
 }
 
-// FIXED: Handle the stupid nested array format
 #[derive(Debug, Deserialize)]
 struct LlamaCppEmbeddingResponseItem {
     pub index: usize,
-    pub embedding: Vec<Vec<f32>>, // This is the  up part - embedding is an array of arrays
+    pub embedding: Vec<Vec<f32>>,
 }
 
-// Proxy endpoint for embeddings
 #[post("/v1/embeddings")]
 pub async fn embeddings_local(
     req_body: web::Json<EmbeddingRequest>,
@@ -731,7 +707,6 @@ pub async fn embeddings_local(
 ) -> Result<HttpResponse> {
     dotenv().ok();
 
-    // Get llama.cpp server URL
     let llama_url =
         env::var("EMBEDDING_URL").unwrap_or_else(|_| "http://localhost:8082".to_string());
 
@@ -743,7 +718,6 @@ pub async fn embeddings_local(
             actix_web::error::ErrorInternalServerError("Failed to create HTTP client")
         })?;
 
-    // Process each input text and get embeddings
     let mut embeddings_data = Vec::new();
     let mut total_tokens = 0;
 
@@ -768,13 +742,11 @@ pub async fn embeddings_local(
         let status = response.status();
 
         if status.is_success() {
-            // First, get the raw response text for debugging
             let raw_response = response.text().await.map_err(|e| {
                 error!("Error reading response text: {}", e);
                 actix_web::error::ErrorInternalServerError("Failed to read response")
             })?;
 
-            // Parse the response as a vector of items with nested arrays
             let llama_response: Vec<LlamaCppEmbeddingResponseItem> =
                 serde_json::from_str(&raw_response).map_err(|e| {
                     error!("Error parsing llama.cpp embedding response: {}", e);
@@ -784,17 +756,13 @@ pub async fn embeddings_local(
                     )
                 })?;
 
-            // Extract the embedding from the nested array bullshit
             if let Some(item) = llama_response.get(0) {
-                // The embedding field contains Vec<Vec<f32>>, so we need to flatten it
-                // If it's [[0.1, 0.2, 0.3]], we want [0.1, 0.2, 0.3]
                 let flattened_embedding = if !item.embedding.is_empty() {
-                    item.embedding[0].clone() // Take the first (and probably only) inner array
+                    item.embedding[0].clone()
                 } else {
-                    vec![] // Empty if no embedding data
+                    vec![]
                 };
 
-                // Estimate token count
                 let estimated_tokens = (input_text.len() as f32 / 4.0).ceil() as u32;
                 total_tokens += estimated_tokens;
 
@@ -832,7 +800,6 @@ pub async fn embeddings_local(
         }
     }
 
-    // Build OpenAI-compatible response
     let openai_response = EmbeddingResponse {
         object: "list".to_string(),
         data: embeddings_data,
@@ -846,7 +813,6 @@ pub async fn embeddings_local(
     Ok(HttpResponse::Ok().json(openai_response))
 }
 
-// Health check endpoint
 #[actix_web::get("/health")]
 pub async fn health() -> Result<HttpResponse> {
     let llama_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
@@ -1008,6 +974,8 @@ pub mod llm_generic;
 pub mod llm_local;
 pub mod llm_provider;
 
+pub use llm_provider::*;
+
 use async_trait::async_trait;
 use futures::StreamExt;
 use langchain_rust::{
@@ -1036,7 +1004,6 @@ pub trait LLMProvider: Send + Sync {
         tx: mpsc::Sender<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
-    // Add tool calling capability using LangChain tools
     async fn generate_with_tools(
         &self,
         prompt: &str,
@@ -1116,7 +1083,6 @@ impl LLMProvider for OpenAIClient {
         _session_id: &str,
         _user_id: &str,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        // Enhanced prompt with tool information
         let tools_info = if available_tools.is_empty() {
             String::new()
         } else {
@@ -1279,133 +1245,14 @@ impl LLMProvider for MockLLMProvider {
     }
 }
 
-use log::info;
-
 use actix_web::{post, web, HttpRequest, HttpResponse, Result};
 use dotenv::dotenv;
-use regex::Regex;
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
-use std::env;
-
-// OpenAI-compatible request/response structures
-#[derive(Debug, Serialize, Deserialize)]
-struct ChatMessage {
-    role: String,
-    content: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ChatCompletionRequest {
-    model: String,
-    messages: Vec<ChatMessage>,
-    stream: Option<bool>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ChatCompletionResponse {
-    id: String,
-    object: String,
-    created: u64,
-    model: String,
-    choices: Vec<Choice>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct Choice {
-    message: ChatMessage,
-    finish_reason: String,
-}
-
-#[post("/azure/v1/chat/completions")]
-async fn chat_completions(body: web::Bytes, _req: HttpRequest) -> Result<HttpResponse> {
-    // Always log raw POST data
-    if let Ok(body_str) = std::str::from_utf8(&body) {
-        info!("POST Data: {}", body_str);
-    } else {
-        info!("POST Data (binary): {:?}", body);
-    }
-
-    dotenv().ok();
-
-    // Environment variables
-    let azure_endpoint = env::var("AI_ENDPOINT")
-        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_ENDPOINT not set."))?;
-    let azure_key = env::var("AI_KEY")
-        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_KEY not set."))?;
-    let deployment_name = env::var("AI_LLM_MODEL")
-        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_LLM_MODEL not set."))?;
-
-    // Construct Azure OpenAI URL
-    let url = format!(
-        "{}/openai/deployments/{}/chat/completions?api-version=2025-01-01-preview",
-        azure_endpoint, deployment_name
-    );
-
-    // Forward headers
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        "api-key",
-        reqwest::header::HeaderValue::from_str(&azure_key)
-            .map_err(|_| actix_web::error::ErrorInternalServerError("Invalid Azure key"))?,
-    );
-    headers.insert(
-        "Content-Type",
-        reqwest::header::HeaderValue::from_static("application/json"),
-    );
-
-    let body_str = std::str::from_utf8(&body).unwrap_or("");
-    info!("Original POST Data: {}", body_str);
-
-    // Remove the problematic params
-    let re =
-        Regex::new(r#","?\s*"(max_completion_tokens|parallel_tool_calls)"\s*:\s*[^,}]*"#).unwrap();
-    let cleaned = re.replace_all(body_str, "");
-    let cleaned_body = web::Bytes::from(cleaned.to_string());
-
-    info!("Cleaned POST Data: {}", cleaned);
-
-    // Send request to Azure
-    let client = Client::new();
-    let response = client
-        .post(&url)
-        .headers(headers)
-        .body(cleaned_body)
-        .send()
-        .await
-        .map_err(actix_web::error::ErrorInternalServerError)?;
-
-    // Handle response based on status
-    let status = response.status();
-    let raw_response = response
-        .text()
-        .await
-        .map_err(actix_web::error::ErrorInternalServerError)?;
-
-    // Log the raw response
-    info!("Raw Azure response: {}", raw_response);
-
-    if status.is_success() {
-        Ok(HttpResponse::Ok().body(raw_response))
-    } else {
-        // Handle error responses properly
-        let actix_status = actix_web::http::StatusCode::from_u16(status.as_u16())
-            .unwrap_or(actix_web::http::StatusCode::INTERNAL_SERVER_ERROR);
-
-        Ok(HttpResponse::build(actix_status).body(raw_response))
-    }
-}
-
 use log::{error, info};
-
-use actix_web::{post, web, HttpRequest, HttpResponse, Result};
-use dotenv::dotenv;
 use regex::Regex;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::env;
 
-// OpenAI-compatible request/response structures
 #[derive(Debug, Serialize, Deserialize)]
 struct ChatMessage {
     role: String,
@@ -1435,20 +1282,17 @@ struct Choice {
 }
 
 fn clean_request_body(body: &str) -> String {
-    // Remove problematic parameters that might not be supported by all providers
     let re = Regex::new(r#","?\s*"(max_completion_tokens|parallel_tool_calls|top_p|frequency_penalty|presence_penalty)"\s*:\s*[^,}]*"#).unwrap();
     re.replace_all(body, "").to_string()
 }
 
 #[post("/v1/chat/completions")]
 pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Result<HttpResponse> {
-    // Log raw POST data
     let body_str = std::str::from_utf8(&body).unwrap_or_default();
     info!("Original POST Data: {}", body_str);
 
     dotenv().ok();
 
-    // Get environment variables
     let api_key = env::var("AI_KEY")
         .map_err(|_| actix_web::error::ErrorInternalServerError("AI_KEY not set."))?;
     let model = env::var("AI_LLM_MODEL")
@@ -1456,11 +1300,9 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
     let endpoint = env::var("AI_ENDPOINT")
         .map_err(|_| actix_web::error::ErrorInternalServerError("AI_ENDPOINT not set."))?;
 
-    // Parse and modify the request body
     let mut json_value: serde_json::Value = serde_json::from_str(body_str)
         .map_err(|_| actix_web::error::ErrorInternalServerError("Failed to parse JSON"))?;
 
-    // Add model parameter
     if let Some(obj) = json_value.as_object_mut() {
         obj.insert("model".to_string(), serde_json::Value::String(model));
     }
@@ -1470,7 +1312,6 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
 
     info!("Modified POST Data: {}", modified_body_str);
 
-    // Set up headers
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert(
         "Authorization",
@@ -1482,7 +1323,6 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
         reqwest::header::HeaderValue::from_static("application/json"),
     );
 
-    // Send request to the AI provider
     let client = Client::new();
     let response = client
         .post(&endpoint)
@@ -1492,7 +1332,6 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
         .await
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    // Handle response
     let status = response.status();
     let raw_response = response
         .text()
@@ -1502,7 +1341,6 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
     info!("Provider response status: {}", status);
     info!("Provider response body: {}", raw_response);
 
-    // Convert response to OpenAI format if successful
     if status.is_success() {
         match convert_to_openai_format(&raw_response) {
             Ok(openai_response) => Ok(HttpResponse::Ok()
@@ -1510,14 +1348,12 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
                 .body(openai_response)),
             Err(e) => {
                 error!("Failed to convert response format: {}", e);
-                // Return the original response if conversion fails
                 Ok(HttpResponse::Ok()
                     .content_type("application/json")
                     .body(raw_response))
             }
         }
     } else {
-        // Return error as-is
         let actix_status = actix_web::http::StatusCode::from_u16(status.as_u16())
             .unwrap_or(actix_web::http::StatusCode::INTERNAL_SERVER_ERROR);
 
@@ -1527,7 +1363,6 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
     }
 }
 
-/// Converts provider response to OpenAI-compatible format
 fn convert_to_openai_format(provider_response: &str) -> Result<String, Box<dyn std::error::Error>> {
     #[derive(serde::Deserialize)]
     struct ProviderChoice {
@@ -1589,10 +1424,8 @@ fn convert_to_openai_format(provider_response: &str) -> Result<String, Box<dyn s
         total_tokens: u32,
     }
 
-    // Parse the provider response
     let provider: ProviderResponse = serde_json::from_str(provider_response)?;
 
-    // Extract content from the first choice
     let first_choice = provider.choices.get(0).ok_or("No choices in response")?;
     let content = first_choice.message.content.clone();
     let role = first_choice
@@ -1601,7 +1434,6 @@ fn convert_to_openai_format(provider_response: &str) -> Result<String, Box<dyn s
         .clone()
         .unwrap_or_else(|| "assistant".to_string());
 
-    // Calculate token usage
     let usage = provider.usage.unwrap_or_default();
     let prompt_tokens = usage.prompt_tokens.unwrap_or(0);
     let completion_tokens = usage
@@ -1643,15 +1475,13 @@ fn convert_to_openai_format(provider_response: &str) -> Result<String, Box<dyn s
     serde_json::to_string(&openai_response).map_err(|e| e.into())
 }
 
-// Default implementation for ProviderUsage
-
 use async_trait::async_trait;
+use log::info;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use log::info;
 
 use crate::shared::BotResponse;
 
@@ -1718,7 +1548,7 @@ pub struct WhatsAppAdapter {
     access_token: String,
     phone_number_id: String,
     webhook_verify_token: String,
-    sessions: Arc<Mutex<HashMap<String, String>>>, // phone -> session_id
+    sessions: Arc<Mutex<HashMap<String, String>>>,
 }
 
 impl WhatsAppAdapter {
@@ -1815,7 +1645,7 @@ impl WhatsAppAdapter {
 }
 
 #[async_trait]
-impl super::channels::ChannelAdapter for WhatsAppAdapter {
+impl crate::channels::ChannelAdapter for WhatsAppAdapter {
     async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error>> {
         info!("Sending WhatsApp response to: {}", response.user_id);
         self.send_whatsapp_message(&response.user_id, &response.content).await
@@ -2545,12 +2375,10 @@ use uuid::Uuid;
 use crate::{
     auth::AuthService,
     channels::ChannelAdapter,
-    chart::ChartGenerator,
     llm::LLMProvider,
     session::SessionManager,
     shared::{BotResponse, UserMessage, UserSession},
     tools::ToolManager,
-    whatsapp::WhatsAppAdapter,
 };
 
 pub struct BotOrchestrator {
@@ -2560,7 +2388,6 @@ pub struct BotOrchestrator {
     auth_service: AuthService,
     channels: HashMap<String, Arc<dyn ChannelAdapter>>,
     response_channels: Arc<Mutex<HashMap<String, mpsc::Sender<BotResponse>>>>,
-    chart_generator: Option<Arc<ChartGenerator>>,
     vector_store: Option<Arc<LangChainQdrant>>,
     sql_chain: Option<Arc<LLMChain>>,
 }
@@ -2571,7 +2398,6 @@ impl BotOrchestrator {
         tool_manager: ToolManager,
         llm_provider: Arc<dyn LLMProvider>,
         auth_service: AuthService,
-        chart_generator: Option<Arc<ChartGenerator>>,
         vector_store: Option<Arc<LangChainQdrant>>,
         sql_chain: Option<Arc<LLMChain>>,
     ) -> Self {
@@ -2582,7 +2408,6 @@ impl BotOrchestrator {
             auth_service,
             channels: HashMap::new(),
             response_channels: Arc::new(Mutex::new(HashMap::new())),
-            chart_generator,
             vector_store,
             sql_chain,
         }
@@ -2660,7 +2485,6 @@ impl BotOrchestrator {
 
         let response_content = match session.answer_mode.as_str() {
             "document" => self.document_mode_handler(&message, &session).await?,
-            "chart" => self.chart_mode_handler(&message, &session).await?,
             "database" => self.database_mode_handler(&message, &session).await?,
             "tool" => self.tool_mode_handler(&message, &session).await?,
             _ => self.direct_mode_handler(&message, &session).await?,
@@ -2682,7 +2506,7 @@ impl BotOrchestrator {
         };
 
         if let Some(adapter) = self.channels.get(&message.channel) {
-            adapter.send_message(bot_response).await;
+            adapter.send_message(bot_response).await?;
         }
 
         Ok(())
@@ -2691,7 +2515,7 @@ impl BotOrchestrator {
     async fn document_mode_handler(
         &self,
         message: &UserMessage,
-        session: &UserSession,
+        _session: &UserSession,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(vector_store) = &self.vector_store {
             let similar_docs = vector_store
@@ -2714,36 +2538,7 @@ impl BotOrchestrator {
                 .generate(&enhanced_prompt, &serde_json::Value::Null)
                 .await
         } else {
-            self.direct_mode_handler(message, session).await
-        }
-    }
-
-    async fn chart_mode_handler(
-        &self,
-        message: &UserMessage,
-        session: &UserSession,
-    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        if let Some(chart_generator) = &self.chart_generator {
-            let chart_response = chart_generator
-                .generate_chart(&message.content, "bar")
-                .await?;
-
-            self.session_manager
-                .save_message(
-                    session.id,
-                    session.user_id,
-                    "system",
-                    &format!("Generated chart for query: {}", message.content),
-                    "chart",
-                )
-                .await?;
-
-            Ok(format!(
-                "Chart generated for your query. Data retrieved: {}",
-                chart_response.sql_query
-            ))
-        } else {
-            self.document_mode_handler(message, session).await
+            Ok("Document mode not available".to_string())
         }
     }
 

@@ -1,10 +1,10 @@
 use async_trait::async_trait;
+use log::info;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use log::info;
 
 use crate::shared::BotResponse;
 
@@ -71,7 +71,7 @@ pub struct WhatsAppAdapter {
     access_token: String,
     phone_number_id: String,
     webhook_verify_token: String,
-    sessions: Arc<Mutex<HashMap<String, String>>>, // phone -> session_id
+    sessions: Arc<Mutex<HashMap<String, String>>>,
 }
 
 impl WhatsAppAdapter {
@@ -87,16 +87,18 @@ impl WhatsAppAdapter {
 
     pub async fn get_session_id(&self, phone: &str) -> String {
         let sessions = self.sessions.lock().await;
-        sessions.get(phone).cloned().unwrap_or_else(|| {
+        if let Some(session_id) = sessions.get(phone) {
+            session_id.clone()
+        } else {
             drop(sessions);
             let session_id = uuid::Uuid::new_v4().to_string();
             let mut sessions = self.sessions.lock().await;
             sessions.insert(phone.to_string(), session_id.clone());
             session_id
-        })
+        }
     }
 
-    pub async fn send_whatsapp_message(&self, to: &str, body: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn send_whatsapp_message(&self, to: &str, body: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let url = format!(
             "https://graph.facebook.com/v17.0/{}/messages",
             self.phone_number_id
@@ -127,7 +129,7 @@ impl WhatsAppAdapter {
         Ok(())
     }
 
-    pub async fn process_incoming_message(&self, message: WhatsAppMessage) -> Result<Vec<crate::shared::UserMessage>, Box<dyn std::error::Error>> {
+    pub async fn process_incoming_message(&self, message: WhatsAppMessage) -> Result<Vec<crate::shared::UserMessage>, Box<dyn std::error::Error + Send + Sync>> {
         let mut user_messages = Vec::new();
 
         for entry in message.entry {
@@ -158,7 +160,7 @@ impl WhatsAppAdapter {
         Ok(user_messages)
     }
 
-    pub fn verify_webhook(&self, mode: &str, token: &str, challenge: &str) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn verify_webhook(&self, mode: &str, token: &str, challenge: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         if mode == "subscribe" && token == self.webhook_verify_token {
             Ok(challenge.to_string())
         } else {
@@ -168,8 +170,8 @@ impl WhatsAppAdapter {
 }
 
 #[async_trait]
-impl super::channels::ChannelAdapter for WhatsAppAdapter {
-    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error>> {
+impl crate::channels::ChannelAdapter for WhatsAppAdapter {
+    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("Sending WhatsApp response to: {}", response.user_id);
         self.send_whatsapp_message(&response.user_id, &response.content).await
     }

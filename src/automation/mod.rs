@@ -121,9 +121,10 @@ impl AutomationService {
 
     async fn update_last_triggered(&self, automation_id: Uuid) {
         if let Some(pool) = &self.state.db {
+            let now = time::OffsetDateTime::now_utc();
             if let Err(e) = sqlx::query!(
                 "UPDATE public.system_automations SET last_triggered = $1 WHERE id = $2",
-                Utc::now(),
+                now,
                 automation_id
             )
             .execute(pool)

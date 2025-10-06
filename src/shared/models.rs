@@ -116,3 +116,9 @@ pub struct BotResponse {
     pub stream_token: Option<String>,
     pub is_complete: bool,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct PaginationQuery {
+    pub page: Option<i64>,
+    pub page_size: Option<i64>,
+}

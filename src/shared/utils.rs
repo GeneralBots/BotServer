@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use langchain_rust::llm::AzureConfig;
 use log::{debug, warn};
 use rhai::{Array, Dynamic};
@@ -14,6 +14,7 @@ use tokio_stream::StreamExt;
 use zip::ZipArchive;
 
 use crate::config::AIConfig;
+use langchain_rust::language_models::llm::LLM;
 use reqwest::Client;
 use tokio::io::AsyncWriteExt;
 
@@ -30,7 +31,7 @@ pub async fn call_llm(
     ai_config: &AIConfig,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let azure_config = azure_from_config(&ai_config.clone());
-    let open_ai = langchain_rust::llm::OpenAI::new(azure_config);
+    let open_ai = langchain_rust::llm::openai::OpenAI::new(azure_config);
 
     let prompt = text.to_string();
 

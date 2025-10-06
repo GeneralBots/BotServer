@@ -1,116 +1,256 @@
-use log::info;
+use async_trait::async_trait;
+use futures::StreamExt;
+use langchain_rust::{
+    language_models::llm::LLM,
+    llm::{claude::Claude, openai::OpenAI},
+    schemas::Message,
+};
+use serde_json::Value;
+use std::sync::Arc;
+use tokio::sync::mpsc;
 
-use actix_web::{post, web, HttpRequest, HttpResponse, Result};
-use dotenv::dotenv;
-use regex::Regex;
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
-use std::env;
+use crate::tools::ToolManager;
 
-// OpenAI-compatible request/response structures
-#[derive(Debug, Serialize, Deserialize)]
-struct ChatMessage {
-    role: String,
-    content: String,
+#[async_trait]
+pub trait LLMProvider: Send + Sync {
+    async fn generate(
+        &self,
+        prompt: &str,
+        config: &Value,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn generate_stream(
+        &self,
+        prompt: &str,
+        config: &Value,
+        tx: mpsc::Sender<String>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn generate_with_tools(
+        &self,
+        prompt: &str,
+        config: &Value,
+        available_tools: &[String],
+        tool_manager: Arc<ToolManager>,
+        session_id: &str,
+        user_id: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>>;
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct ChatCompletionRequest {
-    model: String,
-    messages: Vec<ChatMessage>,
-    stream: Option<bool>,
+pub struct OpenAIClient {
+    client: OpenAI<langchain_rust::llm::openai::OpenAIConfig>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct ChatCompletionResponse {
-    id: String,
-    object: String,
-    created: u64,
-    model: String,
-    choices: Vec<Choice>,
+impl OpenAIClient {
+    pub fn new(client: OpenAI<langchain_rust::llm::openai::OpenAIConfig>) -> Self {
+        Self { client }
+    }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Choice {
-    message: ChatMessage,
-    finish_reason: String,
-}
+#[async_trait]
+impl LLMProvider for OpenAIClient {
+    async fn generate(
+        &self,
+        prompt: &str,
+        _config: &Value,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let result = self
+            .client
+            .invoke(prompt)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 
-#[post("/azure/v1/chat/completions")]
-async fn chat_completions(body: web::Bytes, _req: HttpRequest) -> Result<HttpResponse> {
-    // Always log raw POST data
-    if let Ok(body_str) = std::str::from_utf8(&body) {
-        info!("POST Data: {}", body_str);
-    } else {
-        info!("POST Data (binary): {:?}", body);
+        Ok(result)
     }
 
-    dotenv().ok();
+    async fn generate_stream(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        tx: mpsc::Sender<String>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let mut stream = self
+            .client
+            .stream(prompt)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 
-    // Environment variables
-    let azure_endpoint = env::var("AI_ENDPOINT")
-        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_ENDPOINT not set."))?;
-    let azure_key = env::var("AI_KEY")
-        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_KEY not set."))?;
-    let deployment_name = env::var("AI_LLM_MODEL")
-        .map_err(|_| actix_web::error::ErrorInternalServerError("AI_LLM_MODEL not set."))?;
+        while let Some(result) = stream.next().await {
+            match result {
+                Ok(chunk) => {
+                    let content = chunk.content;
+                    if !content.is_empty() {
+                        let _ = tx.send(content.to_string()).await;
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Stream error: {}", e);
+                }
+            }
+        }
 
-    // Construct Azure OpenAI URL
-    let url = format!(
-        "{}/openai/deployments/{}/chat/completions?api-version=2025-01-01-preview",
-        azure_endpoint, deployment_name
-    );
+        Ok(())
+    }
 
-    // Forward headers
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        "api-key",
-        reqwest::header::HeaderValue::from_str(&azure_key)
-            .map_err(|_| actix_web::error::ErrorInternalServerError("Invalid Azure key"))?,
-    );
-    headers.insert(
-        "Content-Type",
-        reqwest::header::HeaderValue::from_static("application/json"),
-    );
+    async fn generate_with_tools(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        available_tools: &[String],
+        _tool_manager: Arc<ToolManager>,
+        _session_id: &str,
+        _user_id: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let tools_info = if available_tools.is_empty() {
+            String::new()
+        } else {
+            format!("\n\nAvailable tools: {}. You can suggest using these tools if they would help answer the user's question.", available_tools.join(", "))
+        };
 
-    let body_str = std::str::from_utf8(&body).unwrap_or("");
-    info!("Original POST Data: {}", body_str);
+        let enhanced_prompt = format!("{}{}", prompt, tools_info);
 
-    // Remove the problematic params
-    let re =
-        Regex::new(r#","?\s*"(max_completion_tokens|parallel_tool_calls)"\s*:\s*[^,}]*"#).unwrap();
-    let cleaned = re.replace_all(body_str, "");
-    let cleaned_body = web::Bytes::from(cleaned.to_string());
+        let result = self
+            .client
+            .invoke(&enhanced_prompt)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 
-    info!("Cleaned POST Data: {}", cleaned);
+        Ok(result)
+    }
+}
 
-    // Send request to Azure
-    let client = Client::new();
-    let response = client
-        .post(&url)
-        .headers(headers)
-        .body(cleaned_body)
-        .send()
-        .await
-        .map_err(actix_web::error::ErrorInternalServerError)?;
+pub struct AnthropicClient {
+    client: Claude,
+}
 
-    // Handle response based on status
-    let status = response.status();
-    let raw_response = response
-        .text()
-        .await
-        .map_err(actix_web::error::ErrorInternalServerError)?;
+impl AnthropicClient {
+    pub fn new(api_key: String) -> Self {
+        let client = Claude::default().with_api_key(api_key);
+        Self { client }
+    }
+}
 
-    // Log the raw response
-    info!("Raw Azure response: {}", raw_response);
+#[async_trait]
+impl LLMProvider for AnthropicClient {
+    async fn generate(
+        &self,
+        prompt: &str,
+        _config: &Value,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let result = self
+            .client
+            .invoke(prompt)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 
-    if status.is_success() {
-        Ok(HttpResponse::Ok().body(raw_response))
-    } else {
-        // Handle error responses properly
-        let actix_status = actix_web::http::StatusCode::from_u16(status.as_u16())
-            .unwrap_or(actix_web::http::StatusCode::INTERNAL_SERVER_ERROR);
+        Ok(result)
+    }
 
-        Ok(HttpResponse::build(actix_status).body(raw_response))
+    async fn generate_stream(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        tx: mpsc::Sender<String>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let mut stream = self
+            .client
+            .stream(prompt)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+
+        while let Some(result) = stream.next().await {
+            match result {
+                Ok(chunk) => {
+                    let content = chunk.content;
+                    if !content.is_empty() {
+                        let _ = tx.send(content.to_string()).await;
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Stream error: {}", e);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn generate_with_tools(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        available_tools: &[String],
+        _tool_manager: Arc<ToolManager>,
+        _session_id: &str,
+        _user_id: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let tools_info = if available_tools.is_empty() {
+            String::new()
+        } else {
+            format!("\n\nAvailable tools: {}. You can suggest using these tools if they would help answer the user's question.", available_tools.join(", "))
+        };
+
+        let enhanced_prompt = format!("{}{}", prompt, tools_info);
+
+        let result = self
+            .client
+            .invoke(&enhanced_prompt)
+            .await
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+
+        Ok(result)
+    }
+}
+
+pub struct MockLLMProvider;
+
+impl MockLLMProvider {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+#[async_trait]
+impl LLMProvider for MockLLMProvider {
+    async fn generate(
+        &self,
+        prompt: &str,
+        _config: &Value,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(format!("Mock response to: {}", prompt))
+    }
+
+    async fn generate_stream(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        tx: mpsc::Sender<String>,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let response = format!("Mock stream response to: {}", prompt);
+        for word in response.split_whitespace() {
+            let _ = tx.send(format!("{} ", word)).await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        }
+        Ok(())
+    }
+
+    async fn generate_with_tools(
+        &self,
+        prompt: &str,
+        _config: &Value,
+        available_tools: &[String],
+        _tool_manager: Arc<ToolManager>,
+        _session_id: &str,
+        _user_id: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let tools_list = if available_tools.is_empty() {
+            "no tools available".to_string()
+        } else {
+            available_tools.join(", ")
+        };
+        Ok(format!(
+            "Mock response with tools [{}] to: {}",
+            tools_list, prompt
+        ))
     }
 }

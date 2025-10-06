@@ -2,10 +2,11 @@ use std::sync::Arc;
 
 use crate::{
     bot::BotOrchestrator, 
-    channels::{VoiceAdapter, WebChannelAdapter, WhatsAppAdapter},
+    channels::{VoiceAdapter, WebChannelAdapter},
     config::AppConfig,
     tools::ToolApi,
-    web_automation::BrowserPool
+    web_automation::BrowserPool,
+    whatsapp::WhatsAppAdapter,
 };
 
 #[derive(Clone)]
