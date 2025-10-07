@@ -35,7 +35,7 @@ impl OrganizationService {
 
     pub async fn get_organization(
         &self,
-        org_id: Uuid,
+        _org_id: Uuid,
     ) -> Result<Option<Organization>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(None)
     }

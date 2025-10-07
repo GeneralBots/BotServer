@@ -1,4 +1,16 @@
 -- Optimized database schema
+-- Add organizations table
+CREATE TABLE IF NOT EXISTS organizations (
+    org_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug);
+CREATE INDEX IF NOT EXISTS idx_organizations_created_at ON organizations(created_at);
 
 -- Core tables
 CREATE TABLE IF NOT EXISTS users (

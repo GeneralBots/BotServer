@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
