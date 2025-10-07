@@ -1,11 +1,13 @@
+use log::{error, info};
+
 use actix_web::{post, web, HttpRequest, HttpResponse, Result};
 use dotenv::dotenv;
-use log::{error, info};
 use regex::Regex;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::env;
 
+// OpenAI-compatible request/response structures
 #[derive(Debug, Serialize, Deserialize)]
 struct ChatMessage {
     role: String,
@@ -35,17 +37,20 @@ struct Choice {
 }
 
 fn clean_request_body(body: &str) -> String {
+    // Remove problematic parameters that might not be supported by all providers
     let re = Regex::new(r#","?\s*"(max_completion_tokens|parallel_tool_calls|top_p|frequency_penalty|presence_penalty)"\s*:\s*[^,}]*"#).unwrap();
     re.replace_all(body, "").to_string()
 }
 
 #[post("/v1/chat/completions")]
 pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Result<HttpResponse> {
+    // Log raw POST data
     let body_str = std::str::from_utf8(&body).unwrap_or_default();
     info!("Original POST Data: {}", body_str);
 
     dotenv().ok();
 
+    // Get environment variables
     let api_key = env::var("AI_KEY")
         .map_err(|_| actix_web::error::ErrorInternalServerError("AI_KEY not set."))?;
     let model = env::var("AI_LLM_MODEL")
@@ -53,9 +58,11 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
     let endpoint = env::var("AI_ENDPOINT")
         .map_err(|_| actix_web::error::ErrorInternalServerError("AI_ENDPOINT not set."))?;
 
+    // Parse and modify the request body
     let mut json_value: serde_json::Value = serde_json::from_str(body_str)
         .map_err(|_| actix_web::error::ErrorInternalServerError("Failed to parse JSON"))?;
 
+    // Add model parameter
     if let Some(obj) = json_value.as_object_mut() {
         obj.insert("model".to_string(), serde_json::Value::String(model));
     }
@@ -65,6 +72,7 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
 
     info!("Modified POST Data: {}", modified_body_str);
 
+    // Set up headers
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert(
         "Authorization",
@@ -76,6 +84,7 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
         reqwest::header::HeaderValue::from_static("application/json"),
     );
 
+    // Send request to the AI provider
     let client = Client::new();
     let response = client
         .post(&endpoint)
@@ -85,6 +94,7 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
         .await
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
+    // Handle response
     let status = response.status();
     let raw_response = response
         .text()
@@ -94,6 +104,7 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
     info!("Provider response status: {}", status);
     info!("Provider response body: {}", raw_response);
 
+    // Convert response to OpenAI format if successful
     if status.is_success() {
         match convert_to_openai_format(&raw_response) {
             Ok(openai_response) => Ok(HttpResponse::Ok()
@@ -101,12 +112,14 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
                 .body(openai_response)),
             Err(e) => {
                 error!("Failed to convert response format: {}", e);
+                // Return the original response if conversion fails
                 Ok(HttpResponse::Ok()
                     .content_type("application/json")
                     .body(raw_response))
             }
         }
     } else {
+        // Return error as-is
         let actix_status = actix_web::http::StatusCode::from_u16(status.as_u16())
             .unwrap_or(actix_web::http::StatusCode::INTERNAL_SERVER_ERROR);
 
@@ -116,6 +129,7 @@ pub async fn generic_chat_completions(body: web::Bytes, _req: HttpRequest) -> Re
     }
 }
 
+/// Converts provider response to OpenAI-compatible format
 fn convert_to_openai_format(provider_response: &str) -> Result<String, Box<dyn std::error::Error>> {
     #[derive(serde::Deserialize)]
     struct ProviderChoice {
@@ -177,8 +191,10 @@ fn convert_to_openai_format(provider_response: &str) -> Result<String, Box<dyn s
         total_tokens: u32,
     }
 
+    // Parse the provider response
     let provider: ProviderResponse = serde_json::from_str(provider_response)?;
 
+    // Extract content from the first choice
     let first_choice = provider.choices.get(0).ok_or("No choices in response")?;
     let content = first_choice.message.content.clone();
     let role = first_choice
@@ -187,6 +203,7 @@ fn convert_to_openai_format(provider_response: &str) -> Result<String, Box<dyn s
         .clone()
         .unwrap_or_else(|| "assistant".to_string());
 
+    // Calculate token usage
     let usage = provider.usage.unwrap_or_default();
     let prompt_tokens = usage.prompt_tokens.unwrap_or(0);
     let completion_tokens = usage

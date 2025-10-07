@@ -1,15 +1,17 @@
 use async_trait::async_trait;
-use chrono::Utc;
 use log::info;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 
-use crate::shared::{BotResponse, UserMessage};
+use crate::shared::BotResponse;
 
 #[async_trait]
 pub trait ChannelAdapter: Send + Sync {
-    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+    async fn send_message(
+        &self,
+        response: BotResponse,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
 }
 
 pub struct WebChannelAdapter {
@@ -34,7 +36,10 @@ impl WebChannelAdapter {
 
 #[async_trait]
 impl ChannelAdapter for WebChannelAdapter {
-    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn send_message(
+        &self,
+        response: BotResponse,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let connections = self.connections.lock().await;
         if let Some(tx) = connections.get(&response.session_id) {
             tx.send(response).await?;
@@ -67,11 +72,17 @@ impl VoiceAdapter {
         session_id: &str,
         user_id: &str,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        info!("Starting voice session for user: {} with session: {}", user_id, session_id);
-        
+        info!(
+            "Starting voice session for user: {} with session: {}",
+            user_id, session_id
+        );
+
         let token = format!("mock_token_{}_{}", session_id, user_id);
-        self.rooms.lock().await.insert(session_id.to_string(), token.clone());
-        
+        self.rooms
+            .lock()
+            .await
+            .insert(session_id.to_string(), token.clone());
+
         Ok(token)
     }
 
@@ -99,7 +110,10 @@ impl VoiceAdapter {
 
 #[async_trait]
 impl ChannelAdapter for VoiceAdapter {
-    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn send_message(
+        &self,
+        response: BotResponse,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("Sending voice response to: {}", response.user_id);
         self.send_voice_response(&response.session_id, &response.content)
             .await

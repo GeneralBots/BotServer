@@ -1,4 +1,3 @@
-use chrono::Utc;
 use langchain_rust::llm::AzureConfig;
 use log::{debug, warn};
 use rhai::{Array, Dynamic};
