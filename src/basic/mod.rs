@@ -1,6 +1,8 @@
 mod keywords;
 
+#[cfg(feature = "email")]
 use self::keywords::create_draft::create_draft_keyword;
+
 use self::keywords::create_site::create_site_keyword;
 use self::keywords::find::find_keyword;
 use self::keywords::first::first_keyword;
@@ -31,7 +33,9 @@ impl ScriptService {
         engine.set_allow_anonymous_fn(true);
         engine.set_allow_looping(true);
 
+        #[cfg(feature = "email")]
         create_draft_keyword(state, &mut engine);
+
         create_site_keyword(state, &mut engine);
         find_keyword(state, &mut engine);
         for_keyword(state, &mut engine);

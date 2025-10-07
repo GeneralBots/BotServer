@@ -15,6 +15,7 @@ mod channels;
 mod chart;
 mod config;
 mod context;
+#[cfg(feature = "email")]
 mod email;
 mod file;
 mod llm;
@@ -33,6 +34,7 @@ use crate::bot::{
 };
 use crate::channels::{VoiceAdapter, WebChannelAdapter};
 use crate::config::AppConfig;
+#[cfg(feature = "email")]
 use crate::email::{
     get_emails, get_latest_email_from, list_emails, save_click, save_draft, send_email,
 };
@@ -170,7 +172,8 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header()
             .max_age(3600);
 
-        App::new()
+        // Begin building the Actix App
+        let app = App::new()
             .wrap(cors)
             .wrap(Logger::default())
             .wrap(Logger::new("HTTP REQUEST: %a %{User-Agent}i"))
@@ -178,15 +181,9 @@ async fn main() -> std::io::Result<()> {
             // Legacy services
             .service(upload_file)
             .service(list_file)
-            .service(save_click)
-            .service(get_emails)
-            .service(list_emails)
-            .service(send_email)
             .service(chat_completions_local)
-            .service(save_draft)
             .service(generic_chat_completions)
             .service(embeddings_local)
-            .service(get_latest_email_from)
             // New bot services
             .service(index)
             .service(static_files)
@@ -198,7 +195,20 @@ async fn main() -> std::io::Result<()> {
             .service(create_session)
             .service(get_sessions)
             .service(get_session_history)
-            .service(set_mode_handler)
+            .service(set_mode_handler);
+
+        // Conditional email feature services
+        #[cfg(feature = "email")]
+        {
+            app = app
+                .service(get_latest_email_from)
+                .service(get_emails)
+                .service(list_emails)
+                .service(send_email)
+                .service(save_draft);
+        }
+
+        app
     })
     .bind((config.server.host.clone(), config.server.port))?
     .run()

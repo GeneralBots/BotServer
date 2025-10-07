@@ -8,10 +8,9 @@ license = "AGPL-3.0"
 repository = "https://github.pragmatismo.com.br/generalbots/botserver"
 
 [features]
-default = ["postgres", "qdrant"]
-local_llm = []
-postgres = ["sqlx/postgres"]
+default = ["qdrant"]
 qdrant = ["langchain-rust/qdrant"]
+email = ["imap"]
 
 [dependencies]
 actix-cors = "0.7"
@@ -31,8 +30,8 @@ downloader = "0.2"
 env_logger = "0.11"
 futures = "0.3"
 futures-util = "0.3"
-imap = "2.4"
-langchain-rust = { version = "4.6", features = ["qdrant", "postgres"] }
+imap = {version="2.4.1", optional=true}
+langchain-rust = { version = "4.6", features = ["qdrant",] }
 lettre = { version = "0.11", features = ["smtp-transport", "builder", "tokio1", "tokio1-native-tls"] }
 livekit = "0.7"
 log = "0.4"
