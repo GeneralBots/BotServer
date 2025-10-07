@@ -15,15 +15,12 @@ pub struct Organization {
 pub struct Bot {
     pub bot_id: Uuid,
     pub name: String,
-    pub status: BotStatus,
+    pub status: i32,
     pub config: serde_json::Value,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::Type)]
-#[serde(rename_all = "snake_case")]
-#[sqlx(type_name = "bot_status", rename_all = "snake_case")]
 pub enum BotStatus {
     Active,
     Inactive,
