@@ -120,6 +120,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
       result = llmOutputs[0].text;
     }
     let res;
+    result = result.replace(/[“”]/g, '"');
     const jsonMatch = result.match(/\{"text"[^]*\}/);
     if (jsonMatch) {
       res = JSON.parse(jsonMatch[0]);
