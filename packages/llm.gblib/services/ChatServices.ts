@@ -123,20 +123,58 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     let res;
     result = result.replace(/[“”]/g, '"');
 
-    // Find the last occurrence of {"text"
+    // First, fix the escaped characters
+    result = result.replace(/\\"/g, '"'); // Fix escaped quotes
+    result = result.replace(/\\\\n/g, '\\n'); // Fix escaped newlines
+
+    // Then find and parse the JSON
     const lastIndex = result.lastIndexOf('{"text"');
     if (lastIndex !== -1) {
       const substringFromLast = result.slice(lastIndex);
 
-      // Match the complete JSON object (from {"text" to the matching })
-      // This regex stops at the first complete JSON object
-      const jsonMatch = substringFromLast.match(/^\{"text"[^]*?\}/);
+      // Use brace counting to find the complete JSON
+      let braceCount = 0;
+      let inString = false;
+      let escapeNext = false;
+      let jsonEnd = -1;
 
-      if (jsonMatch) {
+      for (let i = 0; i < substringFromLast.length; i++) {
+        const char = substringFromLast[i];
+
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+
+        if (char === '\\') {
+          escapeNext = true;
+          continue;
+        }
+
+        if (char === '"' && !escapeNext) {
+          inString = !inString;
+          continue;
+        }
+
+        if (!inString) {
+          if (char === '{') {
+            braceCount++;
+          } else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              jsonEnd = i + 1;
+              break;
+            }
+          }
+        }
+      }
+
+      if (jsonEnd !== -1) {
+        const jsonString = substringFromLast.substring(0, jsonEnd);
         try {
-          res = JSON.parse(jsonMatch[0]);
+          res = JSON.parse(jsonString);
         } catch (e) {
-          throw new Error('Invalid JSON format found');
+          throw new Error('Invalid JSON format found: ' + e.message);
         }
       } else {
         throw new Error('No complete JSON object found');
