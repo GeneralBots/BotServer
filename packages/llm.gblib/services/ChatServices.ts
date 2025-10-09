@@ -119,15 +119,19 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     } else {
       result = llmOutputs[0].text;
     }
-
     let res;
-    try {
-      GBLogEx.info(this.min, result);
-      res = JSON.parse(result);
-    } catch (e) {
-      GBLogEx.verbose(this.min, `LLM JSON error: ${GBUtil.toYAML(e)}.`);
-
-      return result;
+    const jsonMatch = result.match(/\{"text"[^]*\}/);
+    if (jsonMatch) {
+      res = JSON.parse(jsonMatch[0]);
+    } else {
+      // Fallback: find the position and extract
+      const startIndex = result.indexOf('{"text');
+      if (startIndex !== -1) {
+        const jsonString = result.slice(startIndex);
+        res = JSON.parse(jsonString);
+      } else {
+        throw new Error('No JSON starting with {"text found');
+      }
     }
 
     let { sources, text } = res;
