@@ -123,24 +123,23 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     let res;
     result = result.replace(/[“”]/g, '"');
 
-    // Method 1: Use lastIndexOf to find the last occurrence
+    // Find the last occurrence of {"text"
     const lastIndex = result.lastIndexOf('{"text"');
     if (lastIndex !== -1) {
-      // Extract from the last occurrence to the end
-      const jsonString = result.slice(lastIndex);
+      const substringFromLast = result.slice(lastIndex);
 
-      // Try to parse the JSON, but we need to find where it ends
-      // We'll look for the complete JSON object
-      const jsonMatch = jsonString.match(/^\{"text"[^]*?\}(?=\s*$|\s*\{)/);
+      // Match the complete JSON object (from {"text" to the matching })
+      // This regex stops at the first complete JSON object
+      const jsonMatch = substringFromLast.match(/^\{"text"[^]*?\}/);
+
       if (jsonMatch) {
-        res = JSON.parse(jsonMatch[0]);
-      } else {
-        // Fallback: try to parse the entire substring
         try {
-          res = JSON.parse(jsonString);
+          res = JSON.parse(jsonMatch[0]);
         } catch (e) {
-          throw new Error('Invalid JSON found at the end position');
+          throw new Error('Invalid JSON format found');
         }
+      } else {
+        throw new Error('No complete JSON object found');
       }
     } else {
       throw new Error('No JSON starting with {"text" found');
