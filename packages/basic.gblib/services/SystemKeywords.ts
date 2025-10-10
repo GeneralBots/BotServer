@@ -2941,7 +2941,7 @@ export class SystemKeywords {
         let buf: any = Buffer.from(await res.arrayBuffer());
         data = new Uint8Array(buf);
       } else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
-        const fileUrl = urlJoin('/', `${min.botId}.drive`, file);
+        const fileUrl = urlJoin('/', `${min.botId}.gbdrive`, file);
         GBLogEx.info(min, `Direct PDF from Minio: ${fileUrl}`);
 
         const minioClient = new Client({
