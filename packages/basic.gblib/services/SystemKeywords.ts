@@ -2925,7 +2925,6 @@ export class SystemKeywords {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, GBUtil.toYAML(obj));
   }
-
   public async getPdf({ pid, file }) {
     const { min } = await DialogKeywords.getProcessInfo(pid);
     GBLogEx.info(min, `BASIC GET (pdf): ${file}`);
@@ -2941,6 +2940,52 @@ export class SystemKeywords {
         const res = await fetch(url);
         let buf: any = Buffer.from(await res.arrayBuffer());
         data = new Uint8Array(buf);
+      } else if (GBConfigService.get('GB_MODE') === 'gbcluster') {
+        const fileUrl = urlJoin('/', `${min.botId}.drive`, file);
+        GBLogEx.info(min, `Direct PDF from Minio: ${fileUrl}`);
+
+        const minioClient = new Client({
+          endPoint: process.env.DRIVE_SERVER || 'localhost',
+          port: parseInt(process.env.DRIVE_PORT || '9000', 10),
+          useSSL: process.env.DRIVE_USE_SSL === 'true',
+          accessKey: process.env.DRIVE_ACCESSKEY,
+          secretKey: process.env.DRIVE_SECRET
+        });
+
+        const gbaiName = GBUtil.getGBAIPath(min.botId);
+        const bucketName = (process.env.DRIVE_ORG_PREFIX + min.botId + '.gbai').toLowerCase();
+        const localName = path.join(
+          'work',
+          gbaiName,
+          'cache',
+          `${file.replace(/\s/gi, '')}-${GBAdminService.getNumberIdentifier()}.pdf`
+        );
+
+        try {
+          // Lock the file for reading
+          await this.lockFile(minioClient, bucketName, fileUrl);
+
+          // Download the PDF file
+          await minioClient.fGetObject(bucketName, fileUrl, localName);
+
+          // Read the PDF file
+          data = await fs.readFile(localName);
+          data = new Uint8Array(data);
+
+          GBLogEx.info(min, `Successfully retrieved PDF from Minio storage: ${fileUrl}`);
+        } catch (error) {
+          GBLogEx.error(min, `Error retrieving PDF from Minio storage: ${error.message}`);
+          throw error;
+        } finally {
+          // Ensure the file is unlocked
+          await this.unlockFile(minioClient, bucketName, fileUrl);
+          // Clean up the local file
+          try {
+            await fs.unlink(localName);
+          } catch (cleanupError) {
+            GBLogEx.info(min, `Could not clean up local file: ${cleanupError.message}`);
+          }
+        }
       } else {
         let packagePath = GBUtil.getGBAIPath(min.botId, `gbdrive`);
         let filePath = path.join(GBConfigService.get('STORAGE_LIBRARY'), packagePath, file);
@@ -2953,7 +2998,6 @@ export class SystemKeywords {
       return null;
     }
   }
-
   public async setContext({ pid, text }) {
     const { min, user, params } = await DialogKeywords.getProcessInfo(pid);
     ChatServices.userSystemPrompt[user.userSystemId] = text;
