@@ -592,7 +592,8 @@ export class ChatServices {
 
     if (LLMMode === 'direct') {
       const context = user ? this.userSystemPrompt[user.userSystemId] : '';
-      result = await directChain.invoke(context + question);
+      const res = await directChain.invoke(context + question);
+      result.text = res.text ? res.text : res;
       let cleaned = result.text.split('final<|message|>')[1];
       result.text = cleaned ?? result.text;
     } else if (LLMMode === 'document-ref' || LLMMode === 'document') {
