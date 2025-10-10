@@ -591,7 +591,8 @@ export class ChatServices {
     // .gbot switch LLMMode and choose the corresponding chain.
 
     if (LLMMode === 'direct') {
-      result = await directChain.invoke(question);
+      const context = user ? this.userSystemPrompt[user.userSystemId] : '';
+      result = await directChain.invoke(context + question);
       let cleaned = result.text.split('final<|message|>')[1];
       result.text = cleaned ?? result.text;
     } else if (LLMMode === 'document-ref' || LLMMode === 'document') {
