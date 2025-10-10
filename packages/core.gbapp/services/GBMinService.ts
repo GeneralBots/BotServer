@@ -1618,6 +1618,7 @@ export class GBMinService {
           `Auto start (4) dialog is now being called: ${startDialog} for ${min.instance.instanceId}...`
         );
         await GBVMService.callVM(startDialog.toLowerCase(), min, step, pid);
+        return;
       }
     }
 
