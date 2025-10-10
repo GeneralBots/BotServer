@@ -489,6 +489,7 @@ export class ChatServices {
       ERROR IF: Line breaks in JSON, text outside JSON, invalid format`;
 
     const combineDocumentsPrompt = ChatPromptTemplate.fromMessages([
+      SystemMessagePromptTemplate.fromTemplate(systemPrompt),
       AIMessagePromptTemplate.fromTemplate(
         `
         This is a segmented context:
@@ -555,7 +556,7 @@ export class ChatServices {
         context: async (output: string) => {
           const numDocs = process.env.LLM_EMBEDDED_DOCUMENT_COUNT ?? 10;
           const c = await ChatServices.getRelevantContext(min['vectorStore'], output, numDocs);
-          return `${systemPrompt} \n ${c ? 'Use this context to answer:\n' + c : 'answer just with user question.'}`;
+          return ` ${c ? 'Use this context to answer:\n' + c : 'answer just with user question.'}`;
         }
       },
       combineDocumentsPrompt,
@@ -770,12 +771,14 @@ export class ChatServices {
       GBLogEx.info(min, `Invalid Answer Mode in .gbot: ${LLMMode}.`);
     }
 
+    const ignoreOutput = process.env.LLM_MEMORY_IGNORE_OUTPUT === 'true';
+
     await memory.saveContext(
       {
         input: question
       },
       {
-        output: result ? result.replace(/\!\[.*\)/gi, 'Image generated.') : 'no answer' // Removes .MD url beforing adding to history.
+        output: result && !ignoreOutput ? result.replace(/\!\[.*\)/gi, 'Image generated.') : 'no answer' // Removes .MD url beforing adding to history.
       }
     );
 
