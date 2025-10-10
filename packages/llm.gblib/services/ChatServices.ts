@@ -592,8 +592,7 @@ export class ChatServices {
 
     if (LLMMode === 'direct') {
       result = await directChain.invoke(question);
-      const res = result.split('final<|message|>')[1];
-      result = res ?? result;
+      result.text = result.text.split('final<|message|>')[1];
     } else if (LLMMode === 'document-ref' || LLMMode === 'document') {
       const res = await combineDocumentsChain.invoke(question);
 
