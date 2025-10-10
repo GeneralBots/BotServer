@@ -592,11 +592,16 @@ export class ChatServices {
 
     if (LLMMode === 'direct') {
       result = await directChain.invoke(question);
-      result.text = result.text.split('final<|message|>')[1];
+      let cleaned = result.text.split('final<|message|>')[1];
+      result.text = cleaned ?? result.text;
     } else if (LLMMode === 'document-ref' || LLMMode === 'document') {
       const res = await combineDocumentsChain.invoke(question);
 
       result = res.text ? res.text : res;
+
+      let cleaned = result.split('final<|message|>')[1];
+      result = cleaned ?? result;
+
       sources = res.sources;
     } else if (LLMMode === 'tool') {
       result = await conversationalToolChain.invoke({
