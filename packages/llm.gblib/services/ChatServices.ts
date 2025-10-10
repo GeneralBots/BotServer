@@ -127,6 +127,9 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     result = result.replace(/\\"/g, '"'); // Fix escaped quotes
     result = result.replace(/\\\\n/g, '\\n'); // Fix escaped newlines
 
+    let sources;
+    let text = result;
+
     // Then find and parse the JSON
     const lastIndex = result.lastIndexOf('{"text"');
     if (lastIndex !== -1) {
@@ -173,6 +176,9 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
         const jsonString = substringFromLast.substring(0, jsonEnd);
         try {
           res = JSON.parse(jsonString);
+
+          sources = res.sources;
+          text = res.text;
         } catch (e) {
           throw new Error('Invalid JSON format found: ' + e.message);
         }
@@ -182,8 +188,6 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
     } else {
       throw new Error('No JSON starting with {"text" found');
     }
-
-    let { sources, text } = res;
 
     let securityEnabled = false;
 
