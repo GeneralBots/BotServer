@@ -2705,7 +2705,7 @@ export class SystemKeywords {
     const prompt = `${text}`;
     const answer = await ChatServices.invokeLLM(min, prompt);
     GBLogEx.info(min, `REWRITE ${text} TO ${answer.text}`);
-    return answer;
+    return answer.text;
   }
 
   /**
