@@ -182,11 +182,7 @@ export class GBLLMOutputParser extends BaseLLMOutputParser<ExpectedOutput> {
         } catch (e) {
           throw new Error('Invalid JSON format found: ' + e.message);
         }
-      } else {
-        throw new Error('No complete JSON object found');
       }
-    } else {
-      throw new Error('No JSON starting with {"text" found');
     }
 
     let securityEnabled = false;
