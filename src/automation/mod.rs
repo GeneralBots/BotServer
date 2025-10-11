@@ -194,31 +194,42 @@ impl AutomationService {
 
     async fn execute_action(&self, param: &str) {
         let full_path = Path::new(&self.scripts_dir).join(param);
-        match tokio::fs::read_to_string(&full_path).await {
-            Ok(script_content) => {
-                info!("Executing action with param: {}", param);
-                let user_session = crate::shared::models::UserSession {
-                    id: Uuid::new_v4(),
-                    user_id: Uuid::new_v4(),
-                    bot_id: Uuid::new_v4(),
-                    title: "Automation".to_string(),
-                    answer_mode: "direct".to_string(),
-                    current_tool: None,
-                    context_data: None,
-                    created_at: Utc::now(),
-                    updated_at: Utc::now(),
-                };
-                let script_service = ScriptService::new(&self.state, user_session);
-                match script_service.compile(&script_content) {
-                    Ok(ast) => match script_service.run(&ast) {
-                        Ok(result) => info!("Script executed successfully: {:?}", result),
-                        Err(e) => error!("Error executing script: {}", e),
-                    },
-                    Err(e) => error!("Error compiling script: {}", e),
-                }
+        let script_content = match tokio::fs::read_to_string(&full_path).await {
+            Ok(content) => content,
+            Err(e) => {
+                error!("Failed to read script {}: {}", full_path.display(), e);
+                return;
+            }
+        };
+
+        info!("Executing action with param: {}", param);
+        let user_session = crate::shared::models::UserSession {
+            id: Uuid::new_v4(),
+            user_id: Uuid::new_v4(),
+            bot_id: Uuid::new_v4(),
+            title: "Automation".to_string(),
+            answer_mode: "direct".to_string(),
+            current_tool: None,
+            context_data: serde_json::Value::Null,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        let script_service = ScriptService::new(&self.state, user_session);
+        let ast = match script_service.compile(&script_content) {
+            Ok(ast) => ast,
+            Err(e) => {
+                error!("Error compiling script: {}", e);
+                return;
+            }
+        };
+
+        match script_service.run(&ast) {
+            Ok(_result) => {
+                info!("Script executed successfully");
             }
             Err(e) => {
-                error!("Failed to execute action {}: {}", full_path.display(), e);
+                error!("Error executing script: {}", e);
             }
         }
     }

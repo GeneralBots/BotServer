@@ -28,6 +28,7 @@ impl Clone for AppState {
             s3_client: self.s3_client.clone(),
             config: self.config.clone(),
             conn: Arc::clone(&self.conn),
+            custom_conn: Arc::clone(&self.custom_conn),
             redis_client: self.redis_client.clone(),
             orchestrator: Arc::clone(&self.orchestrator),
             web_adapter: Arc::clone(&self.web_adapter),

@@ -8,7 +8,7 @@ use std::error::Error;
 use crate::shared::models::UserSession;
 use crate::shared::state::AppState;
 
-pub fn set_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
+pub fn set_keyword(state: &AppState, _user: UserSession, engine: &mut Engine) {
     let state_clone = state.clone();
 
     engine
@@ -22,8 +22,8 @@ pub fn set_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
                 let filter_str = filter.to_string();
                 let updates_str = updates.to_string();
 
-                let conn = state_clone.conn.lock().unwrap();
-                let result = execute_set(&*conn, &table_str, &filter_str, &updates_str)
+                let mut conn = state_clone.conn.lock().unwrap();
+                let result = execute_set(&mut *conn, &table_str, &filter_str, &updates_str)
                     .map_err(|e| format!("DB error: {}", e))?;
 
                 if let Some(rows_affected) = result.get("rows_affected") {

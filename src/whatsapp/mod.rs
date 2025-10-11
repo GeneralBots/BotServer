@@ -141,7 +141,8 @@ impl WhatsAppAdapter {
     pub async fn process_incoming_message(
         &self,
         message: WhatsAppMessage,
-    ) -> Result<Vec<crate::shared::UserMessage>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> Result<Vec<crate::shared::models::UserMessage>, Box<dyn std::error::Error + Send + Sync>>
+    {
         let mut user_messages = Vec::new();
 
         for entry in message.entry {

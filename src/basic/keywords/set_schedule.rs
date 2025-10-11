@@ -1,14 +1,14 @@
+use diesel::prelude::*;
 use log::info;
 use rhai::Dynamic;
 use rhai::Engine;
 use serde_json::{json, Value};
-use diesel::prelude::*;
 
 use crate::shared::models::TriggerKind;
-use crate::shared::state::AppState;
 use crate::shared::models::UserSession;
+use crate::shared::state::AppState;
 
-pub fn set_schedule_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
+pub fn set_schedule_keyword(state: &AppState, _user: UserSession, engine: &mut Engine) {
     let state_clone = state.clone();
 
     engine
@@ -17,8 +17,8 @@ pub fn set_schedule_keyword(state: &AppState, user: UserSession, engine: &mut En
                 let cron = context.eval_expression_tree(&inputs[0])?.to_string();
                 let script_name = format!("cron_{}.rhai", cron.replace(' ', "_"));
 
-                let conn = state_clone.conn.lock().unwrap();
-                let result = execute_set_schedule(&*conn, &cron, &script_name)
+                let mut conn = state_clone.conn.lock().unwrap();
+                let result = execute_set_schedule(&mut *conn, &cron, &script_name)
                     .map_err(|e| format!("DB error: {}", e))?;
 
                 if let Some(rows_affected) = result.get("rows_affected") {
@@ -32,7 +32,7 @@ pub fn set_schedule_keyword(state: &AppState, user: UserSession, engine: &mut En
 }
 
 pub fn execute_set_schedule(
-    conn: &diesel::PgConnection,
+    conn: &mut diesel::PgConnection,
     cron: &str,
     script_name: &str,
 ) -> Result<Value, Box<dyn std::error::Error>> {
@@ -51,7 +51,7 @@ pub fn execute_set_schedule(
 
     let result = diesel::insert_into(system_automations::table)
         .values(&new_automation)
-        .execute(conn)?;
+        .execute(&mut *conn)?;
 
     Ok(json!({
         "command": "set_schedule",

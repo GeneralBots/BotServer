@@ -187,7 +187,7 @@ impl BotOrchestrator {
         message: &UserMessage,
         session: &UserSession,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        let session_manager = self.session_manager.lock().await;
+        let mut session_manager = self.session_manager.lock().await;
         let history = session_manager.get_conversation_history(session.id, session.user_id)?;
 
         let mut prompt = String::new();
@@ -220,11 +220,9 @@ impl BotOrchestrator {
         };
 
         if session.answer_mode == "tool" && session.current_tool.is_some() {
-            self.tool_manager.provide_user_response(
-                &message.user_id,
-                &message.bot_id,
-                message.content.clone(),
-            )?;
+            self.tool_manager
+                .provide_user_response(&message.user_id, &message.bot_id, message.content.clone())
+                .await?;
             return Ok(());
         }
 
@@ -310,7 +308,7 @@ impl BotOrchestrator {
         &self,
         user_id: Uuid,
     ) -> Result<Vec<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
-        let session_manager = self.session_manager.lock().await;
+        let mut session_manager = self.session_manager.lock().await;
         session_manager.get_user_sessions(user_id)
     }
 
@@ -319,7 +317,7 @@ impl BotOrchestrator {
         session_id: Uuid,
         user_id: Uuid,
     ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error + Send + Sync>> {
-        let session_manager = self.session_manager.lock().await;
+        let mut session_manager = self.session_manager.lock().await;
         session_manager.get_conversation_history(session_id, user_id)
     }
 
