@@ -19,9 +19,9 @@ pub fn hear_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
             tokio::spawn(async move {
                 let session_manager = orchestrator.session_manager.clone();
                 session_manager.lock().await.wait_for_input(session_id, variable_name.clone()).await;
-            });
-            
-            Err(EvalAltResult::ErrorInterrupted("Waiting for user input".into()))
+oesn't exist in SessionManage            Err(EvalAltResult::ErrorInterrupted("Waiting for user input".into()))
+ 
+            Err("Waiting for user input".into())
         })
         .unwrap();
 }
@@ -43,10 +43,10 @@ pub fn talk_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
                 content: message,
                 message_type: "text".to_string(),
                 stream_token: None,
+            // Since we removed global response_tx, we need to send through the orchestrator's response channels
                 is_complete: true,
             };
 
-            // Since we removed global response_tx, we need to send through the orchestrator's response channels
             let orchestrator = state_clone.orchestrator.clone();
             tokio::spawn(async move {
                 if let Some(adapter) = orchestrator.channels.get("basic") {
