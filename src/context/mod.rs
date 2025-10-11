@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use serde_json::Value;
 use std::sync::Arc;
 
-use crate::shared::SearchResult;
+use crate::shared::models::SearchResult;
 
 #[async_trait]
 pub trait ContextStore: Send + Sync {
@@ -21,11 +21,11 @@ pub trait ContextStore: Send + Sync {
 }
 
 pub struct QdrantContextStore {
-    vector_store: Arc<qdrant_client::client::QdrantClient>,
+    vector_store: Arc<qdrant_client::Qdrant>,
 }
 
 impl QdrantContextStore {
-    pub fn new(vector_store: qdrant_client::client::QdrantClient) -> Self {
+    pub fn new(vector_store: qdrant_client::Qdrant) -> Self {
         Self {
             vector_store: Arc::new(vector_store),
         }

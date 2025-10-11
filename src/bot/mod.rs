@@ -13,7 +13,7 @@ use crate::auth::AuthService;
 use crate::channels::ChannelAdapter;
 use crate::llm::LLMProvider;
 use crate::session::SessionManager;
-use crate::shared::{BotResponse, UserMessage, UserSession};
+use crate::shared::models::{BotResponse, UserMessage, UserSession};
 use crate::tools::ToolManager;
 
 pub struct BotOrchestrator {
@@ -455,7 +455,7 @@ impl BotOrchestrator {
 async fn websocket_handler(
     req: HttpRequest,
     stream: web::Payload,
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let (res, mut session, mut msg_stream) = actix_ws::handle(&req, stream)?;
     let session_id = Uuid::new_v4().to_string();
@@ -515,7 +515,7 @@ async fn websocket_handler(
 
 #[actix_web::get("/api/whatsapp/webhook")]
 async fn whatsapp_webhook_verify(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     web::Query(params): web::Query<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
     let empty = String::new();
@@ -531,7 +531,7 @@ async fn whatsapp_webhook_verify(
 
 #[actix_web::post("/api/whatsapp/webhook")]
 async fn whatsapp_webhook(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     payload: web::Json<crate::whatsapp::WhatsAppMessage>,
 ) -> Result<HttpResponse> {
     match data
@@ -556,7 +556,7 @@ async fn whatsapp_webhook(
 
 #[actix_web::post("/api/voice/start")]
 async fn voice_start(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     info: web::Json<serde_json::Value>,
 ) -> Result<HttpResponse> {
     let session_id = info
@@ -585,7 +585,7 @@ async fn voice_start(
 
 #[actix_web::post("/api/voice/stop")]
 async fn voice_stop(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     info: web::Json<serde_json::Value>,
 ) -> Result<HttpResponse> {
     let session_id = info
@@ -603,7 +603,7 @@ async fn voice_stop(
 }
 
 #[actix_web::post("/api/sessions")]
-async fn create_session(_data: web::Data<crate::shared::AppState>) -> Result<HttpResponse> {
+async fn create_session(_data: web::Data<crate::shared::state::AppState>) -> Result<HttpResponse> {
     let session_id = Uuid::new_v4();
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "session_id": session_id,
@@ -613,7 +613,7 @@ async fn create_session(_data: web::Data<crate::shared::AppState>) -> Result<Htt
 }
 
 #[actix_web::get("/api/sessions")]
-async fn get_sessions(data: web::Data<crate::shared::AppState>) -> Result<HttpResponse> {
+async fn get_sessions(data: web::Data<crate::shared::state::AppState>) -> Result<HttpResponse> {
     let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
     match data.orchestrator.get_user_sessions(user_id).await {
         Ok(sessions) => Ok(HttpResponse::Ok().json(sessions)),
@@ -626,7 +626,7 @@ async fn get_sessions(data: web::Data<crate::shared::AppState>) -> Result<HttpRe
 
 #[actix_web::get("/api/sessions/{session_id}")]
 async fn get_session_history(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let session_id = path.into_inner();
@@ -650,7 +650,7 @@ async fn get_session_history(
 
 #[actix_web::post("/api/set_mode")]
 async fn set_mode_handler(
-    data: web::Data<crate::shared::AppState>,
+    data: web::Data<crate::shared::state::AppState>,
     info: web::Json<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
     let default_user = "default_user".to_string();

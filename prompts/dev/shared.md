@@ -7,3 +7,4 @@ MOST IMPORTANT CODE GENERATION RULES:
 - Do **not** repeat unchanged files or sections — only include files that - have actual changes.
 - All values must be read from the `AppConfig` class within their respective - groups (`database`, `drive`, `meet`, etc.); never use hardcoded or magic - values.
 - Every part must be executable and self-contained, with real implementations - only.
+- Only generated production ready enterprise grade VERY condensed no commented code.

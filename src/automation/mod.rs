@@ -5,6 +5,7 @@ use chrono::{DateTime, Datelike, Timelike, Utc};
 use diesel::prelude::*;
 use log::{error, info};
 use std::path::Path;
+use std::sync::Arc;
 use tokio::time::Duration;
 use uuid::Uuid;
 
@@ -22,15 +23,17 @@ impl AutomationService {
     }
 
     pub fn spawn(self) -> tokio::task::JoinHandle<()> {
-        tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(5));
-            let mut last_check = Utc::now();
-
-            loop {
-                interval.tick().await;
-
-                if let Err(e) = self.run_cycle(&mut last_check).await {
-                    error!("Automation cycle error: {}", e);
+        let service = Arc::new(self);
+        tokio::task::spawn_local({
+            let service = service.clone();
+            async move {
+                let mut interval = tokio::time::interval(Duration::from_secs(5));
+                let mut last_check = Utc::now();
+                loop {
+                    interval.tick().await;
+                    if let Err(e) = service.run_cycle(&mut last_check).await {
+                        error!("Automation cycle error: {}", e);
+                    }
                 }
             }
         })
@@ -49,48 +52,75 @@ impl AutomationService {
 
     async fn load_active_automations(&self) -> Result<Vec<Automation>, diesel::result::Error> {
         use crate::shared::models::system_automations::dsl::*;
-
-        let mut conn = self.state.conn.lock().unwrap().clone();
+        let mut conn = self.state.conn.lock().unwrap();
         system_automations
             .filter(is_active.eq(true))
-            .load::<Automation>(&mut conn)
+            .load::<Automation>(&mut *conn)
             .map_err(Into::into)
     }
 
     async fn check_table_changes(&self, automations: &[Automation], since: DateTime<Utc>) {
-        let mut conn = self.state.conn.lock().unwrap().clone();
-
         for automation in automations {
-            if let Some(trigger_kind) = TriggerKind::from_i32(automation.kind) {
-                if matches!(
-                    trigger_kind,
-                    TriggerKind::TableUpdate
-                        | TriggerKind::TableInsert
-                        | TriggerKind::TableDelete
-                ) {
-                    if let Some(table) = &automation.target {
-                        let column = match trigger_kind {
-                            TriggerKind::TableInsert => "created_at",
-                            _ => "updated_at",
-                        };
+            // Resolve the trigger kind, disambiguating the `from_i32` call.
+            let trigger_kind = match crate::shared::models::TriggerKind::from_i32(automation.kind) {
+                Some(k) => k,
+                None => continue,
+            };
 
-                        let query = format!("SELECT COUNT(*) FROM {} WHERE {} > $1", table, column);
+            // We're only interested in table‑change triggers.
+            if !matches!(
+                trigger_kind,
+                TriggerKind::TableUpdate | TriggerKind::TableInsert | TriggerKind::TableDelete
+            ) {
+                continue;
+            }
 
-                        match diesel::sql_query(&query)
-                            .bind::<diesel::sql_types::Timestamp, _>(since)
-                            .get_result::<(i64,)>(&mut conn)
-                        {
-                            Ok((count,)) => {
-                                if count > 0 {
-                                    self.execute_action(&automation.param).await;
-                                    self.update_last_triggered(automation.id).await;
-                                }
-                            }
-                            Err(e) => {
-                                error!("Error checking changes for table {}: {}", table, e);
-                            }
-                        }
-                    }
+            // Table name must be present.
+            let table = match &automation.target {
+                Some(t) => t,
+                None => continue,
+            };
+
+            // Choose the appropriate timestamp column.
+            let column = match trigger_kind {
+                TriggerKind::TableInsert => "created_at",
+                _ => "updated_at",
+            };
+
+            // Build a simple COUNT(*) query; alias the column so Diesel can map it directly to i64.
+            let query = format!(
+                "SELECT COUNT(*) as count FROM {} WHERE {} > $1",
+                table, column
+            );
+
+            // Acquire a connection for this query.
+            let mut conn_guard = self.state.conn.lock().unwrap();
+            let conn = &mut *conn_guard;
+
+            // Define a struct to capture the query result
+            #[derive(diesel::QueryableByName)]
+            struct CountResult {
+                #[diesel(sql_type = diesel::sql_types::BigInt)]
+                count: i64,
+            }
+
+            // Execute the query, retrieving a plain i64 count.
+            let count_result = diesel::sql_query(&query)
+                .bind::<diesel::sql_types::Timestamp, _>(since.naive_utc())
+                .get_result::<CountResult>(conn);
+
+            match count_result {
+                Ok(result) if result.count > 0 => {
+                    // Release the lock before awaiting asynchronous work.
+                    drop(conn_guard);
+                    self.execute_action(&automation.param).await;
+                    self.update_last_triggered(automation.id).await;
+                }
+                Ok(_result) => {
+                    // No relevant rows changed; continue to the next automation.
+                }
+                Err(e) => {
+                    error!("Error checking changes for table '{}': {}", table, e);
                 }
             }
         }
@@ -98,7 +128,6 @@ impl AutomationService {
 
     async fn process_schedules(&self, automations: &[Automation]) {
         let now = Utc::now();
-
         for automation in automations {
             if let Some(TriggerKind::Scheduled) = TriggerKind::from_i32(automation.kind) {
                 if let Some(pattern) = &automation.schedule {
@@ -113,13 +142,11 @@ impl AutomationService {
 
     async fn update_last_triggered(&self, automation_id: Uuid) {
         use crate::shared::models::system_automations::dsl::*;
-
-        let mut conn = self.state.conn.lock().unwrap().clone();
+        let mut conn = self.state.conn.lock().unwrap();
         let now = Utc::now();
-
         if let Err(e) = diesel::update(system_automations.filter(id.eq(automation_id)))
-            .set(last_triggered.eq(now))
-            .execute(&mut conn)
+            .set(last_triggered.eq(now.naive_utc()))
+            .execute(&mut *conn)
         {
             error!(
                 "Failed to update last_triggered for automation {}: {}",
@@ -133,14 +160,15 @@ impl AutomationService {
         if parts.len() != 5 {
             return false;
         }
-
-        let dt = DateTime::from_timestamp(timestamp, 0).unwrap();
+        let dt = match DateTime::<Utc>::from_timestamp(timestamp, 0) {
+            Some(dt) => dt,
+            None => return false,
+        };
         let minute = dt.minute() as i32;
         let hour = dt.hour() as i32;
         let day = dt.day() as i32;
         let month = dt.month() as i32;
         let weekday = dt.weekday().num_days_from_monday() as i32;
-
         [minute, hour, day, month, weekday]
             .iter()
             .enumerate()
@@ -169,9 +197,18 @@ impl AutomationService {
         match tokio::fs::read_to_string(&full_path).await {
             Ok(script_content) => {
                 info!("Executing action with param: {}", param);
-
-                let script_service = ScriptService::new(&self.state);
-
+                let user_session = crate::shared::models::UserSession {
+                    id: Uuid::new_v4(),
+                    user_id: Uuid::new_v4(),
+                    bot_id: Uuid::new_v4(),
+                    title: "Automation".to_string(),
+                    answer_mode: "direct".to_string(),
+                    current_tool: None,
+                    context_data: None,
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                };
+                let script_service = ScriptService::new(&self.state, user_session);
                 match script_service.compile(&script_content) {
                     Ok(ast) => match script_service.run(&ast) {
                         Ok(result) => info!("Script executed successfully: {:?}", result),

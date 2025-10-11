@@ -1,10 +1,10 @@
+use diesel::prelude::*;
 use redis::{AsyncCommands, Client};
 use serde_json;
-use diesel::prelude::*;
 use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::shared::UserSession;
+use crate::shared::models::UserSession;
 
 pub struct SessionManager {
     pub conn: diesel::PgConnection,
@@ -23,7 +23,8 @@ impl SessionManager {
     ) -> Result<Option<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(redis_client) = &self.redis {
             let mut conn = tokio::task::block_in_place(|| {
-                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                tokio::runtime::Handle::current()
+                    .block_on(redis_client.get_multiplexed_async_connection())
             })?;
             let cache_key = format!("session:{}:{}", user_id, bot_id);
             let session_json: Option<String> = tokio::task::block_in_place(|| {
@@ -37,7 +38,7 @@ impl SessionManager {
         }
 
         use crate::shared::models::user_sessions::dsl::*;
-        
+
         let session = user_sessions
             .filter(user_id.eq(user_id))
             .filter(bot_id.eq(bot_id))
@@ -48,12 +49,17 @@ impl SessionManager {
         if let Some(ref session) = session {
             if let Some(redis_client) = &self.redis {
                 let mut conn = tokio::task::block_in_place(|| {
-                    tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                    tokio::runtime::Handle::current()
+                        .block_on(redis_client.get_multiplexed_async_connection())
                 })?;
                 let cache_key = format!("session:{}:{}", user_id, bot_id);
                 let session_json = serde_json::to_string(session)?;
                 let _: () = tokio::task::block_in_place(|| {
-                    tokio::runtime::Handle::current().block_on(conn.set_ex(cache_key, session_json, 1800))
+                    tokio::runtime::Handle::current().block_on(conn.set_ex(
+                        cache_key,
+                        session_json,
+                        1800,
+                    ))
                 })?;
             }
         }
@@ -69,7 +75,7 @@ impl SessionManager {
     ) -> Result<UserSession, Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::user_sessions;
         use diesel::insert_into;
-        
+
         let session_id = Uuid::new_v4();
         let new_session = (
             user_sessions::id.eq(session_id),
@@ -84,12 +90,17 @@ impl SessionManager {
 
         if let Some(redis_client) = &self.redis {
             let mut conn = tokio::task::block_in_place(|| {
-                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                tokio::runtime::Handle::current()
+                    .block_on(redis_client.get_multiplexed_async_connection())
             })?;
             let cache_key = format!("session:{}:{}", user_id, bot_id);
             let session_json = serde_json::to_string(&session)?;
             let _: () = tokio::task::block_in_place(|| {
-                tokio::runtime::Handle::current().block_on(conn.set_ex(cache_key, session_json, 1800))
+                tokio::runtime::Handle::current().block_on(conn.set_ex(
+                    cache_key,
+                    session_json,
+                    1800,
+                ))
             })?;
         }
 
@@ -106,7 +117,7 @@ impl SessionManager {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::message_history;
         use diesel::insert_into;
-        
+
         let message_count: i64 = message_history::table
             .filter(message_history::session_id.eq(session_id))
             .count()
@@ -139,7 +150,8 @@ impl SessionManager {
             {
                 let (session_user_id, session_bot_id) = session_info;
                 let mut conn = tokio::task::block_in_place(|| {
-                    tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                    tokio::runtime::Handle::current()
+                        .block_on(redis_client.get_multiplexed_async_connection())
                 })?;
                 let cache_key = format!("session:{}:{}", session_user_id, session_bot_id);
                 let _: () = tokio::task::block_in_place(|| {
@@ -157,7 +169,7 @@ impl SessionManager {
         user_id: Uuid,
     ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::message_history::dsl::*;
-        
+
         let messages = message_history
             .filter(session_id.eq(session_id))
             .filter(user_id.eq(user_id))
@@ -173,7 +185,7 @@ impl SessionManager {
         user_id: Uuid,
     ) -> Result<Vec<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::user_sessions::dsl::*;
-        
+
         let sessions = user_sessions
             .filter(user_id.eq(user_id))
             .order_by(updated_at.desc())
@@ -188,20 +200,22 @@ impl SessionManager {
         mode: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::user_sessions::dsl::*;
-        
+
         let user_uuid = Uuid::parse_str(user_id)?;
         let bot_uuid = Uuid::parse_str(bot_id)?;
 
-        diesel::update(user_sessions.filter(user_id.eq(user_uuid)).filter(bot_id.eq(bot_uuid)))
-            .set((
-                answer_mode.eq(mode),
-                updated_at.eq(diesel::dsl::now),
-            ))
-            .execute(&mut self.conn)?;
+        diesel::update(
+            user_sessions
+                .filter(user_id.eq(user_uuid))
+                .filter(bot_id.eq(bot_uuid)),
+        )
+        .set((answer_mode.eq(mode), updated_at.eq(diesel::dsl::now)))
+        .execute(&mut self.conn)?;
 
         if let Some(redis_client) = &self.redis {
             let mut conn = tokio::task::block_in_place(|| {
-                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                tokio::runtime::Handle::current()
+                    .block_on(redis_client.get_multiplexed_async_connection())
             })?;
             let cache_key = format!("session:{}:{}", user_uuid, bot_uuid);
             let _: () = tokio::task::block_in_place(|| {
@@ -219,20 +233,22 @@ impl SessionManager {
         tool_name: Option<&str>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::user_sessions::dsl::*;
-        
+
         let user_uuid = Uuid::parse_str(user_id)?;
         let bot_uuid = Uuid::parse_str(bot_id)?;
 
-        diesel::update(user_sessions.filter(user_id.eq(user_uuid)).filter(bot_id.eq(bot_uuid)))
-            .set((
-                current_tool.eq(tool_name),
-                updated_at.eq(diesel::dsl::now),
-            ))
-            .execute(&mut self.conn)?;
+        diesel::update(
+            user_sessions
+                .filter(user_id.eq(user_uuid))
+                .filter(bot_id.eq(bot_uuid)),
+        )
+        .set((current_tool.eq(tool_name), updated_at.eq(diesel::dsl::now)))
+        .execute(&mut self.conn)?;
 
         if let Some(redis_client) = &self.redis {
             let mut conn = tokio::task::block_in_place(|| {
-                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                tokio::runtime::Handle::current()
+                    .block_on(redis_client.get_multiplexed_async_connection())
             })?;
             let cache_key = format!("session:{}:{}", user_uuid, bot_uuid);
             let _: () = tokio::task::block_in_place(|| {
@@ -249,7 +265,8 @@ impl SessionManager {
     ) -> Result<Option<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(redis_client) = &self.redis {
             let mut conn = tokio::task::block_in_place(|| {
-                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                tokio::runtime::Handle::current()
+                    .block_on(redis_client.get_multiplexed_async_connection())
             })?;
             let cache_key = format!("session_by_id:{}", session_id);
             let session_json: Option<String> = tokio::task::block_in_place(|| {
@@ -263,7 +280,7 @@ impl SessionManager {
         }
 
         use crate::shared::models::user_sessions::dsl::*;
-        
+
         let session = user_sessions
             .filter(id.eq(session_id))
             .first::<UserSession>(&mut self.conn)
@@ -272,12 +289,17 @@ impl SessionManager {
         if let Some(ref session) = session {
             if let Some(redis_client) = &self.redis {
                 let mut conn = tokio::task::block_in_place(|| {
-                    tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                    tokio::runtime::Handle::current()
+                        .block_on(redis_client.get_multiplexed_async_connection())
                 })?;
                 let cache_key = format!("session_by_id:{}", session_id);
                 let session_json = serde_json::to_string(session)?;
                 let _: () = tokio::task::block_in_place(|| {
-                    tokio::runtime::Handle::current().block_on(conn.set_ex(cache_key, session_json, 1800))
+                    tokio::runtime::Handle::current().block_on(conn.set_ex(
+                        cache_key,
+                        session_json,
+                        1800,
+                    ))
                 })?;
             }
         }
@@ -290,10 +312,10 @@ impl SessionManager {
         days_old: i32,
     ) -> Result<u64, Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::user_sessions::dsl::*;
-        
+
         let cutoff = chrono::Utc::now() - chrono::Duration::days(days_old as i64);
-        let result = diesel::delete(user_sessions.filter(updated_at.lt(cutoff)))
-            .execute(&mut self.conn)?;
+        let result =
+            diesel::delete(user_sessions.filter(updated_at.lt(cutoff))).execute(&mut self.conn)?;
         Ok(result as u64)
     }
 
@@ -304,20 +326,22 @@ impl SessionManager {
         tool_name: Option<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::user_sessions::dsl::*;
-        
+
         let user_uuid = Uuid::parse_str(user_id)?;
         let bot_uuid = Uuid::parse_str(bot_id)?;
 
-        diesel::update(user_sessions.filter(user_id.eq(user_uuid)).filter(bot_id.eq(bot_uuid)))
-            .set((
-                current_tool.eq(tool_name),
-                updated_at.eq(diesel::dsl::now),
-            ))
-            .execute(&mut self.conn)?;
+        diesel::update(
+            user_sessions
+                .filter(user_id.eq(user_uuid))
+                .filter(bot_id.eq(bot_uuid)),
+        )
+        .set((current_tool.eq(tool_name), updated_at.eq(diesel::dsl::now)))
+        .execute(&mut self.conn)?;
 
         if let Some(redis_client) = &self.redis {
             let mut conn = tokio::task::block_in_place(|| {
-                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                tokio::runtime::Handle::current()
+                    .block_on(redis_client.get_multiplexed_async_connection())
             })?;
             let cache_key = format!("session:{}:{}", user_uuid, bot_uuid);
             let _: () = tokio::task::block_in_place(|| {

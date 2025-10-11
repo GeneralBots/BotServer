@@ -3,9 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
-use uuid::Uuid;
-
-use crate::{session::SessionManager, shared::BotResponse};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolResult {
@@ -174,48 +171,6 @@ impl ToolManager {
         _session_id: &str,
     ) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(vec![])
-    }
-
-    pub async fn execute_tool_with_session(
-        &self,
-        tool_name: &str,
-        user_id: &str,
-        bot_id: &str,
-        session_manager: SessionManager,
-        channel_sender: mpsc::Sender<BotResponse>,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let tool = self.get_tool(tool_name).ok_or("Tool not found")?;
-        session_manager
-            .set_current_tool(user_id, bot_id, Some(tool_name.to_string()))
-            .await?;
-
-        let user_id = user_id.to_string();
-        let bot_id = bot_id.to_string();
-        let _script = tool.script.clone();
-        let session_manager_clone = session_manager.clone();
-        let _waiting_responses = self.waiting_responses.clone();
-
-        let tool_name_clone = tool_name.to_string();
-        tokio::spawn(async move {
-            // Simulate tool execution
-            let response = BotResponse {
-                bot_id: bot_id.clone(),
-                user_id: user_id.clone(),
-                session_id: Uuid::new_v4().to_string(),
-                channel: "test".to_string(),
-                content: format!("Tool {} executed successfully", tool_name_clone),
-                message_type: "text".to_string(),
-                stream_token: None,
-                is_complete: true,
-            };
-            let _ = channel_sender.send(response).await;
-
-            let _ = session_manager_clone
-                .set_current_tool(&user_id, &bot_id, None)
-                .await;
-        });
-
-        Ok(())
     }
 
     pub async fn provide_user_response(

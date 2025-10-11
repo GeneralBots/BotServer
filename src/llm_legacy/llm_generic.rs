@@ -1,6 +1,6 @@
-use dotenvy::dotenv;
-use log::{error, info};
 use actix_web::{web, HttpResponse, Result};
+use dotenvy::dotenv;
+use log::info;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]

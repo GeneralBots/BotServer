@@ -1,42 +1,40 @@
+use diesel::prelude::*;
 use log::{error, info};
 use rhai::Dynamic;
 use rhai::Engine;
 use serde_json::{json, Value};
-use diesel::prelude::*;
 
 use crate::shared::models::TriggerKind;
-use crate::shared::state::AppState;
 use crate::shared::models::UserSession;
+use crate::shared::state::AppState;
 
-pub fn on_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
+pub fn on_keyword(state: &AppState, _user: UserSession, engine: &mut Engine) {
     let state_clone = state.clone();
 
     engine
         .register_custom_syntax(
-            ["ON", "$ident$", "OF", "$string$"],
+            &["ON", "$ident$", "OF", "$string$"],
             true,
-            {
-                move |context, inputs| {
-                    let trigger_type = context.eval_expression_tree(&inputs[0])?.to_string();
-                    let table = context.eval_expression_tree(&inputs[1])?.to_string();
-                    let script_name = format!("{}_{}.rhai", table, trigger_type.to_lowercase());
+            move |context, inputs| {
+                let trigger_type = context.eval_expression_tree(&inputs[0])?.to_string();
+                let table = context.eval_expression_tree(&inputs[1])?.to_string();
+                let script_name = format!("{}_{}.rhai", table, trigger_type.to_lowercase());
 
-                    let kind = match trigger_type.to_uppercase().as_str() {
-                        "UPDATE" => TriggerKind::TableUpdate,
-                        "INSERT" => TriggerKind::TableInsert,
-                        "DELETE" => TriggerKind::TableDelete,
-                        _ => return Err(format!("Invalid trigger type: {}", trigger_type).into()),
-                    };
+                let kind = match trigger_type.to_uppercase().as_str() {
+                    "UPDATE" => TriggerKind::TableUpdate,
+                    "INSERT" => TriggerKind::TableInsert,
+                    "DELETE" => TriggerKind::TableDelete,
+                    _ => return Err(format!("Invalid trigger type: {}", trigger_type).into()),
+                };
 
-                    let conn = state_clone.conn.lock().unwrap().clone();
-                    let result = execute_on_trigger(&conn, kind, &table, &script_name)
-                        .map_err(|e| format!("DB error: {}", e))?;
+                let mut conn = state_clone.conn.lock().unwrap();
+                let result = execute_on_trigger(&mut *conn, kind, &table, &script_name)
+                    .map_err(|e| format!("DB error: {}", e))?;
 
-                    if let Some(rows_affected) = result.get("rows_affected") {
-                        Ok(Dynamic::from(rows_affected.as_i64().unwrap_or(0)))
-                    } else {
-                        Err("No rows affected".into())
-                    }
+                if let Some(rows_affected) = result.get("rows_affected") {
+                    Ok(Dynamic::from(rows_affected.as_i64().unwrap_or(0)))
+                } else {
+                    Err("No rows affected".into())
                 }
             },
         )
@@ -44,7 +42,7 @@ pub fn on_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
 }
 
 pub fn execute_on_trigger(
-    conn: &PgConnection,
+    conn: &mut diesel::PgConnection,
     kind: TriggerKind,
     table: &str,
     script_name: &str,
@@ -64,7 +62,7 @@ pub fn execute_on_trigger(
 
     let result = diesel::insert_into(system_automations::table)
         .values(&new_automation)
-        .execute(&mut conn.clone())
+        .execute(conn)
         .map_err(|e| {
             error!("SQL execution error: {}", e);
             e.to_string()

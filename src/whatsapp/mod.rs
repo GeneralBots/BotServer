@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-use crate::shared::BotResponse;
+use crate::shared::models::BotResponse;
 
 #[derive(Debug, Deserialize)]
 pub struct WhatsAppMessage {
@@ -75,7 +75,11 @@ pub struct WhatsAppAdapter {
 }
 
 impl WhatsAppAdapter {
-    pub fn new(access_token: String, phone_number_id: String, webhook_verify_token: String) -> Self {
+    pub fn new(
+        access_token: String,
+        phone_number_id: String,
+        webhook_verify_token: String,
+    ) -> Self {
         Self {
             client: Client::new(),
             access_token,
@@ -98,7 +102,11 @@ impl WhatsAppAdapter {
         }
     }
 
-    pub async fn send_whatsapp_message(&self, to: &str, body: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn send_whatsapp_message(
+        &self,
+        to: &str,
+        body: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let url = format!(
             "https://graph.facebook.com/v17.0/{}/messages",
             self.phone_number_id
@@ -112,7 +120,8 @@ impl WhatsAppAdapter {
             },
         };
 
-        let response = self.client
+        let response = self
+            .client
             .post(&url)
             .header("Authorization", format!("Bearer {}", self.access_token))
             .json(&response_data)
@@ -129,7 +138,10 @@ impl WhatsAppAdapter {
         Ok(())
     }
 
-    pub async fn process_incoming_message(&self, message: WhatsAppMessage) -> Result<Vec<crate::shared::UserMessage>, Box<dyn std::error::Error + Send + Sync>> {
+    pub async fn process_incoming_message(
+        &self,
+        message: WhatsAppMessage,
+    ) -> Result<Vec<crate::shared::UserMessage>, Box<dyn std::error::Error + Send + Sync>> {
         let mut user_messages = Vec::new();
 
         for entry in message.entry {
@@ -139,7 +151,7 @@ impl WhatsAppAdapter {
                         if let Some(text) = msg.text {
                             let session_id = self.get_session_id(&msg.from).await;
 
-                            let user_message = crate::shared::UserMessage {
+                            let user_message = crate::shared::models::UserMessage {
                                 bot_id: "default_bot".to_string(),
                                 user_id: msg.from.clone(),
                                 session_id: session_id.clone(),
@@ -160,7 +172,12 @@ impl WhatsAppAdapter {
         Ok(user_messages)
     }
 
-    pub fn verify_webhook(&self, mode: &str, token: &str, challenge: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    pub fn verify_webhook(
+        &self,
+        mode: &str,
+        token: &str,
+        challenge: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         if mode == "subscribe" && token == self.webhook_verify_token {
             Ok(challenge.to_string())
         } else {
@@ -171,8 +188,12 @@ impl WhatsAppAdapter {
 
 #[async_trait]
 impl crate::channels::ChannelAdapter for WhatsAppAdapter {
-    async fn send_message(&self, response: BotResponse) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn send_message(
+        &self,
+        response: BotResponse,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("Sending WhatsApp response to: {}", response.user_id);
-        self.send_whatsapp_message(&response.user_id, &response.content).await
+        self.send_whatsapp_message(&response.user_id, &response.content)
+            .await
     }
 }

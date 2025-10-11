@@ -6,11 +6,11 @@ use std::fs;
 use std::io::Read;
 use std::path::PathBuf;
 
-use crate::shared::state::AppState;
 use crate::shared::models::UserSession;
+use crate::shared::state::AppState;
 use crate::shared::utils;
 
-pub fn create_site_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
+pub fn create_site_keyword(state: &AppState, _user: UserSession, engine: &mut Engine) {
     let state_clone = state.clone();
     engine
         .register_custom_syntax(

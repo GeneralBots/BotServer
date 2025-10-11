@@ -1,12 +1,12 @@
+use diesel::prelude::*;
 use log::{error, info};
 use rhai::Dynamic;
 use rhai::Engine;
 use serde_json::{json, Value};
-use diesel::prelude::*;
 use std::error::Error;
 
-use crate::shared::state::AppState;
 use crate::shared::models::UserSession;
+use crate::shared::state::AppState;
 
 pub fn set_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
     let state_clone = state.clone();
@@ -22,8 +22,8 @@ pub fn set_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
                 let filter_str = filter.to_string();
                 let updates_str = updates.to_string();
 
-                let conn = state_clone.conn.lock().unwrap().clone();
-                let result = execute_set(&conn, &table_str, &filter_str, &updates_str)
+                let conn = state_clone.conn.lock().unwrap();
+                let result = execute_set(&*conn, &table_str, &filter_str, &updates_str)
                     .map_err(|e| format!("DB error: {}", e))?;
 
                 if let Some(rows_affected) = result.get("rows_affected") {
@@ -37,7 +37,7 @@ pub fn set_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
 }
 
 pub fn execute_set(
-    conn: &PgConnection,
+    conn: &mut diesel::PgConnection,
     table_str: &str,
     filter_str: &str,
     updates_str: &str,
@@ -47,7 +47,7 @@ pub fn execute_set(
         table_str, filter_str, updates_str
     );
 
-    let (set_clause, update_values) = parse_updates(updates_str).map_err(|e| e.to_string())?;
+    let (set_clause, _update_values) = parse_updates(updates_str).map_err(|e| e.to_string())?;
 
     let where_clause = parse_filter_for_diesel(filter_str).map_err(|e| e.to_string())?;
 
@@ -57,12 +57,10 @@ pub fn execute_set(
     );
     info!("Executing query: {}", query);
 
-    let result = diesel::sql_query(&query)
-        .execute(&mut conn.clone())
-        .map_err(|e| {
-            error!("SQL execution error: {}", e);
-            e.to_string()
-        })?;
+    let result = diesel::sql_query(&query).execute(conn).map_err(|e| {
+        error!("SQL execution error: {}", e);
+        e.to_string()
+    })?;
 
     Ok(json!({
         "command": "set",

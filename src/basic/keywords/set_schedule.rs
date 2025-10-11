@@ -12,13 +12,13 @@ pub fn set_schedule_keyword(state: &AppState, user: UserSession, engine: &mut En
     let state_clone = state.clone();
 
     engine
-        .register_custom_syntax(["SET_SCHEDULE", "$string$"], true, {
+        .register_custom_syntax(&["SET_SCHEDULE", "$string$"], true, {
             move |context, inputs| {
                 let cron = context.eval_expression_tree(&inputs[0])?.to_string();
                 let script_name = format!("cron_{}.rhai", cron.replace(' ', "_"));
 
-                let conn = state_clone.conn.lock().unwrap().clone();
-                let result = execute_set_schedule(&conn, &cron, &script_name)
+                let conn = state_clone.conn.lock().unwrap();
+                let result = execute_set_schedule(&*conn, &cron, &script_name)
                     .map_err(|e| format!("DB error: {}", e))?;
 
                 if let Some(rows_affected) = result.get("rows_affected") {
@@ -32,7 +32,7 @@ pub fn set_schedule_keyword(state: &AppState, user: UserSession, engine: &mut En
 }
 
 pub fn execute_set_schedule(
-    conn: &PgConnection,
+    conn: &diesel::PgConnection,
     cron: &str,
     script_name: &str,
 ) -> Result<Value, Box<dyn std::error::Error>> {
@@ -51,7 +51,7 @@ pub fn execute_set_schedule(
 
     let result = diesel::insert_into(system_automations::table)
         .values(&new_automation)
-        .execute(&mut conn.clone())?;
+        .execute(conn)?;
 
     Ok(json!({
         "command": "set_schedule",

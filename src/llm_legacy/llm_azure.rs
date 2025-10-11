@@ -2,7 +2,6 @@ use dotenvy::dotenv;
 use log::{error, info};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AzureOpenAIConfig {
@@ -60,12 +59,14 @@ impl AzureOpenAIClient {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
         dotenv().ok();
 
-        let endpoint = std::env::var("AZURE_OPENAI_ENDPOINT")
-            .map_err(|_| "AZURE_OPENAI_ENDPOINT not set")?;
-        let api_key = std::env::var("AZURE_OPENAI_API_KEY")
-            .map_err(|_| "AZURE_OPENAI_API_KEY not set")?;
-        let api_version = std::env::var("AZURE_OPENAI_API_VERSION").unwrap_or_else(|_| "2023-12-01-preview".to_string());
-        let deployment = std::env::var("AZURE_OPENAI_DEPLOYMENT").unwrap_or_else(|_| "gpt-35-turbo".to_string());
+        let endpoint =
+            std::env::var("AZURE_OPENAI_ENDPOINT").map_err(|_| "AZURE_OPENAI_ENDPOINT not set")?;
+        let api_key =
+            std::env::var("AZURE_OPENAI_API_KEY").map_err(|_| "AZURE_OPENAI_API_KEY not set")?;
+        let api_version = std::env::var("AZURE_OPENAI_API_VERSION")
+            .unwrap_or_else(|_| "2023-12-01-preview".to_string());
+        let deployment =
+            std::env::var("AZURE_OPENAI_DEPLOYMENT").unwrap_or_else(|_| "gpt-35-turbo".to_string());
 
         let config = AzureOpenAIConfig {
             endpoint,
@@ -121,10 +122,7 @@ impl AzureOpenAIClient {
         Ok(completion_response)
     }
 
-    pub async fn simple_chat(
-        &self,
-        prompt: &str,
-    ) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn simple_chat(&self, prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
         let messages = vec![
             ChatMessage {
                 role: "system".to_string(),

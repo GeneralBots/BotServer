@@ -1,41 +1,12 @@
-use actix_web::web;
 use actix_multipart::Multipart;
+use actix_web::web;
 use actix_web::{post, HttpResponse};
+use aws_sdk_s3::{Client, Error as S3Error};
 use std::io::Write;
 use tempfile::NamedTempFile;
-use tokio_stream::StreamExt;
-use aws_sdk_s3 as s3;
-use aws_sdk_s3::types::ByteStream;
-use std::str::FromStr;
+use tokio_stream::StreamExt as TokioStreamExt;
 
-use crate::config::AppConfig;
 use crate::shared::state::AppState;
-
-pub async fn init_s3(config: &AppConfig) -> Result<s3::Client, Box<dyn std::error::Error>> {
-    let endpoint_url = if config.minio.use_ssl {
-        format!("https://{}", config.minio.server)
-    } else {
-        format!("http://{}", config.minio.server)
-    };
-
-    let config = aws_config::from_env()
-        .endpoint_url(&endpoint_url)
-        .region(aws_sdk_s3::config::Region::new("us-east-1"))
-        .credentials_provider(
-            s3::config::Credentials::new(
-                &config.minio.access_key,
-                &config.minio.secret_key,
-                None,
-                None,
-                "minio",
-            )
-        )
-        .load()
-        .await;
-
-    let client = s3::Client::new(&config);
-    Ok(client)
-}
 
 #[post("/files/upload/{folder_path}")]
 pub async fn upload_file(
@@ -45,12 +16,14 @@ pub async fn upload_file(
 ) -> Result<HttpResponse, actix_web::Error> {
     let folder_path = folder_path.into_inner();
 
+    // Create a temporary file that will hold the uploaded data
     let mut temp_file = NamedTempFile::new().map_err(|e| {
         actix_web::error::ErrorInternalServerError(format!("Failed to create temp file: {}", e))
     })?;
 
     let mut file_name: Option<String> = None;
 
+    // Process multipart form data
     while let Some(mut field) = payload.try_next().await? {
         if let Some(disposition) = field.content_disposition() {
             if let Some(name) = disposition.get_filename() {
@@ -58,6 +31,7 @@ pub async fn upload_file(
             }
         }
 
+        // Write each chunk of the field to the temporary file
         while let Some(chunk) = field.try_next().await? {
             temp_file.write_all(&chunk).map_err(|e| {
                 actix_web::error::ErrorInternalServerError(format!(
@@ -68,84 +42,106 @@ pub async fn upload_file(
         }
     }
 
+    // Use a fallback name if the client didn't supply one
     let file_name = file_name.unwrap_or_else(|| "unnamed_file".to_string());
-    let object_name = format!("{}/{}", folder_path, file_name);
 
-    let client = state.s3_client.as_ref().ok_or_else(|| {
-        actix_web::error::ErrorInternalServerError("S3 client not initialized")
-    })?;
+    // Convert the NamedTempFile into a TempPath so we can get a stable path
+    let temp_file_path = temp_file.into_temp_path();
 
-    let bucket_name = state.config.as_ref().unwrap().minio.bucket.clone();
+    // Retrieve the bucket name from configuration, handling the case where it is missing
+    let bucket_name = match &state.config {
+        Some(cfg) => cfg.s3_bucket.clone(),
+        None => {
+            // Clean up the temp file before returning the error
+            let _ = std::fs::remove_file(&temp_file_path);
+            return Err(actix_web::error::ErrorInternalServerError(
+                "S3 bucket configuration is missing",
+            ));
+        }
+    };
 
-    let body = ByteStream::from_path(temp_file.path()).await.map_err(|e| {
-        actix_web::error::ErrorInternalServerError(format!("Failed to read file: {}", e))
-    })?;
+    // Build the S3 object key (folder + filename)
+    let s3_key = format!("{}/{}", folder_path, file_name);
 
-    client
-        .put_object()
-        .bucket(&bucket_name)
-        .key(&object_name)
-        .body(body)
-        .send()
-        .await
-        .map_err(|e| {
-            actix_web::error::ErrorInternalServerError(format!(
+    // Perform the upload
+    let s3_client = get_s3_client(&state).await;
+    match upload_to_s3(&s3_client, &bucket_name, &s3_key, &temp_file_path).await {
+        Ok(_) => {
+            // Remove the temporary file now that the upload succeeded
+            let _ = std::fs::remove_file(&temp_file_path);
+            Ok(HttpResponse::Ok().body(format!(
+                "Uploaded file '{}' to folder '{}' in S3 bucket '{}'",
+                file_name, folder_path, bucket_name
+            )))
+        }
+        Err(e) => {
+            // Ensure the temporary file is cleaned up even on failure
+            let _ = std::fs::remove_file(&temp_file_path);
+            Err(actix_web::error::ErrorInternalServerError(format!(
                 "Failed to upload file to S3: {}",
                 e
-            ))
-        })?;
-
-    temp_file.close().map_err(|e| {
-        actix_web::error::ErrorInternalServerError(format!("Failed to close temp file: {}", e))
-    })?;
-
-    Ok(HttpResponse::Ok().body(format!(
-        "Uploaded file '{}' to folder '{}'",
-        file_name, folder_path
-    )))
-}
-
-#[post("/files/list/{folder_path}")]
-pub async fn list_file(
-    folder_path: web::Path<String>,
-    state: web::Data<AppState>,
-) -> Result<HttpResponse, actix_web::Error> {
-    let folder_path = folder_path.into_inner();
-
-    let client = state.s3_client.as_ref().ok_or_else(|| {
-        actix_web::error::ErrorInternalServerError("S3 client not initialized")
-    })?;
-
-    let bucket_name = "file-upload-rust-bucket";
-
-    let mut objects = client
-        .list_objects_v2()
-        .bucket(bucket_name)
-        .prefix(&folder_path)
-        .into_paginator()
-        .send();
-
-    let mut file_list = Vec::new();
-
-    while let Some(result) = objects.next().await {
-        match result {
-            Ok(output) => {
-                if let Some(contents) = output.contents {
-                    for item in contents {
-                        if let Some(key) = item.key {
-                            file_list.push(key);
-                        }
-                    }
-                }
-            }
-            Err(e) => {
-                return Err(actix_web::error::ErrorInternalServerError(format!(
-                    "Failed to list files in S3: {}",
-                    e
-                )));
-            }
+            )))
         }
     }
+}
 
-    Ok(HttpResponse::Ok().json(file_list))
+// Helper function to get S3 client
+async fn get_s3_client(state: &AppState) -> Client {
+    if let Some(cfg) = &state.config.as_ref().and_then(|c| Some(&c.minio)) {
+        // Build static credentials from the Drive configuration.
+        let credentials = aws_sdk_s3::config::Credentials::new(
+            cfg.access_key.clone(),
+            cfg.secret_key.clone(),
+            None,
+            None,
+            "static",
+        );
+
+        // Construct the endpoint URL, respecting the SSL flag.
+        let scheme = if cfg.use_ssl { "https" } else { "http" };
+        let endpoint = format!("{}://{}", scheme, cfg.server);
+
+        // MinIO requires path‑style addressing.
+        let s3_config = aws_sdk_s3::config::Builder::new()
+            .region(aws_sdk_s3::config::Region::new("us-east-1"))
+            .endpoint_url(endpoint)
+            .credentials_provider(credentials)
+            .force_path_style(true)
+            .build();
+
+        Client::from_conf(s3_config)
+    } else {
+        panic!("MinIO configuration is missing in application state");
+    }
+}
+
+// Helper function to upload file to S3
+async fn upload_to_s3(
+    client: &Client,
+    bucket: &str,
+    key: &str,
+    file_path: &std::path::Path,
+) -> Result<(), S3Error> {
+    // Convert the file at `file_path` into a `ByteStream`. Any I/O error is
+    // turned into a construction‑failure `SdkError` so that the function’s
+    // `Result` type (`Result<(), S3Error>`) stays consistent.
+    let body = aws_sdk_s3::primitives::ByteStream::from_path(file_path)
+        .await
+        .map_err(|e| {
+            aws_sdk_s3::error::SdkError::<
+                aws_sdk_s3::operation::put_object::PutObjectError,
+                aws_sdk_s3::operation::put_object::PutObjectOutput,
+            >::construction_failure(e)
+        })?;
+
+    // Perform the actual upload to S3.
+    client
+        .put_object()
+        .bucket(bucket)
+        .key(key)
+        .body(body)
+        .send()
+        .await?;
+
+    Ok(())
 }

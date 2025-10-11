@@ -9,8 +9,6 @@ use self::keywords::first::first_keyword;
 use self::keywords::for_next::for_keyword;
 use self::keywords::format::format_keyword;
 use self::keywords::get::get_keyword;
-#[cfg(feature = "web_automation")]
-use self::keywords::get_website::get_website_keyword;
 use self::keywords::hear_talk::{hear_keyword, set_context_keyword, talk_keyword};
 use self::keywords::last::last_keyword;
 use self::keywords::llm_keyword::llm_keyword;
@@ -20,7 +18,7 @@ use self::keywords::set::set_keyword;
 use self::keywords::set_schedule::set_schedule_keyword;
 use self::keywords::wait::wait_keyword;
 use crate::shared::models::UserSession;
-use crate::shared::AppState;
+use crate::shared::state::AppState;
 use log::info;
 use rhai::{Dynamic, Engine, EvalAltResult};
 
@@ -45,7 +43,6 @@ impl ScriptService {
         last_keyword(&mut engine);
         format_keyword(&mut engine);
         llm_keyword(state, user.clone(), &mut engine);
-        get_website_keyword(state, user.clone(), &mut engine);
         get_keyword(state, user.clone(), &mut engine);
         set_keyword(state, user.clone(), &mut engine);
         wait_keyword(state, user.clone(), &mut engine);
@@ -161,7 +158,7 @@ impl ScriptService {
         info!("Processed Script:\n{}", processed_script);
         match self.engine.compile(&processed_script) {
             Ok(ast) => Ok(ast),
-            Err(parse_error) => Err(Box::new(EvalAltResult::from(parse_error))),
+            Err(parse_error) => Err(Box::new(parse_error.into())),
         }
     }
 

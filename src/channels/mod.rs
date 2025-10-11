@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 
-use crate::shared::BotResponse;
+use crate::shared::models::BotResponse;
 
 #[async_trait]
 pub trait ChannelAdapter: Send + Sync {

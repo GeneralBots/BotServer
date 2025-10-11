@@ -2,13 +2,14 @@ use std::env;
 
 #[derive(Clone)]
 pub struct AppConfig {
-    pub minio: MinioConfig,
+    pub minio: DriveConfig,
     pub server: ServerConfig,
     pub database: DatabaseConfig,
     pub database_custom: DatabaseConfig,
     pub email: EmailConfig,
     pub ai: AIConfig,
     pub site_path: String,
+    pub s3_bucket: String,
 }
 
 #[derive(Clone)]
@@ -21,7 +22,7 @@ pub struct DatabaseConfig {
 }
 
 #[derive(Clone)]
-pub struct MinioConfig {
+pub struct DriveConfig {
     pub server: String,
     pub access_key: String,
     pub secret_key: String,
@@ -98,7 +99,7 @@ impl AppConfig {
             database: env::var("CUSTOM_DATABASE").unwrap_or_else(|_| "db".to_string()),
         };
 
-        let minio = MinioConfig {
+        let minio = DriveConfig {
             server: env::var("DRIVE_SERVER").unwrap_or_else(|_| "localhost:9000".to_string()),
             access_key: env::var("DRIVE_ACCESSKEY").unwrap_or_else(|_| "minioadmin".to_string()),
             secret_key: env::var("DRIVE_SECRET").unwrap_or_else(|_| "minioadmin".to_string()),
@@ -124,7 +125,8 @@ impl AppConfig {
             instance: env::var("AI_INSTANCE").unwrap_or_else(|_| "gpt-4".to_string()),
             key: env::var("AI_KEY").unwrap_or_else(|_| "key".to_string()),
             version: env::var("AI_VERSION").unwrap_or_else(|_| "2023-12-01-preview".to_string()),
-            endpoint: env::var("AI_ENDPOINT").unwrap_or_else(|_| "https://api.openai.com".to_string()),
+            endpoint: env::var("AI_ENDPOINT")
+                .unwrap_or_else(|_| "https://api.openai.com".to_string()),
         };
 
         AppConfig {
@@ -140,6 +142,8 @@ impl AppConfig {
             database_custom,
             email,
             ai,
+            s3_bucket: env::var("DRIVE_BUCKET").unwrap_or_else(|_| "default".to_string()),
+
             site_path: env::var("SITES_ROOT").unwrap_or_else(|_| "./sites".to_string()),
         }
     }
