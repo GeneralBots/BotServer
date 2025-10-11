@@ -4,8 +4,8 @@ use rhai::Dynamic;
 use rhai::Engine;
 use serde_json::{json, Value};
 
-use crate::shared::state::AppState;
 use crate::shared::models::UserSession;
+use crate::shared::state::AppState;
 use crate::shared::utils;
 use crate::shared::utils::row_to_json;
 use crate::shared::utils::to_array;
@@ -13,28 +13,40 @@ use crate::shared::utils::to_array;
 pub fn find_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
     let state_clone = state.clone();
 
-    engine
-        .register_custom_syntax(&["FIND", "$expr$", ",", "$expr$"], false, {
-            move |context, inputs| {
-                let table_name = context.eval_expression_tree(&inputs[0])?;
-                let filter = context.eval_expression_tree(&inputs[1])?;
+    // Register the custom FIND syntax. Any registration error is logged but does not panic.
+    if let Err(e) = engine.register_custom_syntax(
+        &["FIND", "$expr$", ",", "$expr$"],
+        false,
+        move |context, inputs| {
+            // Evaluate the two expressions supplied to the FIND command.
+            let table_name = context.eval_expression_tree(&inputs[0])?;
+            let filter = context.eval_expression_tree(&inputs[1])?;
 
-                let table_str = table_name.to_string();
-                let filter_str = filter.to_string();
+            let table_str = table_name.to_string();
+            let filter_str = filter.to_string();
 
-                let conn = state_clone.conn.lock().unwrap().clone();
-                let result = execute_find(&conn, &table_str, &filter_str)
-                    .map_err(|e| format!("DB error: {}", e))?;
+            // Acquire a DB connection from the shared state.
+            let conn = state_clone
+                .conn
+                .lock()
+                .map_err(|e| format!("Lock error: {}", e))?
+                .clone();
 
-                if let Some(results) = result.get("results") {
-                    let array = to_array(utils::json_value_to_dynamic(results));
-                    Ok(Dynamic::from(array))
-                } else {
-                    Err("No results".into())
-                }
+            // Run the actual find query.
+            let result = execute_find(&conn, &table_str, &filter_str)
+                .map_err(|e| format!("DB error: {}", e))?;
+
+            // Return the results as a Dynamic array, or an error if none were found.
+            if let Some(results) = result.get("results") {
+                let array = to_array(utils::json_value_to_dynamic(results));
+                Ok(Dynamic::from(array))
+            } else {
+                Err("No results".into())
             }
-        })
-        .unwrap();
+        },
+    ) {
+        error!("Failed to register FIND syntax: {}", e);
+    }
 }
 
 pub fn execute_find(
