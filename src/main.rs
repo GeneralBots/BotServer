@@ -49,11 +49,9 @@ async fn main() -> std::io::Result<()> {
 
     info!("Starting General Bots 6.0...");
 
-    // Load configuration and wrap it in an Arc for safe sharing across threads/closures
     let cfg = AppConfig::from_env();
     let config = std::sync::Arc::new(cfg.clone());
 
-    // Main database connection pool
     let db_pool = match diesel::Connection::establish(&cfg.database_url()) {
         Ok(conn) => {
             info!("Connected to main database");
@@ -68,7 +66,6 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    // Build custom database URL from config members
     let custom_db_url = format!(
         "postgres://{}:{}@{}:{}/{}",
         cfg.database_custom.username,
@@ -78,7 +75,6 @@ async fn main() -> std::io::Result<()> {
         cfg.database_custom.database
     );
 
-    // Custom database connection pool
     let db_custom_pool = match diesel::Connection::establish(&custom_db_url) {
         Ok(conn) => {
             info!("Connected to custom database using constructed URL");
@@ -93,12 +89,10 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    // Ensure local LLM servers are running
     ensure_llama_servers_running()
         .await
         .expect("Failed to initialize LLM local server.");
 
-    // Optional Redis client
     let redis_client = match redis::Client::open("redis://127.0.0.1/") {
         Ok(client) => {
             info!("Connected to Redis");
@@ -110,7 +104,6 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    // Shared utilities
     let tool_manager = Arc::new(tools::ToolManager::new());
     let llm_provider = Arc::new(llm::MockLLMProvider::new());
 
@@ -129,7 +122,6 @@ async fn main() -> std::io::Result<()> {
 
     let tool_api = Arc::new(tools::ToolApi::new());
 
-    // Prepare the base AppState (without the orchestrator, which requires per‑worker construction)
     let base_app_state = AppState {
         s3_client: None,
         config: Some(cfg.clone()),
@@ -137,7 +129,6 @@ async fn main() -> std::io::Result<()> {
         custom_conn: db_custom_pool.clone(),
         redis_client: redis_client.clone(),
         orchestrator: Arc::new(bot::BotOrchestrator::new(
-            // Temporary placeholder – will be replaced per worker
             session::SessionManager::new(
                 diesel::Connection::establish(&cfg.database_url()).unwrap(),
                 redis_client.clone(),
@@ -148,7 +139,7 @@ async fn main() -> std::io::Result<()> {
                 diesel::Connection::establish(&cfg.database_url()).unwrap(),
                 redis_client.clone(),
             ),
-        )), // This placeholder will be shadowed inside the closure
+        )),
         web_adapter,
         voice_adapter,
         whatsapp_adapter,
@@ -160,15 +151,11 @@ async fn main() -> std::io::Result<()> {
         config.server.host, config.server.port
     );
 
-    // Clone the Arc<AppConfig> for use inside the closure so the original `config`
-    // remains available for binding later.
     let closure_config = config.clone();
 
     HttpServer::new(move || {
-        // Clone again for this worker thread.
         let cfg = closure_config.clone();
 
-        // Re‑create services that hold non‑Sync DB connections for each worker thread
         let auth_service = auth::AuthService::new(
             diesel::Connection::establish(&cfg.database_url()).unwrap(),
             redis_client.clone(),
@@ -178,7 +165,6 @@ async fn main() -> std::io::Result<()> {
             redis_client.clone(),
         );
 
-        // Orchestrator for this worker
         let orchestrator = Arc::new(bot::BotOrchestrator::new(
             session_manager,
             (*tool_manager).clone(),
@@ -186,7 +172,6 @@ async fn main() -> std::io::Result<()> {
             auth_service,
         ));
 
-        // Build the per‑worker AppState, cloning the shared resources
         let app_state = AppState {
             s3_client: base_app_state.s3_client.clone(),
             config: base_app_state.config.clone(),

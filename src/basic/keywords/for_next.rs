@@ -1,5 +1,5 @@
-use crate::shared::state::AppState;
 use crate::shared::models::UserSession;
+use crate::shared::state::AppState;
 use log::info;
 use rhai::Dynamic;
 use rhai::Engine;
@@ -49,7 +49,7 @@ pub fn for_keyword(_state: &AppState, _user: UserSession, engine: &mut Engine) {
                 let orig_len = context.scope().len();
 
                 for item in array {
-                    context.scope_mut().push(loop_var.clone(), item);
+                    context.scope_mut().push(loop_var, item);
 
                     match context.eval_expression_tree(block) {
                         Ok(_) => (),
