@@ -1,37 +1,40 @@
 use actix_web::web;
-
 use actix_multipart::Multipart;
 use actix_web::{post, HttpResponse};
-use minio::s3::builders::ObjectContent;
-use minio::s3::types::ToStream;
-use minio::s3::Client;
 use std::io::Write;
 use tempfile::NamedTempFile;
 use tokio_stream::StreamExt;
-
-use minio::s3::client::{Client as MinioClient, ClientBuilder as MinioClientBuilder};
-use minio::s3::creds::StaticProvider;
-use minio::s3::http::BaseUrl;
+use aws_sdk_s3 as s3;
+use aws_sdk_s3::types::ByteStream;
 use std::str::FromStr;
 
 use crate::config::AppConfig;
 use crate::shared::state::AppState;
 
-pub async fn init_minio(config: &AppConfig) -> Result<MinioClient, minio::s3::error::Error> {
-    let scheme = if config.minio.use_ssl {
-        "https"
+pub async fn init_s3(config: &AppConfig) -> Result<s3::Client, Box<dyn std::error::Error>> {
+    let endpoint_url = if config.minio.use_ssl {
+        format!("https://{}", config.minio.server)
     } else {
-        "http"
+        format!("http://{}", config.minio.server)
     };
-    let base_url = format!("{}://{}", scheme, config.minio.server);
-    let base_url = BaseUrl::from_str(&base_url)?;
-    let credentials = StaticProvider::new(&config.minio.access_key, &config.minio.secret_key, None);
 
-    let minio_client = MinioClientBuilder::new(base_url)
-        .provider(Some(credentials))
-        .build()?;
+    let config = aws_config::from_env()
+        .endpoint_url(&endpoint_url)
+        .region(aws_sdk_s3::config::Region::new("us-east-1"))
+        .credentials_provider(
+            s3::config::Credentials::new(
+                &config.minio.access_key,
+                &config.minio.secret_key,
+                None,
+                None,
+                "minio",
+            )
+        )
+        .load()
+        .await;
 
-    Ok(minio_client)
+    let client = s3::Client::new(&config);
+    Ok(client)
 }
 
 #[post("/files/upload/{folder_path}")]
@@ -42,23 +45,19 @@ pub async fn upload_file(
 ) -> Result<HttpResponse, actix_web::Error> {
     let folder_path = folder_path.into_inner();
 
-    // Create a temporary file to store the uploaded file.
     let mut temp_file = NamedTempFile::new().map_err(|e| {
         actix_web::error::ErrorInternalServerError(format!("Failed to create temp file: {}", e))
     })?;
 
     let mut file_name: Option<String> = None;
 
-    // Iterate over the multipart stream.
     while let Some(mut field) = payload.try_next().await? {
-        // Extract the filename from the content disposition, if present.
         if let Some(disposition) = field.content_disposition() {
             if let Some(name) = disposition.get_filename() {
                 file_name = Some(name.to_string());
             }
         }
 
-        // Write the file content to the temporary file.
         while let Some(chunk) = field.try_next().await? {
             temp_file.write_all(&chunk).map_err(|e| {
                 actix_web::error::ErrorInternalServerError(format!(
@@ -69,29 +68,33 @@ pub async fn upload_file(
         }
     }
 
-    // Get the file name or use a default name.
     let file_name = file_name.unwrap_or_else(|| "unnamed_file".to_string());
-
-    // Construct the object name using the folder path and file name.
     let object_name = format!("{}/{}", folder_path, file_name);
 
-    // Upload the file to the MinIO bucket.
-    let client: Client = state.minio_client.clone().unwrap();
+    let client = state.s3_client.as_ref().ok_or_else(|| {
+        actix_web::error::ErrorInternalServerError("S3 client not initialized")
+    })?;
+
     let bucket_name = state.config.as_ref().unwrap().minio.bucket.clone();
 
-    let content = ObjectContent::from(temp_file.path());
+    let body = ByteStream::from_path(temp_file.path()).await.map_err(|e| {
+        actix_web::error::ErrorInternalServerError(format!("Failed to read file: {}", e))
+    })?;
+
     client
-        .put_object_content(bucket_name, &object_name, content)
+        .put_object()
+        .bucket(&bucket_name)
+        .key(&object_name)
+        .body(body)
         .send()
         .await
         .map_err(|e| {
             actix_web::error::ErrorInternalServerError(format!(
-                "Failed to upload file to MinIO: {}",
+                "Failed to upload file to S3: {}",
                 e
             ))
         })?;
 
-    // Clean up the temporary file.
     temp_file.close().map_err(|e| {
         actix_web::error::ErrorInternalServerError(format!("Failed to close temp file: {}", e))
     })?;
@@ -109,29 +112,35 @@ pub async fn list_file(
 ) -> Result<HttpResponse, actix_web::Error> {
     let folder_path = folder_path.into_inner();
 
-    let client: Client = state.minio_client.clone().unwrap();
+    let client = state.s3_client.as_ref().ok_or_else(|| {
+        actix_web::error::ErrorInternalServerError("S3 client not initialized")
+    })?;
+
     let bucket_name = "file-upload-rust-bucket";
 
-    // Create the stream using the to_stream() method
-    let mut objects_stream = client
-        .list_objects(bucket_name)
-        .prefix(Some(folder_path))
-        .to_stream()
-        .await;
+    let mut objects = client
+        .list_objects_v2()
+        .bucket(bucket_name)
+        .prefix(&folder_path)
+        .into_paginator()
+        .send();
 
     let mut file_list = Vec::new();
 
-    // Use StreamExt::next() to iterate through the stream
-    while let Some(items) = objects_stream.next().await {
-        match items {
-            Ok(result) => {
-                for item in result.contents {
-                    file_list.push(item.name);
+    while let Some(result) = objects.next().await {
+        match result {
+            Ok(output) => {
+                if let Some(contents) = output.contents {
+                    for item in contents {
+                        if let Some(key) = item.key {
+                            file_list.push(key);
+                        }
+                    }
                 }
             }
             Err(e) => {
                 return Err(actix_web::error::ErrorInternalServerError(format!(
-                    "Failed to list files in MinIO: {}",
+                    "Failed to list files in S3: {}",
                     e
                 )));
             }

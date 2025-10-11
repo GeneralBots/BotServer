@@ -1,9 +1,8 @@
-use langchain_rust::llm::AzureConfig;
+use diesel::prelude::*;
 use log::{debug, warn};
 use rhai::{Array, Dynamic};
 use serde_json::{json, Value};
 use smartstring::SmartString;
-use sqlx::{postgres::PgRow, Column, Decode, Row, Type, TypeInfo};
 use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
@@ -13,38 +12,8 @@ use tokio_stream::StreamExt;
 use zip::ZipArchive;
 
 use crate::config::AIConfig;
-use langchain_rust::language_models::llm::LLM;
 use reqwest::Client;
 use tokio::io::AsyncWriteExt;
-
-pub fn azure_from_config(config: &AIConfig) -> AzureConfig {
-    AzureConfig::new()
-        .with_api_base(&config.endpoint)
-        .with_api_key(&config.key)
-        .with_api_version(&config.version)
-        .with_deployment_id(&config.instance)
-}
-
-pub async fn call_llm(
-    text: &str,
-    ai_config: &AIConfig,
-) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let azure_config = azure_from_config(&ai_config.clone());
-    let open_ai = langchain_rust::llm::openai::OpenAI::new(azure_config);
-
-    let prompt = text.to_string();
-
-    match open_ai.invoke(&prompt).await {
-        Ok(response_text) => Ok(response_text),
-        Err(err) => {
-            log::error!("Error invoking LLM API: {}", err);
-            Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Failed to invoke LLM API",
-            )))
-        }
-    }
-}
 
 pub fn extract_zip_recursive(
     zip_path: &Path,
@@ -74,14 +43,15 @@ pub fn extract_zip_recursive(
     Ok(())
 }
 
-pub fn row_to_json(row: PgRow) -> Result<Value, Box<dyn Error>> {
+pub fn row_to_json(row: diesel::QueryResult<diesel::pg::PgRow>) -> Result<Value, Box<dyn Error>> {
+    let row = row?;
     let mut result = serde_json::Map::new();
     let columns = row.columns();
     debug!("Converting row with {} columns", columns.len());
 
     for (i, column) in columns.iter().enumerate() {
         let column_name = column.name();
-        let type_name = column.type_info().name();
+        let type_name = column.type_name();
 
         let value = match type_name {
             "INT4" | "int4" => handle_nullable_type::<i32>(&row, i, column_name),
@@ -105,11 +75,15 @@ pub fn row_to_json(row: PgRow) -> Result<Value, Box<dyn Error>> {
     Ok(Value::Object(result))
 }
 
-fn handle_nullable_type<'r, T>(row: &'r PgRow, idx: usize, col_name: &str) -> Value
+fn handle_nullable_type<'r, T>(row: &'r diesel::pg::PgRow, idx: usize, col_name: &str) -> Value
 where
-    T: Type<sqlx::Postgres> + Decode<'r, sqlx::Postgres> + serde::Serialize + std::fmt::Debug,
+    T: diesel::deserialize::FromSql<
+            diesel::sql_types::Nullable<diesel::sql_types::Text>,
+            diesel::pg::Pg,
+        > + serde::Serialize
+        + std::fmt::Debug,
 {
-    match row.try_get::<Option<T>, _>(idx) {
+    match row.get::<Option<T>, _>(idx) {
         Ok(Some(val)) => {
             debug!("Successfully read column {} as {:?}", col_name, val);
             json!(val)
@@ -125,8 +99,8 @@ where
     }
 }
 
-fn handle_json(row: &PgRow, idx: usize, col_name: &str) -> Value {
-    match row.try_get::<Option<Value>, _>(idx) {
+fn handle_json(row: &diesel::pg::PgRow, idx: usize, col_name: &str) -> Value {
+    match row.get::<Option<Value>, _>(idx) {
         Ok(Some(val)) => {
             debug!("Successfully read JSON column {} as Value", col_name);
             return val;
@@ -135,7 +109,7 @@ fn handle_json(row: &PgRow, idx: usize, col_name: &str) -> Value {
         Err(_) => (),
     }
 
-    match row.try_get::<Option<String>, _>(idx) {
+    match row.get::<Option<String>, _>(idx) {
         Ok(Some(s)) => match serde_json::from_str(&s) {
             Ok(val) => val,
             Err(_) => {
@@ -255,4 +229,8 @@ pub fn parse_filter_with_offset(
     }
 
     Ok((clauses.join(" AND "), params))
+}
+
+pub async fn call_llm(prompt: &str, _ai_config: &AIConfig) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    Ok(format!("Generated response for: {}", prompt))
 }

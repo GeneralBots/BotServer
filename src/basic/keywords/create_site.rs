@@ -1,5 +1,4 @@
 use log::info;
-
 use rhai::Dynamic;
 use rhai::Engine;
 use std::error::Error;
@@ -8,9 +7,10 @@ use std::io::Read;
 use std::path::PathBuf;
 
 use crate::shared::state::AppState;
+use crate::shared::models::UserSession;
 use crate::shared::utils;
 
-pub fn create_site_keyword(state: &AppState, engine: &mut Engine) {
+pub fn create_site_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
     let state_clone = state.clone();
     engine
         .register_custom_syntax(
@@ -48,15 +48,12 @@ async fn create_site(
     template_dir: Dynamic,
     prompt: Dynamic,
 ) -> Result<String, Box<dyn Error + Send + Sync>> {
-    // Convert paths to platform-specific format
     let base_path = PathBuf::from(&config.site_path);
     let template_path = base_path.join(template_dir.to_string());
     let alias_path = base_path.join(alias.to_string());
 
-    // Create destination directory
     fs::create_dir_all(&alias_path).map_err(|e| e.to_string())?;
 
-    // Process all HTML files in template directory
     let mut combined_content = String::new();
 
     for entry in fs::read_dir(&template_path).map_err(|e| e.to_string())? {
@@ -74,18 +71,15 @@ async fn create_site(
         }
     }
 
-    // Combine template content with prompt
     let full_prompt = format!(
         "TEMPLATE FILES:\n{}\n\nPROMPT: {}\n\nGenerate a new HTML file cloning all previous TEMPLATE (keeping only the local _assets libraries use, no external resources), but turning this into this prompt:",
         combined_content,
         prompt.to_string()
     );
 
-    // Call LLM with the combined prompt
     info!("Asking LLM to create site.");
     let llm_result = utils::call_llm(&full_prompt, &config.ai).await?;
 
-    // Write the generated HTML file
     let index_path = alias_path.join("index.html");
     fs::write(index_path, llm_result).map_err(|e| e.to_string())?;
 

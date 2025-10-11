@@ -1,14 +1,14 @@
-use crate::{shared::state::AppState, web_automation::BrowserPool};
+use crate::{shared::state::AppState, shared::models::UserSession, web_automation::BrowserPool};
+use headless_chrome::browser::tab::Tab;
 use log::info;
 use rhai::{Dynamic, Engine};
 use std::error::Error;
 use std::sync::Arc;
 use std::time::Duration;
-use thirtyfour::{By, WebDriver};
 use tokio::time::sleep;
 
-pub fn get_website_keyword(state: &AppState, engine: &mut Engine) {
-    let browser_pool = state.browser_pool.clone(); // Assuming AppState has browser_pool field
+pub fn get_website_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
+    let browser_pool = state.browser_pool.clone();
 
     engine
         .register_custom_syntax(
@@ -38,16 +38,12 @@ pub async fn execute_headless_browser_search(
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     info!("Starting headless browser search: '{}' ", search_term);
 
-    // Clone the search term so it can be moved into the async closure.
     let term = search_term.to_string();
 
-    // `with_browser` expects a closure that returns a `Future` yielding
-    // `Result<_, Box<dyn Error + Send + Sync>>`. `perform_search` already returns
-    // that exact type, so we can forward the result directly.
     let result = browser_pool
-        .with_browser(move |driver| {
+        .with_browser(move |tab| {
             let term = term.clone();
-            Box::pin(async move { perform_search(driver, &term).await })
+            Box::pin(async move { perform_search(tab, &term).await })
         })
         .await?;
 
@@ -55,27 +51,36 @@ pub async fn execute_headless_browser_search(
 }
 
 async fn perform_search(
-    driver: WebDriver,
+    tab: Arc<Tab>,
     search_term: &str,
 ) -> Result<String, Box<dyn Error + Send + Sync>> {
-    // Navigate to DuckDuckGo
-    driver.goto("https://duckduckgo.com").await?;
+    tab.navigate_to("https://duckduckgo.com")
+        .map_err(|e| format!("Failed to navigate: {}", e))?;
 
-    // Wait for search box and type query
-    let search_input = driver.find(By::Id("searchbox_input")).await?;
-    search_input.click().await?;
-    search_input.send_keys(search_term).await?;
+    tab.wait_for_element("#searchbox_input")
+        .map_err(|e| format!("Failed to find search box: {}", e))?;
 
-    // Submit search by pressing Enter
-    search_input.send_keys("\n").await?;
+    let search_input = tab
+        .find_element("#searchbox_input")
+        .map_err(|e| format!("Failed to find search input: {}", e))?;
 
-    // Wait for results to load - using a modern result selector
-    driver.find(By::Css("[data-testid='result']")).await?;
-    sleep(Duration::from_millis(2000)).await;
+    search_input
+        .click()
+        .map_err(|e| format!("Failed to click search input: {}", e))?;
 
-    // Extract results
-    let results = extract_search_results(&driver).await?;
-    driver.close_window().await?;
+    search_input
+        .type_into(search_term)
+        .map_err(|e| format!("Failed to type into search input: {}", e))?;
+
+    search_input
+        .press_key("Enter")
+        .map_err(|e| format!("Failed to press Enter: {}", e))?;
+
+    sleep(Duration::from_millis(3000)).await;
+
+    let _ = tab.wait_for_element("[data-testid='result']");
+
+    let results = extract_search_results(&tab).await?;
 
     if !results.is_empty() {
         Ok(results[0].clone())
@@ -85,45 +90,34 @@ async fn perform_search(
 }
 
 async fn extract_search_results(
-    driver: &WebDriver,
+    tab: &Arc<Tab>,
 ) -> Result<Vec<String>, Box<dyn Error + Send + Sync>> {
     let mut results = Vec::new();
 
-    // Try different selectors for search results, ordered by most specific to most general
     let selectors = [
-        // Modern DuckDuckGo (as seen in the HTML)
-        "a[data-testid='result-title-a']", // Primary result links
-        "a[data-testid='result-extras-url-link']", // URL links in results
-        "a.eVNpHGjtxRBq_gLOfGDr",          // Class-based selector for result titles
-        "a.Rn_JXVtoPVAFyGkcaXyK",          // Class-based selector for URL links
-        ".ikg2IXiCD14iVX7AdZo1 a",         // Heading container links
-        ".OQ_6vPwNhCeusNiEDcGp a",         // URL container links
-        // Fallback selectors
-        ".result__a",      // Classic DuckDuckGo
-        "a.result-link",   // Alternative
-        ".result a[href]", // Generic result links
+        "a[data-testid='result-title-a']",
+        "a[data-testid='result-extras-url-link']",
+        "a.eVNpHGjtxRBq_gLOfGDr",
+        "a.Rn_JXVtoPVAFyGkcaXyK",
+        ".ikg2IXiCD14iVX7AdZo1 a",
+        ".OQ_6vPwNhCeusNiEDcGp a",
+        ".result__a",
+        "a.result-link",
+        ".result a[href]",
     ];
 
-    // Iterate over selectors, dereferencing each `&&str` to `&str` for `By::Css`
-    for &selector in &selectors {
-        if let Ok(elements) = driver.find_all(By::Css(selector)).await {
+    for selector in &selectors {
+        if let Ok(elements) = tab.find_elements(selector) {
             for element in elements {
-                if let Ok(Some(href)) = element.attr("href").await {
-                    // Filter out internal and non‑http links
+                if let Ok(Some(href)) = element.get_attribute_value("href") {
                     if href.starts_with("http")
                         && !href.contains("duckduckgo.com")
                         && !href.contains("duck.co")
                         && !results.contains(&href)
                     {
-                        // Get the display URL for verification
-                        let display_url = if let Ok(text) = element.text().await {
-                            text.trim().to_string()
-                        } else {
-                            String::new()
-                        };
+                        let display_text = element.get_inner_text().unwrap_or_default();
 
-                        // Only add if it looks like a real result (not an ad or internal link)
-                        if !display_url.is_empty() && !display_url.contains("Ad") {
+                        if !display_text.is_empty() && !display_text.contains("Ad") {
                             results.push(href);
                         }
                     }
@@ -135,7 +129,6 @@ async fn extract_search_results(
         }
     }
 
-    // Deduplicate results
     results.dedup();
 
     Ok(results)

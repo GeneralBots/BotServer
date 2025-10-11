@@ -1,8 +1,4 @@
 use async_trait::async_trait;
-use langchain_rust::{
-    embedding::openai::OpenAiEmbedder,
-    vectorstore::qdrant::Qdrant,
-};
 use serde_json::Value;
 use std::sync::Arc;
 
@@ -25,18 +21,13 @@ pub trait ContextStore: Send + Sync {
 }
 
 pub struct QdrantContextStore {
-    vector_store: Arc<Qdrant>,
-    embedder: Arc<OpenAiEmbedder<langchain_rust::llm::openai::OpenAIConfig>>,
+    vector_store: Arc<qdrant_client::client::QdrantClient>,
 }
 
 impl QdrantContextStore {
-    pub fn new(
-        vector_store: Qdrant,
-        embedder: OpenAiEmbedder<langchain_rust::llm::openai::OpenAIConfig>,
-    ) -> Self {
+    pub fn new(vector_store: qdrant_client::client::QdrantClient) -> Self {
         Self {
             vector_store: Arc::new(vector_store),
-            embedder: Arc::new(embedder),
         }
     }
 

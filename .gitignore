@@ -2,4 +2,4 @@ target
 .env
 *.env
 work
-*.txt
+*.out

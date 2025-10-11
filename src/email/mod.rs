@@ -8,7 +8,8 @@ use lettre::{transport::smtp::authentication::Credentials, Message, SmtpTranspor
 use serde::Serialize;
 
 use imap::types::Seq;
-use mailparse::{parse_mail, MailHeaderMap}; // Added MailHeaderMap import
+use mailparse::{parse_mail, MailHeaderMap};
+use diesel::prelude::*;
 
 #[derive(Debug, Serialize)]
 pub struct EmailResponse {
@@ -80,8 +81,8 @@ pub async fn list_emails(
     let mut email_list = Vec::new();
 
     // Get last 20 messages
-    let recent_messages: Vec<_> = messages.iter().cloned().collect(); // Collect items into a Vec
-    let recent_messages: Vec<Seq> = recent_messages.into_iter().rev().take(20).collect(); // Now you can reverse and take the last 20
+    let recent_messages: Vec<_> = messages.iter().cloned().collect();
+    let recent_messages: Vec<Seq> = recent_messages.into_iter().rev().take(20).collect();
     for seq in recent_messages {
         // Fetch the entire message (headers + body)
         let fetch_result = session.fetch(seq.to_string(), "RFC822");
@@ -334,7 +335,7 @@ async fn fetch_latest_email_from_sender(
             from, to, date, subject, body_text
         );
 
-        break; // We only want the first (and should be only) message
+        break;
     }
 
     session.logout()?;
@@ -435,7 +436,7 @@ pub async fn fetch_latest_sent_to(
         {
             continue;
         }
-        // Extract body text (handles both simple and multipart emails) - SAME AS LIST_EMAILS
+        // Extract body text (handles both simple and multipart emails)
         let body_text = if let Some(body_part) = parsed
             .subparts
             .iter()
@@ -461,7 +462,7 @@ pub async fn fetch_latest_sent_to(
             );
         }
 
-        break; // We only want the first (and should be only) message
+        break;
     }
 
     session.logout()?;
@@ -497,37 +498,45 @@ pub async fn save_click(
     state: web::Data<AppState>,
 ) -> HttpResponse {
     let (campaign_id, email) = path.into_inner();
-    let _ = sqlx::query("INSERT INTO public.clicks (campaign_id, email, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (campaign_id, email) DO UPDATE SET updated_at = NOW()")
-        .bind(campaign_id)
-        .bind(email)
-        .execute(state.db.as_ref().unwrap())
-        .await;
+    use crate::shared::models::clicks;
+    
+    let _ = diesel::insert_into(clicks::table)
+        .values((
+            clicks::campaign_id.eq(campaign_id),
+            clicks::email.eq(email),
+            clicks::updated_at.eq(diesel::dsl::now),
+        ))
+        .on_conflict((clicks::campaign_id, clicks::email))
+        .do_update()
+        .set(clicks::updated_at.eq(diesel::dsl::now))
+        .execute(&state.conn);
 
     let pixel = [
-        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG header
-        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
-        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, // 1x1 dimension
-        0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, // RGBA
-        0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54, // IDAT chunk
-        0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, // data
-        0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, // CRC
-        0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, // IEND chunk
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+        0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89,
+        0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54,
+        0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05,
+        0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4,
+        0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44,
         0xAE, 0x42, 0x60, 0x82,
-    ]; // EOF
+    ];
 
-    // At the end of your save_click function:
     HttpResponse::Ok()
         .content_type(ContentType::png())
-        .body(pixel.to_vec()) // Using slicing to pass a reference
+        .body(pixel.to_vec())
 }
 
 #[actix_web::get("/campaigns/{campaign_id}/emails")]
 pub async fn get_emails(path: web::Path<String>, state: web::Data<AppState>) -> String {
     let campaign_id = path.into_inner();
-    let rows = sqlx::query_scalar::<_, String>("SELECT email FROM clicks WHERE campaign_id = $1")
-        .bind(campaign_id)
-        .fetch_all(state.db.as_ref().unwrap())
-        .await
+    use crate::shared::models::clicks::dsl::*;
+    
+    let rows = clicks
+        .filter(campaign_id.eq(campaign_id))
+        .select(email)
+        .load::<String>(&state.conn)
         .unwrap_or_default();
     rows.join(",")
 }

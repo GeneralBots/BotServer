@@ -1,15 +1,15 @@
 use crate::basic::ScriptService;
 use crate::shared::models::{Automation, TriggerKind};
 use crate::shared::state::AppState;
-use chrono::Datelike;
-use chrono::Timelike;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Datelike, Timelike, Utc};
+use diesel::prelude::*;
 use log::{error, info};
 use std::path::Path;
 use tokio::time::Duration;
 use uuid::Uuid;
+
 pub struct AutomationService {
-    state: AppState, // Use web::Data directly
+    state: AppState,
     scripts_dir: String,
 }
 
@@ -47,55 +47,47 @@ impl AutomationService {
         Ok(())
     }
 
-    async fn load_active_automations(&self) -> Result<Vec<Automation>, sqlx::Error> {
-        if let Some(pool) = &self.state.db {
-            sqlx::query_as::<_, Automation>(
-                r#"
-                SELECT id, kind, target, schedule, param, is_active, last_triggered
-                FROM public.system_automations
-                WHERE is_active = true
-                "#,
-            )
-            .fetch_all(pool)
-            .await
-        } else {
-            Err(sqlx::Error::PoolClosed)
-        }
+    async fn load_active_automations(&self) -> Result<Vec<Automation>, diesel::result::Error> {
+        use crate::shared::models::system_automations::dsl::*;
+
+        let mut conn = self.state.conn.lock().unwrap().clone();
+        system_automations
+            .filter(is_active.eq(true))
+            .load::<Automation>(&mut conn)
+            .map_err(Into::into)
     }
 
     async fn check_table_changes(&self, automations: &[Automation], since: DateTime<Utc>) {
-        if let Some(pool) = &self.state.db_custom {
-            for automation in automations {
-                if let Some(trigger_kind) = TriggerKind::from_i32(automation.kind) {
-                    if matches!(
-                        trigger_kind,
-                        TriggerKind::TableUpdate
-                            | TriggerKind::TableInsert
-                            | TriggerKind::TableDelete
-                    ) {
-                        if let Some(table) = &automation.target {
-                            let column = match trigger_kind {
-                                TriggerKind::TableInsert => "created_at",
-                                _ => "updated_at",
-                            };
+        let mut conn = self.state.conn.lock().unwrap().clone();
 
-                            let query =
-                                format!("SELECT COUNT(*) FROM {} WHERE {} > $1", table, column);
+        for automation in automations {
+            if let Some(trigger_kind) = TriggerKind::from_i32(automation.kind) {
+                if matches!(
+                    trigger_kind,
+                    TriggerKind::TableUpdate
+                        | TriggerKind::TableInsert
+                        | TriggerKind::TableDelete
+                ) {
+                    if let Some(table) = &automation.target {
+                        let column = match trigger_kind {
+                            TriggerKind::TableInsert => "created_at",
+                            _ => "updated_at",
+                        };
 
-                            match sqlx::query_scalar::<_, i64>(&query)
-                                .bind(since)
-                                .fetch_one(pool)
-                                .await
-                            {
-                                Ok(count) => {
-                                    if count > 0 {
-                                        self.execute_action(&automation.param).await;
-                                        self.update_last_triggered(automation.id).await;
-                                    }
+                        let query = format!("SELECT COUNT(*) FROM {} WHERE {} > $1", table, column);
+
+                        match diesel::sql_query(&query)
+                            .bind::<diesel::sql_types::Timestamp, _>(since)
+                            .get_result::<(i64,)>(&mut conn)
+                        {
+                            Ok((count,)) => {
+                                if count > 0 {
+                                    self.execute_action(&automation.param).await;
+                                    self.update_last_triggered(automation.id).await;
                                 }
-                                Err(e) => {
-                                    error!("Error checking changes for table {}: {}", table, e);
-                                }
+                            }
+                            Err(e) => {
+                                error!("Error checking changes for table {}: {}", table, e);
                             }
                         }
                     }
@@ -105,12 +97,12 @@ impl AutomationService {
     }
 
     async fn process_schedules(&self, automations: &[Automation]) {
-        let now = Utc::now().timestamp();
+        let now = Utc::now();
 
         for automation in automations {
             if let Some(TriggerKind::Scheduled) = TriggerKind::from_i32(automation.kind) {
                 if let Some(pattern) = &automation.schedule {
-                    if Self::should_run_cron(pattern, now) {
+                    if Self::should_run_cron(pattern, now.timestamp()) {
                         self.execute_action(&automation.param).await;
                         self.update_last_triggered(automation.id).await;
                     }
@@ -120,21 +112,19 @@ impl AutomationService {
     }
 
     async fn update_last_triggered(&self, automation_id: Uuid) {
-        if let Some(pool) = &self.state.db {
-            let now = time::OffsetDateTime::now_utc();
-            if let Err(e) = sqlx::query!(
-                "UPDATE public.system_automations SET last_triggered = $1 WHERE id = $2",
-                now,
-                automation_id
-            )
-            .execute(pool)
-            .await
-            {
-                error!(
-                    "Failed to update last_triggered for automation {}: {}",
-                    automation_id, e
-                );
-            }
+        use crate::shared::models::system_automations::dsl::*;
+
+        let mut conn = self.state.conn.lock().unwrap().clone();
+        let now = Utc::now();
+
+        if let Err(e) = diesel::update(system_automations.filter(id.eq(automation_id)))
+            .set(last_triggered.eq(now))
+            .execute(&mut conn)
+        {
+            error!(
+                "Failed to update last_triggered for automation {}: {}",
+                automation_id, e
+            );
         }
     }
 
@@ -144,7 +134,7 @@ impl AutomationService {
             return false;
         }
 
-        let dt = chrono::DateTime::from_timestamp(timestamp, 0).unwrap();
+        let dt = DateTime::from_timestamp(timestamp, 0).unwrap();
         let minute = dt.minute() as i32;
         let hour = dt.hour() as i32;
         let day = dt.day() as i32;
@@ -180,7 +170,7 @@ impl AutomationService {
             Ok(script_content) => {
                 info!("Executing action with param: {}", param);
 
-                let script_service = ScriptService::new(&self.state.clone());
+                let script_service = ScriptService::new(&self.state);
 
                 match script_service.compile(&script_content) {
                     Ok(ast) => match script_service.run(&ast) {

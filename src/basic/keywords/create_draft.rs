@@ -1,24 +1,21 @@
-use crate::email::fetch_latest_sent_to;
-use crate::email::save_email_draft;
-use crate::email::SaveDraftRequest;
+use crate::email::{fetch_latest_sent_to, save_email_draft, SaveDraftRequest};
 use crate::shared::state::AppState;
+use crate::shared::models::UserSession;
 use rhai::Dynamic;
 use rhai::Engine;
 
-pub fn create_draft_keyword(state: &AppState, engine: &mut Engine) {
+pub fn create_draft_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
     let state_clone = state.clone();
 
     engine
         .register_custom_syntax(
             &["CREATE_DRAFT", "$expr$", ",", "$expr$", ",", "$expr$"],
-            true, // Statement
+            true,
             move |context, inputs| {
-                // Extract arguments
                 let to = context.eval_expression_tree(&inputs[0])?.to_string();
                 let subject = context.eval_expression_tree(&inputs[1])?.to_string();
                 let reply_text = context.eval_expression_tree(&inputs[2])?.to_string();
 
-                // Execute async operations using the same pattern as FIND
                 let fut = execute_create_draft(&state_clone, &to, &subject, &reply_text);
                 let result =
                     tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(fut))
@@ -39,7 +36,7 @@ async fn execute_create_draft(
     let get_result = fetch_latest_sent_to(&state.config.clone().unwrap().email, to).await;
     let email_body = if let Ok(get_result_str) = get_result {
         if !get_result_str.is_empty() {
-            let email_separator = "<br><hr><br>"; // Horizontal rule in HTML
+            let email_separator = "<br><hr><br>";
             let formatted_reply_text = reply_text.to_string();
             let formatted_old_text = get_result_str.replace("\n", "<br>");
             let fixed_reply_text = formatted_reply_text.replace("FIX", "Fixed");
@@ -54,7 +51,6 @@ async fn execute_create_draft(
         reply_text.to_string()
     };
 
-    // Create and save draft
     let draft_request = SaveDraftRequest {
         to: to.to_string(),
         subject: subject.to_string(),

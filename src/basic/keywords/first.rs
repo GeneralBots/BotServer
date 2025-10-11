@@ -8,7 +8,6 @@ pub fn first_keyword(engine: &mut Engine) {
                 let input_string = context.eval_expression_tree(&inputs[0])?;
                 let input_str = input_string.to_string();
 
-                // Extract first word by splitting on whitespace
                 let first_word = input_str
                     .split_whitespace()
                     .next()

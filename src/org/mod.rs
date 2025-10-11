@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -10,13 +9,11 @@ pub struct Organization {
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
-pub struct OrganizationService {
-    pub pool: PgPool,
-}
+pub struct OrganizationService;
 
 impl OrganizationService {
-    pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+    pub fn new() -> Self {
+        Self
     }
 
     pub async fn create_organization(

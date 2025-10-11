@@ -1,7 +1,7 @@
-mod keywords;
+pub mod keywords;
 
 #[cfg(feature = "email")]
-use self::keywords::create_draft::create_draft_keyword;
+use self::keywords::create_draft_keyword;
 
 use self::keywords::create_site::create_site_keyword;
 use self::keywords::find::find_keyword;
@@ -9,7 +9,9 @@ use self::keywords::first::first_keyword;
 use self::keywords::for_next::for_keyword;
 use self::keywords::format::format_keyword;
 use self::keywords::get::get_keyword;
+#[cfg(feature = "web_automation")]
 use self::keywords::get_website::get_website_keyword;
+use self::keywords::hear_talk::{hear_keyword, set_context_keyword, talk_keyword};
 use self::keywords::last::last_keyword;
 use self::keywords::llm_keyword::llm_keyword;
 use self::keywords::on::on_keyword;
@@ -17,6 +19,7 @@ use self::keywords::print::print_keyword;
 use self::keywords::set::set_keyword;
 use self::keywords::set_schedule::set_schedule_keyword;
 use self::keywords::wait::wait_keyword;
+use crate::shared::models::UserSession;
 use crate::shared::AppState;
 use log::info;
 use rhai::{Dynamic, Engine, EvalAltResult};
@@ -26,30 +29,32 @@ pub struct ScriptService {
 }
 
 impl ScriptService {
-    pub fn new(state: &AppState) -> Self {
+    pub fn new(state: &AppState, user: UserSession) -> Self {
         let mut engine = Engine::new();
 
-        // Configure engine for BASIC-like syntax
         engine.set_allow_anonymous_fn(true);
         engine.set_allow_looping(true);
 
         #[cfg(feature = "email")]
-        create_draft_keyword(state, &mut engine);
+        create_draft_keyword(state, user.clone(), &mut engine);
 
-        create_site_keyword(state, &mut engine);
-        find_keyword(state, &mut engine);
-        for_keyword(state, &mut engine);
+        create_site_keyword(state, user.clone(), &mut engine);
+        find_keyword(state, user.clone(), &mut engine);
+        for_keyword(state, user.clone(), &mut engine);
         first_keyword(&mut engine);
         last_keyword(&mut engine);
         format_keyword(&mut engine);
-        llm_keyword(state, &mut engine);
-        get_website_keyword(state, &mut engine);
-        get_keyword(state, &mut engine);
-        set_keyword(state, &mut engine);
-        wait_keyword(state, &mut engine);
-        print_keyword(state, &mut engine);
-        on_keyword(state, &mut engine);
-        set_schedule_keyword(state, &mut engine);
+        llm_keyword(state, user.clone(), &mut engine);
+        get_website_keyword(state, user.clone(), &mut engine);
+        get_keyword(state, user.clone(), &mut engine);
+        set_keyword(state, user.clone(), &mut engine);
+        wait_keyword(state, user.clone(), &mut engine);
+        print_keyword(state, user.clone(), &mut engine);
+        on_keyword(state, user.clone(), &mut engine);
+        set_schedule_keyword(state, user.clone(), &mut engine);
+        hear_keyword(state, user.clone(), &mut engine);
+        talk_keyword(state, user.clone(), &mut engine);
+        set_context_keyword(state, user.clone(), &mut engine);
 
         ScriptService { engine }
     }
@@ -62,14 +67,12 @@ impl ScriptService {
         for line in script.lines() {
             let trimmed = line.trim();
 
-            // Skip empty lines and comments
             if trimmed.is_empty() || trimmed.starts_with("//") || trimmed.starts_with("REM") {
                 result.push_str(line);
                 result.push('\n');
                 continue;
             }
 
-            // Handle FOR EACH start
             if trimmed.starts_with("FOR EACH") {
                 for_stack.push(current_indent);
                 result.push_str(&" ".repeat(current_indent));
@@ -81,7 +84,6 @@ impl ScriptService {
                 continue;
             }
 
-            // Handle NEXT
             if trimmed.starts_with("NEXT") {
                 if let Some(expected_indent) = for_stack.pop() {
                     if (current_indent - 4) != expected_indent {
@@ -100,7 +102,6 @@ impl ScriptService {
                 }
             }
 
-            // Handle EXIT FOR
             if trimmed == "EXIT FOR" {
                 result.push_str(&" ".repeat(current_indent));
                 result.push_str(trimmed);
@@ -108,12 +109,27 @@ impl ScriptService {
                 continue;
             }
 
-            // Handle regular lines - no semicolons added for BASIC-style commands
             result.push_str(&" ".repeat(current_indent));
 
             let basic_commands = [
-                "SET", "CREATE", "PRINT", "FOR", "FIND", "GET", "EXIT", "IF", "THEN", "ELSE",
-                "END IF", "WHILE", "WEND", "DO", "LOOP",
+                "SET",
+                "CREATE",
+                "PRINT",
+                "FOR",
+                "FIND",
+                "GET",
+                "EXIT",
+                "IF",
+                "THEN",
+                "ELSE",
+                "END IF",
+                "WHILE",
+                "WEND",
+                "DO",
+                "LOOP",
+                "HEAR",
+                "TALK",
+                "SET CONTEXT",
             ];
 
             let is_basic_command = basic_commands.iter().any(|&cmd| trimmed.starts_with(cmd));
@@ -122,11 +138,9 @@ impl ScriptService {
                 || trimmed.starts_with("END IF");
 
             if is_basic_command || !for_stack.is_empty() || is_control_flow {
-                // Don'ta add semicolons for BASIC-style commands or inside blocks
                 result.push_str(trimmed);
                 result.push(';');
             } else {
-                // Add semicolons only for BASIC statements
                 result.push_str(trimmed);
                 if !trimmed.ends_with(';') && !trimmed.ends_with('{') && !trimmed.ends_with('}') {
                     result.push(';');
@@ -142,7 +156,6 @@ impl ScriptService {
         result
     }
 
-    /// Preprocesses BASIC-style script to handle semicolon-free syntax
     pub fn compile(&self, script: &str) -> Result<rhai::AST, Box<EvalAltResult>> {
         let processed_script = self.preprocess_basic_script(script);
         info!("Processed Script:\n{}", processed_script);

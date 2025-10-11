@@ -3,7 +3,7 @@
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use log::info;
 use std::sync::Arc;
 
@@ -12,7 +12,6 @@ mod automation;
 mod basic;
 mod bot;
 mod channels;
-mod chart;
 mod config;
 mod context;
 #[cfg(feature = "email")]
@@ -24,6 +23,7 @@ mod org;
 mod session;
 mod shared;
 mod tools;
+#[cfg(feature = "web_automation")]
 mod web_automation;
 mod whatsapp;
 
@@ -55,11 +55,10 @@ async fn main() -> std::io::Result<()> {
 
     let config = AppConfig::from_env();
 
-    // Main database pool (required)
-    let db_pool = match sqlx::postgres::PgPool::connect(&config.database_url()).await {
-        Ok(pool) => {
+    let db_pool = match diesel::PgConnection::establish(&config.database_url()) {
+        Ok(conn) => {
             info!("Connected to main database");
-            pool
+            Arc::new(Mutex::new(conn))
         }
         Err(e) => {
             log::error!("Failed to connect to main database: {}", e);
@@ -70,20 +69,6 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    // Optional custom database pool
-    let db_custom_pool = match sqlx::postgres::PgPool::connect(&config.database_custom_url()).await
-    {
-        Ok(pool) => {
-            info!("Connected to custom database");
-            Some(pool)
-        }
-        Err(e) => {
-            log::warn!("Failed to connect to custom database: {}", e);
-            None
-        }
-    };
-
-    // Optional Redis client
     let redis_client = match redis::Client::open("redis://127.0.0.1/") {
         Ok(client) => {
             info!("Connected to Redis");
@@ -95,30 +80,20 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    // Initialize MinIO client
-    let minio_client = file::init_minio(&config)
-        .await
-        .expect("Failed to initialize Minio");
-
-    // Initialize browser pool
     let browser_pool = Arc::new(web_automation::BrowserPool::new(
         "chrome".to_string(),
         2,
         "headless".to_string(),
     ));
 
-    // Initialize LLM servers
-    ensure_llama_servers_running()
-        .await
-        .expect("Failed to initialize LLM local server.");
-
-    web_automation::initialize_browser_pool()
-        .await
-        .expect("Failed to initialize browser pool");
-
-    // Initialize services from new architecture
-    let auth_service = auth::AuthService::new(db_pool.clone(), redis_client.clone());
-    let session_manager = session::SessionManager::new(db_pool.clone(), redis_client.clone());
+    let auth_service = auth::AuthService::new(
+        diesel::PgConnection::establish(&config.database_url()).unwrap(),
+        redis_client.clone(),
+    );
+    let session_manager = session::SessionManager::new(
+        diesel::PgConnection::establish(&config.database_url()).unwrap(),
+        redis_client.clone(),
+    );
 
     let tool_manager = tools::ToolManager::new();
     let llm_provider = Arc::new(llm::MockLLMProvider::new());
@@ -141,24 +116,19 @@ async fn main() -> std::io::Result<()> {
 
     let tool_api = Arc::new(tools::ToolApi::new());
 
-    // Create unified app state
     let app_state = AppState {
-        minio_client: Some(minio_client),
+        s3_client: None,
         config: Some(config.clone()),
-        db: Some(db_pool.clone()),
-        db_custom: db_custom_pool.clone(),
+        conn: db_pool,
+        redis_client: redis_client.clone(),
         browser_pool: browser_pool.clone(),
         orchestrator: Arc::new(orchestrator),
         web_adapter,
         voice_adapter,
         whatsapp_adapter,
         tool_api,
+        ..Default::default()
     };
-
-    // Start automation service in background
-    let automation_state = app_state.clone();
-    let automation = AutomationService::new(automation_state, "src/prompts");
-    let _automation_handle = automation.spawn();
 
     info!(
         "Starting server on {}:{}",
@@ -172,19 +142,16 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header()
             .max_age(3600);
 
-        // Begin building the Actix App
-        let app = App::new()
+        let mut app = App::new()
             .wrap(cors)
             .wrap(Logger::default())
             .wrap(Logger::new("HTTP REQUEST: %a %{User-Agent}i"))
             .app_data(web::Data::new(app_state.clone()))
-            // Legacy services
             .service(upload_file)
             .service(list_file)
             .service(chat_completions_local)
             .service(generic_chat_completions)
             .service(embeddings_local)
-            // New bot services
             .service(index)
             .service(static_files)
             .service(websocket_handler)
@@ -197,7 +164,6 @@ async fn main() -> std::io::Result<()> {
             .service(get_session_history)
             .service(set_mode_handler);
 
-        // Conditional email feature services
         #[cfg(feature = "email")]
         {
             app = app

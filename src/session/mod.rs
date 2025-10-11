@@ -1,30 +1,34 @@
 use redis::{AsyncCommands, Client};
 use serde_json;
-use sqlx::{PgPool, Row};
+use diesel::prelude::*;
 use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::shared::UserSession;
 
 pub struct SessionManager {
-    pub pool: PgPool,
+    pub conn: diesel::PgConnection,
     pub redis: Option<Arc<Client>>,
 }
 
 impl SessionManager {
-    pub fn new(pool: PgPool, redis: Option<Arc<Client>>) -> Self {
-        Self { pool, redis }
+    pub fn new(conn: diesel::PgConnection, redis: Option<Arc<Client>>) -> Self {
+        Self { conn, redis }
     }
 
-    pub async fn get_user_session(
-        &self,
+    pub fn get_user_session(
+        &mut self,
         user_id: Uuid,
         bot_id: Uuid,
     ) -> Result<Option<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(redis_client) = &self.redis {
-            let mut conn = redis_client.get_multiplexed_async_connection().await?;
+            let mut conn = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+            })?;
             let cache_key = format!("session:{}:{}", user_id, bot_id);
-            let session_json: Option<String> = conn.get(&cache_key).await?;
+            let session_json: Option<String> = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(conn.get(&cache_key))
+            })?;
             if let Some(json) = session_json {
                 if let Ok(session) = serde_json::from_str::<UserSession>(&json) {
                     return Ok(Some(session));
@@ -32,204 +36,225 @@ impl SessionManager {
             }
         }
 
-        let session = sqlx::query_as::<_, UserSession>(
-            "SELECT * FROM user_sessions WHERE user_id = $1 AND bot_id = $2 ORDER BY updated_at DESC LIMIT 1",
-        )
-        .bind(user_id)
-        .bind(bot_id)
-        .fetch_optional(&self.pool)
-        .await?;
+        use crate::shared::models::user_sessions::dsl::*;
+        
+        let session = user_sessions
+            .filter(user_id.eq(user_id))
+            .filter(bot_id.eq(bot_id))
+            .order_by(updated_at.desc())
+            .first::<UserSession>(&mut self.conn)
+            .optional()?;
 
         if let Some(ref session) = session {
             if let Some(redis_client) = &self.redis {
-                let mut conn = redis_client.get_multiplexed_async_connection().await?;
+                let mut conn = tokio::task::block_in_place(|| {
+                    tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                })?;
                 let cache_key = format!("session:{}:{}", user_id, bot_id);
                 let session_json = serde_json::to_string(session)?;
-                let _: () = conn.set_ex(cache_key, session_json, 1800).await?;
+                let _: () = tokio::task::block_in_place(|| {
+                    tokio::runtime::Handle::current().block_on(conn.set_ex(cache_key, session_json, 1800))
+                })?;
             }
         }
 
         Ok(session)
     }
 
-    pub async fn create_session(
-        &self,
+    pub fn create_session(
+        &mut self,
         user_id: Uuid,
         bot_id: Uuid,
         title: &str,
     ) -> Result<UserSession, Box<dyn std::error::Error + Send + Sync>> {
-        let session = sqlx::query_as::<_, UserSession>(
-            "INSERT INTO user_sessions (user_id, bot_id, title) VALUES ($1, $2, $3) RETURNING *",
-        )
-        .bind(user_id)
-        .bind(bot_id)
-        .bind(title)
-        .fetch_one(&self.pool)
-        .await?;
+        use crate::shared::models::user_sessions;
+        use diesel::insert_into;
+        
+        let session_id = Uuid::new_v4();
+        let new_session = (
+            user_sessions::id.eq(session_id),
+            user_sessions::user_id.eq(user_id),
+            user_sessions::bot_id.eq(bot_id),
+            user_sessions::title.eq(title),
+        );
+
+        let session = insert_into(user_sessions::table)
+            .values(&new_session)
+            .get_result::<UserSession>(&mut self.conn)?;
 
         if let Some(redis_client) = &self.redis {
-            let mut conn = redis_client.get_multiplexed_async_connection().await?;
+            let mut conn = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+            })?;
             let cache_key = format!("session:{}:{}", user_id, bot_id);
             let session_json = serde_json::to_string(&session)?;
-            let _: () = conn.set_ex(cache_key, session_json, 1800).await?;
+            let _: () = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(conn.set_ex(cache_key, session_json, 1800))
+            })?;
         }
 
         Ok(session)
     }
 
-    pub async fn save_message(
-        &self,
+    pub fn save_message(
+        &mut self,
         session_id: Uuid,
         user_id: Uuid,
         role: &str,
         content: &str,
         message_type: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let message_count: i64 =
-            sqlx::query("SELECT COUNT(*) as count FROM message_history WHERE session_id = $1")
-                .bind(session_id)
-                .fetch_one(&self.pool)
-                .await?
-                .get("count");
+        use crate::shared::models::message_history;
+        use diesel::insert_into;
+        
+        let message_count: i64 = message_history::table
+            .filter(message_history::session_id.eq(session_id))
+            .count()
+            .get_result(&mut self.conn)?;
 
-        sqlx::query(
-            "INSERT INTO message_history (session_id, user_id, role, content_encrypted, message_type, message_index)
-             VALUES ($1, $2, $3, $4, $5, $6)",
-        )
-        .bind(session_id)
-        .bind(user_id)
-        .bind(role)
-        .bind(content)
-        .bind(message_type)
-        .bind(message_count + 1)
-        .execute(&self.pool)
-        .await?;
+        let new_message = (
+            message_history::session_id.eq(session_id),
+            message_history::user_id.eq(user_id),
+            message_history::role.eq(role),
+            message_history::content_encrypted.eq(content),
+            message_history::message_type.eq(message_type),
+            message_history::message_index.eq(message_count + 1),
+        );
 
-        sqlx::query("UPDATE user_sessions SET updated_at = NOW() WHERE id = $1")
-            .bind(session_id)
-            .execute(&self.pool)
-            .await?;
+        insert_into(message_history::table)
+            .values(&new_message)
+            .execute(&mut self.conn)?;
+
+        use crate::shared::models::user_sessions::dsl::*;
+        diesel::update(user_sessions.filter(id.eq(session_id)))
+            .set(updated_at.eq(diesel::dsl::now))
+            .execute(&mut self.conn)?;
 
         if let Some(redis_client) = &self.redis {
-            if let Some(session_info) =
-                sqlx::query("SELECT user_id, bot_id FROM user_sessions WHERE id = $1")
-                    .bind(session_id)
-                    .fetch_optional(&self.pool)
-                    .await?
+            if let Some(session_info) = user_sessions
+                .filter(id.eq(session_id))
+                .select((user_id, bot_id))
+                .first::<(Uuid, Uuid)>(&mut self.conn)
+                .optional()?
             {
-                let user_id: Uuid = session_info.get("user_id");
-                let bot_id: Uuid = session_info.get("bot_id");
-                let mut conn = redis_client.get_multiplexed_async_connection().await?;
-                let cache_key = format!("session:{}:{}", user_id, bot_id);
-                let _: () = conn.del(cache_key).await?;
+                let (session_user_id, session_bot_id) = session_info;
+                let mut conn = tokio::task::block_in_place(|| {
+                    tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                })?;
+                let cache_key = format!("session:{}:{}", session_user_id, session_bot_id);
+                let _: () = tokio::task::block_in_place(|| {
+                    tokio::runtime::Handle::current().block_on(conn.del(cache_key))
+                })?;
             }
         }
 
         Ok(())
     }
 
-    pub async fn get_conversation_history(
-        &self,
+    pub fn get_conversation_history(
+        &mut self,
         session_id: Uuid,
         user_id: Uuid,
     ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error + Send + Sync>> {
-        let messages = sqlx::query(
-            "SELECT role, content_encrypted FROM message_history
-             WHERE session_id = $1 AND user_id = $2
-             ORDER BY message_index ASC",
-        )
-        .bind(session_id)
-        .bind(user_id)
-        .fetch_all(&self.pool)
-        .await?;
+        use crate::shared::models::message_history::dsl::*;
+        
+        let messages = message_history
+            .filter(session_id.eq(session_id))
+            .filter(user_id.eq(user_id))
+            .order_by(message_index.asc())
+            .select((role, content_encrypted))
+            .load::<(String, String)>(&mut self.conn)?;
 
-        let history = messages
-            .into_iter()
-            .map(|row| (row.get("role"), row.get("content_encrypted")))
-            .collect();
-
-        Ok(history)
+        Ok(messages)
     }
 
-    pub async fn get_user_sessions(
-        &self,
+    pub fn get_user_sessions(
+        &mut self,
         user_id: Uuid,
     ) -> Result<Vec<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
-        let sessions = sqlx::query_as::<_, UserSession>(
-            "SELECT * FROM user_sessions WHERE user_id = $1 ORDER BY updated_at DESC",
-        )
-        .bind(user_id)
-        .fetch_all(&self.pool)
-        .await?;
+        use crate::shared::models::user_sessions::dsl::*;
+        
+        let sessions = user_sessions
+            .filter(user_id.eq(user_id))
+            .order_by(updated_at.desc())
+            .load::<UserSession>(&mut self.conn)?;
         Ok(sessions)
     }
 
-    pub async fn update_answer_mode(
-        &self,
+    pub fn update_answer_mode(
+        &mut self,
         user_id: &str,
         bot_id: &str,
         mode: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use crate::shared::models::user_sessions::dsl::*;
+        
         let user_uuid = Uuid::parse_str(user_id)?;
         let bot_uuid = Uuid::parse_str(bot_id)?;
 
-        sqlx::query(
-            "UPDATE user_sessions
-             SET answer_mode = $1, updated_at = NOW()
-             WHERE user_id = $2 AND bot_id = $3",
-        )
-        .bind(mode)
-        .bind(user_uuid)
-        .bind(bot_uuid)
-        .execute(&self.pool)
-        .await?;
+        diesel::update(user_sessions.filter(user_id.eq(user_uuid)).filter(bot_id.eq(bot_uuid)))
+            .set((
+                answer_mode.eq(mode),
+                updated_at.eq(diesel::dsl::now),
+            ))
+            .execute(&mut self.conn)?;
 
         if let Some(redis_client) = &self.redis {
-            let mut conn = redis_client.get_multiplexed_async_connection().await?;
+            let mut conn = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+            })?;
             let cache_key = format!("session:{}:{}", user_uuid, bot_uuid);
-            let _: () = conn.del(cache_key).await?;
+            let _: () = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(conn.del(cache_key))
+            })?;
         }
 
         Ok(())
     }
 
-    pub async fn update_current_tool(
-        &self,
+    pub fn update_current_tool(
+        &mut self,
         user_id: &str,
         bot_id: &str,
         tool_name: Option<&str>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use crate::shared::models::user_sessions::dsl::*;
+        
         let user_uuid = Uuid::parse_str(user_id)?;
         let bot_uuid = Uuid::parse_str(bot_id)?;
 
-        sqlx::query(
-            "UPDATE user_sessions
-             SET current_tool = $1, updated_at = NOW()
-             WHERE user_id = $2 AND bot_id = $3",
-        )
-        .bind(tool_name)
-        .bind(user_uuid)
-        .bind(bot_uuid)
-        .execute(&self.pool)
-        .await?;
+        diesel::update(user_sessions.filter(user_id.eq(user_uuid)).filter(bot_id.eq(bot_uuid)))
+            .set((
+                current_tool.eq(tool_name),
+                updated_at.eq(diesel::dsl::now),
+            ))
+            .execute(&mut self.conn)?;
 
         if let Some(redis_client) = &self.redis {
-            let mut conn = redis_client.get_multiplexed_async_connection().await?;
+            let mut conn = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+            })?;
             let cache_key = format!("session:{}:{}", user_uuid, bot_uuid);
-            let _: () = conn.del(cache_key).await?;
+            let _: () = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(conn.del(cache_key))
+            })?;
         }
 
         Ok(())
     }
 
-    pub async fn get_session_by_id(
-        &self,
+    pub fn get_session_by_id(
+        &mut self,
         session_id: Uuid,
     ) -> Result<Option<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
         if let Some(redis_client) = &self.redis {
-            let mut conn = redis_client.get_multiplexed_async_connection().await?;
+            let mut conn = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+            })?;
             let cache_key = format!("session_by_id:{}", session_id);
-            let session_json: Option<String> = conn.get(&cache_key).await?;
+            let session_json: Option<String> = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(conn.get(&cache_key))
+            })?;
             if let Some(json) = session_json {
                 if let Ok(session) = serde_json::from_str::<UserSession>(&json) {
                     return Ok(Some(session));
@@ -237,72 +262,69 @@ impl SessionManager {
             }
         }
 
-        let session = sqlx::query_as::<_, UserSession>("SELECT * FROM user_sessions WHERE id = $1")
-            .bind(session_id)
-            .fetch_optional(&self.pool)
-            .await?;
+        use crate::shared::models::user_sessions::dsl::*;
+        
+        let session = user_sessions
+            .filter(id.eq(session_id))
+            .first::<UserSession>(&mut self.conn)
+            .optional()?;
 
         if let Some(ref session) = session {
             if let Some(redis_client) = &self.redis {
-                let mut conn = redis_client.get_multiplexed_async_connection().await?;
+                let mut conn = tokio::task::block_in_place(|| {
+                    tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+                })?;
                 let cache_key = format!("session_by_id:{}", session_id);
                 let session_json = serde_json::to_string(session)?;
-                let _: () = conn.set_ex(cache_key, session_json, 1800).await?;
+                let _: () = tokio::task::block_in_place(|| {
+                    tokio::runtime::Handle::current().block_on(conn.set_ex(cache_key, session_json, 1800))
+                })?;
             }
         }
 
         Ok(session)
     }
 
-    pub async fn cleanup_old_sessions(
-        &self,
+    pub fn cleanup_old_sessions(
+        &mut self,
         days_old: i32,
     ) -> Result<u64, Box<dyn std::error::Error + Send + Sync>> {
-        let result = sqlx::query(
-            "DELETE FROM user_sessions
-             WHERE updated_at < NOW() - INTERVAL '1 day' * $1",
-        )
-        .bind(days_old)
-        .execute(&self.pool)
-        .await?;
-        Ok(result.rows_affected())
+        use crate::shared::models::user_sessions::dsl::*;
+        
+        let cutoff = chrono::Utc::now() - chrono::Duration::days(days_old as i64);
+        let result = diesel::delete(user_sessions.filter(updated_at.lt(cutoff)))
+            .execute(&mut self.conn)?;
+        Ok(result as u64)
     }
 
-    pub async fn set_current_tool(
-        &self,
+    pub fn set_current_tool(
+        &mut self,
         user_id: &str,
         bot_id: &str,
         tool_name: Option<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use crate::shared::models::user_sessions::dsl::*;
+        
         let user_uuid = Uuid::parse_str(user_id)?;
         let bot_uuid = Uuid::parse_str(bot_id)?;
 
-        sqlx::query(
-            "UPDATE user_sessions
-                 SET current_tool = $1, updated_at = NOW()
-                 WHERE user_id = $2 AND bot_id = $3",
-        )
-        .bind(tool_name)
-        .bind(user_uuid)
-        .bind(bot_uuid)
-        .execute(&self.pool)
-        .await?;
+        diesel::update(user_sessions.filter(user_id.eq(user_uuid)).filter(bot_id.eq(bot_uuid)))
+            .set((
+                current_tool.eq(tool_name),
+                updated_at.eq(diesel::dsl::now),
+            ))
+            .execute(&mut self.conn)?;
 
         if let Some(redis_client) = &self.redis {
-            let mut conn = redis_client.get_multiplexed_async_connection().await?;
+            let mut conn = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(redis_client.get_multiplexed_async_connection())
+            })?;
             let cache_key = format!("session:{}:{}", user_uuid, bot_uuid);
-            let _: () = conn.del(cache_key).await?;
+            let _: () = tokio::task::block_in_place(|| {
+                tokio::runtime::Handle::current().block_on(conn.del(cache_key))
+            })?;
         }
 
         Ok(())
-    }
-}
-
-impl Clone for SessionManager {
-    fn clone(&self) -> Self {
-        Self {
-            pool: self.pool.clone(),
-            redis: self.redis.clone(),
-        }
     }
 }
