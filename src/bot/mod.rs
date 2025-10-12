@@ -76,7 +76,7 @@ impl BotOrchestrator {
         &self,
         user_id: &str,
         bot_id: &str,
-        mode: &str,
+        mode: i32,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let mut session_manager = self.session_manager.lock().await;
         session_manager.update_answer_mode(user_id, bot_id, mode)?;
@@ -130,7 +130,7 @@ impl BotOrchestrator {
             }
         }
 
-        if session.answer_mode == "tool" && session.current_tool.is_some() {
+        if session.answer_mode == 1 && session.current_tool.is_some() {
             self.tool_manager.provide_user_response(
                 &message.user_id,
                 &message.bot_id,
@@ -226,7 +226,7 @@ impl BotOrchestrator {
         };
 
         // If the session is awaiting tool input, forward the user's answer to the tool manager.
-        if session.answer_mode == "tool" && session.current_tool.is_some() {
+        if session.answer_mode == 1 && session.current_tool.is_some() {
             self.tool_manager.provide_user_response(
                 &message.user_id,
                 &message.bot_id,
@@ -666,11 +666,13 @@ async fn set_mode_handler(
 ) -> Result<HttpResponse> {
     let default_user = "default_user".to_string();
     let default_bot = "default_bot".to_string();
-    let default_mode = "direct".to_string();
+    let default_mode = "0".to_string();
 
     let user_id = info.get("user_id").unwrap_or(&default_user);
     let bot_id = info.get("bot_id").unwrap_or(&default_bot);
-    let mode = info.get("mode").unwrap_or(&default_mode);
+    let mode_str = info.get("mode").unwrap_or(&default_mode);
+
+    let mode = mode_str.parse::<i32>().unwrap_or(0);
 
     if let Err(e) = data
         .orchestrator

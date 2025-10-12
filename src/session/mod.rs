@@ -115,7 +115,7 @@ impl SessionManager {
                 bot_id.eq(bid),
                 title.eq(session_title),
                 context_data.eq(serde_json::json!({})),
-                answer_mode.eq("direct"),
+                answer_mode.eq(0),
                 current_tool.eq(None::<String>),
                 created_at.eq(now),
                 updated_at.eq(now),
@@ -191,7 +191,7 @@ impl SessionManager {
         &mut self,
         uid: &str,
         bid: &str,
-        mode: &str,
+        mode: i32,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         use crate::shared::models::user_sessions::dsl::*;
 

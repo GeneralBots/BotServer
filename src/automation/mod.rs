@@ -208,7 +208,7 @@ impl AutomationService {
             user_id: Uuid::new_v4(),
             bot_id: Uuid::new_v4(),
             title: "Automation".to_string(),
-            answer_mode: "direct".to_string(),
+            answer_mode: 0,
             current_tool: None,
             context_data: serde_json::Value::Null,
             created_at: Utc::now(),

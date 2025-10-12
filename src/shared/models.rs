@@ -11,6 +11,17 @@ pub struct Organization {
     pub slug: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
+#[derive(Debug, Clone, Queryable, Serialize, Deserialize)]
+#[diesel(table_name = users)]
+pub struct User {
+    pub id: Uuid,
+    pub username: String,
+    pub email: String,
+    pub password_hash: String,
+    pub is_active: bool,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub updated_at: chrono::DateTime<chrono::Utc>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 #[diesel(table_name = bots)]
@@ -70,7 +81,7 @@ pub struct UserSession {
     pub bot_id: Uuid,
     pub title: String,
     pub context_data: serde_json::Value,
-    pub answer_mode: String,
+    pub answer_mode: i32,
     pub current_tool: Option<String>,
     pub created_at: chrono::DateTime<Utc>,
     pub updated_at: chrono::DateTime<Utc>,
@@ -165,7 +176,7 @@ diesel::table! {
         bot_id -> Uuid,
         title -> Text,
         context_data -> Jsonb,
-        answer_mode -> Text,
+        answer_mode -> Int4,
         current_tool -> Nullable<Text>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,

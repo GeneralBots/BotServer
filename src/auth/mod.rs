@@ -2,11 +2,13 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 use redis::Client;
 use std::sync::Arc;
 use uuid::Uuid;
+
+use crate::shared;
 
 pub struct AuthService {
     pub conn: PgConnection,
@@ -24,7 +26,7 @@ impl AuthService {
         password: &str,
     ) -> Result<Option<Uuid>, Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::users;
-        
+
         let user = users::table
             .filter(users::username.eq(username))
             .filter(users::is_active.eq(true))
@@ -54,15 +56,16 @@ impl AuthService {
     ) -> Result<Uuid, Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::users;
         use diesel::insert_into;
-        
+
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
-        let password_hash = argon2.hash_password(password.as_bytes(), &salt)
+        let password_hash = argon2
+            .hash_password(password.as_bytes(), &salt)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
             .to_string();
 
         let user_id = Uuid::new_v4();
-        
+
         insert_into(users::table)
             .values((
                 users::id.eq(user_id),
@@ -95,10 +98,11 @@ impl AuthService {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::users;
         use diesel::update;
-        
+
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
-        let password_hash = argon2.hash_password(new_password.as_bytes(), &salt)
+        let password_hash = argon2
+            .hash_password(new_password.as_bytes(), &salt)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?
             .to_string();
 
@@ -121,5 +125,19 @@ impl AuthService {
         }
 
         Ok(())
+    }
+    pub(crate) fn get_user_by_id(
+        &mut self,
+        uid: Uuid,
+    ) -> Result<Option<shared::models::User>, Box<dyn std::error::Error + Send + Sync>> {
+        use crate::shared::models::users;
+
+        let user = users::table
+            .filter(users::id.eq(uid))
+            .filter(users::is_active.eq(true))
+            .first::<shared::models::User>(&mut self.conn)
+            .optional()?;
+
+        Ok(user)
     }
 }
