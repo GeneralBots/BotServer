@@ -1,10 +1,11 @@
-use crate::shared::models::UserSession;
 use crate::shared::state::AppState;
+use crate::{channels::ChannelAdapter, shared::models::UserSession};
 use log::info;
 use rhai::{Dynamic, Engine, EvalAltResult};
 
-pub fn hear_keyword(_state: &AppState, user: UserSession, engine: &mut Engine) {
+pub fn hear_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
     let session_id = user.id;
+    let cache = state.redis_client.clone();
 
     engine
         .register_custom_syntax(&["HEAR", "$ident$"], true, move |_context, inputs| {
@@ -18,19 +19,35 @@ pub fn hear_keyword(_state: &AppState, user: UserSession, engine: &mut Engine) {
                 variable_name
             );
 
-            // Spawn a background task to handle the input‑waiting logic.
-            // The actual waiting implementation should be added here.
+            let cache_clone = cache.clone();
+            let session_id_clone = session_id;
+            let var_name_clone = variable_name.clone();
+
             tokio::spawn(async move {
                 log::debug!(
                     "HEAR: Starting async task for session {} and variable '{}'",
-                    session_id,
-                    variable_name
+                    session_id_clone,
+                    var_name_clone
                 );
-                // TODO: implement actual waiting logic here without using the orchestrator
-                // For now, just log that we would wait for input
+
+                if let Some(cache_client) = &cache_clone {
+                    let mut conn = match cache_client.get_multiplexed_async_connection().await {
+                        Ok(conn) => conn,
+                        Err(e) => {
+                            log::error!("Failed to connect to cache: {}", e);
+                            return;
+                        }
+                    };
+
+                    let key = format!("hear:{}:{}", session_id_clone, var_name_clone);
+                    let _: Result<(), _> = redis::cmd("SET")
+                        .arg(&key)
+                        .arg("waiting")
+                        .query_async(&mut conn)
+                        .await;
+                }
             });
 
-            // Interrupt the current Rhai evaluation flow until the user input is received.
             Err(Box::new(EvalAltResult::ErrorRuntime(
                 "Waiting for user input".into(),
                 rhai::Position::NONE,
@@ -40,7 +57,6 @@ pub fn hear_keyword(_state: &AppState, user: UserSession, engine: &mut Engine) {
 }
 
 pub fn talk_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
-    // Import the BotResponse type directly to satisfy diagnostics.
     use crate::shared::models::BotResponse;
 
     let state_clone = state.clone();
@@ -63,13 +79,11 @@ pub fn talk_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
                 is_complete: true,
             };
 
-            // Send response through a channel or queue instead of accessing orchestrator directly
-            let _state_for_spawn = state_clone.clone();
+            let state_for_spawn = state_clone.clone();
             tokio::spawn(async move {
-                // Use a more thread-safe approach to send the message
-                // This avoids capturing the orchestrator directly which isn't Send + Sync
-                // TODO: Implement proper response handling once response_sender field is added to AppState
-                log::debug!("TALK: Would send response: {:?}", response);
+                if let Err(e) = state_for_spawn.web_adapter.send_message(response).await {
+                    log::error!("Failed to send TALK message: {}", e);
+                }
             });
 
             Ok(Dynamic::UNIT)
@@ -78,7 +92,7 @@ pub fn talk_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
 }
 
 pub fn set_context_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
-    let state_clone = state.clone();
+    let cache = state.redis_client.clone();
 
     engine
         .register_custom_syntax(
@@ -91,14 +105,14 @@ pub fn set_context_keyword(state: &AppState, user: UserSession, engine: &mut Eng
 
                 let redis_key = format!("context:{}:{}", user.user_id, user.id);
 
-                let state_for_redis = state_clone.clone();
+                let cache_clone = cache.clone();
 
                 tokio::spawn(async move {
-                    if let Some(redis_client) = &state_for_redis.redis_client {
-                        let mut conn = match redis_client.get_multiplexed_async_connection().await {
+                    if let Some(cache_client) = &cache_clone {
+                        let mut conn = match cache_client.get_multiplexed_async_connection().await {
                             Ok(conn) => conn,
                             Err(e) => {
-                                log::error!("Failed to connect to Redis: {}", e);
+                                log::error!("Failed to connect to cache: {}", e);
                                 return;
                             }
                         };

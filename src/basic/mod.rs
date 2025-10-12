@@ -1,7 +1,10 @@
-pub mod keywords;
+use crate::shared::models::UserSession;
+use crate::shared::state::AppState;
+use log::info;
+use rhai::{Dynamic, Engine, EvalAltResult};
+use std::sync::Arc;
 
-#[cfg(feature = "email")]
-use self::keywords::create_draft_keyword;
+pub mod keywords;
 
 use self::keywords::create_site::create_site_keyword;
 use self::keywords::find::find_keyword;
@@ -17,43 +20,54 @@ use self::keywords::print::print_keyword;
 use self::keywords::set::set_keyword;
 use self::keywords::set_schedule::set_schedule_keyword;
 use self::keywords::wait::wait_keyword;
-use crate::shared::models::UserSession;
-use crate::shared::state::AppState;
-use log::info;
-use rhai::{Dynamic, Engine, EvalAltResult};
+
+#[cfg(feature = "email")]
+use self::keywords::create_draft_keyword;
+
+#[cfg(feature = "web_automation")]
+use self::keywords::get_website::get_website_keyword;
 
 pub struct ScriptService {
     engine: Engine,
+    state: Arc<AppState>,
+    user: UserSession,
 }
 
 impl ScriptService {
-    pub fn new(state: &AppState, user: UserSession) -> Self {
+    pub fn new(state: Arc<AppState>, user: UserSession) -> Self {
         let mut engine = Engine::new();
 
         engine.set_allow_anonymous_fn(true);
         engine.set_allow_looping(true);
 
         #[cfg(feature = "email")]
-        create_draft_keyword(state, user.clone(), &mut engine);
+        create_draft_keyword(&state, user.clone(), &mut engine);
 
-        create_site_keyword(state, user.clone(), &mut engine);
-        find_keyword(state, user.clone(), &mut engine);
-        for_keyword(state, user.clone(), &mut engine);
+        create_site_keyword(&state, user.clone(), &mut engine);
+        find_keyword(&state, user.clone(), &mut engine);
+        for_keyword(&state, user.clone(), &mut engine);
         first_keyword(&mut engine);
         last_keyword(&mut engine);
         format_keyword(&mut engine);
-        llm_keyword(state, user.clone(), &mut engine);
-        get_keyword(state, user.clone(), &mut engine);
-        set_keyword(state, user.clone(), &mut engine);
-        wait_keyword(state, user.clone(), &mut engine);
-        print_keyword(state, user.clone(), &mut engine);
-        on_keyword(state, user.clone(), &mut engine);
-        set_schedule_keyword(state, user.clone(), &mut engine);
-        hear_keyword(state, user.clone(), &mut engine);
-        talk_keyword(state, user.clone(), &mut engine);
-        set_context_keyword(state, user.clone(), &mut engine);
+        llm_keyword(&state, user.clone(), &mut engine);
+        get_keyword(&state, user.clone(), &mut engine);
+        set_keyword(&state, user.clone(), &mut engine);
+        wait_keyword(&state, user.clone(), &mut engine);
+        print_keyword(&state, user.clone(), &mut engine);
+        on_keyword(&state, user.clone(), &mut engine);
+        set_schedule_keyword(&state, user.clone(), &mut engine);
+        hear_keyword(&state, user.clone(), &mut engine);
+        talk_keyword(&state, user.clone(), &mut engine);
+        set_context_keyword(&state, user.clone(), &mut engine);
 
-        ScriptService { engine }
+        #[cfg(feature = "web_automation")]
+        get_website_keyword(&state, user.clone(), &mut engine);
+
+        ScriptService {
+            engine,
+            state,
+            user,
+        }
     }
 
     fn preprocess_basic_script(&self, script: &str) -> String {

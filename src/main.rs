@@ -5,6 +5,7 @@ use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
 use dotenvy::dotenv;
 use log::info;
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 mod auth;
@@ -105,7 +106,7 @@ async fn main() -> std::io::Result<()> {
     };
 
     let tool_manager = Arc::new(tools::ToolManager::new());
-    let llm_provider = Arc::new(llm::OpenAIClient::new(
+    let llm_provider = Arc::new(crate::llm::OpenAIClient::new(
         "empty".to_string(),
         Some("http://localhost:8081".to_string()),
     ));
@@ -125,69 +126,40 @@ async fn main() -> std::io::Result<()> {
 
     let tool_api = Arc::new(tools::ToolApi::new());
 
-    let base_app_state = AppState {
+    let session_manager = Arc::new(tokio::sync::Mutex::new(session::SessionManager::new(
+        diesel::Connection::establish(&cfg.database_url()).unwrap(),
+        redis_client.clone(),
+    )));
+
+    let auth_service = Arc::new(tokio::sync::Mutex::new(auth::AuthService::new(
+        diesel::Connection::establish(&cfg.database_url()).unwrap(),
+        redis_client.clone(),
+    )));
+
+    let app_state = Arc::new(AppState {
         s3_client: None,
         config: Some(cfg.clone()),
         conn: db_pool.clone(),
         custom_conn: db_custom_pool.clone(),
         redis_client: redis_client.clone(),
-        orchestrator: Arc::new(bot::BotOrchestrator::new(
-            session::SessionManager::new(
-                diesel::Connection::establish(&cfg.database_url()).unwrap(),
-                redis_client.clone(),
-            ),
-            (*tool_manager).clone(),
-            llm_provider.clone(),
-            auth::AuthService::new(
-                diesel::Connection::establish(&cfg.database_url()).unwrap(),
-                redis_client.clone(),
-            ),
-        )),
-        web_adapter,
-        voice_adapter,
-        whatsapp_adapter,
-        tool_api,
-    };
+        session_manager: session_manager.clone(),
+        tool_manager: tool_manager.clone(),
+        llm_provider: llm_provider.clone(),
+        auth_service: auth_service.clone(),
+        channels: Arc::new(Mutex::new(HashMap::new())),
+        response_channels: Arc::new(tokio::sync::Mutex::new(HashMap::new())),
+        web_adapter: web_adapter.clone(),
+        voice_adapter: voice_adapter.clone(),
+        whatsapp_adapter: whatsapp_adapter.clone(),
+        tool_api: tool_api.clone(),
+    });
 
     info!(
         "Starting server on {}:{}",
         config.server.host, config.server.port
     );
 
-    let closure_config = config.clone();
-
     HttpServer::new(move || {
-        let cfg = closure_config.clone();
-
-        let auth_service = auth::AuthService::new(
-            diesel::Connection::establish(&cfg.database_url()).unwrap(),
-            redis_client.clone(),
-        );
-        let session_manager = session::SessionManager::new(
-            diesel::Connection::establish(&cfg.database_url()).unwrap(),
-            redis_client.clone(),
-        );
-
-        let orchestrator = Arc::new(bot::BotOrchestrator::new(
-            session_manager,
-            (*tool_manager).clone(),
-            llm_provider.clone(),
-            auth_service,
-        ));
-
-        let app_state = AppState {
-            s3_client: base_app_state.s3_client.clone(),
-            config: base_app_state.config.clone(),
-            conn: base_app_state.conn.clone(),
-            custom_conn: base_app_state.custom_conn.clone(),
-            redis_client: base_app_state.redis_client.clone(),
-            orchestrator,
-            web_adapter: base_app_state.web_adapter.clone(),
-            voice_adapter: base_app_state.voice_adapter.clone(),
-            whatsapp_adapter: base_app_state.whatsapp_adapter.clone(),
-            tool_api: base_app_state.tool_api.clone(),
-        };
-
         let cors = Cors::default()
             .allow_any_origin()
             .allow_any_method()
@@ -200,7 +172,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .wrap(Logger::default())
             .wrap(Logger::new("HTTP REQUEST: %a %{User-Agent}i"))
-            .app_data(web::Data::new(app_state_clone));
+            .app_data(web::Data::from(app_state_clone));
 
         app = app
             .service(upload_file)

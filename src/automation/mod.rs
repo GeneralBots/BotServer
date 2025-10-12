@@ -10,12 +10,12 @@ use tokio::time::Duration;
 use uuid::Uuid;
 
 pub struct AutomationService {
-    state: AppState,
+    state: Arc<AppState>,
     scripts_dir: String,
 }
 
 impl AutomationService {
-    pub fn new(state: AppState, scripts_dir: &str) -> Self {
+    pub fn new(state: Arc<AppState>, scripts_dir: &str) -> Self {
         Self {
             state,
             scripts_dir: scripts_dir.to_string(),
@@ -61,13 +61,11 @@ impl AutomationService {
 
     async fn check_table_changes(&self, automations: &[Automation], since: DateTime<Utc>) {
         for automation in automations {
-            // Resolve the trigger kind, disambiguating the `from_i32` call.
             let trigger_kind = match crate::shared::models::TriggerKind::from_i32(automation.kind) {
                 Some(k) => k,
                 None => continue,
             };
 
-            // We're only interested in table‑change triggers.
             if !matches!(
                 trigger_kind,
                 TriggerKind::TableUpdate | TriggerKind::TableInsert | TriggerKind::TableDelete
@@ -75,50 +73,41 @@ impl AutomationService {
                 continue;
             }
 
-            // Table name must be present.
             let table = match &automation.target {
                 Some(t) => t,
                 None => continue,
             };
 
-            // Choose the appropriate timestamp column.
             let column = match trigger_kind {
                 TriggerKind::TableInsert => "created_at",
                 _ => "updated_at",
             };
 
-            // Build a simple COUNT(*) query; alias the column so Diesel can map it directly to i64.
             let query = format!(
                 "SELECT COUNT(*) as count FROM {} WHERE {} > $1",
                 table, column
             );
 
-            // Acquire a connection for this query.
             let mut conn_guard = self.state.conn.lock().unwrap();
             let conn = &mut *conn_guard;
 
-            // Define a struct to capture the query result
             #[derive(diesel::QueryableByName)]
             struct CountResult {
                 #[diesel(sql_type = diesel::sql_types::BigInt)]
                 count: i64,
             }
 
-            // Execute the query, retrieving a plain i64 count.
             let count_result = diesel::sql_query(&query)
                 .bind::<diesel::sql_types::Timestamp, _>(since.naive_utc())
                 .get_result::<CountResult>(conn);
 
             match count_result {
                 Ok(result) if result.count > 0 => {
-                    // Release the lock before awaiting asynchronous work.
                     drop(conn_guard);
                     self.execute_action(&automation.param).await;
                     self.update_last_triggered(automation.id).await;
                 }
-                Ok(_result) => {
-                    // No relevant rows changed; continue to the next automation.
-                }
+                Ok(_result) => {}
                 Err(e) => {
                     error!("Error checking changes for table '{}': {}", table, e);
                 }
@@ -215,7 +204,7 @@ impl AutomationService {
             updated_at: Utc::now(),
         };
 
-        let script_service = ScriptService::new(&self.state, user_session);
+        let script_service = ScriptService::new(Arc::clone(&self.state), user_session);
         let ast = match script_service.compile(&script_content) {
             Ok(ast) => ast,
             Err(e) => {

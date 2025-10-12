@@ -6,40 +6,20 @@ use serde_json;
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::mpsc;
 use uuid::Uuid;
 
-use crate::auth::AuthService;
 use crate::channels::ChannelAdapter;
-use crate::llm::LLMProvider;
-use crate::session::SessionManager;
 use crate::shared::models::{BotResponse, UserMessage, UserSession};
-use crate::tools::ToolManager;
+use crate::shared::state::AppState;
 
 pub struct BotOrchestrator {
-    pub session_manager: Arc<Mutex<SessionManager>>,
-    tool_manager: Arc<ToolManager>,
-    llm_provider: Arc<dyn LLMProvider>,
-    auth_service: Arc<Mutex<AuthService>>,
-    pub channels: HashMap<String, Arc<dyn ChannelAdapter>>,
-    response_channels: Arc<Mutex<HashMap<String, mpsc::Sender<BotResponse>>>>,
+    pub state: Arc<AppState>,
 }
 
 impl BotOrchestrator {
-    pub fn new(
-        session_manager: SessionManager,
-        tool_manager: ToolManager,
-        llm_provider: Arc<dyn LLMProvider>,
-        auth_service: AuthService,
-    ) -> Self {
-        Self {
-            session_manager: Arc::new(Mutex::new(session_manager)),
-            tool_manager: Arc::new(tool_manager),
-            llm_provider,
-            auth_service: Arc::new(Mutex::new(auth_service)),
-            channels: HashMap::new(),
-            response_channels: Arc::new(Mutex::new(HashMap::new())),
-        }
+    pub fn new(state: Arc<AppState>) -> Self {
+        Self { state }
     }
 
     pub async fn handle_user_input(
@@ -47,18 +27,22 @@ impl BotOrchestrator {
         session_id: Uuid,
         user_input: &str,
     ) -> Result<Option<String>, Box<dyn std::error::Error + Send + Sync>> {
-        let mut session_manager = self.session_manager.lock().await;
+        let mut session_manager = self.state.session_manager.lock().await;
         session_manager.provide_input(session_id, user_input.to_string())?;
         Ok(None)
     }
 
     pub async fn is_waiting_for_input(&self, session_id: Uuid) -> bool {
-        let session_manager = self.session_manager.lock().await;
+        let session_manager = self.state.session_manager.lock().await;
         session_manager.is_waiting_for_input(&session_id)
     }
 
-    pub fn add_channel(&mut self, channel_type: &str, adapter: Arc<dyn ChannelAdapter>) {
-        self.channels.insert(channel_type.to_string(), adapter);
+    pub fn add_channel(&self, channel_type: &str, adapter: Arc<dyn ChannelAdapter>) {
+        self.state
+            .channels
+            .lock()
+            .unwrap()
+            .insert(channel_type.to_string(), adapter);
     }
 
     pub async fn register_response_channel(
@@ -66,7 +50,8 @@ impl BotOrchestrator {
         session_id: String,
         sender: mpsc::Sender<BotResponse>,
     ) {
-        self.response_channels
+        self.state
+            .response_channels
             .lock()
             .await
             .insert(session_id, sender);
@@ -78,7 +63,7 @@ impl BotOrchestrator {
         bot_id: &str,
         mode: i32,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let mut session_manager = self.session_manager.lock().await;
+        let mut session_manager = self.state.session_manager.lock().await;
         session_manager.update_answer_mode(user_id, bot_id, mode)?;
         Ok(())
     }
@@ -97,10 +82,15 @@ impl BotOrchestrator {
             .unwrap_or_else(|_| Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap());
 
         let session = {
-            let mut session_manager = self.session_manager.lock().await;
+            let mut session_manager = self.state.session_manager.lock().await;
             match session_manager.get_user_session(user_id, bot_id)? {
                 Some(session) => session,
-                None => session_manager.create_session(user_id, bot_id, "New Conversation")?,
+                None => {
+                    let new_session =
+                        session_manager.create_session(user_id, bot_id, "New Conversation")?;
+                    Self::run_start_script(&new_session, Arc::clone(&self.state)).await;
+                    new_session
+                }
             }
         };
 
@@ -113,7 +103,7 @@ impl BotOrchestrator {
                     variable_name, session.id
                 );
 
-                if let Some(adapter) = self.channels.get(&message.channel) {
+                if let Some(adapter) = self.state.channels.lock().unwrap().get(&message.channel) {
                     let ack_response = BotResponse {
                         bot_id: message.bot_id.clone(),
                         user_id: message.user_id.clone(),
@@ -131,7 +121,7 @@ impl BotOrchestrator {
         }
 
         if session.answer_mode == 1 && session.current_tool.is_some() {
-            self.tool_manager.provide_user_response(
+            self.state.tool_manager.provide_user_response(
                 &message.user_id,
                 &message.bot_id,
                 message.content.clone(),
@@ -140,7 +130,7 @@ impl BotOrchestrator {
         }
 
         {
-            let mut session_manager = self.session_manager.lock().await;
+            let mut session_manager = self.state.session_manager.lock().await;
             session_manager.save_message(
                 session.id,
                 user_id,
@@ -153,7 +143,7 @@ impl BotOrchestrator {
         let response_content = self.direct_mode_handler(&message, &session).await?;
 
         {
-            let mut session_manager = self.session_manager.lock().await;
+            let mut session_manager = self.state.session_manager.lock().await;
             session_manager.save_message(session.id, user_id, 2, &response_content, 1)?;
         }
 
@@ -168,7 +158,7 @@ impl BotOrchestrator {
             is_complete: true,
         };
 
-        if let Some(adapter) = self.channels.get(&message.channel) {
+        if let Some(adapter) = self.state.channels.lock().unwrap().get(&message.channel) {
             adapter.send_message(bot_response).await?;
         }
 
@@ -180,21 +170,19 @@ impl BotOrchestrator {
         message: &UserMessage,
         session: &UserSession,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        // Retrieve conversation history while holding a mutable lock on the session manager.
         let history = {
-            let mut session_manager = self.session_manager.lock().await;
+            let mut session_manager = self.state.session_manager.lock().await;
             session_manager.get_conversation_history(session.id, session.user_id)?
         };
 
-        // Build the prompt from the conversation history.
         let mut prompt = String::new();
         for (role, content) in history {
             prompt.push_str(&format!("{}: {}\n", role, content));
         }
         prompt.push_str(&format!("User: {}\nAssistant:", message.content));
 
-        // Generate the assistant's response using the LLM provider.
-        self.llm_provider
+        self.state
+            .llm_provider
             .generate(&prompt, &serde_json::Value::Null)
             .await
     }
@@ -206,31 +194,31 @@ impl BotOrchestrator {
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         info!("Streaming response for user: {}", message.user_id);
 
-        // Parse identifiers, falling back to safe defaults.
         let mut user_id = Uuid::parse_str(&message.user_id).unwrap_or_else(|_| Uuid::new_v4());
         let bot_id = Uuid::parse_str(&message.bot_id).unwrap_or_else(|_| Uuid::nil());
-        let mut auth = self.auth_service.lock().await;
+        let mut auth = self.state.auth_service.lock().await;
         let user_exists = auth.get_user_by_id(user_id)?;
 
         if user_exists.is_none() {
-            // User does not exist, invoke Authentication service to create them
             user_id = auth.create_user("anonymous1", "anonymous@local", "password")?;
         } else {
             user_id = user_exists.unwrap().id;
         }
 
-        // Retrieve an existing session or create a new one.
         let session = {
-            let mut sm = self.session_manager.lock().await;
+            let mut sm = self.state.session_manager.lock().await;
             match sm.get_user_session(user_id, bot_id)? {
                 Some(sess) => sess,
-                None => sm.create_session(user_id, bot_id, "New Conversation")?,
+                None => {
+                    let new_session = sm.create_session(user_id, bot_id, "New Conversation")?;
+                    Self::run_start_script(&new_session, Arc::clone(&self.state)).await;
+                    new_session
+                }
             }
         };
 
-        // If the session is awaiting tool input, forward the user's answer to the tool manager.
         if session.answer_mode == 1 && session.current_tool.is_some() {
-            self.tool_manager.provide_user_response(
+            self.state.tool_manager.provide_user_response(
                 &message.user_id,
                 &message.bot_id,
                 message.content.clone(),
@@ -238,9 +226,8 @@ impl BotOrchestrator {
             return Ok(());
         }
 
-        // Persist the incoming user message.
         {
-            let mut sm = self.session_manager.lock().await;
+            let mut sm = self.state.session_manager.lock().await;
             sm.save_message(
                 session.id,
                 user_id,
@@ -250,9 +237,8 @@ impl BotOrchestrator {
             )?;
         }
 
-        // Build the prompt from the conversation history.
         let prompt = {
-            let mut sm = self.session_manager.lock().await;
+            let mut sm = self.state.session_manager.lock().await;
             let history = sm.get_conversation_history(session.id, user_id)?;
             let mut p = String::new();
             for (role, content) in history {
@@ -262,11 +248,9 @@ impl BotOrchestrator {
             p
         };
 
-        // Set up a channel for the streaming LLM output.
         let (stream_tx, mut stream_rx) = mpsc::channel::<String>(100);
-        let llm = self.llm_provider.clone();
+        let llm = self.state.llm_provider.clone();
 
-        // Spawn the LLM streaming task.
         tokio::spawn(async move {
             if let Err(e) = llm
                 .generate_stream(&prompt, &serde_json::Value::Null, stream_tx)
@@ -276,7 +260,6 @@ impl BotOrchestrator {
             }
         });
 
-        // Forward each chunk to the client as it arrives.
         let mut full_response = String::new();
         while let Some(chunk) = stream_rx.recv().await {
             full_response.push_str(&chunk);
@@ -293,18 +276,15 @@ impl BotOrchestrator {
             };
 
             if response_tx.send(partial).await.is_err() {
-                // Receiver has been dropped; stop streaming.
                 break;
             }
         }
 
-        // Save the complete assistant reply.
         {
-            let mut sm = self.session_manager.lock().await;
+            let mut sm = self.state.session_manager.lock().await;
             sm.save_message(session.id, user_id, 2, &full_response, 1)?;
         }
 
-        // Notify the client that the stream is finished.
         let final_msg = BotResponse {
             bot_id: message.bot_id,
             user_id: message.user_id,
@@ -324,7 +304,7 @@ impl BotOrchestrator {
         &self,
         user_id: Uuid,
     ) -> Result<Vec<UserSession>, Box<dyn std::error::Error + Send + Sync>> {
-        let mut session_manager = self.session_manager.lock().await;
+        let mut session_manager = self.state.session_manager.lock().await;
         session_manager.get_user_sessions(user_id)
     }
 
@@ -333,7 +313,7 @@ impl BotOrchestrator {
         session_id: Uuid,
         user_id: Uuid,
     ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error + Send + Sync>> {
-        let mut session_manager = self.session_manager.lock().await;
+        let mut session_manager = self.state.session_manager.lock().await;
         session_manager.get_conversation_history(session_id, user_id)
     }
 
@@ -351,15 +331,20 @@ impl BotOrchestrator {
             .unwrap_or_else(|_| Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap());
 
         let session = {
-            let mut session_manager = self.session_manager.lock().await;
+            let mut session_manager = self.state.session_manager.lock().await;
             match session_manager.get_user_session(user_id, bot_id)? {
                 Some(session) => session,
-                None => session_manager.create_session(user_id, bot_id, "New Conversation")?,
+                None => {
+                    let new_session =
+                        session_manager.create_session(user_id, bot_id, "New Conversation")?;
+                    Self::run_start_script(&new_session, Arc::clone(&self.state)).await;
+                    new_session
+                }
             }
         };
 
         {
-            let mut session_manager = self.session_manager.lock().await;
+            let mut session_manager = self.state.session_manager.lock().await;
             session_manager.save_message(
                 session.id,
                 user_id,
@@ -370,17 +355,24 @@ impl BotOrchestrator {
         }
 
         let is_tool_waiting = self
+            .state
             .tool_manager
             .is_tool_waiting(&message.session_id)
             .await
             .unwrap_or(false);
 
         if is_tool_waiting {
-            self.tool_manager
+            self.state
+                .tool_manager
                 .provide_input(&message.session_id, &message.content)
                 .await?;
 
-            if let Ok(tool_output) = self.tool_manager.get_tool_output(&message.session_id).await {
+            if let Ok(tool_output) = self
+                .state
+                .tool_manager
+                .get_tool_output(&message.session_id)
+                .await
+            {
                 for output in tool_output {
                     let bot_response = BotResponse {
                         bot_id: message.bot_id.clone(),
@@ -393,7 +385,8 @@ impl BotOrchestrator {
                         is_complete: true,
                     };
 
-                    if let Some(adapter) = self.channels.get(&message.channel) {
+                    if let Some(adapter) = self.state.channels.lock().unwrap().get(&message.channel)
+                    {
                         adapter.send_message(bot_response).await?;
                     }
                 }
@@ -406,12 +399,13 @@ impl BotOrchestrator {
             || message.content.to_lowercase().contains("math")
         {
             match self
+                .state
                 .tool_manager
                 .execute_tool("calculator", &message.session_id, &message.user_id)
                 .await
             {
                 Ok(tool_result) => {
-                    let mut session_manager = self.session_manager.lock().await;
+                    let mut session_manager = self.state.session_manager.lock().await;
                     session_manager.save_message(session.id, user_id, 2, &tool_result.output, 2)?;
 
                     tool_result.output
@@ -421,7 +415,7 @@ impl BotOrchestrator {
                 }
             }
         } else {
-            let available_tools = self.tool_manager.list_tools();
+            let available_tools = self.state.tool_manager.list_tools();
             let tools_context = if !available_tools.is_empty() {
                 format!("\n\nAvailable tools: {}. If the user needs calculations, suggest using the calculator tool.", available_tools.join(", "))
             } else {
@@ -430,13 +424,14 @@ impl BotOrchestrator {
 
             let full_prompt = format!("{}{}", message.content, tools_context);
 
-            self.llm_provider
+            self.state
+                .llm_provider
                 .generate(&full_prompt, &serde_json::Value::Null)
                 .await?
         };
 
         {
-            let mut session_manager = self.session_manager.lock().await;
+            let mut session_manager = self.state.session_manager.lock().await;
             session_manager.save_message(session.id, user_id, 2, &response, 1)?;
         }
 
@@ -451,11 +446,48 @@ impl BotOrchestrator {
             is_complete: true,
         };
 
-        if let Some(adapter) = self.channels.get(&message.channel) {
+        if let Some(adapter) = self.state.channels.lock().unwrap().get(&message.channel) {
             adapter.send_message(bot_response).await?;
         }
 
         Ok(())
+    }
+
+    async fn run_start_script(session: &UserSession, state: Arc<AppState>) {
+        let start_script = r#"
+TALK "Welcome to General Bots!"
+HEAR name
+TALK "Hello, " + name
+
+text = GET "default.pdf"
+SET CONTEXT text
+
+resume = LLM "Build a resume from " + text
+"#;
+
+        info!("Running start.bas for session: {}", session.id);
+
+        let session_clone = session.clone();
+        let state_clone = state.clone();
+        tokio::spawn(async move {
+            let state_for_run = state_clone.clone();
+            if let Err(e) = crate::basic::ScriptService::new(state_clone, session_clone.clone())
+                .compile(start_script)
+                .and_then(|ast| {
+                    crate::basic::ScriptService::new(state_for_run, session_clone.clone()).run(&ast)
+                })
+            {
+                log::error!("Failed to run start.bas: {}", e);
+            }
+        });
+    }
+}
+
+impl Default for BotOrchestrator {
+    fn default() -> Self {
+        Self {
+            state: Arc::new(AppState::default()),
+        }
     }
 }
 
@@ -463,13 +495,14 @@ impl BotOrchestrator {
 async fn websocket_handler(
     req: HttpRequest,
     stream: web::Payload,
-    data: web::Data<crate::shared::state::AppState>,
+    data: web::Data<AppState>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let (res, mut session, mut msg_stream) = actix_ws::handle(&req, stream)?;
     let session_id = Uuid::new_v4().to_string();
     let (tx, mut rx) = mpsc::channel::<BotResponse>(100);
 
-    data.orchestrator
+    let orchestrator = BotOrchestrator::new(Arc::clone(&data));
+    orchestrator
         .register_response_channel(session_id.clone(), tx.clone())
         .await;
     data.web_adapter
@@ -479,7 +512,6 @@ async fn websocket_handler(
         .add_connection(session_id.clone(), tx.clone())
         .await;
 
-    let orchestrator = data.orchestrator.clone();
     let web_adapter = data.web_adapter.clone();
 
     actix_web::rt::spawn(async move {
@@ -523,7 +555,7 @@ async fn websocket_handler(
 
 #[actix_web::get("/api/whatsapp/webhook")]
 async fn whatsapp_webhook_verify(
-    data: web::Data<crate::shared::state::AppState>,
+    data: web::Data<AppState>,
     web::Query(params): web::Query<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
     let empty = String::new();
@@ -539,7 +571,7 @@ async fn whatsapp_webhook_verify(
 
 #[actix_web::post("/api/whatsapp/webhook")]
 async fn whatsapp_webhook(
-    data: web::Data<crate::shared::state::AppState>,
+    data: web::Data<AppState>,
     payload: web::Json<crate::whatsapp::WhatsAppMessage>,
 ) -> Result<HttpResponse> {
     match data
@@ -549,7 +581,8 @@ async fn whatsapp_webhook(
     {
         Ok(user_messages) => {
             for user_message in user_messages {
-                if let Err(e) = data.orchestrator.process_message(user_message).await {
+                let orchestrator = BotOrchestrator::new(Arc::clone(&data));
+                if let Err(e) = orchestrator.process_message(user_message).await {
                     log::error!("Error processing WhatsApp message: {}", e);
                 }
             }
@@ -564,7 +597,7 @@ async fn whatsapp_webhook(
 
 #[actix_web::post("/api/voice/start")]
 async fn voice_start(
-    data: web::Data<crate::shared::state::AppState>,
+    data: web::Data<AppState>,
     info: web::Json<serde_json::Value>,
 ) -> Result<HttpResponse> {
     let session_id = info
@@ -593,7 +626,7 @@ async fn voice_start(
 
 #[actix_web::post("/api/voice/stop")]
 async fn voice_stop(
-    data: web::Data<crate::shared::state::AppState>,
+    data: web::Data<AppState>,
     info: web::Json<serde_json::Value>,
 ) -> Result<HttpResponse> {
     let session_id = info
@@ -611,7 +644,7 @@ async fn voice_stop(
 }
 
 #[actix_web::post("/api/sessions")]
-async fn create_session(_data: web::Data<crate::shared::state::AppState>) -> Result<HttpResponse> {
+async fn create_session(_data: web::Data<AppState>) -> Result<HttpResponse> {
     let session_id = Uuid::new_v4();
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "session_id": session_id,
@@ -621,9 +654,10 @@ async fn create_session(_data: web::Data<crate::shared::state::AppState>) -> Res
 }
 
 #[actix_web::get("/api/sessions")]
-async fn get_sessions(data: web::Data<crate::shared::state::AppState>) -> Result<HttpResponse> {
+async fn get_sessions(data: web::Data<AppState>) -> Result<HttpResponse> {
     let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
-    match data.orchestrator.get_user_sessions(user_id).await {
+    let orchestrator = BotOrchestrator::new(Arc::clone(&data));
+    match orchestrator.get_user_sessions(user_id).await {
         Ok(sessions) => Ok(HttpResponse::Ok().json(sessions)),
         Err(e) => {
             Ok(HttpResponse::InternalServerError()
@@ -634,22 +668,24 @@ async fn get_sessions(data: web::Data<crate::shared::state::AppState>) -> Result
 
 #[actix_web::get("/api/sessions/{session_id}")]
 async fn get_session_history(
-    data: web::Data<crate::shared::state::AppState>,
+    data: web::Data<AppState>,
     path: web::Path<String>,
 ) -> Result<HttpResponse> {
     let session_id = path.into_inner();
     let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
 
     match Uuid::parse_str(&session_id) {
-        Ok(session_uuid) => match data
-            .orchestrator
-            .get_conversation_history(session_uuid, user_id)
-            .await
-        {
-            Ok(history) => Ok(HttpResponse::Ok().json(history)),
-            Err(e) => Ok(HttpResponse::InternalServerError()
-                .json(serde_json::json!({"error": e.to_string()}))),
-        },
+        Ok(session_uuid) => {
+            let orchestrator = BotOrchestrator::new(Arc::clone(&data));
+            match orchestrator
+                .get_conversation_history(session_uuid, user_id)
+                .await
+            {
+                Ok(history) => Ok(HttpResponse::Ok().json(history)),
+                Err(e) => Ok(HttpResponse::InternalServerError()
+                    .json(serde_json::json!({"error": e.to_string()}))),
+            }
+        }
         Err(_) => {
             Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": "Invalid session ID"})))
         }
@@ -658,7 +694,7 @@ async fn get_session_history(
 
 #[actix_web::post("/api/set_mode")]
 async fn set_mode_handler(
-    data: web::Data<crate::shared::state::AppState>,
+    data: web::Data<AppState>,
     info: web::Json<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
     let default_user = "default_user".to_string();
@@ -671,8 +707,8 @@ async fn set_mode_handler(
 
     let mode = mode_str.parse::<i32>().unwrap_or(0);
 
-    if let Err(e) = data
-        .orchestrator
+    let orchestrator = BotOrchestrator::new(Arc::clone(&data));
+    if let Err(e) = orchestrator
         .set_user_answer_mode(user_id, bot_id, mode)
         .await
     {

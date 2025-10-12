@@ -1,11 +1,10 @@
 use crate::shared::models::UserSession;
 use crate::shared::state::AppState;
-use crate::shared::utils::call_llm;
 use log::info;
 use rhai::{Dynamic, Engine};
 
 pub fn llm_keyword(state: &AppState, _user: UserSession, engine: &mut Engine) {
-    let ai_config = state.config.clone().unwrap().ai.clone();
+    let state_clone = state.clone();
 
     engine
         .register_custom_syntax(&["LLM", "$expr$"], false, move |context, inputs| {
@@ -14,10 +13,18 @@ pub fn llm_keyword(state: &AppState, _user: UserSession, engine: &mut Engine) {
 
             info!("LLM processing text: {}", text_str);
 
-            let fut = call_llm(&text_str, &ai_config);
+            let state_inner = state_clone.clone();
+            let fut = async move {
+                let prompt = text_str;
+                state_inner
+                    .llm_provider
+                    .generate(&prompt, &serde_json::Value::Null)
+                    .await
+                    .map_err(|e| format!("LLM call failed: {}", e))
+            };
+
             let result =
-                tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(fut))
-                    .map_err(|e| format!("LLM call failed: {}", e))?;
+                tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(fut))?;
 
             Ok(Dynamic::from(result))
         })

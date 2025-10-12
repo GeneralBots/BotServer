@@ -1,59 +1,45 @@
-use log::info;
-use crate::shared::state::AppState;
 use crate::shared::models::UserSession;
+use crate::shared::state::AppState;
+use log::info;
 use reqwest::{self, Client};
 use rhai::{Dynamic, Engine};
 use std::error::Error;
 
-pub fn get_keyword(_state: &AppState, _user: UserSession, engine: &mut Engine) {
+pub fn get_keyword(state: &AppState, _user: UserSession, engine: &mut Engine) {
+    let state_clone = state.clone();
+
     engine
-        .register_custom_syntax(
-            &["GET", "$expr$"],
-            false,
-            move |context, inputs| {
-                let url = context.eval_expression_tree(&inputs[0])?;
-                let url_str = url.to_string();
+        .register_custom_syntax(&["GET", "$expr$"], false, move |context, inputs| {
+            let url = context.eval_expression_tree(&inputs[0])?;
+            let url_str = url.to_string();
 
-                if url_str.contains("..") {
-                    return Err("URL contains invalid path traversal sequences like '..'.".into());
-                }
+            if url_str.contains("..") {
+                return Err("URL contains invalid path traversal sequences like '..'.".into());
+            }
 
-                let modified_url = if url_str.starts_with("/") {
-                    let work_root = std::env::var("WORK_ROOT").unwrap_or_else(|_| "./work".to_string());
-                    let full_path = std::path::Path::new(&work_root)
-                        .join(url_str.trim_start_matches('/'))
-                        .to_string_lossy()
-                        .into_owned();
+            let state_for_async = state_clone.clone();
+            let url_for_async = url_str.clone();
 
-                    let base_url = "file://";
-                    format!("{}{}", base_url, full_path)
-                } else {
-                    url_str.to_string()
-                };
+            if url_str.starts_with("https://") {
+                info!("HTTPS GET request: {}", url_for_async);
 
-                if modified_url.starts_with("https://") {
-                    info!("HTTPS GET request: {}", modified_url);
+                let fut = execute_get(&url_for_async);
+                let result =
+                    tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(fut))
+                        .map_err(|e| format!("HTTP request failed: {}", e))?;
 
-                    let fut = execute_get(&modified_url);
-                    let result =
-                        tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(fut))
-                            .map_err(|e| format!("HTTP request failed: {}", e))?;
+                Ok(Dynamic::from(result))
+            } else {
+                info!("Local file GET request from bucket: {}", url_for_async);
 
-                    Ok(Dynamic::from(result))
-                } else if modified_url.starts_with("file://") {
-                    let file_path = modified_url.trim_start_matches("file://");
-                    match std::fs::read_to_string(file_path) {
-                        Ok(content) => Ok(Dynamic::from(content)),
-                        Err(e) => Err(format!("Failed to read file: {}", e).into()),
-                    }
-                } else {
-                    Err(
-                        format!("GET request failed: URL must begin with 'https://' or 'file://'")
-                            .into(),
-                    )
-                }
-            },
-        )
+                let fut = get_from_bucket(&state_for_async, &url_for_async);
+                let result =
+                    tokio::task::block_in_place(|| tokio::runtime::Handle::current().block_on(fut))
+                        .map_err(|e| format!("Bucket GET failed: {}", e))?;
+
+                Ok(Dynamic::from(result))
+            }
+        })
         .unwrap();
 }
 
@@ -68,4 +54,30 @@ pub async fn execute_get(url: &str) -> Result<String, Box<dyn Error + Send + Syn
     let content = response.text().await?;
 
     Ok(content)
+}
+
+pub async fn get_from_bucket(
+    state: &AppState,
+    file_path: &str,
+) -> Result<String, Box<dyn Error + Send + Sync>> {
+    info!("Getting file from bucket: {}", file_path);
+
+    if let Some(s3_client) = &state.s3_client {
+        let bucket_name =
+            std::env::var("DEFAULT_BUCKET").unwrap_or_else(|_| "default-bucket".to_string());
+
+        let response = s3_client
+            .get_object()
+            .bucket(&bucket_name)
+            .key(file_path)
+            .send()
+            .await?;
+
+        let data = response.body.collect().await?;
+        let content = String::from_utf8(data.into_bytes().to_vec())?;
+
+        Ok(content)
+    } else {
+        Err("S3 client not configured".into())
+    }
 }

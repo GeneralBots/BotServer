@@ -9,8 +9,8 @@ echo "Consolidated LLM Context" > "$OUTPUT_FILE"
 prompts=(
     "../../prompts/dev/shared.md"
     "../../Cargo.toml"
-    #"../../prompts/dev/fix.md"
-    "../../prompts/dev/generation.md"
+    "../../prompts/dev/fix.md"
+    #"../../prompts/dev/generation.md"
 )
 
 for file in "${prompts[@]}"; do
@@ -23,18 +23,18 @@ dirs=(
     #"automation"
     #"basic"
     "bot"
-    "channels"
+    #"channels"
     #"config"
-    "context"
+    #"context"
     #"email"
     #"file"
-    "llm"
+    #"llm"
     #"llm_legacy"
     #"org"
-    "session"
+    #"session"
     "shared"
     #"tests"
-    "tools"
+    #"tools"
     #"web_automation"
     #"whatsapp"
 )
@@ -47,10 +47,10 @@ done
 
 # Also append the specific files you mentioned
 cat "$PROJECT_ROOT/src/main.rs" >> "$OUTPUT_FILE"
-cat "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs" >> "$OUTPUT_FILE"
-
-echo "This BASIC file will run as soon as the conversation is created. " >> "$OUTPUT_FILE"
-cat "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/start.bas" >> "$OUTPUT_FILE"
+# cat "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs" >> "$OUTPUT_FILE"
+# cat "$PROJECT_ROOT/src/basic/keywords/get.rs" >> "$OUTPUT_FILE"
+cat "$PROJECT_ROOT/src/basic/keywords/llm_keyword.rs" >> "$OUTPUT_FILE"
+# cat "$PROJECT_ROOT/src/basic/mod.rs" >> "$OUTPUT_FILE"
 
 
 echo "" >> "$OUTPUT_FILE"
