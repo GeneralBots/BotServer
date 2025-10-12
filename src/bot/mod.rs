@@ -20,7 +20,7 @@ pub struct BotOrchestrator {
     pub session_manager: Arc<Mutex<SessionManager>>,
     tool_manager: Arc<ToolManager>,
     llm_provider: Arc<dyn LLMProvider>,
-    auth_service: AuthService,
+    auth_service: Arc<Mutex<AuthService>>,
     pub channels: HashMap<String, Arc<dyn ChannelAdapter>>,
     response_channels: Arc<Mutex<HashMap<String, mpsc::Sender<BotResponse>>>>,
 }
@@ -36,7 +36,7 @@ impl BotOrchestrator {
             session_manager: Arc::new(Mutex::new(session_manager)),
             tool_manager: Arc::new(tool_manager),
             llm_provider,
-            auth_service,
+            auth_service: Arc::new(Mutex::new(auth_service)),
             channels: HashMap::new(),
             response_channels: Arc::new(Mutex::new(HashMap::new())),
         }
@@ -215,6 +215,13 @@ impl BotOrchestrator {
         // Parse identifiers, falling back to safe defaults.
         let user_id = Uuid::parse_str(&message.user_id).unwrap_or_else(|_| Uuid::new_v4());
         let bot_id = Uuid::parse_str(&message.bot_id).unwrap_or_else(|_| Uuid::nil());
+        let mut auth = self.auth_service.lock().await;
+        let user_exists = auth.get_user_by_id(user_id)?;
+
+        if user_exists.is_none() {
+            // User does not exist, invoke Authentication service to create them
+            auth.create_user("anonymous", "anonymous@local", "password")?;
+        }
 
         // Retrieve an existing session or create a new one.
         let session = {
