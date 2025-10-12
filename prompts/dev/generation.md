@@ -1,5 +1,6 @@
 MORE RULES:
-- Return only the modified files as a single `.sh` script using `cat`, so the - code can be restored directly.
+- Return *only the modified* files as a single `.sh` script using `cat`, so the code can be restored directly.
+- NEVER return a untouched file in output. Just files that need to be updated.
 - You MUST return exactly this example format:
 ```sh
 #!/bin/bash

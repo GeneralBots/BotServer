@@ -1,3 +1,4 @@
+use chrono::Utc;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -61,7 +62,7 @@ pub struct Automation {
     pub last_triggered: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable)]
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable, Selectable)]
 #[diesel(table_name = user_sessions)]
 pub struct UserSession {
     pub id: Uuid,
@@ -71,8 +72,8 @@ pub struct UserSession {
     pub context_data: serde_json::Value,
     pub answer_mode: String,
     pub current_tool: Option<String>,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub created_at: chrono::DateTime<Utc>,
+    pub updated_at: chrono::DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

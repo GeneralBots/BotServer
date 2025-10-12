@@ -112,7 +112,6 @@ impl ToolManager {
                 ("b".to_string(), "number".to_string()),
             ]),
             script: r#"
-                // Calculator tool implementation
                 print("Calculator started");
             "#
             .to_string(),
@@ -163,7 +162,6 @@ impl ToolManager {
         input: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.provide_user_response(session_id, "default_bot", input.to_string())
-            .await
     }
 
     pub async fn get_tool_output(
@@ -173,18 +171,23 @@ impl ToolManager {
         Ok(vec![])
     }
 
-    pub async fn provide_user_response(
+    pub fn provide_user_response(
         &self,
         user_id: &str,
         bot_id: &str,
         response: String,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let key = format!("{}:{}", user_id, bot_id);
-        let mut waiting = self.waiting_responses.lock().await;
-        if let Some(tx) = waiting.get_mut(&key) {
-            let _ = tx.send(response).await;
-            waiting.remove(&key);
-        }
+        let waiting = self.waiting_responses.clone();
+
+        tokio::spawn(async move {
+            let mut waiting_lock = waiting.lock().await;
+            if let Some(tx) = waiting_lock.get_mut(&key) {
+                let _ = tx.send(response).await;
+                waiting_lock.remove(&key);
+            }
+        });
+
         Ok(())
     }
 }
