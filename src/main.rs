@@ -106,9 +106,12 @@ async fn main() -> std::io::Result<()> {
     };
 
     let tool_manager = Arc::new(tools::ToolManager::new());
+    let llama_url =
+        std::env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
+
     let llm_provider = Arc::new(crate::llm::OpenAIClient::new(
         "empty".to_string(),
-        Some("http://localhost:8081".to_string()),
+        Some(llama_url.clone()),
     ));
 
     let web_adapter = Arc::new(WebChannelAdapter::new());

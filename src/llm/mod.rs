@@ -101,7 +101,7 @@ impl LLMProvider for OpenAIClient {
         while let Some(chunk) = stream.next().await {
             let chunk = chunk?;
             let chunk_str = String::from_utf8_lossy(&chunk);
-            
+
             for line in chunk_str.lines() {
                 if line.starts_with("data: ") && !line.contains("[DONE]") {
                     if let Ok(data) = serde_json::from_str::<Value>(&line[6..]) {
@@ -209,7 +209,7 @@ impl LLMProvider for AnthropicClient {
         while let Some(chunk) = stream.next().await {
             let chunk = chunk?;
             let chunk_str = String::from_utf8_lossy(&chunk);
-            
+
             for line in chunk_str.lines() {
                 if line.starts_with("data: ") {
                     if let Ok(data) = serde_json::from_str::<Value>(&line[6..]) {
