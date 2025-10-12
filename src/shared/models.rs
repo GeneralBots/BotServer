@@ -188,7 +188,7 @@ diesel::table! {
         id -> Uuid,
         session_id -> Uuid,
         user_id -> Uuid,
-        role -> Text,
+        role -> Int4,
         content_encrypted -> Text,
         message_type -> Int4,
         message_index -> Int8,

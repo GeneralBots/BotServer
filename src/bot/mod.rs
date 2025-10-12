@@ -144,7 +144,7 @@ impl BotOrchestrator {
             session_manager.save_message(
                 session.id,
                 user_id,
-                "user",
+                1,
                 &message.content,
                 message.message_type,
             )?;
@@ -154,7 +154,7 @@ impl BotOrchestrator {
 
         {
             let mut session_manager = self.session_manager.lock().await;
-            session_manager.save_message(session.id, user_id, "assistant", &response_content, 1)?;
+            session_manager.save_message(session.id, user_id, 2, &response_content, 1)?;
         }
 
         let bot_response = BotResponse {
@@ -244,7 +244,7 @@ impl BotOrchestrator {
             sm.save_message(
                 session.id,
                 user_id,
-                "user",
+                1,
                 &message.content,
                 message.message_type,
             )?;
@@ -301,7 +301,7 @@ impl BotOrchestrator {
         // Save the complete assistant reply.
         {
             let mut sm = self.session_manager.lock().await;
-            sm.save_message(session.id, user_id, "assistant", &full_response, 1)?;
+            sm.save_message(session.id, user_id, 2, &full_response, 1)?;
         }
 
         // Notify the client that the stream is finished.
@@ -363,7 +363,7 @@ impl BotOrchestrator {
             session_manager.save_message(
                 session.id,
                 user_id,
-                "user",
+                1,
                 &message.content,
                 message.message_type,
             )?;
@@ -412,13 +412,7 @@ impl BotOrchestrator {
             {
                 Ok(tool_result) => {
                     let mut session_manager = self.session_manager.lock().await;
-                    session_manager.save_message(
-                        session.id,
-                        user_id,
-                        "assistant",
-                        &tool_result.output,
-                        2,
-                    )?;
+                    session_manager.save_message(session.id, user_id, 2, &tool_result.output, 2)?;
 
                     tool_result.output
                 }
@@ -443,7 +437,7 @@ impl BotOrchestrator {
 
         {
             let mut session_manager = self.session_manager.lock().await;
-            session_manager.save_message(session.id, user_id, "assistant", &response, 1)?;
+            session_manager.save_message(session.id, user_id, 2, &response, 1)?;
         }
 
         let bot_response = BotResponse {

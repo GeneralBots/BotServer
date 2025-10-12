@@ -130,7 +130,7 @@ impl SessionManager {
         &mut self,
         sess_id: Uuid,
         uid: Uuid,
-        _role_str: &str,
+        ro: i32,
         content: &str,
         msg_type: i32,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -146,7 +146,7 @@ impl SessionManager {
                 id.eq(Uuid::new_v4()),
                 session_id.eq(sess_id),
                 user_id.eq(uid),
-                //        role.eq(role_str),
+                role.eq(ro),
                 content_encrypted.eq(content),
                 message_type.eq(msg_type),
                 message_index.eq(next_index),
