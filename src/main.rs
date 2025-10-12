@@ -105,7 +105,10 @@ async fn main() -> std::io::Result<()> {
     };
 
     let tool_manager = Arc::new(tools::ToolManager::new());
-    let llm_provider = Arc::new(llm::MockLLMProvider::new());
+    let llm_provider = Arc::new(llm::OpenAIClient::new(
+        "empty".to_string(),
+        Some("http://localhost:8081".to_string()),
+    ));
 
     let web_adapter = Arc::new(WebChannelAdapter::new());
     let voice_adapter = Arc::new(VoiceAdapter::new(

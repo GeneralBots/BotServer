@@ -686,8 +686,7 @@ async fn set_mode_handler(
 
 #[actix_web::get("/")]
 async fn index() -> Result<HttpResponse> {
-    let html = fs::read_to_string("templates/index.html")
-        .unwrap_or_else(|_| include_str!("../../static/index.html").to_string());
+    let html = fs::read_to_string("web/index.html").unwrap();
     Ok(HttpResponse::Ok().content_type("text/html").body(html))
 }
 
