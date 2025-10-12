@@ -158,7 +158,7 @@ impl WhatsAppAdapter {
                                 session_id: session_id.clone(),
                                 channel: "whatsapp".to_string(),
                                 content: text.body,
-                                message_type: msg.r#type,
+                                message_type: 1,
                                 media_url: None,
                                 timestamp: chrono::Utc::now(),
                             };

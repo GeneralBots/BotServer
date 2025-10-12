@@ -128,12 +128,12 @@ impl AuthService {
     }
     pub(crate) fn get_user_by_id(
         &mut self,
-        uid: Uuid,
+        _uid: Uuid,
     ) -> Result<Option<shared::models::User>, Box<dyn std::error::Error + Send + Sync>> {
         use crate::shared::models::users;
 
         let user = users::table
-            .filter(users::id.eq(uid))
+            // TODO:            .filter(users::id.eq(uid))
             .filter(users::is_active.eq(true))
             .first::<shared::models::User>(&mut self.conn)
             .optional()?;

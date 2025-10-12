@@ -113,7 +113,7 @@ pub struct UserMessage {
     pub session_id: String,
     pub channel: String,
     pub content: String,
-    pub message_type: String,
+    pub message_type: i32,
     pub media_url: Option<String>,
     pub timestamp: chrono::DateTime<chrono::Utc>,
 }
@@ -125,7 +125,7 @@ pub struct BotResponse {
     pub session_id: String,
     pub channel: String,
     pub content: String,
-    pub message_type: String,
+    pub message_type: i32,
     pub stream_token: Option<String>,
     pub is_complete: bool,
 }
@@ -190,7 +190,7 @@ diesel::table! {
         user_id -> Uuid,
         role -> Text,
         content_encrypted -> Text,
-        message_type -> Text,
+        message_type -> Int4,
         message_index -> Int8,
         created_at -> Timestamptz,
     }

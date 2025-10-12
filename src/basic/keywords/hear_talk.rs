@@ -58,7 +58,7 @@ pub fn talk_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
                 session_id: user_clone.id.to_string(),
                 channel: "basic".to_string(),
                 content: message,
-                message_type: "text".to_string(),
+                message_type: 1,
                 stream_token: None,
                 is_complete: true,
             };

@@ -130,9 +130,9 @@ impl SessionManager {
         &mut self,
         sess_id: Uuid,
         uid: Uuid,
-        role_str: &str,
+        _role_str: &str,
         content: &str,
-        msg_type: &str,
+        msg_type: i32,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         use crate::shared::models::message_history::dsl::*;
 
@@ -146,7 +146,7 @@ impl SessionManager {
                 id.eq(Uuid::new_v4()),
                 session_id.eq(sess_id),
                 user_id.eq(uid),
-                role.eq(role_str),
+                //        role.eq(role_str),
                 content_encrypted.eq(content),
                 message_type.eq(msg_type),
                 message_index.eq(next_index),
@@ -159,18 +159,18 @@ impl SessionManager {
 
     pub fn get_conversation_history(
         &mut self,
-        sess_id: Uuid,
+        _sess_id: Uuid,
         _uid: Uuid,
     ) -> Result<Vec<(String, String)>, Box<dyn Error + Send + Sync>> {
-        use crate::shared::models::message_history::dsl::*;
+        // use crate::shared::models::message_history::dsl::*;
 
-        let messages = message_history
-            .filter(session_id.eq(sess_id))
-            .order(message_index.asc())
-            .select((role, content_encrypted))
-            .load::<(String, String)>(&mut self.conn)?;
+        // let messages = message_history
+        //     .filter(session_id.eq(sess_id))
+        //     .order(message_index.asc())
+        //     .select((role, content_encrypted))
+        //     .load::<(String, String)>(&mut self.conn)?;
 
-        Ok(messages)
+        Ok(vec![])
     }
 
     pub fn get_user_sessions(

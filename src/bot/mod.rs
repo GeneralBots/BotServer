@@ -120,7 +120,7 @@ impl BotOrchestrator {
                         session_id: message.session_id.clone(),
                         channel: message.channel.clone(),
                         content: format!("Input stored in '{}'", variable_name),
-                        message_type: "system".to_string(),
+                        message_type: 1,
                         stream_token: None,
                         is_complete: true,
                     };
@@ -146,7 +146,7 @@ impl BotOrchestrator {
                 user_id,
                 "user",
                 &message.content,
-                &message.message_type,
+                message.message_type,
             )?;
         }
 
@@ -154,13 +154,7 @@ impl BotOrchestrator {
 
         {
             let mut session_manager = self.session_manager.lock().await;
-            session_manager.save_message(
-                session.id,
-                user_id,
-                "assistant",
-                &response_content,
-                "text",
-            )?;
+            session_manager.save_message(session.id, user_id, "assistant", &response_content, 1)?;
         }
 
         let bot_response = BotResponse {
@@ -169,7 +163,7 @@ impl BotOrchestrator {
             session_id: message.session_id.clone(),
             channel: message.channel.clone(),
             content: response_content,
-            message_type: "text".to_string(),
+            message_type: 1,
             stream_token: None,
             is_complete: true,
         };
@@ -213,14 +207,16 @@ impl BotOrchestrator {
         info!("Streaming response for user: {}", message.user_id);
 
         // Parse identifiers, falling back to safe defaults.
-        let user_id = Uuid::parse_str(&message.user_id).unwrap_or_else(|_| Uuid::new_v4());
+        let mut user_id = Uuid::parse_str(&message.user_id).unwrap_or_else(|_| Uuid::new_v4());
         let bot_id = Uuid::parse_str(&message.bot_id).unwrap_or_else(|_| Uuid::nil());
         let mut auth = self.auth_service.lock().await;
         let user_exists = auth.get_user_by_id(user_id)?;
 
         if user_exists.is_none() {
             // User does not exist, invoke Authentication service to create them
-            auth.create_user("anonymous", "anonymous@local", "password")?;
+            user_id = auth.create_user("anonymous1", "anonymous@local", "password")?;
+        } else {
+            user_id = user_exists.unwrap().id;
         }
 
         // Retrieve an existing session or create a new one.
@@ -250,7 +246,7 @@ impl BotOrchestrator {
                 user_id,
                 "user",
                 &message.content,
-                &message.message_type,
+                message.message_type,
             )?;
         }
 
@@ -291,7 +287,7 @@ impl BotOrchestrator {
                 session_id: message.session_id.clone(),
                 channel: message.channel.clone(),
                 content: chunk,
-                message_type: "text".to_string(),
+                message_type: 1,
                 stream_token: None,
                 is_complete: false,
             };
@@ -305,7 +301,7 @@ impl BotOrchestrator {
         // Save the complete assistant reply.
         {
             let mut sm = self.session_manager.lock().await;
-            sm.save_message(session.id, user_id, "assistant", &full_response, "text")?;
+            sm.save_message(session.id, user_id, "assistant", &full_response, 1)?;
         }
 
         // Notify the client that the stream is finished.
@@ -315,7 +311,7 @@ impl BotOrchestrator {
             session_id: message.session_id,
             channel: message.channel,
             content: String::new(),
-            message_type: "text".to_string(),
+            message_type: 1,
             stream_token: None,
             is_complete: true,
         };
@@ -369,7 +365,7 @@ impl BotOrchestrator {
                 user_id,
                 "user",
                 &message.content,
-                &message.message_type,
+                message.message_type,
             )?;
         }
 
@@ -392,7 +388,7 @@ impl BotOrchestrator {
                         session_id: message.session_id.clone(),
                         channel: message.channel.clone(),
                         content: output,
-                        message_type: "text".to_string(),
+                        message_type: 1,
                         stream_token: None,
                         is_complete: true,
                     };
@@ -421,7 +417,7 @@ impl BotOrchestrator {
                         user_id,
                         "assistant",
                         &tool_result.output,
-                        "tool_start",
+                        2,
                     )?;
 
                     tool_result.output
@@ -447,7 +443,7 @@ impl BotOrchestrator {
 
         {
             let mut session_manager = self.session_manager.lock().await;
-            session_manager.save_message(session.id, user_id, "assistant", &response, "text")?;
+            session_manager.save_message(session.id, user_id, "assistant", &response, 1)?;
         }
 
         let bot_response = BotResponse {
@@ -456,7 +452,7 @@ impl BotOrchestrator {
             session_id: message.session_id.clone(),
             channel: message.channel.clone(),
             content: response,
-            message_type: "text".to_string(),
+            message_type: 1,
             stream_token: None,
             is_complete: true,
         };
@@ -510,7 +506,7 @@ async fn websocket_handler(
                         session_id: session_id.clone(),
                         channel: "web".to_string(),
                         content: text.to_string(),
-                        message_type: "text".to_string(),
+                        message_type: 1,
                         media_url: None,
                         timestamp: Utc::now(),
                     };
