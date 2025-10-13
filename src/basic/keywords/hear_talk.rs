@@ -119,7 +119,10 @@ pub fn talk_keyword(state: Arc<AppState>, user: UserSession, engine: &mut Engine
             Ok(Dynamic::UNIT)
         })
         .unwrap();
-
+}
+pub fn set_user_keyword(state: Arc<AppState>, user: UserSession, engine: &mut Engine) {
+    let state_clone = Arc::clone(&state);
+    let user_clone = user.clone();
     engine
         .register_custom_syntax(&["SET_USER", "$expr$"], true, move |context, inputs| {
             let user_id_str = context.eval_expression_tree(&inputs[0])?.to_string();
@@ -155,40 +158,39 @@ pub fn talk_keyword(state: Arc<AppState>, user: UserSession, engine: &mut Engine
             Ok(Dynamic::UNIT)
         })
         .unwrap();
+}
+pub fn set_context_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
+    let cache = state.redis_client.clone();
 
-    pub fn set_context_keyword(state: &AppState, user: UserSession, engine: &mut Engine) {
-        let cache = state.redis_client.clone();
+    engine
+        .register_custom_syntax(&["SET_CONTEXT", "$expr$"], true, move |context, inputs| {
+            let context_value = context.eval_expression_tree(&inputs[0])?.to_string();
 
-        engine
-            .register_custom_syntax(&["SET_CONTEXT", "$expr$"], true, move |context, inputs| {
-                let context_value = context.eval_expression_tree(&inputs[0])?.to_string();
+            info!("SET CONTEXT command executed: {}", context_value);
 
-                info!("SET CONTEXT command executed: {}", context_value);
+            let redis_key = format!("context:{}:{}", user.user_id, user.id);
 
-                let redis_key = format!("context:{}:{}", user.user_id, user.id);
+            let cache_clone = cache.clone();
 
-                let cache_clone = cache.clone();
+            tokio::spawn(async move {
+                if let Some(cache_client) = &cache_clone {
+                    let mut conn = match cache_client.get_multiplexed_async_connection().await {
+                        Ok(conn) => conn,
+                        Err(e) => {
+                            error!("Failed to connect to cache: {}", e);
+                            return;
+                        }
+                    };
 
-                tokio::spawn(async move {
-                    if let Some(cache_client) = &cache_clone {
-                        let mut conn = match cache_client.get_multiplexed_async_connection().await {
-                            Ok(conn) => conn,
-                            Err(e) => {
-                                error!("Failed to connect to cache: {}", e);
-                                return;
-                            }
-                        };
+                    let _: Result<(), _> = redis::cmd("SET")
+                        .arg(&redis_key)
+                        .arg(&context_value)
+                        .query_async(&mut conn)
+                        .await;
+                }
+            });
 
-                        let _: Result<(), _> = redis::cmd("SET")
-                            .arg(&redis_key)
-                            .arg(&context_value)
-                            .query_async(&mut conn)
-                            .await;
-                    }
-                });
-
-                Ok(Dynamic::UNIT)
-            })
-            .unwrap();
-    }
+            Ok(Dynamic::UNIT)
+        })
+        .unwrap();
 }

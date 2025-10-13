@@ -12,7 +12,9 @@ use self::keywords::first::first_keyword;
 use self::keywords::for_next::for_keyword;
 use self::keywords::format::format_keyword;
 use self::keywords::get::get_keyword;
-use self::keywords::hear_talk::{hear_keyword, set_context_keyword, talk_keyword};
+use self::keywords::hear_talk::{
+    hear_keyword, set_context_keyword, set_user_keyword, talk_keyword,
+};
 use self::keywords::last::last_keyword;
 use self::keywords::llm_keyword::llm_keyword;
 use self::keywords::on::on_keyword;
@@ -59,6 +61,7 @@ impl ScriptService {
         hear_keyword(state.clone(), user.clone(), &mut engine);
         talk_keyword(state.clone(), user.clone(), &mut engine);
         set_context_keyword(&state, user.clone(), &mut engine);
+        set_user_keyword(state.clone(), user.clone(), &mut engine);
 
         #[cfg(feature = "web_automation")]
         get_website_keyword(&state, user.clone(), &mut engine);
