@@ -9,7 +9,7 @@ echo "Consolidated LLM Context" > "$OUTPUT_FILE"
 prompts=(
     "../../prompts/dev/shared.md"
     "../../Cargo.toml"
-    #../../prompts/dev/fix.md"
+    #"../../prompts/dev/fix.md"
     "../../prompts/dev/generation.md"
 )
 
@@ -24,8 +24,8 @@ dirs=(
     #"basic"
     "bot"
     "channels"
-    #"config"
-    #"context"
+    "config"
+    "context"
     #"email"
     #"file"
     "llm"
@@ -47,11 +47,12 @@ for dir in "${dirs[@]}"; do
 done
 
 # Also append the specific files you mentioned
+echo "$PROJECT_ROOT/src/main.rs" >> "$OUTPUT_FILE"
 cat "$PROJECT_ROOT/src/main.rs" >> "$OUTPUT_FILE"
-# cat "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs" >> "$OUTPUT_FILE"
-# cat "$PROJECT_ROOT/src/basic/keywords/get.rs" >> "$OUTPUT_FILE"
-cat "$PROJECT_ROOT/src/basic/keywords/llm_keyword.rs" >> "$OUTPUT_FILE"
-# cat "$PROJECT_ROOT/src/basic/mod.rs" >> "$OUTPUT_FILE"
+
+cat "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs" >> "$OUTPUT_FILE"
+echo "$PROJECT_ROOT/src/basic/mod.rs">> "$OUTPUT_FILE"
+cat "$PROJECT_ROOT/src/basic/mod.rs" >> "$OUTPUT_FILE"
 
 
 echo "" >> "$OUTPUT_FILE"
