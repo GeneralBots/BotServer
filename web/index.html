@@ -8,6 +8,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <style>
             @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@400;600&display=swap");
 
@@ -350,6 +351,123 @@
                     opacity: 0.5;
                 }
             }
+
+            /* Markdown Styles */
+            .markdown-content {
+                line-height: 1.6;
+            }
+
+            .markdown-content h1,
+            .markdown-content h2,
+            .markdown-content h3,
+            .markdown-content h4,
+            .markdown-content h5,
+            .markdown-content h6 {
+                margin-top: 1.5em;
+                margin-bottom: 0.5em;
+                color: var(--dante-gold);
+                font-weight: 600;
+            }
+
+            .markdown-content h1 {
+                font-size: 1.8em;
+                border-bottom: 2px solid var(--dante-gold);
+                padding-bottom: 0.3em;
+            }
+
+            .markdown-content h2 {
+                font-size: 1.5em;
+            }
+
+            .markdown-content h3 {
+                font-size: 1.3em;
+            }
+
+            .markdown-content p {
+                margin-bottom: 1em;
+            }
+
+            .markdown-content ul,
+            .markdown-content ol {
+                margin-bottom: 1em;
+                padding-left: 2em;
+            }
+
+            .markdown-content li {
+                margin-bottom: 0.5em;
+            }
+
+            .markdown-content code {
+                background: rgba(255, 215, 0, 0.1);
+                color: var(--dante-gold2);
+                padding: 0.2em 0.4em;
+                border-radius: 3px;
+                font-family: "Courier New", monospace;
+                font-size: 0.9em;
+            }
+
+            .markdown-content pre {
+                background: rgba(0, 10, 31, 0.8);
+                border: 1px solid rgba(255, 215, 0, 0.3);
+                border-radius: 8px;
+                padding: 1em;
+                overflow-x: auto;
+                margin-bottom: 1em;
+            }
+
+            .markdown-content pre code {
+                background: none;
+                padding: 0;
+                color: #e0e0e0;
+            }
+
+            .markdown-content blockquote {
+                border-left: 4px solid var(--dante-gold);
+                padding-left: 1em;
+                margin-left: 0;
+                margin-bottom: 1em;
+                color: #ccc;
+                font-style: italic;
+            }
+
+            .markdown-content table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 1em;
+            }
+
+            .markdown-content th,
+            .markdown-content td {
+                border: 1px solid rgba(255, 215, 0, 0.3);
+                padding: 0.5em;
+                text-align: left;
+            }
+
+            .markdown-content th {
+                background: rgba(255, 215, 0, 0.1);
+                color: var(--dante-gold);
+                font-weight: 600;
+            }
+
+            .markdown-content a {
+                color: var(--dante-gold2);
+                text-decoration: none;
+                border-bottom: 1px dotted var(--dante-gold2);
+            }
+
+            .markdown-content a:hover {
+                border-bottom: 1px solid var(--dante-gold2);
+            }
+
+            .markdown-content strong {
+                color: var(--dante-gold2);
+                font-weight: 600;
+            }
+
+            .markdown-content em {
+                color: #ffed4e;
+                font-style: italic;
+            }
         </style>
     </head>
     <body class="relative overflow-hidden flex">
@@ -457,6 +575,16 @@
             const sendBtn = document.getElementById("sendBtn");
             const newChatBtn = document.getElementById("newChatBtn");
 
+            // Configure marked for markdown parsing
+            marked.setOptions({
+                highlight: function (code, lang) {
+                    // Simple syntax highlighting - you could integrate highlight.js here
+                    return `<pre><code class="language-${lang}">${code}</code></pre>`;
+                },
+                breaks: true,
+                gfm: true,
+            });
+
             // Initialize
             createNewSession();
 
@@ -487,6 +615,13 @@
                 if (isVoiceMode) {
                     await startVoiceSession();
                 }
+                await fetch("/api/start", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                    }),
+                });
             }
 
             function switchSession(sessionId) {
@@ -645,10 +780,16 @@
                 const msg = document.createElement("div");
                 msg.className = "mb-8";
 
+                // Parse markdown for assistant messages
+                const processedContent =
+                    role === "assistant" || role === "voice"
+                        ? marked.parse(content)
+                        : content;
+
                 if (role === "user") {
                     msg.innerHTML = `<div class="flex justify-end"><div class="glass neon-border rounded-2xl px-6 py-4 max-w-3xl text-lg text-yellow-100 font-semibold shadow-2xl">${content}</div></div>`;
                 } else if (role === "assistant") {
-                    msg.innerHTML = `<div class="flex justify-start"><div class="flex gap-4 max-w-3xl"><div class="w-12 h-12 rounded-xl neon-border flex items-center justify-center flex-shrink-0 shine shadow-2xl"><span class="text-2xl neon-text font-extrabold">D</span></div><div class="glass border-2 border-yellow-400/30 rounded-2xl px-6 py-4 flex-1 text-blue-50 font-medium text-lg shadow-2xl" id="${streaming ? msgId : ""}">${streaming ? "" : content}</div></div></div>`;
+                    msg.innerHTML = `<div class="flex justify-start"><div class="flex gap-4 max-w-3xl"><div class="w-12 h-12 rounded-xl neon-border flex items-center justify-center flex-shrink-0 shine shadow-2xl"><span class="text-2xl neon-text font-extrabold">D</span></div><div class="glass border-2 border-yellow-400/30 rounded-2xl px-6 py-4 flex-1 text-blue-50 font-medium text-lg shadow-2xl markdown-content" id="${streaming ? msgId : ""}">${streaming ? "" : processedContent}</div></div></div>`;
                 } else {
                     // Voice message
                     msg.innerHTML = `<div class="flex justify-start"><div class="flex gap-4 max-w-3xl"><div class="w-12 h-12 rounded-xl neon-border flex items-center justify-center flex-shrink-0 shine shadow-2xl"><span class="text-2xl neon-text font-extrabold">D</span></div><div class="glass border-2 border-green-400/30 rounded-2xl px-6 py-4 flex-1 text-green-100 font-medium text-lg shadow-2xl">${content}</div></div></div>`;
@@ -667,7 +808,10 @@
             function updateLastMessage(content) {
                 const m = document.getElementById(streamingMessageId);
                 if (m) {
-                    m.textContent += content;
+                    // Parse markdown incrementally during streaming
+                    const currentContent = m.textContent || m.innerText;
+                    const newContent = currentContent + content;
+                    m.innerHTML = marked.parse(newContent);
                     messagesDiv.scrollTop = messagesDiv.scrollHeight;
                 }
             }
@@ -895,6 +1039,34 @@
                         message: "Esta é uma mensagem de teste de aviso!",
                     }),
                 });
+            };
+
+            // Test markdown functionality
+            window.testMarkdown = function () {
+                const markdownContent = `# Título Principal
+
+## Subtítulo
+
+Este é um **texto em negrito** e este é um *texto em itálico*.
+
+### Lista de Itens:
+- Primeiro item
+- Segundo item
+- Terceiro item
+
+### Código:
+\`\`\`javascript
+function exemplo() {
+    console.log("Olá, mundo!");
+    return 42;
+}
+\`\`\`
+
+> Esta é uma citação importante sobre o assunto.
+
+[Link para documentação](https://exemplo.com)`;
+
+                addMessage("assistant", markdownContent);
             };
         </script>
     </body>

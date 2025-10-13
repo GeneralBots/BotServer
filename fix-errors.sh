@@ -1,16 +1,15 @@
 #!/bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR"
 OUTPUT_FILE="$SCRIPT_DIR/prompt.out"
 rm $OUTPUT_FILE
-echo "Consolidated LLM Context" > "$OUTPUT_FILE"
+echo "Please, fix this consolidated LLM Context" > "$OUTPUT_FILE"
 
 prompts=(
-    "../../prompts/dev/shared.md"
-    "../../Cargo.toml"
-    #"../../prompts/dev/fix.md"
-    "../../prompts/dev/generation.md"
+    "./prompts/dev/shared.md"
+    "./Cargo.toml"
+    "./prompts/dev/fix.md"
 )
 
 for file in "${prompts[@]}"; do
@@ -23,12 +22,12 @@ dirs=(
     #"automation"
     #"basic"
     "bot"
-    "channels"
-    "config"
-    "context"
+    #"channels"
+    #"config"
+    #"context"
     #"email"
     #"file"
-    "llm"
+    #"llm"
     #"llm_legacy"
     #"org"
     "session"
@@ -36,7 +35,7 @@ dirs=(
     #"tests"
     #"tools"
     #"web_automation"
-    "whatsapp"
+    #"whatsapp"
 )
 for dir in "${dirs[@]}"; do
     find "$PROJECT_ROOT/src/$dir" -name "*.rs" | while read file; do
@@ -57,4 +56,4 @@ cat "$PROJECT_ROOT/src/basic/mod.rs" >> "$OUTPUT_FILE"
 
 echo "" >> "$OUTPUT_FILE"
 
-# cargo build --message-format=short 2>&1 | grep -E 'error' >> "$OUTPUT_FILE"
+cargo build --message-format=short 2>&1 | grep -E 'error' >> "$OUTPUT_FILE"

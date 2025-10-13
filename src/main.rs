@@ -27,8 +27,9 @@ mod tools;
 mod whatsapp;
 
 use crate::bot::{
-    create_session, get_session_history, get_sessions, index, set_mode_handler, static_files,
-    voice_start, voice_stop, websocket_handler, whatsapp_webhook, whatsapp_webhook_verify,
+    create_session, get_session_history, get_sessions, index, set_mode_handler, start_session,
+    static_files, voice_start, voice_stop, websocket_handler, whatsapp_webhook,
+    whatsapp_webhook_verify,
 };
 use crate::channels::{VoiceAdapter, WebChannelAdapter};
 use crate::config::AppConfig;
@@ -188,6 +189,7 @@ async fn main() -> std::io::Result<()> {
             .service(voice_stop)
             .service(create_session)
             .service(get_sessions)
+            .service(start_session)
             .service(get_session_history)
             .service(set_mode_handler)
             .service(chat_completions_local)

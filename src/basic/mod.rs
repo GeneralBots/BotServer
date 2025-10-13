@@ -28,7 +28,7 @@ use self::keywords::create_draft_keyword;
 use self::keywords::get_website::get_website_keyword;
 
 pub struct ScriptService {
-    engine: Engine,
+    pub engine: Engine,
     state: Arc<AppState>,
     user: UserSession,
 }
@@ -56,8 +56,8 @@ impl ScriptService {
         print_keyword(&state, user.clone(), &mut engine);
         on_keyword(&state, user.clone(), &mut engine);
         set_schedule_keyword(&state, user.clone(), &mut engine);
-        hear_keyword(&state, user.clone(), &mut engine);
-        talk_keyword(&state, user.clone(), &mut engine);
+        hear_keyword(state.clone(), user.clone(), &mut engine);
+        talk_keyword(state.clone(), user.clone(), &mut engine);
         set_context_keyword(&state, user.clone(), &mut engine);
 
         #[cfg(feature = "web_automation")]
@@ -141,6 +141,7 @@ impl ScriptService {
                 "HEAR",
                 "TALK",
                 "SET CONTEXT",
+                "SET USER",
             ];
 
             let is_basic_command = basic_commands.iter().any(|&cmd| trimmed.starts_with(cmd));

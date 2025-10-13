@@ -125,6 +125,37 @@ impl BotOrchestrator {
         Ok(())
     }
 
+    pub async fn send_direct_message(
+        &self,
+        session_id: &str,
+        channel: &str,
+        content: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        debug!(
+            "Sending direct message to session {}: '{}'",
+            session_id, content
+        );
+
+        let bot_response = BotResponse {
+            bot_id: "default_bot".to_string(),
+            user_id: "default_user".to_string(),
+            session_id: session_id.to_string(),
+            channel: channel.to_string(),
+            content: content.to_string(),
+            message_type: 1,
+            stream_token: None,
+            is_complete: true,
+        };
+
+        if let Some(adapter) = self.state.channels.lock().unwrap().get(channel) {
+            adapter.send_message(bot_response).await?;
+            debug!("Direct message sent successfully");
+        } else {
+            warn!("No channel adapter found for channel: {}", channel);
+        }
+        Ok(())
+    }
+
     pub async fn process_message(
         &self,
         message: UserMessage,
@@ -143,28 +174,32 @@ impl BotOrchestrator {
             warn!("Invalid user ID provided, generated new UUID: {}", new_id);
             new_id
         });
-        let bot_id = Uuid::parse_str(&message.bot_id)
-            .unwrap_or_else(|_| Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap());
+
+        let bot_id = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
+            Uuid::parse_str(&bot_guid).unwrap_or_else(|_| {
+                warn!("Invalid BOT_GUID from env, using nil UUID");
+                Uuid::nil()
+            })
+        } else {
+            warn!("BOT_GUID not set in environment, using nil UUID");
+            Uuid::nil()
+        };
 
         debug!("Parsed user_id: {}, bot_id: {}", user_id, bot_id);
 
         let session = {
             let mut session_manager = self.state.session_manager.lock().await;
-            match session_manager.get_user_session(user_id, bot_id)? {
+            match session_manager.get_or_create_user_session(user_id, bot_id, "New Conversation")? {
                 Some(session) => {
                     debug!("Found existing session: {}", session.id);
                     session
                 }
                 None => {
-                    info!(
-                        "Creating new session for user {} with bot {}",
+                    error!(
+                        "Failed to create session for user {} with bot {}",
                         user_id, bot_id
                     );
-                    let new_session =
-                        session_manager.create_session(user_id, bot_id, "New Conversation")?;
-                    debug!("New session created: {}", new_session.id);
-                    Self::run_start_script(&new_session, Arc::clone(&self.state)).await;
-                    new_session
+                    return Err("Failed to create session".into());
                 }
             }
         };
@@ -296,43 +331,34 @@ impl BotOrchestrator {
         );
         debug!("Message content: '{}'", message.content);
 
-        let mut user_id = Uuid::parse_str(&message.user_id).unwrap_or_else(|_| {
+        let user_id = Uuid::parse_str(&message.user_id).unwrap_or_else(|_| {
             let new_id = Uuid::new_v4();
             warn!("Invalid user ID, generated new: {}", new_id);
             new_id
         });
-        let bot_id = Uuid::parse_str(&message.bot_id).unwrap_or_else(|_| {
-            warn!("Invalid bot ID, using nil UUID");
+
+        let bot_id = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
+            Uuid::parse_str(&bot_guid).unwrap_or_else(|_| {
+                warn!("Invalid BOT_GUID from env, using nil UUID");
+                Uuid::nil()
+            })
+        } else {
+            warn!("BOT_GUID not set in environment, using nil UUID");
             Uuid::nil()
-        });
+        };
 
         debug!("User ID: {}, Bot ID: {}", user_id, bot_id);
 
-        let mut auth = self.state.auth_service.lock().await;
-        let user_exists = auth.get_user_by_id(user_id)?;
-
-        if user_exists.is_none() {
-            debug!("User {} not found, creating anonymous user", user_id);
-            user_id = auth.create_user("anonymous1", "anonymous@local", "password")?;
-            info!("Created new anonymous user: {}", user_id);
-        } else {
-            user_id = user_exists.unwrap().id;
-            debug!("Found existing user: {}", user_id);
-        }
-
         let session = {
             let mut sm = self.state.session_manager.lock().await;
-            match sm.get_user_session(user_id, bot_id)? {
+            match sm.get_or_create_user_session(user_id, bot_id, "New Conversation")? {
                 Some(sess) => {
                     debug!("Using existing session: {}", sess.id);
                     sess
                 }
                 None => {
-                    info!("Creating new session for streaming");
-                    let new_session = sm.create_session(user_id, bot_id, "New Conversation")?;
-                    debug!("New session created: {}", new_session.id);
-                    Self::run_start_script(&new_session, Arc::clone(&self.state)).await;
-                    new_session
+                    error!("Failed to create session for streaming");
+                    return Err("Failed to create session".into());
                 }
             }
         };
@@ -557,23 +583,27 @@ impl BotOrchestrator {
             warn!("Invalid user ID, generated new: {}", new_id);
             new_id
         });
-        let bot_id = Uuid::parse_str(&message.bot_id)
-            .unwrap_or_else(|_| Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap());
+
+        let bot_id = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
+            Uuid::parse_str(&bot_guid).unwrap_or_else(|_| {
+                warn!("Invalid BOT_GUID from env, using nil UUID");
+                Uuid::nil()
+            })
+        } else {
+            warn!("BOT_GUID not set in environment, using nil UUID");
+            Uuid::nil()
+        };
 
         let session = {
             let mut session_manager = self.state.session_manager.lock().await;
-            match session_manager.get_user_session(user_id, bot_id)? {
+            match session_manager.get_or_create_user_session(user_id, bot_id, "New Conversation")? {
                 Some(session) => {
                     debug!("Found existing session: {}", session.id);
                     session
                 }
                 None => {
-                    info!("Creating new session for tools processing");
-                    let new_session =
-                        session_manager.create_session(user_id, bot_id, "New Conversation")?;
-                    debug!("New session created: {}", new_session.id);
-                    Self::run_start_script(&new_session, Arc::clone(&self.state)).await;
-                    new_session
+                    error!("Failed to create session for tools processing");
+                    return Err("Failed to create session".into());
                 }
             }
         };
@@ -705,10 +735,17 @@ impl BotOrchestrator {
         Ok(())
     }
 
-    async fn run_start_script(session: &UserSession, state: Arc<AppState>) {
-        info!("Running start script for session: {}", session.id);
-        
-        let start_script_path = "start.bas";
+    pub async fn run_start_script(
+        session: &UserSession,
+        state: Arc<AppState>,
+        token_id: Option<String>,
+    ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+        info!(
+            "Running start script for session: {} with token_id: {:?}",
+            session.id, token_id
+        );
+
+        let start_script_path = "./templates/annoucements.gbai/annoucements.gbdialog/start.bas";
         let start_script = match std::fs::read_to_string(start_script_path) {
             Ok(content) => {
                 debug!("Loaded start script from {}", start_script_path);
@@ -720,31 +757,39 @@ impl BotOrchestrator {
             }
         };
 
-        debug!("Start script content for session {}: {}", session.id, start_script);
+        debug!(
+            "Start script content for session {}: {}",
+            session.id, start_script
+        );
 
         let session_clone = session.clone();
         let state_clone = state.clone();
-        tokio::spawn(async move {
-            let state_for_run = state_clone.clone();
-            match crate::basic::ScriptService::new(state_clone, session_clone.clone())
-                .compile(&start_script)
-                .and_then(|ast| {
-                    crate::basic::ScriptService::new(state_for_run, session_clone.clone()).run(&ast)
-                }) {
-                Ok(_) => {
-                    info!(
-                        "Start script executed successfully for session {}",
-                        session_clone.id
-                    );
-                }
-                Err(e) => {
-                    error!(
-                        "Failed to run start script for session {}: {}",
-                        session_clone.id, e
-                    );
-                }
+
+        let script_service = crate::basic::ScriptService::new(state_clone, session_clone.clone());
+
+        if let Some(token_id_value) = token_id {
+            debug!("Token ID available for script: {}", token_id_value);
+        }
+
+        match script_service
+            .compile(&start_script)
+            .and_then(|ast| script_service.run(&ast))
+        {
+            Ok(result) => {
+                info!(
+                    "Start script executed successfully for session {}, result: {}",
+                    session_clone.id, result
+                );
+                Ok(true)
             }
-        });
+            Err(e) => {
+                error!(
+                    "Failed to run start script for session {}: {}",
+                    session_clone.id, e
+                );
+                Ok(false)
+            }
+        }
     }
 
     pub async fn send_warning(
@@ -795,6 +840,73 @@ impl BotOrchestrator {
             }
         }
     }
+
+    pub async fn trigger_auto_welcome(
+        &self,
+        session_id: &str,
+        user_id: &str,
+        _bot_id: &str,
+        token_id: Option<String>,
+    ) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+        info!(
+            "Triggering auto welcome for session: {} with token_id: {:?}",
+            session_id, token_id
+        );
+
+        let user_uuid = Uuid::parse_str(user_id).unwrap_or_else(|_| {
+            let new_id = Uuid::new_v4();
+            warn!("Invalid user ID, generated new: {}", new_id);
+            new_id
+        });
+
+        let bot_uuid = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
+            Uuid::parse_str(&bot_guid).unwrap_or_else(|_| {
+                warn!("Invalid BOT_GUID from env, using nil UUID");
+                Uuid::nil()
+            })
+        } else {
+            warn!("BOT_GUID not set in environment, using nil UUID");
+            Uuid::nil()
+        };
+
+        let session = {
+            let mut session_manager = self.state.session_manager.lock().await;
+            match session_manager.get_or_create_user_session(
+                user_uuid,
+                bot_uuid,
+                "New Conversation",
+            )? {
+                Some(session) => {
+                    debug!("Found existing session: {}", session.id);
+                    session
+                }
+                None => {
+                    error!("Failed to create session for auto welcome");
+                    return Ok(false);
+                }
+            }
+        };
+
+        let result = Self::run_start_script(&session, Arc::clone(&self.state), token_id).await?;
+
+        info!(
+            "Auto welcome completed for session: {} with result: {}",
+            session_id, result
+        );
+        Ok(result)
+    }
+
+    async fn get_web_response_channel(
+        &self,
+        session_id: &str,
+    ) -> Result<mpsc::Sender<BotResponse>, Box<dyn std::error::Error + Send + Sync>> {
+        let response_channels = self.state.response_channels.lock().await;
+        if let Some(tx) = response_channels.get(session_id) {
+            Ok(tx.clone())
+        } else {
+            Err("No response channel found for session".into())
+        }
+    }
 }
 
 impl Default for BotOrchestrator {
@@ -831,10 +943,12 @@ async fn websocket_handler(
         .add_connection(session_id.clone(), tx.clone())
         .await;
 
+    let bot_id = std::env::var("BOT_GUID").unwrap_or_else(|_| "default_bot".to_string());
+
     orchestrator
         .send_event(
             "default_user",
-            "default_bot",
+            &bot_id,
             &session_id,
             "web",
             "session_start",
@@ -845,6 +959,19 @@ async fn websocket_handler(
         )
         .await
         .ok();
+
+    let orchestrator_clone = BotOrchestrator::new(Arc::clone(&data));
+    let session_id_clone = session_id.clone();
+    tokio::spawn(async move {
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+        if let Err(e) = orchestrator_clone
+            .trigger_auto_welcome(&session_id_clone, "default_user", &bot_id, None)
+            .await
+        {
+            error!("Failed to trigger auto welcome: {}", e);
+        }
+    });
+
     let web_adapter = data.web_adapter.clone();
     let session_id_clone1 = session_id.clone();
     let session_id_clone2 = session_id.clone();
@@ -883,8 +1010,11 @@ async fn websocket_handler(
                     message_count += 1;
                     debug!("Received WebSocket message {}: {}", message_count, text);
 
+                    let bot_id =
+                        std::env::var("BOT_GUID").unwrap_or_else(|_| "default_bot".to_string());
+
                     let user_message = UserMessage {
-                        bot_id: "default_bot".to_string(),
+                        bot_id: bot_id,
                         user_id: "default_user".to_string(),
                         session_id: session_id_clone2.clone(),
                         channel: "web".to_string(),
@@ -903,10 +1033,14 @@ async fn websocket_handler(
                 }
                 WsMessage::Close(_) => {
                     info!("WebSocket close received for session {}", session_id_clone2);
+
+                    let bot_id =
+                        std::env::var("BOT_GUID").unwrap_or_else(|_| "default_bot".to_string());
+
                     orchestrator
                         .send_event(
                             "default_user",
-                            "default_bot",
+                            &bot_id,
                             &session_id_clone2,
                             "web",
                             "session_end",
@@ -1067,17 +1201,112 @@ async fn voice_stop(
     }
 }
 
+#[actix_web::post("/api/start")]
+async fn start_session(
+    data: web::Data<AppState>,
+    info: web::Json<serde_json::Value>,
+) -> Result<HttpResponse> {
+    let session_id = info
+        .get("session_id")
+        .and_then(|s| s.as_str())
+        .unwrap_or("");
+    let token_id = info
+        .get("token_id")
+        .and_then(|t| t.as_str())
+        .map(|s| s.to_string());
+
+    info!(
+        "Starting session: {} with token_id: {:?}",
+        session_id, token_id
+    );
+    let session_uuid = match Uuid::parse_str(session_id) {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            warn!("Invalid session ID format: {}", session_id);
+            return Ok(
+                HttpResponse::BadRequest().json(serde_json::json!({"error": "Invalid session ID"}))
+            );
+        }
+    };
+
+    let session = {
+        let mut session_manager = data.session_manager.lock().await;
+        match session_manager.get_session_by_id(session_uuid) {
+            Ok(Some(s)) => {
+                debug!("Found existing session: {}", session_uuid);
+                s
+            }
+            Ok(None) => {
+                warn!("Session not found: {}", session_uuid);
+                return Ok(HttpResponse::NotFound()
+                    .json(serde_json::json!({"error": "Session not found"})));
+            }
+            Err(e) => {
+                error!("Error retrieving session {}: {}", session_uuid, e);
+                return Ok(HttpResponse::InternalServerError()
+                    .json(serde_json::json!({"error": "Failed to retrieve session"})));
+            }
+        }
+    };
+
+    let result = BotOrchestrator::run_start_script(&session, Arc::clone(&data), token_id).await;
+
+    match result {
+        Ok(true) => {
+            info!(
+                "Start script completed successfully for session: {}",
+                session_id
+            );
+            Ok(HttpResponse::Ok().json(serde_json::json!({
+                "status": "started",
+                "session_id": session.id,
+                "result": "success"
+            })))
+        }
+        Ok(false) => {
+            warn!("Start script returned false for session: {}", session_id);
+            Ok(HttpResponse::Ok().json(serde_json::json!({
+                "status": "started",
+                "session_id": session.id,
+                "result": "failed"
+            })))
+        }
+        Err(e) => {
+            error!(
+                "Error running start script for session {}: {}",
+                session_id, e
+            );
+            Ok(HttpResponse::InternalServerError()
+                .json(serde_json::json!({"error": e.to_string()})))
+        }
+    }
+}
+
 #[actix_web::post("/api/sessions")]
 async fn create_session(data: web::Data<AppState>) -> Result<HttpResponse> {
     info!("Creating new session");
 
     let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
-    let bot_id = Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap();
+
+    let bot_id = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
+        Uuid::parse_str(&bot_guid).unwrap_or_else(|_| {
+            warn!("Invalid BOT_GUID from env, using nil UUID");
+            Uuid::nil()
+        })
+    } else {
+        warn!("BOT_GUID not set in environment, using nil UUID");
+        Uuid::nil()
+    };
 
     let session = {
         let mut session_manager = data.session_manager.lock().await;
-        match session_manager.create_session(user_id, bot_id, "New Conversation") {
-            Ok(s) => s,
+        match session_manager.get_or_create_user_session(user_id, bot_id, "New Conversation") {
+            Ok(Some(s)) => s,
+            Ok(None) => {
+                error!("Failed to create session");
+                return Ok(HttpResponse::InternalServerError()
+                    .json(serde_json::json!({"error": "Failed to create session"})));
+            }
             Err(e) => {
                 error!("Failed to create session: {}", e);
                 return Ok(HttpResponse::InternalServerError()

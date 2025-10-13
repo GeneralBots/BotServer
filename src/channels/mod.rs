@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use log::info;
+use log::{debug, info};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
@@ -31,6 +31,28 @@ impl WebChannelAdapter {
 
     pub async fn remove_connection(&self, session_id: &str) {
         self.connections.lock().await.remove(session_id);
+    }
+    pub async fn send_message_to_session(
+        &self,
+        session_id: &str,
+        message: BotResponse,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let connections = self.connections.lock().await;
+        if let Some(tx) = connections.get(session_id) {
+            if let Err(e) = tx.send(message).await {
+                log::error!(
+                    "Failed to send message to WebSocket session {}: {}",
+                    session_id,
+                    e
+                );
+                return Err(Box::new(e));
+            }
+            debug!("Message sent to WebSocket session: {}", session_id);
+            Ok(())
+        } else {
+            debug!("No WebSocket connection found for session: {}", session_id);
+            Err("No WebSocket connection found".into())
+        }
     }
 }
 
