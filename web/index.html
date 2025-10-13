@@ -7,7 +7,7 @@
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-        <script src="https://unpkg.com/livekit-client@latest/dist/livekit-client.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
         <style>
             @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@400;600&display=swap");
 
@@ -299,6 +299,57 @@
                 font-family: "Orbitron", monospace;
                 font-weight: 600;
             }
+
+            .thinking-indicator {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px 16px;
+                background: rgba(255, 215, 0, 0.1);
+                border: 1px solid rgba(255, 215, 0, 0.3);
+                border-radius: 12px;
+                margin: 10px auto;
+                max-width: 800px;
+                animation: neonPulse 2s infinite;
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            }
+
+            @keyframes neonPulse {
+                0%,
+                100% {
+                    box-shadow:
+                        0 0 5px rgba(255, 215, 0, 0.3),
+                        0 0 10px rgba(255, 215, 0, 0.2);
+                }
+                50% {
+                    box-shadow:
+                        0 0 10px rgba(255, 215, 0, 0.5),
+                        0 0 20px rgba(255, 215, 0, 0.3),
+                        0 0 30px rgba(255, 215, 0, 0.1);
+                }
+            }
+
+            .warning-message {
+                background: rgba(255, 69, 0, 0.2);
+                border: 1px solid rgba(255, 69, 0, 0.5);
+                color: #ff4500;
+                padding: 12px 16px;
+                border-radius: 12px;
+                margin: 10px auto;
+                max-width: 800px;
+                text-align: center;
+                animation: flash 0.5s ease 3;
+            }
+
+            @keyframes flash {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.5;
+                }
+            }
         </style>
     </head>
     <body class="relative overflow-hidden flex">
@@ -398,6 +449,8 @@
             let mediaRecorder = null;
             let audioChunks = [];
             let streamingMessageId = null;
+            let isThinking = false;
+            let thinkingIndicatorId = null;
 
             const messagesDiv = document.getElementById("messages");
             const input = document.getElementById("messageInput");
@@ -473,6 +526,14 @@
                 ws.onmessage = function (event) {
                     const response = JSON.parse(event.data);
 
+                    // Handle event messages (thinking_start, thinking_end, warn)
+                    if (response.message_type === 2) {
+                        const eventData = JSON.parse(response.content);
+                        handleEvent(eventData.event, eventData.data);
+                        return;
+                    }
+
+                    // Handle regular messages
                     if (!response.is_complete) {
                         if (!isStreaming) {
                             isStreaming = true;
@@ -495,6 +556,81 @@
                 ws.onopen = function () {
                     console.log("Connected to WebSocket");
                 };
+            }
+
+            function handleEvent(eventType, eventData) {
+                console.log("Event received:", eventType, eventData);
+
+                switch (eventType) {
+                    case "thinking_start":
+                        showThinkingIndicator();
+                        isThinking = true;
+                        break;
+
+                    case "thinking_end":
+                        hideThinkingIndicator();
+                        isThinking = false;
+                        break;
+
+                    case "warn":
+                        showWarning(eventData.message);
+                        break;
+
+                    default:
+                        console.log("Unknown event type:", eventType);
+                }
+            }
+
+            function showThinkingIndicator() {
+                if (isThinking) return;
+
+                const emptyState = document.getElementById("emptyState");
+                if (emptyState) emptyState.remove();
+
+                const thinkingDiv = document.createElement("div");
+                thinkingDiv.id = "thinking-indicator";
+                thinkingDiv.className = "thinking-indicator";
+                thinkingDiv.innerHTML = `
+                    <div class="typing-dots flex gap-2">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span class="text-yellow-300 font-semibold">Pensando...</span>
+                `;
+
+                messagesDiv.appendChild(thinkingDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                isThinking = true;
+                thinkingIndicatorId = thinkingDiv.id;
+            }
+
+            function hideThinkingIndicator() {
+                if (!isThinking) return;
+
+                const thinkingDiv =
+                    document.getElementById("thinking-indicator");
+                if (thinkingDiv) {
+                    thinkingDiv.remove();
+                }
+                isThinking = false;
+                thinkingIndicatorId = null;
+            }
+
+            function showWarning(message) {
+                const warningDiv = document.createElement("div");
+                warningDiv.className = "warning-message";
+                warningDiv.innerHTML = `⚠️ ${message}`;
+
+                messagesDiv.appendChild(warningDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+                // Remove warning after 5 seconds
+                setTimeout(() => {
+                    if (warningDiv.parentNode) {
+                        warningDiv.remove();
+                    }
+                }, 5000);
             }
 
             function addMessage(
@@ -539,6 +675,12 @@
             function sendMessage() {
                 const message = input.value.trim();
                 if (!message || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+                // Hide thinking indicator if it's showing
+                if (isThinking) {
+                    hideThinkingIndicator();
+                }
+
                 addMessage("user", message);
                 ws.send(message);
                 input.value = "";
@@ -733,12 +875,27 @@
             // Neon text animation
             gsap.to(".neon-text", {
                 textShadow:
-                    "0 0 25px var(--gb-glow),0 0 50px var(--gb-glow),0 0 100px rgba(255,215,0,0.8)",
+                    "0 0 25px var(--dante-glow),0 0 50px var(--dante-glow),0 0 100px rgba(255,215,0,0.8)",
                 repeat: -1,
                 yoyo: true,
                 duration: 1.8,
                 ease: "power1.inOut",
             });
+
+            // Test warning functionality
+            window.testWarning = function () {
+                fetch("/api/warn", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        session_id: currentSessionId || "default",
+                        channel: "web",
+                        message: "Esta é uma mensagem de teste de aviso!",
+                    }),
+                });
+            };
         </script>
     </body>
 </html>

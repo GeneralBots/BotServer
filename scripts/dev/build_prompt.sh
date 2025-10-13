@@ -9,8 +9,8 @@ echo "Consolidated LLM Context" > "$OUTPUT_FILE"
 prompts=(
     "../../prompts/dev/shared.md"
     "../../Cargo.toml"
-    "../../prompts/dev/fix.md"
-    #"../../prompts/dev/generation.md"
+    #../../prompts/dev/fix.md"
+    "../../prompts/dev/generation.md"
 )
 
 for file in "${prompts[@]}"; do
@@ -23,23 +23,24 @@ dirs=(
     #"automation"
     #"basic"
     "bot"
-    #"channels"
+    "channels"
     #"config"
     #"context"
     #"email"
     #"file"
-    #"llm"
+    "llm"
     #"llm_legacy"
     #"org"
-    #"session"
+    "session"
     "shared"
     #"tests"
     #"tools"
     #"web_automation"
-    #"whatsapp"
+    "whatsapp"
 )
 for dir in "${dirs[@]}"; do
     find "$PROJECT_ROOT/src/$dir" -name "*.rs" | while read file; do
+        echo $file >> "$OUTPUT_FILE"
         cat "$file" >> "$OUTPUT_FILE"
         echo "" >> "$OUTPUT_FILE"
     done
