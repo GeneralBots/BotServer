@@ -109,7 +109,7 @@ impl BotOrchestrator {
                 "event": event_type,
                 "data": data
             }))?,
-            message_type: 2, // Event message type
+            message_type: 2,
             stream_token: None,
             is_complete: true,
         };
@@ -331,6 +331,7 @@ impl BotOrchestrator {
                     info!("Creating new session for streaming");
                     let new_session = sm.create_session(user_id, bot_id, "New Conversation")?;
                     debug!("New session created: {}", new_session.id);
+                    Self::run_start_script(&new_session, Arc::clone(&self.state)).await;
                     new_session
                 }
             }
@@ -379,7 +380,6 @@ impl BotOrchestrator {
         let (stream_tx, mut stream_rx) = mpsc::channel::<String>(100);
         let llm = self.state.llm_provider.clone();
 
-        // Send thinking start event for web channels
         if message.channel == "web" {
             debug!("Sending thinking start event for web channel");
             self.send_event(
@@ -392,7 +392,6 @@ impl BotOrchestrator {
             )
             .await?;
         } else {
-            // For non-web channels, send a single thinking message
             debug!("Sending thinking message for non-web channel");
             let thinking_response = BotResponse {
                 bot_id: message.bot_id.clone(),
@@ -429,7 +428,6 @@ impl BotOrchestrator {
             chunk_count += 1;
             trace!("Received chunk {}: '{}'", chunk_count, chunk);
 
-            // Handle analysis tags - don't send analysis content to client
             analysis_buffer.push_str(&chunk);
 
             if analysis_buffer.contains("<|channel|>") {
@@ -438,17 +436,14 @@ impl BotOrchestrator {
             }
 
             if in_analysis {
-                // Check for end of analysis
                 if analysis_buffer.ends_with("final<|message|>") {
                     debug!(
                         "Analysis section completed, buffer length: {}",
                         analysis_buffer.len()
                     );
                     in_analysis = false;
-                    // Clear buffer if we're not in analysis
                     analysis_buffer.clear();
 
-                    // Send thinking end event for web channels
                     if message.channel == "web" {
                         let orchestrator = BotOrchestrator::new(Arc::clone(&self.state));
                         orchestrator
@@ -469,12 +464,10 @@ impl BotOrchestrator {
                     continue;
                 }
 
-                // Skip sending analysis content to client
                 trace!("Skipping analysis chunk");
                 continue;
             }
 
-            // Only send non-analysis content to client
             full_response.push_str(&chunk);
 
             let partial = BotResponse {
@@ -714,18 +707,27 @@ impl BotOrchestrator {
 
     async fn run_start_script(session: &UserSession, state: Arc<AppState>) {
         info!("Running start script for session: {}", session.id);
-        let start_script = r#"
-TALK "Welcome to General Bots!"
-"#;
+        
+        let start_script_path = "start.bas";
+        let start_script = match std::fs::read_to_string(start_script_path) {
+            Ok(content) => {
+                debug!("Loaded start script from {}", start_script_path);
+                content
+            }
+            Err(_) => {
+                debug!("No start.bas found, using default welcome script");
+                r#"TALK "Welcome to General Bots!""#.to_string()
+            }
+        };
 
-        debug!("Start script content loaded for session {}", session.id);
+        debug!("Start script content for session {}: {}", session.id, start_script);
 
         let session_clone = session.clone();
         let state_clone = state.clone();
         tokio::spawn(async move {
             let state_for_run = state_clone.clone();
             match crate::basic::ScriptService::new(state_clone, session_clone.clone())
-                .compile(start_script)
+                .compile(&start_script)
                 .and_then(|ast| {
                     crate::basic::ScriptService::new(state_for_run, session_clone.clone()).run(&ast)
                 }) {
@@ -771,7 +773,6 @@ TALK "Welcome to General Bots!"
             )
             .await
         } else {
-            // For non-web channels, send as regular message
             debug!("Sending warning as regular message");
             if let Some(adapter) = self.state.channels.lock().unwrap().get(channel) {
                 let warn_response = BotResponse {
@@ -830,7 +831,6 @@ async fn websocket_handler(
         .add_connection(session_id.clone(), tx.clone())
         .await;
 
-    // Send session start event
     orchestrator
         .send_event(
             "default_user",
@@ -849,7 +849,6 @@ async fn websocket_handler(
     let session_id_clone1 = session_id.clone();
     let session_id_clone2 = session_id.clone();
 
-    // Spawn task to send messages to WebSocket
     actix_web::rt::spawn(async move {
         info!(
             "Starting WebSocket sender for session {}",
@@ -872,7 +871,6 @@ async fn websocket_handler(
         );
     });
 
-    // Spawn task to receive messages from WebSocket
     actix_web::rt::spawn(async move {
         info!(
             "Starting WebSocket receiver for session {}",
@@ -905,7 +903,6 @@ async fn websocket_handler(
                 }
                 WsMessage::Close(_) => {
                     info!("WebSocket close received for session {}", session_id_clone2);
-                    // Send session end event
                     orchestrator
                         .send_event(
                             "default_user",
@@ -1074,7 +1071,6 @@ async fn voice_stop(
 async fn create_session(data: web::Data<AppState>) -> Result<HttpResponse> {
     info!("Creating new session");
 
-    // Run start script for new session
     let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
     let bot_id = Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap();
 
