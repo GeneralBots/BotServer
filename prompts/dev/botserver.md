@@ -1,0 +1,1 @@
+- Sessions must always be retrived by id if session_id or something is present;
