@@ -170,23 +170,24 @@ pub fn set_context_keyword(state: &AppState, user: UserSession, engine: &mut Eng
 
             let cache_clone = cache.clone();
 
-            tokio::spawn(async move {
-                if let Some(cache_client) = &cache_clone {
-                    let mut conn = match cache_client.get_multiplexed_async_connection().await {
-                        Ok(conn) => conn,
-                        Err(e) => {
-                            error!("Failed to connect to cache: {}", e);
-                            return;
-                        }
-                    };
+            if let Some(cache_client) = &cache_clone {
+                let mut conn = match futures::executor::block_on(
+                    cache_client.get_multiplexed_async_connection(),
+                ) {
+                    Ok(conn) => conn,
+                    Err(e) => {
+                        error!("Failed to connect to cache: {}", e);
+                        return Ok(Dynamic::UNIT);
+                    }
+                };
 
-                    let _: Result<(), _> = redis::cmd("SET")
+                let _: Result<(), _> = futures::executor::block_on(
+                    redis::cmd("SET")
                         .arg(&redis_key)
                         .arg(&context_value)
-                        .query_async(&mut conn)
-                        .await;
-                }
-            });
+                        .query_async(&mut conn),
+                );
+            }
 
             Ok(Dynamic::UNIT)
         })

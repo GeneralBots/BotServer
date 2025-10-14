@@ -5,6 +5,7 @@ use actix_web::{web, HttpRequest, HttpResponse, Result};
 use actix_ws::Message as WsMessage;
 use chrono::Utc;
 use log::{debug, error, info, warn};
+use redis::Commands;
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
@@ -501,13 +502,57 @@ impl BotOrchestrator {
         session_id: Uuid,
         user_id: Uuid,
     ) -> Result<Vec<(String, String)>, Box<dyn std::error::Error + Send + Sync>> {
+        let redis_key = format!("context:{}:{}", user_id, session_id);
+
+        // Fetch context from Redis and append to history on first retrieval
+        let redis_context = if let Some(redis_client) = &self.state.redis_client {
+            let conn = redis_client
+                .get_connection()
+                .map_err(|e| {
+                    warn!("Failed to get Redis connection: {}", e);
+                    e
+                })
+                .ok();
+
+            if let Some(mut connection) = conn {
+                match connection.get::<_, Option<String>>(&redis_key) {
+                    Ok(Some(context)) => {
+                        info!(
+                            "Retrieved context from Redis for key {}: {} chars",
+                            redis_key,
+                            context.len()
+                        );
+                        Some(context)
+                    }
+                    Ok(None) => {
+                        debug!("No context found in Redis for key {}", redis_key);
+                        None
+                    }
+                    Err(e) => {
+                        warn!("Failed to retrieve context from Redis: {}", e);
+                        None
+                    }
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
         info!(
             "Getting conversation history for session {} user {}",
             session_id, user_id
         );
         let mut session_manager = self.state.session_manager.lock().await;
         let history = session_manager.get_conversation_history(session_id, user_id)?;
-        Ok(history)
+        if let Some(context) = redis_context {
+            let mut result = vec![("system".to_string(), context)];
+            result.extend(history);
+            Ok(result)
+        } else {
+            Ok(history)
+        }
     }
 
     pub async fn run_start_script(
@@ -709,10 +754,6 @@ async fn websocket_handler(
         "WebSocket connection established for session: {}, user: {}",
         session_id, user_id
     );
-
-    let orchestrator_clone = BotOrchestrator::new(Arc::clone(&data));
-    let session_id_clone = session_id.clone();
-    let user_id_clone = user_id.clone();
 
     let web_adapter = data.web_adapter.clone();
     let session_id_clone1 = session_id.clone();
