@@ -192,7 +192,7 @@ async fn start_llm_server(
 
     let mut cmd = tokio::process::Command::new("sh");
     cmd.arg("-c").arg(format!(
-        "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {} --n-gpu-layers 99 &",
+        "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {}  {} --top_p 0.95  --temp 0.6 --flash-attn on  --ctx-size 4096  --repeat-penalty 1.2 -ngl 22 &",
         llama_cpp_path, model_path, port
     ));
 

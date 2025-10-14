@@ -33,6 +33,7 @@ mv build/bin/* .
 rm build/bin -r
 rm llama-b6148-bin-ubuntu-x64.zip
 
+sudo apt install lib-pq
 wget https://huggingface.co/bartowski/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q3_K_M.gguf
 wget https://huggingface.co/CompendiumLabs/bge-small-en-v1.5-gguf/resolve/main/bge-small-en-v1.5-f32.gguf
 
