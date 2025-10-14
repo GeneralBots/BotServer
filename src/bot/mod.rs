@@ -305,7 +305,7 @@ impl BotOrchestrator {
             e
         })?;
 
-        let bot_id = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
+        let _bot_id = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
             Uuid::parse_str(&bot_guid).map_err(|e| {
                 warn!("Invalid BOT_GUID from env: {}", e);
                 e
@@ -714,16 +714,6 @@ async fn websocket_handler(
     let session_id_clone = session_id.clone();
     let user_id_clone = user_id.clone();
 
-    tokio::spawn(async move {
-        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-        if let Err(e) = orchestrator_clone
-            .trigger_auto_welcome(&session_id_clone, &user_id_clone, &bot_id, None)
-            .await
-        {
-            error!("Failed to trigger auto welcome: {}", e);
-        }
-    });
-
     let web_adapter = data.web_adapter.clone();
     let session_id_clone1 = session_id.clone();
     let session_id_clone2 = session_id.clone();
@@ -855,7 +845,7 @@ async fn auth_handler(
             }
         }
     };
-
+    let session_id_clone = session.id.clone();
     let auth_script_path = "./templates/annoucements.gbai/annoucements.gbdialog/auth.bas";
     let auth_script = match std::fs::read_to_string(auth_script_path) {
         Ok(content) => content,
@@ -863,15 +853,41 @@ async fn auth_handler(
     };
 
     let script_service = crate::basic::ScriptService::new(Arc::clone(&data), session.clone());
-    if let Err(e) = script_service
+    match script_service
         .compile(&auth_script)
         .and_then(|ast| script_service.run(&ast))
     {
-        error!("Failed to run auth script: {}", e);
-        return Ok(
-            HttpResponse::InternalServerError().json(serde_json::json!({"error": "Auth failed"}))
-        );
+        Ok(result) => {
+            if result.to_string() == "false" {
+                error!("Auth script returned false, authentication failed");
+                return Ok(HttpResponse::Unauthorized()
+                    .json(serde_json::json!({"error": "Authentication failed"})));
+            }
+        }
+        Err(e) => {
+            error!("Failed to run auth script: {}", e);
+            return Ok(HttpResponse::InternalServerError()
+                .json(serde_json::json!({"error": "Auth failed"})));
+        }
     }
+
+    let session = {
+        let mut sm = data.session_manager.lock().await;
+
+        match sm.get_session_by_id(session_id_clone) {
+            Ok(Some(s)) => s,
+            Ok(None) => {
+                error!("Failed to retrieve session");
+                return Ok(HttpResponse::InternalServerError()
+                    .json(serde_json::json!({"error": "Failed to retrieve session"})));
+            }
+            Err(e) => {
+                error!("Failed to retrieve session: {}", e);
+                return Ok(HttpResponse::InternalServerError()
+                    .json(serde_json::json!({"error": e.to_string()})));
+            }
+        }
+    };
 
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "user_id": session.user_id,

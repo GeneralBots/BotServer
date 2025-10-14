@@ -136,19 +136,17 @@ pub fn set_user_keyword(state: Arc<AppState>, user: UserSession, engine: &mut En
                     let state_for_spawn = Arc::clone(&state_clone);
                     let user_clone_spawn = user_clone.clone();
 
-                    tokio::spawn(async move {
-                        let mut session_manager = state_for_spawn.session_manager.lock().await;
+                    let mut session_manager =
+                        futures::executor::block_on(state_for_spawn.session_manager.lock());
 
-                        if let Err(e) = session_manager.update_user_id(user_clone_spawn.id, user_id)
-                        {
-                            error!("Failed to update user ID in session: {}", e);
-                        } else {
-                            info!(
-                                "Updated session {} to user ID: {}",
-                                user_clone_spawn.id, user_id
-                            );
-                        }
-                    });
+                    if let Err(e) = session_manager.update_user_id(user_clone_spawn.id, user_id) {
+                        error!("Failed to update user ID in session: {}", e);
+                    } else {
+                        info!(
+                            "Updated session {} to user ID: {}",
+                            user_clone_spawn.id, user_id
+                        );
+                    }
                 }
                 Err(e) => {
                     debug!("Invalid UUID format for SET USER: {}", e);

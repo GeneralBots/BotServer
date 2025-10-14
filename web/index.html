@@ -1,218 +1,218 @@
 <!doctype html>
 <html lang="pt-br">
-  <head>
-    <meta charset="utf-8" />
-    <title>General Bots 2400</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@400;600&display=swap");
-    </style>
-    <link rel="stylesheet" href="static/style.css" />
-  </head>
-  <body class="relative overflow-hidden flex">
-    <div class="background-animated"></div>
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <button class="new-chat" onclick="createNewSession()">
-        + Novo Chat
-      </button>
-      <button
-        class="voice-toggle"
-        id="voiceToggle"
-        onclick="toggleVoiceMode()"
-      >
-        🎤 Modo Voz
-      </button>
-      <div class="history" id="history"></div>
-    </div>
-    <!-- Main Content -->
-    <div class="main">
-      <header
-        class="glass border-b border-yellow-400/40 relative z-20 flex items-center justify-between px-10 py-6 shadow-2xl"
-      >
-        <div class="flex items-center gap-4">
-          <div
-            class="w-14 h-14 rounded-2xl neon-border flex items-center justify-center relative shine"
-          >
-            <span class="text-3xl font-extrabold neon-text">D</span>
-          </div>
-          <h1 class="text-4xl font-extrabold neon-text">
-            General Bots
-          </h1>
+    <head>
+        <meta charset="utf-8" />
+        <title>General Bots 2400</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@400;600&display=swap");
+        </style>
+        <link rel="stylesheet" href="static/style.css" />
+    </head>
+    <body class="relative overflow-hidden flex">
+        <div class="background-animated"></div>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <button class="new-chat" onclick="createNewSession()">
+                + Novo Chat
+            </button>
+            <button
+                class="voice-toggle"
+                id="voiceToggle"
+                onclick="toggleVoiceMode()"
+            >
+                🎤 Modo Voz
+            </button>
+            <div class="history" id="history"></div>
         </div>
-        <button
-          id="newChatBtn"
-          class="px-8 py-3 rounded-xl glass neon-border text-yellow-300 font-semibold hover:scale-105 transition-all"
-        >
-          Novo Chat
-        </button>
-      </header>
-      <div class="voice-status" id="voiceStatus" style="display: none">
-        <div class="pulse">🎤 Ouvindo... Fale agora</div>
-      </div>
-      <main
-        id="messages"
-        class="relative z-10 overflow-y-auto h-[calc(100vh-170px)] px-10 py-8"
-      >
-        <div
-          id="emptyState"
-          class="text-center pt-40 flex flex-col items-center justify-center"
-        >
-          <div
-            class="w-36 h-36 rounded-3xl neon-border flex items-center justify-center shine mb-6"
-          >
-            <span class="text-7xl neon-text font-extrabold">D</span>
-          </div>
-          <h2 class="text-4xl neon-text font-bold">
-            Bem-vindo ao General Bots
-          </h2>
-          <p class="text-blue-200 mt-3 opacity-80 text-lg">
-            Seu assistente de IA avançado
-          </p>
+        <!-- Main Content -->
+        <div class="main">
+            <header
+                class="glass border-b border-yellow-400/40 relative z-20 flex items-center justify-between px-10 py-6 shadow-2xl"
+            >
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-14 h-14 rounded-2xl neon-border flex items-center justify-center relative shine"
+                    >
+                        <span class="text-3xl font-extrabold neon-text">D</span>
+                    </div>
+                    <h1 class="text-4xl font-extrabold neon-text">
+                        General Bots
+                    </h1>
+                </div>
+                <button
+                    id="newChatBtn"
+                    class="px-8 py-3 rounded-xl glass neon-border text-yellow-300 font-semibold hover:scale-105 transition-all"
+                >
+                    Novo Chat
+                </button>
+            </header>
+            <div class="voice-status" id="voiceStatus" style="display: none">
+                <div class="pulse">🎤 Ouvindo... Fale agora</div>
+            </div>
+            <main
+                id="messages"
+                class="relative z-10 overflow-y-auto h-[calc(100vh-170px)] px-10 py-8"
+            >
+                <div
+                    id="emptyState"
+                    class="text-center pt-40 flex flex-col items-center justify-center"
+                >
+                    <div
+                        class="w-36 h-36 rounded-3xl neon-border flex items-center justify-center shine mb-6"
+                    >
+                        <span class="text-7xl neon-text font-extrabold">D</span>
+                    </div>
+                    <h2 class="text-4xl neon-text font-bold">
+                        Bem-vindo ao General Bots
+                    </h2>
+                    <p class="text-blue-200 mt-3 opacity-80 text-lg">
+                        Seu assistente de IA avançado
+                    </p>
+                </div>
+            </main>
+            <footer
+                class="glass border-t border-yellow-400/30 px-10 py-6 relative z-20 backdrop-blur-lg"
+            >
+                <div class="flex items-center gap-4">
+                    <input
+                        id="messageInput"
+                        type="text"
+                        placeholder="Fale com General Bots..."
+                        class="flex-1 rounded-2xl px-8 py-4 glass border border-yellow-400/40 text-lg text-white placeholder-yellow-200/40 focus:outline-none focus:border-yellow-300 transition-all"
+                    />
+                    <button
+                        id="sendBtn"
+                        class="rounded-2xl px-10 py-4 neon-border hover:scale-105 transition-all text-yellow-300 font-bold tracking-wide"
+                    >
+                        Enviar
+                    </button>
+                </div>
+            </footer>
         </div>
-      </main>
-      <footer
-        class="glass border-t border-yellow-400/30 px-10 py-6 relative z-20 backdrop-blur-lg"
-      >
-        <div class="flex items-center gap-4">
-          <input
-            id="messageInput"
-            type="text"
-            placeholder="Fale com General Bots..."
-            class="flex-1 rounded-2xl px-8 py-4 glass border border-yellow-400/40 text-lg text-white placeholder-yellow-200/40 focus:outline-none focus:border-yellow-300 transition-all"
-          />
-          <button
-            id="sendBtn"
-            class="rounded-2xl px-10 py-4 neon-border hover:scale-105 transition-all text-yellow-300 font-bold tracking-wide"
-          >
-            Enviar
-          </button>
-        </div>
-      </footer>
-    </div>
-    <script>
-      let ws = null;
-      let currentSessionId = null;
-      let currentUserId = null;
-      let isStreaming = false;
-      let voiceRoom = null;
-      let isVoiceMode = false;
-      let mediaRecorder = null;
-      let audioChunks = [];
-      let streamingMessageId = null;
-      let isThinking = false;
-      let thinkingIndicatorId = null;
+        <script>
+            let ws = null;
+            let currentSessionId = null;
+            let currentUserId = null;
+            let isStreaming = false;
+            let voiceRoom = null;
+            let isVoiceMode = false;
+            let mediaRecorder = null;
+            let audioChunks = [];
+            let streamingMessageId = null;
+            let isThinking = false;
+            let thinkingIndicatorId = null;
 
-      const messagesDiv = document.getElementById("messages");
-      const input = document.getElementById("messageInput");
-      const sendBtn = document.getElementById("sendBtn");
-      const newChatBtn = document.getElementById("newChatBtn");
+            const messagesDiv = document.getElementById("messages");
+            const input = document.getElementById("messageInput");
+            const sendBtn = document.getElementById("sendBtn");
+            const newChatBtn = document.getElementById("newChatBtn");
 
-      marked.setOptions({
-        highlight: function (code, lang) {
-          return `<pre><code class="language-${lang}">${code}</code></pre>`;
-        },
-        breaks: true,
-        gfm: true,
-        tables: true,
-      });
+            marked.setOptions({
+                highlight: function (code, lang) {
+                    return `<pre><code class="language-${lang}">${code}</code></pre>`;
+                },
+                breaks: true,
+                gfm: true,
+                tables: true,
+            });
 
-      const renderer = new marked.Renderer();
-      renderer.table = function (header, body) {
-        return `<table class="markdown-table"><thead>${header}</thead><tbody>${body}</tbody></table>`;
-      };
-      renderer.tablerow = function (content) {
-        const cleanedContent = content.replace(/<td><\/td>\s*$/, "");
-        return `<tr>${cleanedContent}</tr>`;
-      };
-      marked.setOptions({ renderer });
+            const renderer = new marked.Renderer();
+            renderer.table = function (header, body) {
+                return `<table class="markdown-table"><thead>${header}</thead><tbody>${body}</tbody></table>`;
+            };
+            renderer.tablerow = function (content) {
+                const cleanedContent = content.replace(/<td><\/td>\s*$/, "");
+                return `<tr>${cleanedContent}</tr>`;
+            };
+            marked.setOptions({ renderer });
 
-      function cleanMarkdownTable(markdown) {
-        return markdown
-          .replace(/\|\|+/g, "|")
-          .replace(/\n\s*\|/g, "\n|")
-          .replace(/(^|\n)\|(\s*\|)+\s*($|\n)/g, "$1$3")
-          .replace(
-            /(\n\|[^\n]+\|)\n(\|[^\n]+\|)/g,
-            "$1\n| --- | --- | --- |\n$2",
-          );
-      }
+            function cleanMarkdownTable(markdown) {
+                return markdown
+                    .replace(/\|\|+/g, "|")
+                    .replace(/\n\s*\|/g, "\n|")
+                    .replace(/(^|\n)\|(\s*\|)+\s*($|\n)/g, "$1$3")
+                    .replace(
+                        /(\n\|[^\n]+\|)\n(\|[^\n]+\|)/g,
+                        "$1\n| --- | --- | --- |\n$2",
+                    );
+            }
 
-      function parseMarkdown(content) {
-        try {
-          const cleanedContent = cleanMarkdownTable(content);
-          return marked.parse(cleanedContent);
-        } catch (error) {
-          console.error("Markdown parsing error:", error);
-          return content
-            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-            .replace(/\*(.*?)\*/g, "<em>$1</em>")
-            .replace(/\n/g, "<br>");
-        }
-      }
+            function parseMarkdown(content) {
+                try {
+                    const cleanedContent = cleanMarkdownTable(content);
+                    return marked.parse(cleanedContent);
+                } catch (error) {
+                    console.error("Markdown parsing error:", error);
+                    return content
+                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                        .replace(/\*(.*?)\*/g, "<em>$1</em>")
+                        .replace(/\n/g, "<br>");
+                }
+            }
 
-      async function initializeAuth() {
-        try {
-          const response = await fetch("/api/auth");
-          const authData = await response.json();
-          currentUserId = authData.user_id;
-          currentSessionId = authData.session_id;
-          connectWebSocket();
-          loadSessions();
-          await triggerStartScript();
-        } catch (error) {
-          console.error("Failed to initialize auth:", error);
-        }
-      }
+            async function initializeAuth() {
+                try {
+                    const response = await fetch("/api/auth");
+                    const authData = await response.json();
+                    currentUserId = authData.user_id;
+                    currentSessionId = authData.session_id;
+                    connectWebSocket();
+                    loadSessions();
+                    await triggerStartScript();
+                } catch (error) {
+                    console.error("Failed to initialize auth:", error);
+                }
+            }
 
-      async function triggerStartScript() {
-        if (!currentSessionId) return;
-        try {
-          await fetch("/api/start", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              session_id: currentSessionId,
-            }),
-          });
-        } catch (error) {
-          console.error("Failed to trigger start script:", error);
-        }
-      }
+            async function triggerStartScript() {
+                if (!currentSessionId) return;
+                try {
+                    await fetch("/api/start", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            session_id: currentSessionId,
+                        }),
+                    });
+                } catch (error) {
+                    console.error("Failed to trigger start script:", error);
+                }
+            }
 
-      async function loadSessions() {
-        try {
-          const response = await fetch("/api/sessions");
-          const sessions = await response.json();
-          const history = document.getElementById("history");
-          history.innerHTML = "";
-          sessions.forEach((session) => {
-            const div = document.createElement("div");
-            div.className = "history-item";
-            div.textContent = session.title;
-            div.onclick = () => switchSession(session.id);
-            history.appendChild(div);
-          });
-        } catch (error) {
-          console.error("Failed to load sessions:", error);
-        }
-      }
+            async function loadSessions() {
+                try {
+                    const response = await fetch("/api/sessions");
+                    const sessions = await response.json();
+                    const history = document.getElementById("history");
+                    history.innerHTML = "";
+                    sessions.forEach((session) => {
+                        const div = document.createElement("div");
+                        div.className = "history-item";
+                        div.textContent = session.title;
+                        div.onclick = () => switchSession(session.id);
+                        history.appendChild(div);
+                    });
+                } catch (error) {
+                    console.error("Failed to load sessions:", error);
+                }
+            }
 
-      async function createNewSession() {
-        try {
-          const response = await fetch("/api/sessions", {
-            method: "POST",
-          });
-          const session = await response.json();
-          currentSessionId = session.session_id;
-          connectWebSocket();
-          loadSessions();
-          document.getElementById("messages").innerHTML = `
+            async function createNewSession() {
+                try {
+                    const response = await fetch("/api/sessions", {
+                        method: "POST",
+                    });
+                    const session = await response.json();
+                    currentSessionId = session.session_id;
+                    connectWebSocket();
+                    loadSessions();
+                    document.getElementById("messages").innerHTML = `
             <div id="emptyState" class="text-center pt-40 flex flex-col items-center justify-center">
               <div class="w-36 h-36 rounded-3xl neon-border flex items-center justify-center shine mb-6">
                 <span class="text-7xl neon-text font-extrabold">D</span>
@@ -221,130 +221,142 @@
               <p class="text-blue-200 mt-3 opacity-80 text-lg">Seu assistente de IA avançado</p>
             </div>
           `;
-          if (isVoiceMode) {
-            await startVoiceSession();
-          }
-          await triggerStartScript();
-        } catch (error) {
-          console.error("Failed to create session:", error);
-        }
-      }
-
-      function switchSession(sessionId) {
-        currentSessionId = sessionId;
-        loadSessionHistory(sessionId);
-        connectWebSocket();
-        if (isVoiceMode) {
-          startVoiceSession();
-        }
-      }
-
-      async function loadSessionHistory(sessionId) {
-        try {
-          const response = await fetch("/api/sessions/" + sessionId);
-          const history = await response.json();
-          const messages = document.getElementById("messages");
-          messages.innerHTML = "";
-          history.forEach(([role, content]) => {
-            const className =
-              role === "user"
-                ? "user-message"
-                : role === "assistant"
-                ? "assistant-message"
-                : "voice-message";
-            addMessage(
-              role === "user" ? "Você" : "Assistente",
-              content,
-              className,
-            );
-          });
-        } catch (error) {
-          console.error("Failed to load session history:", error);
-        }
-      }
-
-      function connectWebSocket() {
-        if (ws) {
-          ws.close();
-        }
-        const wsUrl =
-          "ws://" +
-          window.location.host +
-          "/ws?session_id=" + currentSessionId + "&user_id=" + currentUserId;
-        ws = new WebSocket(wsUrl);
-
-        ws.onmessage = function (event) {
-          const response = JSON.parse(event.data);
-          if (response.message_type === 2) {
-            const eventData = JSON.parse(response.content);
-            handleEvent(eventData.event, eventData.data);
-            return;
-          }
-
-          if (!response.is_complete) {
-            if (!isStreaming) {
-              isStreaming = true;
-              streamingMessageId = "streaming-" + Date.now();
-              addMessage(
-                "assistant",
-                response.content,
-                true,
-                streamingMessageId,
-              );
-            } else {
-              updateLastMessage(response.content);
+                    if (isVoiceMode) {
+                        await startVoiceSession();
+                    }
+                    await triggerStartScript();
+                } catch (error) {
+                    console.error("Failed to create session:", error);
+                }
             }
-          } else {
-            isStreaming = false;
-            streamingMessageId = null;
-          }
-        };
 
-        ws.onopen = function () {
-          console.log(
-            "Connected to WebSocket with session:",
-            currentSessionId,
-            "user:",
-            currentUserId
-          );
-        };
+            function switchSession(sessionId) {
+                currentSessionId = sessionId;
+                loadSessionHistory(sessionId);
+                connectWebSocket();
+                if (isVoiceMode) {
+                    startVoiceSession();
+                }
+            }
 
-        ws.onclose = function () {
-          console.log("WebSocket disconnected");
-        };
+            async function loadSessionHistory(sessionId) {
+                try {
+                    const response = await fetch("/api/sessions/" + sessionId);
+                    const history = await response.json();
+                    const messages = document.getElementById("messages");
+                    messages.innerHTML = "";
+                    history.forEach(([role, content]) => {
+                        const className =
+                            role === "user"
+                                ? "user-message"
+                                : role === "assistant"
+                                  ? "assistant-message"
+                                  : "voice-message";
+                        addMessage(
+                            role === "user" ? "Você" : "Assistente",
+                            content,
+                            className,
+                        );
+                    });
+                } catch (error) {
+                    console.error("Failed to load session history:", error);
+                }
+            }
 
-        ws.onerror = function (error) {
-          console.error("WebSocket error:", error);
-        };
-      }
+            function connectWebSocket() {
+                if (ws) {
+                    ws.close();
+                }
+                const wsUrl =
+                    "ws://" +
+                    window.location.host +
+                    "/ws?session_id=" +
+                    currentSessionId +
+                    "&user_id=" +
+                    currentUserId;
+                ws = new WebSocket(wsUrl);
 
-      function handleEvent(eventType, eventData) {
-        console.log("Event received:", eventType, eventData);
-        switch (eventType) {
-          case "thinking_start":
-            showThinkingIndicator();
-            isThinking = true;
-            break;
-          case "thinking_end":
-            hideThinkingIndicator();
-            isThinking = false;
-            break;
-          case "warn":
-            showWarning(eventData.message);
-            break;
-          default:
-            console.log("Unknown event type:", eventType);
-        }
-      }
+                ws.onmessage = function (event) {
+                    const response = JSON.parse(event.data);
+                    if (response.message_type === 2) {
+                        const eventData = JSON.parse(response.content);
+                        handleEvent(eventData.event, eventData.data);
+                        return;
+                    }
 
-      function showThinkingIndicator() {
-        if (isThinking) return;
-        const emptyState = document.getElementById("emptyState");
-        if (emptyState) emptyState.remove();
-        const thinkingDiv = document.createElement("div");
-        thinkingDiv.id = "thinking-indicator";
-        thinkingDiv.className = "thinking-indicator";
-        thinkingDiv.innerHTML = `
+                    // Handle normal complete messages (like from TALK)
+                    if (response.is_complete) {
+                        isStreaming = false;
+                        streamingMessageId = null;
+                        // Only add message if there's actual content
+                        if (
+                            response.content &&
+                            response.content.trim() !== ""
+                        ) {
+                            addMessage("assistant", response.content);
+                        }
+                    } else {
+                        // Handle streaming messages
+                        if (!isStreaming) {
+                            isStreaming = true;
+                            streamingMessageId = "streaming-" + Date.now();
+                            addMessage(
+                                "assistant",
+                                response.content,
+                                true,
+                                streamingMessageId,
+                            );
+                        } else {
+                            updateLastMessage(response.content);
+                        }
+                    }
+                };
+
+                ws.onopen = function () {
+                    console.log(
+                        "Connected to WebSocket with session:",
+                        currentSessionId,
+                        "user:",
+                        currentUserId,
+                    );
+                };
+
+                ws.onclose = function () {
+                    console.log("WebSocket disconnected");
+                };
+
+                ws.onerror = function (error) {
+                    console.error("WebSocket error:", error);
+                };
+            }
+
+            function handleEvent(eventType, eventData) {
+                console.log("Event received:", eventType, eventData);
+                switch (eventType) {
+                    case "thinking_start":
+                        showThinkingIndicator();
+                        isThinking = true;
+                        break;
+                    case "thinking_end":
+                        hideThinkingIndicator();
+                        isThinking = false;
+                        break;
+                    case "warn":
+                        showWarning(eventData.message);
+                        break;
+                    default:
+                        console.log("Unknown event type:", eventType);
+                }
+            }
+
+            function showThinkingIndicator() {
+                if (isThinking) return;
+                const emptyState = document.getElementById("emptyState");
+                if (emptyState) emptyState.remove();
+                const thinkingDiv = document.createElement("div");
+                thinkingDiv.id = "thinking-indicator";
+                thinkingDiv.className = "thinking-indicator";
+                thinkingDiv.innerHTML = `
           <div class="typing-dots flex gap-2">
             <div class="typing-dot"></div>
             <div class="typing-dot"></div>
@@ -352,315 +364,317 @@
           </div>
           <span class="text-yellow-300 font-semibold">Pensando...</span>
         `;
-        messagesDiv.appendChild(thinkingDiv);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        isThinking = true;
-        thinkingIndicatorId = thinkingDiv.id;
-      }
-
-      function hideThinkingIndicator() {
-        if (!isThinking) return;
-        const thinkingDiv = document.getElementById("thinking-indicator");
-        if (thinkingDiv) {
-          thinkingDiv.remove();
-        }
-        isThinking = false;
-        thinkingIndicatorId = null;
-      }
-
-      function showWarning(message) {
-        const warningDiv = document.createElement("div");
-        warningDiv.className = "warning-message";
-        warningDiv.innerHTML = `⚠️ ${message}`;
-        messagesDiv.appendChild(warningDiv);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        setTimeout(() => {
-          if (warningDiv.parentNode) {
-            warningDiv.remove();
-          }
-        }, 5000);
-      }
-
-      function addMessage(
-        role,
-        content,
-        streaming = false,
-        msgId = null,
-      ) {
-        const emptyState = document.getElementById("emptyState");
-        if (emptyState) emptyState.remove();
-        const msg = document.createElement("div");
-        msg.className = "mb-8";
-        const processedContent =
-          role === "assistant" || role === "voice"
-            ? parseMarkdown(content)
-            : content;
-
-        if (role === "user") {
-          msg.innerHTML = `<div class="flex justify-end"><div class="glass neon-border rounded-2xl px-6 py-4 max-w-3xl text-lg text-yellow-100 font-semibold shadow-2xl">${content}</div></div>`;
-        } else if (role === "assistant") {
-          msg.innerHTML = `<div class="flex justify-start"><div class="flex gap-4 max-w-3xl"><div class="w-12 h-12 rounded-xl neon-border flex items-center justify-center flex-shrink-0 shine shadow-2xl"><span class="text-2xl neon-text font-extrabold">D</span></div><div class="glass border-2 border-yellow-400/30 rounded-2xl px-6 py-4 flex-1 text-blue-50 font-medium text-lg shadow-2xl markdown-content" id="${streaming ? msgId : ""}">${streaming ? "" : processedContent}</div></div></div>`;
-        } else {
-          msg.innerHTML = `<div class="flex justify-start"><div class="flex gap-4 max-w-3xl"><div class="w-12 h-12 rounded-xl neon-border flex items-center justify-center flex-shrink-0 shine shadow-2xl"><span class="text-2xl neon-text font-extrabold">D</span></div><div class="glass border-2 border-green-400/30 rounded-2xl px-6 py-4 flex-1 text-green-100 font-medium text-lg shadow-2xl">${content}</div></div></div>`;
-        }
-        messagesDiv.appendChild(msg);
-        gsap.from(msg, {
-          opacity: 0,
-          y: 30,
-          duration: 0.6,
-          ease: "power3.out",
-        });
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      }
-
-      function updateLastMessage(content) {
-        const m = document.getElementById(streamingMessageId);
-        if (m) {
-          const currentContent = m.textContent || m.innerText;
-          const newContent = currentContent + content;
-          m.innerHTML = parseMarkdown(newContent);
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-      }
-
-      function sendMessage() {
-        const message = input.value.trim();
-        if (!message || !ws || ws.readyState !== WebSocket.OPEN) return;
-
-        if (isThinking) {
-          hideThinkingIndicator();
-        }
-
-        addMessage("user", message);
-        const messageData = {
-          bot_id: "default_bot",
-          user_id: currentUserId,
-          session_id: currentSessionId,
-          channel: "web",
-          content: message,
-          message_type: 1,
-          media_url: null,
-          timestamp: new Date().toISOString(),
-        };
-        ws.send(JSON.stringify(messageData));
-        input.value = "";
-
-        anime({
-          targets: sendBtn,
-          scale: [1, 0.85, 1],
-          duration: 300,
-          easing: "easeInOutQuad",
-        });
-      }
-
-      sendBtn.onclick = sendMessage;
-      input.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") sendMessage();
-      });
-
-      newChatBtn.onclick = () => createNewSession();
-
-      async function toggleVoiceMode() {
-        isVoiceMode = !isVoiceMode;
-        const voiceToggle = document.getElementById("voiceToggle");
-        const voiceStatus = document.getElementById("voiceStatus");
-        if (isVoiceMode) {
-          voiceToggle.textContent = "🔴 Parar Voz";
-          voiceToggle.classList.add("recording");
-          voiceStatus.style.display = "block";
-          await startVoiceSession();
-        } else {
-          voiceToggle.textContent = "🎤 Modo Voz";
-          voiceToggle.classList.remove("recording");
-          voiceStatus.style.display = "none";
-          await stopVoiceSession();
-        }
-      }
-
-      async function startVoiceSession() {
-        if (!currentSessionId) return;
-        try {
-          const response = await fetch("/api/voice/start", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              session_id: currentSessionId,
-              user_id: currentUserId,
-            }),
-          });
-          const data = await response.json();
-          if (data.token) {
-            await connectToVoiceRoom(data.token);
-            startVoiceRecording();
-          }
-        } catch (error) {
-          console.error("Failed to start voice session:", error);
-        }
-      }
-
-      async function stopVoiceSession() {
-        if (!currentSessionId) return;
-        try {
-          await fetch("/api/voice/stop", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              session_id: currentSessionId,
-            }),
-          });
-          if (voiceRoom) {
-            voiceRoom.disconnect();
-            voiceRoom = null;
-          }
-          if (mediaRecorder && mediaRecorder.state === "recording") {
-            mediaRecorder.stop();
-          }
-        } catch (error) {
-          console.error("Failed to stop voice session:", error);
-        }
-      }
-
-      async function connectToVoiceRoom(token) {
-        try {
-          const room = new LiveKitClient.Room();
-          await room.connect("ws://localhost:7880", token);
-          voiceRoom = room;
-
-          room.on("dataReceived", (data) => {
-            const decoder = new TextDecoder();
-            const message = decoder.decode(data);
-            try {
-              const parsed = JSON.parse(message);
-              if (parsed.type === "voice_response") {
-                addMessage("assistant", parsed.text);
-              }
-            } catch (e) {
-              console.log("Voice data:", message);
+                messagesDiv.appendChild(thinkingDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                isThinking = true;
+                thinkingIndicatorId = thinkingDiv.id;
             }
-          });
 
-          const localTracks = await LiveKitClient.createLocalTracks({
-            audio: true,
-            video: false,
-          });
-          for (const track of localTracks) {
-            await room.localParticipant.publishTrack(track);
-          }
-        } catch (error) {
-          console.error("Failed to connect to voice room:", error);
-        }
-      }
+            function hideThinkingIndicator() {
+                if (!isThinking) return;
+                const thinkingDiv =
+                    document.getElementById("thinking-indicator");
+                if (thinkingDiv) {
+                    thinkingDiv.remove();
+                }
+                isThinking = false;
+                thinkingIndicatorId = null;
+            }
 
-      function startVoiceRecording() {
-        if (!navigator.mediaDevices) {
-          console.log("Media devices not supported");
-          return;
-        }
-
-        navigator.mediaDevices
-          .getUserMedia({ audio: true })
-          .then((stream) => {
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-
-            mediaRecorder.ondataavailable = (event) => {
-              audioChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-              const audioBlob = new Blob(audioChunks, {
-                type: "audio/wav",
-              });
-              simulateVoiceTranscription();
-            };
-
-            mediaRecorder.start();
-            setTimeout(() => {
-              if (
-                mediaRecorder &&
-                mediaRecorder.state === "recording"
-              ) {
-                mediaRecorder.stop();
+            function showWarning(message) {
+                const warningDiv = document.createElement("div");
+                warningDiv.className = "warning-message";
+                warningDiv.innerHTML = `⚠️ ${message}`;
+                messagesDiv.appendChild(warningDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
                 setTimeout(() => {
-                  if (isVoiceMode) {
-                    startVoiceRecording();
-                  }
-                }, 1000);
-              }
-            }, 5000);
-          })
-          .catch((error) => {
-            console.error("Error accessing microphone:", error);
-          });
-      }
+                    if (warningDiv.parentNode) {
+                        warningDiv.remove();
+                    }
+                }, 5000);
+            }
 
-      function simulateVoiceTranscription() {
-        const phrases = [
-          "Olá, como posso ajudá-lo hoje?",
-          "Entendo o que você está dizendo",
-          "Esse é um ponto interessante",
-          "Deixe-me pensar sobre isso",
-          "Posso ajudá-lo com isso",
-          "O que você gostaria de saber?",
-          "Isso parece ótimo",
-          "Estou ouvindo sua voz",
-        ];
-        const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+            function addMessage(
+                role,
+                content,
+                streaming = false,
+                msgId = null,
+            ) {
+                const emptyState = document.getElementById("emptyState");
+                if (emptyState) emptyState.remove();
+                const msg = document.createElement("div");
+                msg.className = "mb-8";
+                const processedContent =
+                    role === "assistant" || role === "voice"
+                        ? parseMarkdown(content)
+                        : content;
 
-        if (voiceRoom) {
-          const message = {
-            type: "voice_input",
-            content: randomPhrase,
-            timestamp: new Date().toISOString(),
-          };
-          voiceRoom.localParticipant.publishData(
-            new TextEncoder().encode(JSON.stringify(message)),
-            LiveKitClient.DataPacketKind.RELIABLE,
-          );
-        }
-        addMessage("voice", `🎤 ${randomPhrase}`);
-      }
+                if (role === "user") {
+                    msg.innerHTML = `<div class="flex justify-end"><div class="glass neon-border rounded-2xl px-6 py-4 max-w-3xl text-lg text-yellow-100 font-semibold shadow-2xl">${content}</div></div>`;
+                } else if (role === "assistant") {
+                    msg.innerHTML = `<div class="flex justify-start"><div class="flex gap-4 max-w-3xl"><div class="w-12 h-12 rounded-xl neon-border flex items-center justify-center flex-shrink-0 shine shadow-2xl"><span class="text-2xl neon-text font-extrabold">D</span></div><div class="glass border-2 border-yellow-400/30 rounded-2xl px-6 py-4 flex-1 text-blue-50 font-medium text-lg shadow-2xl markdown-content" id="${streaming ? msgId : ""}">${streaming ? "" : processedContent}</div></div></div>`;
+                } else {
+                    msg.innerHTML = `<div class="flex justify-start"><div class="flex gap-4 max-w-3xl"><div class="w-12 h-12 rounded-xl neon-border flex items-center justify-center flex-shrink-0 shine shadow-2xl"><span class="text-2xl neon-text font-extrabold">D</span></div><div class="glass border-2 border-green-400/30 rounded-2xl px-6 py-4 flex-1 text-green-100 font-medium text-lg shadow-2xl">${content}</div></div></div>`;
+                }
+                messagesDiv.appendChild(msg);
+                gsap.from(msg, {
+                    opacity: 0,
+                    y: 30,
+                    duration: 0.6,
+                    ease: "power3.out",
+                });
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
 
-      gsap.to(".neon-text", {
-        textShadow:
-          "0 0 25px var(--dante-glow),0 0 50px var(--dante-glow),0 0 100px rgba(255,215,0,0.8)",
-        repeat: -1,
-        yoyo: true,
-        duration: 1.8,
-        ease: "power1.inOut",
-      });
+            function updateLastMessage(content) {
+                const m = document.getElementById(streamingMessageId);
+                if (m) {
+                    const currentContent = m.textContent || m.innerText;
+                    const newContent = currentContent + content;
+                    m.innerHTML = parseMarkdown(newContent);
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+            }
 
-      window.testWarning = function () {
-        fetch("/api/warn", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            session_id: currentSessionId || "default",
-            channel: "web",
-            message: "Esta é uma mensagem de teste de aviso!",
-          }),
-        });
-      };
+            function sendMessage() {
+                const message = input.value.trim();
+                if (!message || !ws || ws.readyState !== WebSocket.OPEN) return;
 
-      window.testMarkdown = function () {
-        const markdownContent = `Tabela de Frutas
+                if (isThinking) {
+                    hideThinkingIndicator();
+                }
+
+                addMessage("user", message);
+                const messageData = {
+                    bot_id: "default_bot",
+                    user_id: currentUserId,
+                    session_id: currentSessionId,
+                    channel: "web",
+                    content: message,
+                    message_type: 1,
+                    media_url: null,
+                    timestamp: new Date().toISOString(),
+                };
+                ws.send(JSON.stringify(messageData));
+                input.value = "";
+
+                anime({
+                    targets: sendBtn,
+                    scale: [1, 0.85, 1],
+                    duration: 300,
+                    easing: "easeInOutQuad",
+                });
+            }
+
+            sendBtn.onclick = sendMessage;
+            input.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") sendMessage();
+            });
+
+            newChatBtn.onclick = () => createNewSession();
+
+            async function toggleVoiceMode() {
+                isVoiceMode = !isVoiceMode;
+                const voiceToggle = document.getElementById("voiceToggle");
+                const voiceStatus = document.getElementById("voiceStatus");
+                if (isVoiceMode) {
+                    voiceToggle.textContent = "🔴 Parar Voz";
+                    voiceToggle.classList.add("recording");
+                    voiceStatus.style.display = "block";
+                    await startVoiceSession();
+                } else {
+                    voiceToggle.textContent = "🎤 Modo Voz";
+                    voiceToggle.classList.remove("recording");
+                    voiceStatus.style.display = "none";
+                    await stopVoiceSession();
+                }
+            }
+
+            async function startVoiceSession() {
+                if (!currentSessionId) return;
+                try {
+                    const response = await fetch("/api/voice/start", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            session_id: currentSessionId,
+                            user_id: currentUserId,
+                        }),
+                    });
+                    const data = await response.json();
+                    if (data.token) {
+                        await connectToVoiceRoom(data.token);
+                        startVoiceRecording();
+                    }
+                } catch (error) {
+                    console.error("Failed to start voice session:", error);
+                }
+            }
+
+            async function stopVoiceSession() {
+                if (!currentSessionId) return;
+                try {
+                    await fetch("/api/voice/stop", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            session_id: currentSessionId,
+                        }),
+                    });
+                    if (voiceRoom) {
+                        voiceRoom.disconnect();
+                        voiceRoom = null;
+                    }
+                    if (mediaRecorder && mediaRecorder.state === "recording") {
+                        mediaRecorder.stop();
+                    }
+                } catch (error) {
+                    console.error("Failed to stop voice session:", error);
+                }
+            }
+
+            async function connectToVoiceRoom(token) {
+                try {
+                    const room = new LiveKitClient.Room();
+                    await room.connect("ws://localhost:7880", token);
+                    voiceRoom = room;
+
+                    room.on("dataReceived", (data) => {
+                        const decoder = new TextDecoder();
+                        const message = decoder.decode(data);
+                        try {
+                            const parsed = JSON.parse(message);
+                            if (parsed.type === "voice_response") {
+                                addMessage("assistant", parsed.text);
+                            }
+                        } catch (e) {
+                            console.log("Voice data:", message);
+                        }
+                    });
+
+                    const localTracks = await LiveKitClient.createLocalTracks({
+                        audio: true,
+                        video: false,
+                    });
+                    for (const track of localTracks) {
+                        await room.localParticipant.publishTrack(track);
+                    }
+                } catch (error) {
+                    console.error("Failed to connect to voice room:", error);
+                }
+            }
+
+            function startVoiceRecording() {
+                if (!navigator.mediaDevices) {
+                    console.log("Media devices not supported");
+                    return;
+                }
+
+                navigator.mediaDevices
+                    .getUserMedia({ audio: true })
+                    .then((stream) => {
+                        mediaRecorder = new MediaRecorder(stream);
+                        audioChunks = [];
+
+                        mediaRecorder.ondataavailable = (event) => {
+                            audioChunks.push(event.data);
+                        };
+
+                        mediaRecorder.onstop = () => {
+                            const audioBlob = new Blob(audioChunks, {
+                                type: "audio/wav",
+                            });
+                            simulateVoiceTranscription();
+                        };
+
+                        mediaRecorder.start();
+                        setTimeout(() => {
+                            if (
+                                mediaRecorder &&
+                                mediaRecorder.state === "recording"
+                            ) {
+                                mediaRecorder.stop();
+                                setTimeout(() => {
+                                    if (isVoiceMode) {
+                                        startVoiceRecording();
+                                    }
+                                }, 1000);
+                            }
+                        }, 5000);
+                    })
+                    .catch((error) => {
+                        console.error("Error accessing microphone:", error);
+                    });
+            }
+
+            function simulateVoiceTranscription() {
+                const phrases = [
+                    "Olá, como posso ajudá-lo hoje?",
+                    "Entendo o que você está dizendo",
+                    "Esse é um ponto interessante",
+                    "Deixe-me pensar sobre isso",
+                    "Posso ajudá-lo com isso",
+                    "O que você gostaria de saber?",
+                    "Isso parece ótimo",
+                    "Estou ouvindo sua voz",
+                ];
+                const randomPhrase =
+                    phrases[Math.floor(Math.random() * phrases.length)];
+
+                if (voiceRoom) {
+                    const message = {
+                        type: "voice_input",
+                        content: randomPhrase,
+                        timestamp: new Date().toISOString(),
+                    };
+                    voiceRoom.localParticipant.publishData(
+                        new TextEncoder().encode(JSON.stringify(message)),
+                        LiveKitClient.DataPacketKind.RELIABLE,
+                    );
+                }
+                addMessage("voice", `🎤 ${randomPhrase}`);
+            }
+
+            gsap.to(".neon-text", {
+                textShadow:
+                    "0 0 25px var(--dante-glow),0 0 50px var(--dante-glow),0 0 100px rgba(255,215,0,0.8)",
+                repeat: -1,
+                yoyo: true,
+                duration: 1.8,
+                ease: "power1.inOut",
+            });
+
+            window.testWarning = function () {
+                fetch("/api/warn", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        session_id: currentSessionId || "default",
+                        channel: "web",
+                        message: "Esta é uma mensagem de teste de aviso!",
+                    }),
+                });
+            };
+
+            window.testMarkdown = function () {
+                const markdownContent = `Tabela de Frutas
 | Nome da fruta | Cor predominante | Estação em que costuma estar em flor/colheita |
 |---------------|------------------|-----------------------------------------------|
 | Maçã | Verde, vermelho | Outono (início do verão em países de clima temperado) |
 | Banana | Amarelo | Todo ano (principalmente nas regiões tropicais) |
 | Laranja | Laranja | Inverno (pico de colheita em países de clima temperado) |
 **Nota**: As informações sobre a estação de colheita são gerais e podem variar de acordo com a região e variedade da fruta.`;
-        addMessage("assistant", markdownContent);
-      };
+                addMessage("assistant", markdownContent);
+            };
 
-      window.testProblematicTable = function () {
-        const problematicContent = `Tabela de Frutas**| Nome da fruta | Cor predominante | Estação em que costuma estar em flor/colheita |||||| Maçã | Verde, vermelho | Outono (início do verão em países de clima temperado) || Banana | Amarelo | Todo ano (principalmente nas regiões tropicais) || Laranja | Laranja | Inverno (pico de colheita em países de clima temperado) | Nota: As informações sobre a estação de colheita são gerais e podem variar de acordo com a região e variedade da fruta`;
-        addMessage("assistant", problematicContent);
-      };
+            window.testProblematicTable = function () {
+                const problematicContent = `Tabela de Frutas**| Nome da fruta | Cor predominante | Estação em que costuma estar em flor/colheita |||||| Maçã | Verde, vermelho | Outono (início do verão em países de clima temperado) || Banana | Amarelo | Todo ano (principalmente nas regiões tropicais) || Laranja | Laranja | Inverno (pico de colheita em países de clima temperado) | Nota: As informações sobre a estação de colheita são gerais e podem variar de acordo com a região e variedade da fruta`;
+                addMessage("assistant", problematicContent);
+            };
 
-      initializeAuth();
-    </script>
-  </body>
+            initializeAuth();
+        </script>
+    </body>
 </html>
