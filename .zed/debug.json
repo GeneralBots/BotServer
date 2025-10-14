@@ -1,9 +1,9 @@
 [
   {
-    "label": "Build & Debug native binary",
+    "label": "Debug BotServer",
     "build": {
       "command": "cargo",
-      "args": ["build"]
+      "args": ["run"]
     },
     "program": "$ZED_WORKTREE_ROOT/target/debug/botserver",
 
