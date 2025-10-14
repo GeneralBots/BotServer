@@ -3,7 +3,8 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 OUTPUT_FILE="$SCRIPT_DIR/prompt.out"
-rm $OUTPUT_FILE
+
+rm -f "$OUTPUT_FILE"
 echo "Consolidated LLM Context" > "$OUTPUT_FILE"
 
 prompts=(
@@ -13,8 +14,10 @@ prompts=(
 )
 
 for file in "${prompts[@]}"; do
-    cat "$file" >> "$OUTPUT_FILE"
-    echo "" >> "$OUTPUT_FILE"
+    if [ -f "$file" ]; then
+        cat "$file" >> "$OUTPUT_FILE"
+        echo "" >> "$OUTPUT_FILE"
+    fi
 done
 
 dirs=(
@@ -22,8 +25,8 @@ dirs=(
     #"automation"
     #"basic"
     "bot"
-    #"channels"
-    "config"
+    "channels"
+    #"config"
     #"context"
     #"email"
     #"file"
@@ -37,25 +40,55 @@ dirs=(
     #"web_automation"
     #"whatsapp"
 )
+
+filter_rust_file() {
+    sed -E '/^\s*\/\//d' "$1" | \
+    sed -E '/info!\s*\(/d' | \
+    sed -E '/debug!\s*\(/d' | \
+    sed -E '/trace!\s*\(/d'
+}
+
 for dir in "${dirs[@]}"; do
-    find "$PROJECT_ROOT/src/$dir" -name "*.rs" | while read file; do
-        echo $file >> "$OUTPUT_FILE"
-        cat "$file" >> "$OUTPUT_FILE"
+    find "$PROJECT_ROOT/src/$dir" -name "*.rs" | while read -r file; do
+        echo "$file" >> "$OUTPUT_FILE"
+        filter_rust_file "$file" >> "$OUTPUT_FILE"
         echo "" >> "$OUTPUT_FILE"
     done
 done
 
-# Also append the specific files you mentioned
-echo "$PROJECT_ROOT/src/main.rs" >> "$OUTPUT_FILE"
-cat "$PROJECT_ROOT/src/main.rs" >> "$OUTPUT_FILE"
+# Additional specific files
+files=(
+    "$PROJECT_ROOT/src/main.rs"
+    "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs"
+    "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/start.bas"
+    "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/auth.bas"
+    "$PROJECT_ROOT/web/index.html"
+)
 
-cat "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs" >> "$OUTPUT_FILE"
-echo "$PROJECT_ROOT/src/basic/mod.rs">> "$OUTPUT_FILE"
-cat "$PROJECT_ROOT/src/basic/mod.rs" >> "$OUTPUT_FILE"
+for file in "${files[@]}"; do
+    if [[ "$file" == *.rs ]]; then
+        echo "$file" >> "$OUTPUT_FILE"
+        filter_rust_file "$file" >> "$OUTPUT_FILE"
+    else
+        echo "$file" >> "$OUTPUT_FILE"
+        cat "$file" >> "$OUTPUT_FILE"
+    fi
+done
 
-echo "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/start.bas" >> "$OUTPUT_FILE"
-cat "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/start.bas" >> "$OUTPUT_FILE"
+# Remove all blank lines and reduce whitespace greater than 1 space
+sed -i 's/[[:space:]]*$//' "$OUTPUT_FILE"
+sed -i '/^$/d' "$OUTPUT_FILE"
+sed -i 's/  \+/ /g' "$OUTPUT_FILE"
+
+# Calculate and display token count (approximation: words * 1.3)
+WORD_COUNT=$(wc -w < "$OUTPUT_FILE")
+TOKEN_COUNT=$(echo "$WORD_COUNT * 1.3 / 1" | bc)
+FILE_SIZE=$(wc -c < "$OUTPUT_FILE")
 
 echo "" >> "$OUTPUT_FILE"
 
-# cargo build --message-format=short 2>&1 | grep -E 'error' >> "$OUTPUT_FILE"
+echo "Approximate token count: $TOKEN_COUNT"
+echo "Context size: $FILE_SIZE bytes"
+
+cat "$OUTPUT_FILE" | xclip -selection clipboard
+echo "Content copied to clipboard (xclip)"

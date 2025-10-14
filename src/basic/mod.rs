@@ -82,8 +82,6 @@ impl ScriptService {
             let trimmed = line.trim();
 
             if trimmed.is_empty() || trimmed.starts_with("//") || trimmed.starts_with("REM") {
-                result.push_str(line);
-                result.push('\n');
                 continue;
             }
 

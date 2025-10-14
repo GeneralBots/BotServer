@@ -78,7 +78,7 @@ impl AppConfig {
 
     pub fn from_env() -> Self {
         let database = DatabaseConfig {
-            username: env::var("TABLES_USERNAME").unwrap_or_else(|_| "user".to_string()),
+            username: env::var("TABLES_USERNAME").unwrap(),
             password: env::var("TABLES_PASSWORD").unwrap_or_else(|_| "pass".to_string()),
             server: env::var("TABLES_SERVER").unwrap_or_else(|_| "localhost".to_string()),
             port: env::var("TABLES_PORT")

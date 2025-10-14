@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
@@ -7,7 +6,6 @@ use dotenvy::dotenv;
 use log::info;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-
 mod auth;
 mod automation;
 mod basic;
@@ -25,10 +23,9 @@ mod session;
 mod shared;
 mod tools;
 mod whatsapp;
-
 use crate::bot::{
-    create_session, get_session_history, get_sessions, index, set_mode_handler, start_session,
-    static_files, voice_start, voice_stop, websocket_handler, whatsapp_webhook,
+    auth_handler, create_session, get_session_history, get_sessions, index, set_mode_handler,
+    start_session, static_files, voice_start, voice_stop, websocket_handler,
     whatsapp_webhook_verify,
 };
 use crate::channels::{VoiceAdapter, WebChannelAdapter};
@@ -49,14 +46,12 @@ async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
-    info!("Starting General Bots 6.0...");
-
     let cfg = AppConfig::from_env();
     let config = std::sync::Arc::new(cfg.clone());
 
     let db_pool = match diesel::Connection::establish(&cfg.database_url()) {
         Ok(conn) => {
-            info!("Connected to main database");
+            info!("Connected to main database successfully");
             Arc::new(Mutex::new(conn))
         }
         Err(e) => {
@@ -79,7 +74,7 @@ async fn main() -> std::io::Result<()> {
 
     let db_custom_pool = match diesel::Connection::establish(&custom_db_url) {
         Ok(conn) => {
-            info!("Connected to custom database using constructed URL");
+            info!("Connected to custom database successfully");
             Arc::new(Mutex::new(conn))
         }
         Err(e2) => {
@@ -97,7 +92,7 @@ async fn main() -> std::io::Result<()> {
 
     let redis_client = match redis::Client::open("redis://127.0.0.1/") {
         Ok(client) => {
-            info!("Connected to Redis");
+            info!("Connected to Redis successfully");
             Some(Arc::new(client))
         }
         Err(e) => {
@@ -109,7 +104,6 @@ async fn main() -> std::io::Result<()> {
     let tool_manager = Arc::new(tools::ToolManager::new());
     let llama_url =
         std::env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
-
     let llm_provider = Arc::new(crate::llm::OpenAIClient::new(
         "empty".to_string(),
         Some(llama_url.clone()),
@@ -121,13 +115,11 @@ async fn main() -> std::io::Result<()> {
         "api_key".to_string(),
         "api_secret".to_string(),
     ));
-
     let whatsapp_adapter = Arc::new(WhatsAppAdapter::new(
         "whatsapp_token".to_string(),
         "phone_number_id".to_string(),
         "verify_token".to_string(),
     ));
-
     let tool_api = Arc::new(tools::ToolApi::new());
 
     let session_manager = Arc::new(tokio::sync::Mutex::new(session::SessionManager::new(
@@ -150,7 +142,14 @@ async fn main() -> std::io::Result<()> {
         tool_manager: tool_manager.clone(),
         llm_provider: llm_provider.clone(),
         auth_service: auth_service.clone(),
-        channels: Arc::new(Mutex::new(HashMap::new())),
+        channels: Arc::new(Mutex::new({
+            let mut map = HashMap::new();
+            map.insert(
+                "web".to_string(),
+                web_adapter.clone() as Arc<dyn crate::channels::ChannelAdapter>,
+            );
+            map
+        })),
         response_channels: Arc::new(tokio::sync::Mutex::new(HashMap::new())),
         web_adapter: web_adapter.clone(),
         voice_adapter: voice_adapter.clone(),
@@ -171,7 +170,6 @@ async fn main() -> std::io::Result<()> {
             .max_age(3600);
 
         let app_state_clone = app_state.clone();
-
         let mut app = App::new()
             .wrap(cors)
             .wrap(Logger::default())
@@ -183,8 +181,8 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(static_files)
             .service(websocket_handler)
+            .service(auth_handler)
             .service(whatsapp_webhook_verify)
-            .service(whatsapp_webhook)
             .service(voice_start)
             .service(voice_stop)
             .service(create_session)

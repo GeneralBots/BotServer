@@ -18,3 +18,10 @@ cargo install cargo-edit
 
 cargo upgrade
 cargo audit
+
+apt install xclip
+
+# Prompt add-ons
+
+- Prompt add-ons: Fill the file with info!, trace! and debug! macros.
+-

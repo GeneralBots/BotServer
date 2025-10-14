@@ -141,7 +141,7 @@ pub fn set_user_keyword(state: Arc<AppState>, user: UserSession, engine: &mut En
 
                         if let Err(e) = session_manager.update_user_id(user_clone_spawn.id, user_id)
                         {
-                            debug!("Failed to update user ID in session: {}", e);
+                            error!("Failed to update user ID in session: {}", e);
                         } else {
                             info!(
                                 "Updated session {} to user ID: {}",
