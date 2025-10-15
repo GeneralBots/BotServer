@@ -63,8 +63,9 @@ pub async fn get_from_bucket(
     info!("Getting file from bucket: {}", file_path);
 
     if let Some(s3_client) = &state.s3_client {
-        let bucket_name =
-            std::env::var("DEFAULT_BUCKET").unwrap_or_else(|_| "default-bucket".to_string());
+        let bucket_name = std::env::var("DRIVE_ORG_PREFIX")
+            .map(|v| format!("{}-default", v))
+            .unwrap_or_else(|_| "org-default".to_string());
 
         let response = s3_client
             .get_object()
