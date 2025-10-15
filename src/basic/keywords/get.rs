@@ -1,6 +1,6 @@
 use crate::shared::models::UserSession;
 use crate::shared::state::AppState;
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use reqwest::{self, Client};
 use rhai::{Dynamic, Engine};
 use std::error::Error;
