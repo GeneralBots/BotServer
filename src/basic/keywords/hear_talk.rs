@@ -162,31 +162,73 @@ pub fn set_context_keyword(state: &AppState, user: UserSession, engine: &mut Eng
 
     engine
         .register_custom_syntax(&["SET_CONTEXT", "$expr$"], true, move |context, inputs| {
+            // Evaluate the expression that should be stored in the context.
             let context_value = context.eval_expression_tree(&inputs[0])?.to_string();
 
             info!("SET CONTEXT command executed: {}", context_value);
-
+            // Build the Redis key using the user ID and the session ID.
             let redis_key = format!("context:{}:{}", user.user_id, user.id);
+            log::trace!(
+                target: "app::set_context",
+                "Constructed Redis key: {} for user {} and session {}",
+                redis_key,
+                user.user_id,
+                user.id
+            );
 
-            let cache_clone = cache.clone();
+            // If a Redis client is configured, perform the SET operation in a background task.
+            if let Some(cache_client) = &cache {
+                log::trace!("Redis client is available, preparing to set context value");
+                // Clone the values we need inside the async block.
+                let cache_client = cache_client.clone();
+                let redis_key = redis_key.clone();
+                let context_value = context_value.clone();
+                log::trace!(
+                    "Cloned cache_client, redis_key ({}) and context_value (len={}) for async task",
+                    redis_key,
+                    context_value.len()
+                );
 
-            if let Some(cache_client) = &cache_clone {
-                let mut conn = match futures::executor::block_on(
-                    cache_client.get_multiplexed_async_connection(),
-                ) {
-                    Ok(conn) => conn,
-                    Err(e) => {
-                        error!("Failed to connect to cache: {}", e);
-                        return Ok(Dynamic::UNIT);
-                    }
-                };
+                // Spawn a task so we don't need an async closure here.
+                tokio::spawn(async move {
+                    log::trace!("Async task started for SET_CONTEXT operation");
+                    // Acquire an async Redis connection.
+                    let mut conn = match cache_client.get_multiplexed_async_connection().await {
+                        Ok(conn) => {
+                            log::trace!("Successfully acquired async Redis connection");
+                            conn
+                        }
+                        Err(e) => {
+                            error!("Failed to connect to cache: {}", e);
+                            log::trace!("Aborting SET_CONTEXT task due to connection error");
+                            return;
+                        }
+                    };
 
-                let _: Result<(), _> = futures::executor::block_on(
-                    redis::cmd("SET")
+                    // Perform the SET command.
+                    log::trace!(
+                        "Executing Redis SET command with key: {} and value length: {}",
+                        redis_key,
+                        context_value.len()
+                    );
+                    let result: Result<(), redis::RedisError> = redis::cmd("SET")
                         .arg(&redis_key)
                         .arg(&context_value)
-                        .query_async(&mut conn),
-                );
+                        .query_async(&mut conn)
+                        .await;
+
+                    match result {
+                        Ok(_) => {
+                            log::trace!("Successfully set context in Redis for key {}", redis_key);
+                        }
+                        Err(e) => {
+                            error!("Failed to set cache value: {}", e);
+                            log::trace!("SET_CONTEXT Redis SET command failed");
+                        }
+                    }
+                });
+            } else {
+                log::trace!("No Redis client configured; SET_CONTEXT will not persist to cache");
             }
 
             Ok(Dynamic::UNIT)

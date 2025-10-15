@@ -9,17 +9,17 @@ ADD Manual: Claude/DeepSeek -> DeepSeek
 curl -sSL https://get.livekit.io | bash
 livekit-server --dev
 
-
-
-# Util
-
 cargo install cargo-audit
 cargo install cargo-edit
+
+apt install -y xclip valkey-cli
+
+# Util
 
 cargo upgrade
 cargo audit
 
-apt install xclip
+valkey-cli -p 6379 monitor
 
 # Prompt add-ons
 

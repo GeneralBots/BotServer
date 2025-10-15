@@ -219,6 +219,45 @@ impl SessionManager {
         _uid: Uuid,
     ) -> Result<Vec<(String, String)>, Box<dyn Error + Send + Sync>> {
         use crate::shared::models::message_history::dsl::*;
+        use redis::Commands; // Import trait that provides the `get` method
+
+        let redis_key = format!("context:{}:{}", _uid, sess_id);
+
+        // Fetch context from Redis and append to history on first retrieval
+        let redis_context = if let Some(redis_client) = &self.redis {
+            let conn = redis_client
+                .get_connection()
+                .map_err(|e| {
+                    warn!("Failed to get Redis connection: {}", e);
+                    e
+                })
+                .ok();
+
+            if let Some(mut connection) = conn {
+                match connection.get::<_, Option<String>>(&redis_key) {
+                    Ok(Some(context)) => {
+                        info!(
+                            "Retrieved context from Redis for key {}: {} chars",
+                            redis_key,
+                            context.len()
+                        );
+                        Some(context)
+                    }
+                    Ok(None) => {
+                        debug!("No context found in Redis for key {}", redis_key);
+                        None
+                    }
+                    Err(e) => {
+                        warn!("Failed to retrieve context from Redis: {}", e);
+                        None
+                    }
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        };
 
         let messages = message_history
             .filter(session_id.eq(sess_id))
@@ -226,18 +265,22 @@ impl SessionManager {
             .select((role, content_encrypted))
             .load::<(i32, String)>(&mut self.conn)?;
 
-        let history = messages
-            .into_iter()
-            .map(|(other_role, content)| {
-                let role_str = match other_role {
-                    0 => "user".to_string(),
-                    1 => "assistant".to_string(),
-                    _ => "unknown".to_string(),
-                };
-                (role_str, content)
-            })
-            .collect();
+        // Build conversation history, inserting Redis context as a system (role 2) message if it exists
+        let mut history: Vec<(String, String)> = Vec::new();
 
+        if let Some(ctx) = redis_context {
+            history.push(("system".to_string(), ctx));
+        }
+
+        for (other_role, content) in messages {
+            let role_str = match other_role {
+                0 => "user".to_string(),
+                1 => "assistant".to_string(),
+                2 => "system".to_string(),
+                _ => "unknown".to_string(),
+            };
+            history.push((role_str, content));
+        }
         Ok(history)
     }
 
