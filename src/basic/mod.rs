@@ -52,7 +52,7 @@ impl ScriptService {
         last_keyword(&mut engine);
         format_keyword(&mut engine);
         llm_keyword(&state, user.clone(), &mut engine);
-        get_keyword(&state, user.clone(), &mut engine);
+        get_keyword(state.clone(), user.clone(), &mut engine);
         set_keyword(&state, user.clone(), &mut engine);
         wait_keyword(&state, user.clone(), &mut engine);
         print_keyword(&state, user.clone(), &mut engine);

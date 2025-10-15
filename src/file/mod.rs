@@ -6,6 +6,7 @@ use std::io::Write;
 use tempfile::NamedTempFile;
 use tokio_stream::StreamExt as TokioStreamExt;
 
+use crate::config::DriveConfig;
 use crate::shared::state::AppState;
 
 #[post("/files/upload/{folder_path}")]
@@ -49,7 +50,7 @@ pub async fn upload_file(
     let temp_file_path = temp_file.into_temp_path();
 
     // Retrieve the bucket name from configuration, handling the case where it is missing
-    let bucket_name = match &state.config {
+    let bucket_name = match &state.get_ref().config {
         Some(cfg) => cfg.s3_bucket.clone(),
         None => {
             // Clean up the temp file before returning the error
@@ -63,9 +64,13 @@ pub async fn upload_file(
     // Build the S3 object key (folder + filename)
     let s3_key = format!("{}/{}", folder_path, file_name);
 
+    // Retrieve a reference to the S3 client, handling the case where it is missing
+    let s3_client = state.get_ref().s3_client.as_ref().ok_or_else(|| {
+        actix_web::error::ErrorInternalServerError("S3 client is not initialized")
+    })?;
+
     // Perform the upload
-    let s3_client = get_s3_client(&state).await;
-    match upload_to_s3(&s3_client, &bucket_name, &s3_key, &temp_file_path).await {
+    match upload_to_s3(s3_client, &bucket_name, &s3_key, &temp_file_path).await {
         Ok(_) => {
             // Remove the temporary file now that the upload succeeded
             let _ = std::fs::remove_file(&temp_file_path);
@@ -86,33 +91,31 @@ pub async fn upload_file(
 }
 
 // Helper function to get S3 client
-async fn get_s3_client(state: &AppState) -> Client {
-    if let Some(cfg) = &state.config.as_ref().and_then(|c| Some(&c.minio)) {
-        // Build static credentials from the Drive configuration.
-        let credentials = aws_sdk_s3::config::Credentials::new(
-            cfg.access_key.clone(),
-            cfg.secret_key.clone(),
-            None,
-            None,
-            "static",
-        );
+pub async fn init_drive(cfg: &DriveConfig) -> Result<Client, Box<dyn std::error::Error>> {
+    // Build static credentials from the Drive configuration.
+    let credentials = aws_sdk_s3::config::Credentials::new(
+        cfg.access_key.clone(),
+        cfg.secret_key.clone(),
+        None,
+        None,
+        "static",
+    );
 
-        // Construct the endpoint URL, respecting the SSL flag.
-        let scheme = if cfg.use_ssl { "https" } else { "http" };
-        let endpoint = format!("{}://{}", scheme, cfg.server);
+    // Construct the endpoint URL, respecting the SSL flag.
+    let scheme = if cfg.use_ssl { "https" } else { "http" };
+    let endpoint = format!("{}://{}", scheme, cfg.server);
 
-        // MinIO requires path‑style addressing.
-        let s3_config = aws_sdk_s3::config::Builder::new()
-            .region(aws_sdk_s3::config::Region::new("us-east-1"))
-            .endpoint_url(endpoint)
-            .credentials_provider(credentials)
-            .force_path_style(true)
-            .build();
+    // MinIO requires path‑style addressing.
+    let s3_config = aws_sdk_s3::config::Builder::new()
+        // Set the behavior version to the latest to satisfy the SDK requirement.
+        .behavior_version(aws_sdk_s3::config::BehaviorVersion::latest())
+        .region(aws_sdk_s3::config::Region::new("us-east-1"))
+        .endpoint_url(endpoint)
+        .credentials_provider(credentials)
+        .force_path_style(true)
+        .build();
 
-        Client::from_conf(s3_config)
-    } else {
-        panic!("MinIO configuration is missing in application state");
-    }
+    Ok(Client::from_conf(s3_config))
 }
 
 // Helper function to upload file to S3
@@ -122,15 +125,14 @@ async fn upload_to_s3(
     key: &str,
     file_path: &std::path::Path,
 ) -> Result<(), S3Error> {
-    // Convert the file at `file_path` into a `ByteStream`. Any I/O error is
-    // turned into a construction‑failure `SdkError` so that the function’s
-    // `Result` type (`Result<(), S3Error>`) stays consistent.
+    // Convert the file at `file_path` into a ByteStream, mapping any I/O error
+    // into the appropriate `SdkError` type expected by the function signature.
     let body = aws_sdk_s3::primitives::ByteStream::from_path(file_path)
         .await
         .map_err(|e| {
             aws_sdk_s3::error::SdkError::<
                 aws_sdk_s3::operation::put_object::PutObjectError,
-                aws_sdk_s3::operation::put_object::PutObjectOutput,
+                aws_sdk_s3::primitives::ByteStream,
             >::construction_failure(e)
         })?;
 
@@ -141,7 +143,8 @@ async fn upload_to_s3(
         .key(key)
         .body(body)
         .send()
-        .await?;
+        .await
+        .map(|_| ())?; // Convert the successful output to `()`.
 
     Ok(())
 }

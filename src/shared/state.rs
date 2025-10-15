@@ -75,7 +75,7 @@ impl Default for AppState {
             tool_manager: Arc::new(ToolManager::new()),
             llm_provider: Arc::new(crate::llm::OpenAIClient::new(
                 "empty".to_string(),
-                Some("http://48.217.66.81:8080".to_string()),
+                Some("http://localhost:8081".to_string()),
             )),
             auth_service: Arc::new(tokio::sync::Mutex::new(AuthService::new(
                 diesel::PgConnection::establish("postgres://localhost/test").unwrap(),

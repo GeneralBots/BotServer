@@ -1,45 +1,36 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'gbserver'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=gbserver",
-                    "--package=gbserver"
-                ],
-                "filter": {
-                    "name": "gbserver",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'gbserver'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=gbserver",
-                    "--package=gbserver"
-                ],
-                "filter": {
-                    "name": "gbserver",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug executable 'botserver'",
+      "cargo": {
+        "args": ["build", "--bin=botserver", "--package=botserver"],
+        "filter": {
+          "name": "botserver",
+          "kind": "bin"
         }
-    ]
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in executable 'botserver'",
+      "cargo": {
+        "args": ["test", "--no-run", "--bin=botserver", "--package=botserver"],
+        "filter": {
+          "name": "botserver",
+          "kind": "bin"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
 }

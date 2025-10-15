@@ -27,7 +27,7 @@ pub struct DriveConfig {
     pub access_key: String,
     pub secret_key: String,
     pub use_ssl: bool,
-    pub bucket: String,
+    pub org_prefix: String,
 }
 
 #[derive(Clone)]
@@ -107,7 +107,7 @@ impl AppConfig {
                 .unwrap_or_else(|_| "false".to_string())
                 .parse()
                 .unwrap_or(false),
-            bucket: env::var("DRIVE_ORG_PREFIX").unwrap_or_else(|_| "botserver".to_string()),
+            org_prefix: env::var("DRIVE_ORG_PREFIX").unwrap_or_else(|_| "botserver".to_string()),
         };
 
         let email = EmailConfig {

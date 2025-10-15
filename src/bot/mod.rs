@@ -862,7 +862,7 @@ async fn auth_handler(
     data: web::Data<AppState>,
     web::Query(params): web::Query<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
-    let token = params.get("token").cloned().unwrap_or_default();
+    let _token = params.get("token").cloned().unwrap_or_default();
     let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap();
     let bot_id = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
         match Uuid::parse_str(&bot_guid) {
