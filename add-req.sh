@@ -25,7 +25,7 @@ dirs=(
     #"automation"
     #"basic"
     "bot"
-    "channels"
+    #"channels"
     #"config"
     #"context"
     #"email"
@@ -62,7 +62,6 @@ files=(
     "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs"
     "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/start.bas"
     "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/auth.bas"
-    "$PROJECT_ROOT/web/index.html"
 )
 
 for file in "${files[@]}"; do

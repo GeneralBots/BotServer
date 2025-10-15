@@ -5,7 +5,6 @@ use actix_web::{web, HttpRequest, HttpResponse, Result};
 use actix_ws::Message as WsMessage;
 use chrono::Utc;
 use log::{debug, error, info, warn};
-
 use serde_json;
 use std::collections::HashMap;
 use std::fs;
@@ -274,12 +273,27 @@ impl BotOrchestrator {
         message: &UserMessage,
         session: &UserSession,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let system_prompt = std::env::var("SYSTEM_PROMPT").unwrap_or_default();
+        let context_data = {
+            let session_manager = self.state.session_manager.lock().await;
+            session_manager
+                .get_session_context(&session.id, &session.user_id)
+                .await?
+        };
+
+        let mut prompt = String::new();
+        if !system_prompt.is_empty() {
+            prompt.push_str(&format!("System: {}\n", system_prompt));
+        }
+        if !context_data.is_empty() {
+            prompt.push_str(&format!("Context: {}\n", context_data));
+        }
+
         let history = {
             let mut session_manager = self.state.session_manager.lock().await;
             session_manager.get_conversation_history(session.id, session.user_id)?
         };
 
-        let mut prompt = String::new();
         for (role, content) in history {
             prompt.push_str(&format!("{}: {}\n", role, content));
         }
@@ -351,14 +365,31 @@ impl BotOrchestrator {
             )?;
         }
 
+        let system_prompt = std::env::var("SYSTEM_PROMPT").unwrap_or_default();
+        let context_data = {
+            let session_manager = self.state.session_manager.lock().await;
+            session_manager
+                .get_session_context(&session.id, &session.user_id)
+                .await?
+        };
+
         let prompt = {
             let mut sm = self.state.session_manager.lock().await;
             let history = sm.get_conversation_history(session.id, user_id)?;
             let mut p = String::new();
+
+            if !system_prompt.is_empty() {
+                p.push_str(&format!("System: {}\n", system_prompt));
+            }
+            if !context_data.is_empty() {
+                p.push_str(&format!("Context: {}\n", context_data));
+            }
+
             for (role, content) in &history {
                 p.push_str(&format!("{}: {}\n", role, content));
             }
             p.push_str(&format!("User: {}\nAssistant:", message.content));
+
             debug!(
                 "Stream prompt constructed with {} history entries",
                 history.len()
@@ -406,11 +437,17 @@ impl BotOrchestrator {
         let mut analysis_buffer = String::new();
         let mut in_analysis = false;
         let mut chunk_count = 0;
+        let mut first_word_received = false;
 
         while let Some(chunk) = stream_rx.recv().await {
             chunk_count += 1;
-            analysis_buffer.push_str(&chunk);
 
+            if !first_word_received && !chunk.trim().is_empty() {
+                first_word_received = true;
+                debug!("First word received in stream: '{}'", chunk);
+            }
+
+            analysis_buffer.push_str(&chunk);
             if analysis_buffer.contains("<|channel|>") && !in_analysis {
                 in_analysis = true;
             }
@@ -567,7 +604,6 @@ impl BotOrchestrator {
             "Sending warning to session {} on channel {}: {}",
             session_id, channel, message
         );
-
         if channel == "web" {
             self.send_event(
                 "system",
@@ -615,7 +651,6 @@ impl BotOrchestrator {
             "Triggering auto welcome for user: {}, session: {}, token: {:?}",
             user_id, session_id, token
         );
-
         let session_uuid = Uuid::parse_str(session_id).map_err(|e| {
             error!("Invalid session ID: {}", e);
             e
@@ -676,8 +711,8 @@ async fn websocket_handler(
 
     let (res, mut session, mut msg_stream) = actix_ws::handle(&req, stream)?;
     let (tx, mut rx) = mpsc::channel::<BotResponse>(100);
-
     let orchestrator = BotOrchestrator::new(Arc::clone(&data));
+
     orchestrator
         .register_response_channel(session_id.clone(), tx.clone())
         .await;
@@ -685,11 +720,13 @@ async fn websocket_handler(
     data.web_adapter
         .add_connection(session_id.clone(), tx.clone())
         .await;
+
     data.voice_adapter
         .add_connection(session_id.clone(), tx.clone())
         .await;
 
     let bot_id = std::env::var("BOT_GUID").unwrap_or_else(|_| "default_bot".to_string());
+
     orchestrator
         .send_event(
             &user_id,
@@ -749,12 +786,28 @@ async fn websocket_handler(
                     message_count += 1;
                     let bot_id =
                         std::env::var("BOT_GUID").unwrap_or_else(|_| "default_bot".to_string());
+
+                    // Parse the text as JSON to extract the content field
+                    let json_value: serde_json::Value = match serde_json::from_str(&text) {
+                        Ok(value) => value,
+                        Err(e) => {
+                            error!("Error parsing JSON message {}: {}", message_count, e);
+                            continue; // Skip processing this message
+                        }
+                    };
+
+                    // Extract content from JSON, fallback to original text if content field doesn't exist
+                    let content = json_value["content"]
+                        .as_str()
+                        .map(|s| s.to_string())
+                        .unwrap();
+
                     let user_message = UserMessage {
                         bot_id: bot_id,
                         user_id: user_id_clone.clone(),
                         session_id: session_id_clone2.clone(),
                         channel: "web".to_string(),
-                        content: text.to_string(),
+                        content: content,
                         message_type: 1,
                         media_url: None,
                         timestamp: Utc::now(),
@@ -767,6 +820,7 @@ async fn websocket_handler(
                         );
                     }
                 }
+
                 WsMessage::Close(_) => {
                     let bot_id =
                         std::env::var("BOT_GUID").unwrap_or_else(|_| "default_bot".to_string());
@@ -809,7 +863,6 @@ async fn auth_handler(
     web::Query(params): web::Query<HashMap<String, String>>,
 ) -> Result<HttpResponse> {
     let token = params.get("token").cloned().unwrap_or_default();
-    info!("Auth handler called with token: {}", token);
     let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000000").unwrap();
     let bot_id = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
         match Uuid::parse_str(&bot_guid) {
@@ -827,7 +880,6 @@ async fn auth_handler(
 
     let session = {
         let mut sm = data.session_manager.lock().await;
-
         match sm.get_or_create_user_session(user_id, bot_id, "Auth Session") {
             Ok(Some(s)) => s,
             Ok(None) => {
@@ -842,6 +894,7 @@ async fn auth_handler(
             }
         }
     };
+
     let session_id_clone = session.id.clone();
     let auth_script_path = "./templates/annoucements.gbai/annoucements.gbdialog/auth.bas";
     let auth_script = match std::fs::read_to_string(auth_script_path) {
@@ -870,7 +923,6 @@ async fn auth_handler(
 
     let session = {
         let mut sm = data.session_manager.lock().await;
-
         match sm.get_session_by_id(session_id_clone) {
             Ok(Some(s)) => s,
             Ok(None) => {
@@ -902,7 +954,6 @@ async fn whatsapp_webhook_verify(
     let mode = params.get("hub.mode").unwrap_or(&empty);
     let token = params.get("hub.verify_token").unwrap_or(&empty);
     let challenge = params.get("hub.challenge").unwrap_or(&empty);
-
     info!(
         "Verification params - mode: {}, token: {}, challenge: {}",
         mode, token, challenge
@@ -930,7 +981,6 @@ async fn voice_start(
         .get("user_id")
         .and_then(|u| u.as_str())
         .unwrap_or("user");
-
     info!(
         "Voice session start request - session: {}, user: {}",
         session_id, user_id
@@ -968,7 +1018,6 @@ async fn voice_stop(
         .get("session_id")
         .and_then(|s| s.as_str())
         .unwrap_or("");
-
     match data.voice_adapter.stop_voice_session(session_id).await {
         Ok(()) => {
             info!(

@@ -1,16 +1,14 @@
+use crate::shared::models::UserSession;
 use chrono::Utc;
 use diesel::prelude::*;
 use diesel::PgConnection;
 use log::{debug, error, info, warn};
 use redis::Client;
 use serde::{Deserialize, Serialize};
-
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::sync::Arc;
 use uuid::Uuid;
-
-use crate::shared::models::UserSession;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct SessionData {
@@ -28,7 +26,6 @@ pub struct SessionManager {
 
 impl SessionManager {
     pub fn new(conn: PgConnection, redis_client: Option<Arc<Client>>) -> Self {
-        info!("Initializing SessionManager");
         SessionManager {
             conn,
             sessions: HashMap::new(),
@@ -46,7 +43,6 @@ impl SessionManager {
             "SessionManager.provide_input called for session {}",
             session_id
         );
-
         if let Some(sess) = self.sessions.get_mut(&session_id) {
             sess.data = input;
             self.waiting_for_input.remove(&session_id);
@@ -69,7 +65,6 @@ impl SessionManager {
 
     pub fn mark_waiting(&mut self, session_id: Uuid) {
         self.waiting_for_input.insert(session_id);
-        info!("Session {} marked as waiting for input", session_id);
     }
 
     pub fn get_session_by_id(
@@ -77,12 +72,10 @@ impl SessionManager {
         session_id: Uuid,
     ) -> Result<Option<UserSession>, Box<dyn Error + Send + Sync>> {
         use crate::shared::models::user_sessions::dsl::*;
-
         let result = user_sessions
             .filter(id.eq(session_id))
             .first::<UserSession>(&mut self.conn)
             .optional()?;
-
         Ok(result)
     }
 
@@ -92,14 +85,12 @@ impl SessionManager {
         bid: Uuid,
     ) -> Result<Option<UserSession>, Box<dyn Error + Send + Sync>> {
         use crate::shared::models::user_sessions::dsl::*;
-
         let result = user_sessions
             .filter(user_id.eq(uid))
             .filter(bot_id.eq(bid))
             .order(created_at.desc())
             .first::<UserSession>(&mut self.conn)
             .optional()?;
-
         Ok(result)
     }
 
@@ -110,11 +101,8 @@ impl SessionManager {
         session_title: &str,
     ) -> Result<Option<UserSession>, Box<dyn Error + Send + Sync>> {
         if let Some(existing) = self.get_user_session(uid, bid)? {
-            debug!("Found existing session: {}", existing.id);
             return Ok(Some(existing));
         }
-
-        info!("Creating new session for user {} with bot {}", uid, bid);
         self.create_session(uid, bid, session_title).map(Some)
     }
 
@@ -128,7 +116,6 @@ impl SessionManager {
         use crate::shared::models::users::dsl as users_dsl;
 
         let now = Utc::now();
-
         let user_exists: Option<Uuid> = users_dsl::users
             .filter(users_dsl::id.eq(uid))
             .select(users_dsl::id)
@@ -151,7 +138,6 @@ impl SessionManager {
                     users_dsl::updated_at.eq(now),
                 ))
                 .execute(&mut self.conn)?;
-            info!("Created placeholder user: {}", uid);
         }
 
         let inserted: UserSession = diesel::insert_into(user_sessions)
@@ -173,7 +159,6 @@ impl SessionManager {
                 e
             })?;
 
-        info!("New session created: {}", inserted.id);
         Ok(inserted)
     }
 
@@ -213,19 +198,18 @@ impl SessionManager {
         Ok(())
     }
 
-    pub fn get_conversation_history(
-        &mut self,
-        sess_id: Uuid,
-        _uid: Uuid,
-    ) -> Result<Vec<(String, String)>, Box<dyn Error + Send + Sync>> {
-        use crate::shared::models::message_history::dsl::*;
-        use redis::Commands; // Import trait that provides the `get` method
+    pub async fn get_session_context(
+        &self,
+        session_id: &Uuid,
+        user_id: &Uuid,
+    ) -> Result<String, Box<dyn Error + Send + Sync>> {
+        // Bring the Redis command trait into scope so we can call `get`.
+        use redis::Commands;
 
-        let redis_key = format!("context:{}:{}", _uid, sess_id);
-
-        // Fetch context from Redis and append to history on first retrieval
-        let redis_context = if let Some(redis_client) = &self.redis {
-            let conn = redis_client
+        let redis_key = format!("context:{}:{}", user_id, session_id);
+        if let Some(redis_client) = &self.redis {
+            // Attempt to obtain a Redis connection; log and ignore errors, returning `None`.
+            let conn_option = redis_client
                 .get_connection()
                 .map_err(|e| {
                     warn!("Failed to get Redis connection: {}", e);
@@ -233,31 +217,35 @@ impl SessionManager {
                 })
                 .ok();
 
-            if let Some(mut connection) = conn {
+            if let Some(mut connection) = conn_option {
                 match connection.get::<_, Option<String>>(&redis_key) {
                     Ok(Some(context)) => {
-                        info!(
+                        debug!(
                             "Retrieved context from Redis for key {}: {} chars",
                             redis_key,
                             context.len()
                         );
-                        Some(context)
+                        return Ok(context);
                     }
                     Ok(None) => {
                         debug!("No context found in Redis for key {}", redis_key);
-                        None
                     }
                     Err(e) => {
                         warn!("Failed to retrieve context from Redis: {}", e);
-                        None
                     }
                 }
-            } else {
-                None
             }
-        } else {
-            None
-        };
+        }
+        // If Redis is unavailable or the key is missing, return an empty context.
+        Ok(String::new())
+    }
+
+    pub fn get_conversation_history(
+        &mut self,
+        sess_id: Uuid,
+        _uid: Uuid,
+    ) -> Result<Vec<(String, String)>, Box<dyn Error + Send + Sync>> {
+        use crate::shared::models::message_history::dsl::*;
 
         let messages = message_history
             .filter(session_id.eq(sess_id))
@@ -265,13 +253,7 @@ impl SessionManager {
             .select((role, content_encrypted))
             .load::<(i32, String)>(&mut self.conn)?;
 
-        // Build conversation history, inserting Redis context as a system (role 2) message if it exists
         let mut history: Vec<(String, String)> = Vec::new();
-
-        if let Some(ctx) = redis_context {
-            history.push(("system".to_string(), ctx));
-        }
-
         for (other_role, content) in messages {
             let role_str = match other_role {
                 0 => "user".to_string(),
@@ -289,12 +271,10 @@ impl SessionManager {
         uid: Uuid,
     ) -> Result<Vec<UserSession>, Box<dyn Error + Send + Sync>> {
         use crate::shared::models::user_sessions;
-
         let sessions = user_sessions::table
             .filter(user_sessions::user_id.eq(uid))
             .order(user_sessions::created_at.desc())
             .load::<UserSession>(&mut self.conn)?;
-
         Ok(sessions)
     }
 
@@ -326,12 +306,11 @@ impl SessionManager {
         if updated_count == 0 {
             warn!("No session found for user {} and bot {}", uid, bid);
         } else {
-            debug!(
+            info!(
                 "Answer mode updated to {} for user {} and bot {}",
                 mode, uid, bid
             );
         }
-
         Ok(())
     }
 
@@ -349,9 +328,8 @@ impl SessionManager {
         if updated_count == 0 {
             warn!("No session found with ID: {}", session_id);
         } else {
-            info!("Updated session {} to user ID: {}", session_id, new_user_id);
+            debug!("Updated user ID for session {}", session_id);
         }
-
         Ok(())
     }
 }

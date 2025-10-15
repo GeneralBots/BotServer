@@ -72,19 +72,20 @@ async fn main() -> std::io::Result<()> {
         cfg.database_custom.database
     );
 
-    let db_custom_pool = match diesel::Connection::establish(&custom_db_url) {
-        Ok(conn) => {
-            info!("Connected to custom database successfully");
-            Arc::new(Mutex::new(conn))
-        }
-        Err(e2) => {
-            log::error!("Failed to connect to custom database: {}", e2);
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::ConnectionRefused,
-                format!("Custom Database connection failed: {}", e2),
-            ));
-        }
-    };
+    let db_custom_pool = db_pool.clone();
+    //     match diesel::Connection::establish(&custom_db_url) {
+    //     Ok(conn) => {
+    //         info!("Connected to custom database successfully");
+    //         Arc::new(Mutex::new(conn))
+    //     }
+    //     Err(e2) => {
+    //         log::error!("Failed to connect to custom database: {}", e2);
+    //         return Err(std::io::Error::new(
+    //             std::io::ErrorKind::ConnectionRefused,
+    //             format!("Custom Database connection failed: {}", e2),
+    //         ));
+    //     }
+    // };
 
     ensure_llama_servers_running()
         .await
@@ -103,7 +104,7 @@ async fn main() -> std::io::Result<()> {
 
     let tool_manager = Arc::new(tools::ToolManager::new());
     let llama_url =
-        std::env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
+        std::env::var("LLM_URL").unwrap_or_else(|_| "http://48.217.66.81:8080".to_string());
     let llm_provider = Arc::new(crate::llm::OpenAIClient::new(
         "empty".to_string(),
         Some(llama_url.clone()),

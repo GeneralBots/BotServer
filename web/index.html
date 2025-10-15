@@ -278,38 +278,26 @@
 
                 ws.onmessage = function (event) {
                     const response = JSON.parse(event.data);
+
+                    // Handle events first
                     if (response.message_type === 2) {
                         const eventData = JSON.parse(response.content);
                         handleEvent(eventData.event, eventData.data);
+
+                        // Don't return - allow regular message processing to continue
+                        // in case this event packet also contains response content
+                        if (
+                            response.content &&
+                            response.content.trim() !== "" &&
+                            !response.is_complete
+                        ) {
+                            processMessageContent(response);
+                        }
                         return;
                     }
 
-                    // Handle normal complete messages (like from TALK)
-                    if (response.is_complete) {
-                        isStreaming = false;
-                        streamingMessageId = null;
-                        // Only add message if there's actual content
-                        if (
-                            response.content &&
-                            response.content.trim() !== ""
-                        ) {
-                            addMessage("assistant", response.content);
-                        }
-                    } else {
-                        // Handle streaming messages
-                        if (!isStreaming) {
-                            isStreaming = true;
-                            streamingMessageId = "streaming-" + Date.now();
-                            addMessage(
-                                "assistant",
-                                response.content,
-                                true,
-                                streamingMessageId,
-                            );
-                        } else {
-                            updateLastMessage(response.content);
-                        }
-                    }
+                    // Process regular messages
+                    processMessageContent(response);
                 };
 
                 ws.onopen = function () {
@@ -330,6 +318,29 @@
                 };
             }
 
+            function processMessageContent(response) {
+                if (response.is_complete) {
+                    isStreaming = false;
+                    streamingMessageId = null;
+                    if (response.content && response.content.trim() !== "") {
+                        addMessage("assistant", response.content);
+                    }
+                } else {
+                    if (!isStreaming) {
+                        isStreaming = true;
+                        streamingMessageId = "streaming-" + Date.now();
+                        addMessage(
+                            "assistant",
+                            response.content,
+                            true,
+                            streamingMessageId,
+                        );
+                    } else {
+                        updateLastMessage(response.content);
+                    }
+                }
+            }
+
             function handleEvent(eventType, eventData) {
                 console.log("Event received:", eventType, eventData);
                 switch (eventType) {
@@ -340,6 +351,9 @@
                     case "thinking_end":
                         hideThinkingIndicator();
                         isThinking = false;
+                        // Reset streaming state to ensure clean start for next message
+                        isStreaming = false;
+                        streamingMessageId = null;
                         break;
                     case "warn":
                         showWarning(eventData.message);
@@ -647,31 +661,13 @@
             window.testWarning = function () {
                 fetch("/api/warn", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         session_id: currentSessionId || "default",
                         channel: "web",
                         message: "Esta é uma mensagem de teste de aviso!",
                     }),
                 });
-            };
-
-            window.testMarkdown = function () {
-                const markdownContent = `Tabela de Frutas
-| Nome da fruta | Cor predominante | Estação em que costuma estar em flor/colheita |
-|---------------|------------------|-----------------------------------------------|
-| Maçã | Verde, vermelho | Outono (início do verão em países de clima temperado) |
-| Banana | Amarelo | Todo ano (principalmente nas regiões tropicais) |
-| Laranja | Laranja | Inverno (pico de colheita em países de clima temperado) |
-**Nota**: As informações sobre a estação de colheita são gerais e podem variar de acordo com a região e variedade da fruta.`;
-                addMessage("assistant", markdownContent);
-            };
-
-            window.testProblematicTable = function () {
-                const problematicContent = `Tabela de Frutas**| Nome da fruta | Cor predominante | Estação em que costuma estar em flor/colheita |||||| Maçã | Verde, vermelho | Outono (início do verão em países de clima temperado) || Banana | Amarelo | Todo ano (principalmente nas regiões tropicais) || Laranja | Laranja | Inverno (pico de colheita em países de clima temperado) | Nota: As informações sobre a estação de colheita são gerais e podem variar de acordo com a região e variedade da fruta`;
-                addMessage("assistant", problematicContent);
             };
 
             initializeAuth();

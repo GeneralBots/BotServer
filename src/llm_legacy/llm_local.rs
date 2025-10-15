@@ -63,7 +63,7 @@ pub async fn ensure_llama_servers_running() -> Result<(), Box<dyn std::error::Er
     }
 
     // Get configuration from environment variables
-    let llm_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
+    let llm_url = env::var("LLM_URL").unwrap_or_else(|_| "http://48.217.66.81:8080".to_string());
     let embedding_url =
         env::var("EMBEDDING_URL").unwrap_or_else(|_| "http://localhost:8082".to_string());
     let llama_cpp_path = env::var("LLM_CPP_PATH").unwrap_or_else(|_| "~/llama.cpp".to_string());
@@ -259,7 +259,7 @@ pub async fn chat_completions_local(
     dotenv().ok().unwrap();
 
     // Get llama.cpp server URL
-    let llama_url = env::var("LLM_URL").unwrap_or_else(|_| "http://localhost:8081".to_string());
+    let llama_url = env::var("LLM_URL").unwrap_or_else(|_| "http://48.217.66.81:8080".to_string());
 
     // Convert OpenAI format to llama.cpp format
     let prompt = messages_to_prompt(&req_body.messages);
