@@ -1,0 +1,1 @@
+- When generating new Rhai keyword handlers in Rust, always design them to be thread-safe and fully compatible with async execution. Use Arc for shared state, perform heavy or async operations with tokio::task::block_in_place and Handle::current().block_on, and return results as rhai::Dynamic to maintain safe cross-thread communication between Rust and the Rhai engine.

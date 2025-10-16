@@ -82,7 +82,7 @@
                 border-radius: 8px;
                 color: #ffd700;
                 cursor: pointer;
-                margin-top: 60px; /* Moved down to create space */
+                margin-top: 60px;
                 margin-bottom: 15px;
                 transition: all 0.3s ease;
                 font-weight: 600;
@@ -436,6 +436,36 @@
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             }
 
+            .connection-status {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                z-index: 1000;
+                transition: all 0.3s ease;
+            }
+
+            .connection-status.connected {
+                background: rgba(100, 255, 100, 0.2);
+                border: 1px solid rgba(100, 255, 100, 0.4);
+                color: #90ff90;
+            }
+
+            .connection-status.disconnected {
+                background: rgba(255, 100, 100, 0.2);
+                border: 1px solid rgba(255, 100, 100, 0.4);
+                color: #ff9090;
+            }
+
+            .connection-status.connecting {
+                background: rgba(255, 215, 0, 0.2);
+                border: 1px solid rgba(255, 215, 0, 0.4);
+                color: #ffd700;
+            }
+
             /* Markdown Styles */
             .markdown-content h1,
             .markdown-content h2,
@@ -616,6 +646,13 @@
                     height: 60px;
                     font-size: 36px;
                 }
+
+                .connection-status {
+                    top: 5px;
+                    right: 5px;
+                    font-size: 10px;
+                    padding: 6px 10px;
+                }
             }
 
             @media (max-width: 480px) {
@@ -651,6 +688,10 @@
         </style>
     </head>
     <body>
+        <div class="connection-status connecting" id="connectionStatus">
+            🔄 Conectando...
+        </div>
+
         <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
         <div class="sidebar" id="sidebar">
@@ -716,11 +757,16 @@
             let isThinking = false;
             let currentStreamingContent = "";
             let hasReceivedInitialMessage = false;
+            let reconnectAttempts = 0;
+            const maxReconnectAttempts = 5;
+            let reconnectTimeout = null;
 
             const messagesDiv = document.getElementById("messages");
             const input = document.getElementById("messageInput");
             const sendBtn = document.getElementById("sendBtn");
             const newChatBtn = document.getElementById("newChatBtn");
+            const connectionStatus =
+                document.getElementById("connectionStatus");
 
             marked.setOptions({
                 breaks: true,
@@ -729,6 +775,17 @@
 
             function toggleSidebar() {
                 document.getElementById("sidebar").classList.toggle("open");
+            }
+
+            function updateConnectionStatus(status, message) {
+                connectionStatus.className = `connection-status ${status}`;
+                connectionStatus.textContent = message;
+            }
+
+            function getWebSocketUrl() {
+                const protocol =
+                    window.location.protocol === "https:" ? "wss:" : "ws:";
+                return `${protocol}//${window.location.host}/ws?session_id=${currentSessionId}&user_id=${currentUserId}`;
             }
 
             // Auto-focus on input when page loads
@@ -753,6 +810,7 @@
 
             async function initializeAuth() {
                 try {
+                    updateConnectionStatus("connecting", "🔄 Conectando...");
                     const response = await fetch("/api/auth");
                     const authData = await response.json();
                     currentUserId = authData.user_id;
@@ -762,6 +820,11 @@
                     await triggerStartScript();
                 } catch (error) {
                     console.error("Failed to initialize auth:", error);
+                    updateConnectionStatus(
+                        "disconnected",
+                        "❌ Erro de conexão",
+                    );
+                    setTimeout(initializeAuth, 3000);
                 }
             }
 
@@ -870,13 +933,10 @@
                 if (ws) {
                     ws.close();
                 }
-                const wsUrl =
-                    "ws://" +
-                    window.location.host +
-                    "/ws?session_id=" +
-                    currentSessionId +
-                    "&user_id=" +
-                    currentUserId;
+
+                clearTimeout(reconnectTimeout);
+
+                const wsUrl = getWebSocketUrl();
                 ws = new WebSocket(wsUrl);
 
                 ws.onmessage = function (event) {
@@ -893,16 +953,48 @@
 
                 ws.onopen = function () {
                     console.log("Connected to WebSocket");
+                    updateConnectionStatus("connected", "✅ Conectado");
+                    reconnectAttempts = 0;
                     // Reset the flag when connection is established
                     hasReceivedInitialMessage = false;
                 };
 
-                ws.onclose = function () {
-                    console.log("WebSocket disconnected");
+                ws.onclose = function (event) {
+                    console.log(
+                        "WebSocket disconnected:",
+                        event.code,
+                        event.reason,
+                    );
+                    updateConnectionStatus("disconnected", "❌ Desconectado");
+
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        const delay = Math.min(1000 * reconnectAttempts, 10000);
+                        console.log(
+                            `Reconnecting in ${delay}ms... (attempt ${reconnectAttempts})`,
+                        );
+
+                        reconnectTimeout = setTimeout(() => {
+                            updateConnectionStatus(
+                                "connecting",
+                                `🔄 Reconectando... (${reconnectAttempts}/${maxReconnectAttempts})`,
+                            );
+                            connectWebSocket();
+                        }, delay);
+                    } else {
+                        updateConnectionStatus(
+                            "disconnected",
+                            "❌ Conexão perdida",
+                        );
+                    }
                 };
 
                 ws.onerror = function (error) {
                     console.error("WebSocket error:", error);
+                    updateConnectionStatus(
+                        "disconnected",
+                        "❌ Erro de conexão",
+                    );
                 };
             }
 
@@ -1124,7 +1216,15 @@
 
             function sendMessage() {
                 const message = input.value.trim();
-                if (!message || !ws || ws.readyState !== WebSocket.OPEN) return;
+                if (!message || !ws || ws.readyState !== WebSocket.OPEN) {
+                    if (!ws || ws.readyState !== WebSocket.OPEN) {
+                        showWarning(
+                            "Conexão não disponível. Tentando reconectar...",
+                        );
+                        connectWebSocket();
+                    }
+                    return;
+                }
 
                 if (isThinking) {
                     hideThinkingIndicator();
@@ -1195,6 +1295,7 @@
                     }
                 } catch (error) {
                     console.error("Failed to start voice session:", error);
+                    showWarning("Falha ao iniciar modo de voz");
                 }
             }
 
@@ -1223,7 +1324,11 @@
             async function connectToVoiceRoom(token) {
                 try {
                     const room = new LiveKitClient.Room();
-                    await room.connect("ws://localhost:7880", token);
+                    // Use o mesmo esquema (ws/wss) do WebSocket principal
+                    const protocol =
+                        window.location.protocol === "https:" ? "wss:" : "ws:";
+                    const voiceUrl = `${protocol}//${window.location.host}/voice`;
+                    await room.connect(voiceUrl, token);
                     voiceRoom = room;
 
                     room.on("dataReceived", (data) => {
@@ -1248,6 +1353,7 @@
                     }
                 } catch (error) {
                     console.error("Failed to connect to voice room:", error);
+                    showWarning("Falha na conexão de voz");
                 }
             }
 
@@ -1291,6 +1397,7 @@
                     })
                     .catch((error) => {
                         console.error("Error accessing microphone:", error);
+                        showWarning("Erro ao acessar microfone");
                     });
             }
 
@@ -1322,7 +1429,15 @@
                 addMessage("voice", `🎤 ${randomPhrase}`);
             }
 
-            initializeAuth();
+            // Inicializar quando a página carregar
+            window.addEventListener("load", initializeAuth);
+
+            // Tentar reconectar quando a página ganhar foco
+            window.addEventListener("focus", function () {
+                if (!ws || ws.readyState !== WebSocket.OPEN) {
+                    connectWebSocket();
+                }
+            });
         </script>
     </body>
 </html>
