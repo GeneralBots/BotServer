@@ -11,6 +11,7 @@ pub struct Organization {
     pub slug: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
+
 #[derive(Debug, Clone, Queryable, Serialize, Deserialize)]
 #[diesel(table_name = users)]
 pub struct User {
@@ -67,7 +68,6 @@ pub struct Automation {
     pub kind: i32,
     pub target: Option<String>,
     pub schedule: Option<String>,
-    pub script_name: String,
     pub param: String,
     pub is_active: bool,
     pub last_triggered: Option<chrono::DateTime<chrono::Utc>>,
@@ -136,6 +136,17 @@ pub struct PaginationQuery {
     pub page_size: Option<i64>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable, Insertable)]
+#[diesel(table_name = bot_memories)]
+pub struct BotMemory {
+    pub id: Uuid,
+    pub bot_id: Uuid,
+    pub key: String,
+    pub value: String,
+    pub created_at: chrono::DateTime<Utc>,
+    pub updated_at: chrono::DateTime<Utc>,
+}
+
 diesel::table! {
     organizations (org_id) {
         org_id -> Uuid,
@@ -162,7 +173,6 @@ diesel::table! {
         kind -> Int4,
         target -> Nullable<Text>,
         schedule -> Nullable<Text>,
-        script_name -> Text,
         param -> Text,
         is_active -> Bool,
         last_triggered -> Nullable<Timestamptz>,
@@ -213,6 +223,17 @@ diesel::table! {
         id -> Uuid,
         campaign_id -> Text,
         email -> Text,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    bot_memories (id) {
+        id -> Uuid,
+        bot_id -> Uuid,
+        key -> Text,
+        value -> Text,
+        created_at -> Timestamptz,
         updated_at -> Timestamptz,
     }
 }

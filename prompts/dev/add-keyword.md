@@ -118,12 +118,12 @@ pub async fn execute_set_schedule(
 
     let result = sqlx::query(
         "INSERT INTO system_automations
-        (kind, schedule, script_name)
+        (kind, schedule, param)
         VALUES ($1, $2, $3)"
     )
     .bind(TriggerKind::Scheduled as i32)
     .bind(cron)
-    .bind(script_name)
+    .bind(param)
     .execute(pool)
     .await?;
 

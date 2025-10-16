@@ -1,8 +1,3 @@
--- public.bots definition
-
--- Drop table
-
--- DROP TABLE public.bots;
 
 CREATE TABLE public.bots (
 	id uuid DEFAULT gen_random_uuid() NOT NULL,

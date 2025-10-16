@@ -15,10 +15,10 @@ pub fn set_schedule_keyword(state: &AppState, _user: UserSession, engine: &mut E
         .register_custom_syntax(&["SET_SCHEDULE", "$string$"], true, {
             move |context, inputs| {
                 let cron = context.eval_expression_tree(&inputs[0])?.to_string();
-                let script_name = format!("cron_{}.rhai", cron.replace(' ', "_"));
+                let param = format!("cron_{}.rhai", cron.replace(' ', "_"));
 
                 let mut conn = state_clone.conn.lock().unwrap();
-                let result = execute_set_schedule(&mut *conn, &cron, &script_name)
+                let result = execute_set_schedule(&mut *conn, &cron, &param)
                     .map_err(|e| format!("DB error: {}", e))?;
 
                 if let Some(rows_affected) = result.get("rows_affected") {
@@ -34,11 +34,11 @@ pub fn set_schedule_keyword(state: &AppState, _user: UserSession, engine: &mut E
 pub fn execute_set_schedule(
     conn: &mut diesel::PgConnection,
     cron: &str,
-    script_name: &str,
+    param: &str,
 ) -> Result<Value, Box<dyn std::error::Error>> {
     info!(
-        "Starting execute_set_schedule with cron: {}, script_name: {}",
-        cron, script_name
+        "Starting execute_set_schedule with cron: {}, param: {}",
+        cron, param
     );
 
     use crate::shared::models::system_automations;
@@ -46,7 +46,7 @@ pub fn execute_set_schedule(
     let new_automation = (
         system_automations::kind.eq(TriggerKind::Scheduled as i32),
         system_automations::schedule.eq(cron),
-        system_automations::script_name.eq(script_name),
+        system_automations::param.eq(param),
     );
 
     let result = diesel::insert_into(system_automations::table)
@@ -56,7 +56,7 @@ pub fn execute_set_schedule(
     Ok(json!({
         "command": "set_schedule",
         "schedule": cron,
-        "script_name": script_name,
+        "param": param,
         "rows_affected": result
     }))
 }

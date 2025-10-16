@@ -1,3 +1,4 @@
+pub mod bot_memory;
 pub mod create_site;
 pub mod find;
 pub mod first;

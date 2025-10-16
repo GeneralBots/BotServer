@@ -1,0 +1,1 @@
+- Be pragmatic and concise with examples.

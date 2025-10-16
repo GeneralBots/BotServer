@@ -24,7 +24,7 @@ dirs=(
     #"auth"
     #"automation"
     #"basic"
-    "bot"
+    #"bot"
     #"channels"
     #"config"
     #"context"
@@ -60,8 +60,7 @@ done
 files=(
     "$PROJECT_ROOT/src/main.rs"
     "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs"
-    "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/start.bas"
-    "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/auth.bas"
+    "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/update-summary.bas"
 )
 
 for file in "${files[@]}"; do

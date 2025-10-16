@@ -18,7 +18,7 @@ pub fn on_keyword(state: &AppState, _user: UserSession, engine: &mut Engine) {
             move |context, inputs| {
                 let trigger_type = context.eval_expression_tree(&inputs[0])?.to_string();
                 let table = context.eval_expression_tree(&inputs[1])?.to_string();
-                let script_name = format!("{}_{}.rhai", table, trigger_type.to_lowercase());
+                let name = format!("{}_{}.rhai", table, trigger_type.to_lowercase());
 
                 let kind = match trigger_type.to_uppercase().as_str() {
                     "UPDATE" => TriggerKind::TableUpdate,
@@ -28,7 +28,7 @@ pub fn on_keyword(state: &AppState, _user: UserSession, engine: &mut Engine) {
                 };
 
                 let mut conn = state_clone.conn.lock().unwrap();
-                let result = execute_on_trigger(&mut *conn, kind, &table, &script_name)
+                let result = execute_on_trigger(&mut *conn, kind, &table, &name)
                     .map_err(|e| format!("DB error: {}", e))?;
 
                 if let Some(rows_affected) = result.get("rows_affected") {
@@ -45,11 +45,11 @@ pub fn execute_on_trigger(
     conn: &mut diesel::PgConnection,
     kind: TriggerKind,
     table: &str,
-    script_name: &str,
+    param: &str,
 ) -> Result<Value, String> {
     info!(
-        "Starting execute_on_trigger with kind: {:?}, table: {}, script_name: {}",
-        kind, table, script_name
+        "Starting execute_on_trigger with kind: {:?}, table: {}, param: {}",
+        kind, table, param
     );
 
     use crate::shared::models::system_automations;
@@ -57,7 +57,7 @@ pub fn execute_on_trigger(
     let new_automation = (
         system_automations::kind.eq(kind as i32),
         system_automations::target.eq(table),
-        system_automations::script_name.eq(script_name),
+        system_automations::param.eq(param),
     );
 
     let result = diesel::insert_into(system_automations::table)
@@ -72,7 +72,7 @@ pub fn execute_on_trigger(
         "command": "on_trigger",
         "trigger_type": format!("{:?}", kind),
         "table": table,
-        "script_name": script_name,
+        "param": param,
         "rows_affected": result
     }))
 }
