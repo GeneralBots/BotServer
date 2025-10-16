@@ -91,7 +91,7 @@ pub fn talk_keyword(state: Arc<AppState>, user: UserSession, engine: &mut Engine
             // by an async `tokio::sync::Mutex`, so we use `try_lock` to avoid awaiting
             // inside this non‑async closure.
             match state_clone.response_channels.try_lock() {
-                Ok(mut response_channels) => {
+                Ok(response_channels) => {
                     if let Some(tx) = response_channels.get(&user_id) {
                         // Use `try_send` to avoid blocking the runtime.
                         if let Err(e) = tx.try_send(response.clone()) {
