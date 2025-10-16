@@ -94,7 +94,9 @@ async fn main() -> std::io::Result<()> {
     // ----------------------------------------------------------------------
     // Redis client (optional)
     // ----------------------------------------------------------------------
-    let redis_client = match redis::Client::open("redis://127.0.0.1/") {
+    let cache_url = std::env::var("CACHE_URL").unwrap_or_else(|_| "redis://127.0.0.1/".to_string());
+
+    let redis_client = match redis::Client::open(cache_url.as_str()) {
         Ok(client) => {
             info!("Connected to Redis successfully");
             Some(Arc::new(client))

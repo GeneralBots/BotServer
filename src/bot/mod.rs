@@ -557,10 +557,10 @@ impl BotOrchestrator {
             "Running start script for session: {} with token: {:?}",
             session.id, token
         );
-        let start_script_path = "./templates/annoucements.gbai/annoucements.gbdialog/start.bas";
+        let start_script_path = "./templates/announcements.gbai/announcements.gbdialog/start.bas";
         let start_script = match std::fs::read_to_string(start_script_path) {
             Ok(content) => content,
-            Err(_) => r#"TALK "Welcome to General Bots!""#.to_string(),
+            Err(_) => r#"TALK "Error loading script file.""#.to_string(),
         };
         debug!(
             "Start script content for session {}: {}",

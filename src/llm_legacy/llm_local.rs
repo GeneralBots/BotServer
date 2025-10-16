@@ -275,7 +275,7 @@ pub async fn chat_completions_local(
 
     // Send request to llama.cpp server
     let client = Client::builder()
-        .timeout(Duration::from_secs(120)) // 2 minute timeout
+        .timeout(Duration::from_secs(180)) // 2 minute timeout
         .build()
         .map_err(|e| {
             error!("Error creating HTTP client: {}", e);

@@ -45,7 +45,7 @@ pub fn llm_keyword(state: Arc<AppState>, _user: UserSession, engine: &mut Engine
                 }
             });
 
-            match rx.recv_timeout(Duration::from_secs(60)) {
+            match rx.recv_timeout(Duration::from_secs(180)) {
                 Ok(Ok(result)) => Ok(Dynamic::from(result)),
                 Ok(Err(e)) => Err(Box::new(rhai::EvalAltResult::ErrorRuntime(
                     e.to_string().into(),

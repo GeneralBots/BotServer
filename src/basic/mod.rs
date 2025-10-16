@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 pub mod keywords;
 
+use self::keywords::bot_memory::{get_bot_memory_keyword, set_bot_memory_keyword};
 use self::keywords::create_site::create_site_keyword;
 use self::keywords::find::find_keyword;
 use self::keywords::first::first_keyword;
@@ -45,6 +46,8 @@ impl ScriptService {
         #[cfg(feature = "email")]
         create_draft_keyword(&state, user.clone(), &mut engine);
 
+        set_bot_memory_keyword(state.clone(), user.clone(), &mut engine);
+        get_bot_memory_keyword(state.clone(), user.clone(), &mut engine);
         create_site_keyword(&state, user.clone(), &mut engine);
         find_keyword(&state, user.clone(), &mut engine);
         for_keyword(&state, user.clone(), &mut engine);
@@ -143,6 +146,8 @@ impl ScriptService {
                 "TALK",
                 "SET CONTEXT",
                 "SET USER",
+                "GET BOT MEMORY",
+                "SET BOT MEMORY",
             ];
 
             let is_basic_command = basic_commands.iter().any(|&cmd| trimmed.starts_with(cmd));

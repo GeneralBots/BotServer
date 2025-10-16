@@ -12,8 +12,8 @@ pub fn set_bot_memory_keyword(state: Arc<AppState>, user: UserSession, engine: &
 
     engine
         .register_custom_syntax(
-            &["SET_BOT_MEMORY", "$expr$", "$expr$"],
-            true,
+            &["SET_BOT_MEMORY", "$expr$", ",", "$expr$"],
+            false,
             move |context, inputs| {
                 let key = context.eval_expression_tree(&inputs[0])?.to_string();
                 let value = context.eval_expression_tree(&inputs[1])?.to_string();

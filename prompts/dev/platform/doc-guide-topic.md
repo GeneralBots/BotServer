@@ -1,0 +1,7 @@
+- Be pragmatic and concise with examples.
+- Create both guide like and API like if any.
+- Use clear and consistent terminology.
+- Ensure consistency in formatting and structure.
+- Follow a logical flow and organization.
+- Use consistent headings and subheadings.
+- Make a relation to the BASIC keyword list.

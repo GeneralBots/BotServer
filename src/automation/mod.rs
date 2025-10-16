@@ -3,7 +3,8 @@ use crate::shared::models::{Automation, TriggerKind};
 use crate::shared::state::AppState;
 use chrono::{DateTime, Datelike, Timelike, Utc};
 use diesel::prelude::*;
-use log::{error, info};
+use log::{error, info, warn};
+use std::env;
 use std::path::Path;
 use std::sync::Arc;
 use tokio::time::Duration;
@@ -182,20 +183,68 @@ impl AutomationService {
     }
 
     async fn execute_action(&self, param: &str) {
+        // Get bot_id early to use in Redis key
+        let bot_id_string = env::var("BOT_GUID").unwrap_or_else(|_| "default_bot".to_string());
+        let bot_id = Uuid::parse_str(&bot_id_string).unwrap_or_else(|_| Uuid::new_v4());
+
+        // Check if this job is already running for this bot
+        let is_bas_file = param.ends_with(".bas");
+        let redis_key = format!("job:running:{}:{}", bot_id, param);
+
+        // Try to check if job is running using Redis
+        if let Some(redis_client) = &self.state.redis_client {
+            match redis_client.get_multiplexed_async_connection().await {
+                Ok(mut conn) => {
+                    // Check if key exists
+                    let is_running: Result<bool, redis::RedisError> = redis::cmd("EXISTS")
+                        .arg(&redis_key)
+                        .query_async(&mut conn)
+                        .await;
+
+                    if let Ok(true) = is_running {
+                        if is_bas_file {
+                            warn!(
+                                "⚠️  Job '{}' is already running for bot '{}', skipping execution to allow only one .bas execution per bot",
+                                param, bot_id
+                            );
+                        } else {
+                            info!(
+                                "Job '{}' is already running for bot '{}', skipping execution",
+                                param, bot_id
+                            );
+                        }
+                        return;
+                    }
+
+                    // Mark job as running (set with 300 second expiry as safety)
+                    let _: Result<(), redis::RedisError> = redis::cmd("SETEX")
+                        .arg(&redis_key)
+                        .arg(300) // 5 minutes expiry
+                        .arg("1")
+                        .query_async(&mut conn)
+                        .await;
+                }
+                Err(e) => {
+                    warn!("Failed to connect to Redis for job tracking: {}", e);
+                }
+            }
+        }
+
         let full_path = Path::new(&self.scripts_dir).join(param);
         let script_content = match tokio::fs::read_to_string(&full_path).await {
             Ok(content) => content,
             Err(e) => {
                 error!("Failed to read script {}: {}", full_path.display(), e);
+                // Clean up running flag on error
+                self.cleanup_job_flag(&bot_id, param).await;
                 return;
             }
         };
-
-        info!("Executing action with param: {}", param);
+        info!("Executing action with param: {} for bot: {}", param, bot_id);
         let user_session = crate::shared::models::UserSession {
             id: Uuid::new_v4(),
             user_id: Uuid::new_v4(),
-            bot_id: Uuid::new_v4(),
+            bot_id,
             title: "Automation".to_string(),
             answer_mode: 0,
             current_tool: None,
@@ -219,6 +268,27 @@ impl AutomationService {
             }
             Err(e) => {
                 error!("Error executing script: {}", e);
+            }
+        }
+
+        // Clean up running flag after execution
+        self.cleanup_job_flag(&bot_id, param).await;
+    }
+
+    async fn cleanup_job_flag(&self, bot_id: &Uuid, param: &str) {
+        let redis_key = format!("job:running:{}:{}", bot_id, param);
+
+        if let Some(redis_client) = &self.state.redis_client {
+            match redis_client.get_multiplexed_async_connection().await {
+                Ok(mut conn) => {
+                    let _: Result<(), redis::RedisError> = redis::cmd("DEL")
+                        .arg(&redis_key)
+                        .query_async(&mut conn)
+                        .await;
+                }
+                Err(e) => {
+                    warn!("Failed to connect to Redis for cleanup: {}", e);
+                }
             }
         }
     }
