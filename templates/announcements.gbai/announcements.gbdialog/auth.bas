@@ -1,4 +1,4 @@
-REM result = GET "http://0.0.0.0/api/isvalid?token=" + token;
+REM result = POST "http://0.0.0.0/api/isvalid", "token=" + token;
 
 REM user = FIND "users", "external_id=" + result.user_id
 
