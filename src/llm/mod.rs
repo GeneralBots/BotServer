@@ -68,10 +68,18 @@ impl LLMProvider for OpenAIClient {
             .await?;
 
         let result: Value = response.json().await?;
-        let content = result["choices"][0]["message"]["content"]
+        let raw_content = result["choices"][0]["message"]["content"]
             .as_str()
-            .unwrap_or("")
-            .to_string();
+            .unwrap_or("");
+        // Define the end token we want to skip up to. Adjust the token string if needed.
+        let end_token = "final<|message|>";
+        let content = if let Some(pos) = raw_content.find(end_token) {
+            // Skip everything up to and including the end token.
+            raw_content[(pos + end_token.len())..].to_string()
+        } else {
+            // If the token is not found, return the full content.
+            raw_content.to_string()
+        };
 
         Ok(content)
     }
