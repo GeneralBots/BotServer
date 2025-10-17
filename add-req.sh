@@ -26,7 +26,7 @@ dirs=(
     #"basic"
     #"bot"
     #"channels"
-    #"config"
+    "config"
     #"context"
     #"email"
     #"file"
@@ -59,8 +59,26 @@ done
 # Additional specific files
 files=(
     "$PROJECT_ROOT/src/main.rs"
-    "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs"
-    "$PROJECT_ROOT/templates/annoucements.gbai/annoucements.gbdialog/update-summary.bas"
+    "$PROJECT_ROOT/scripts/containers/proxy.sh"
+    "$PROJECT_ROOT/scripts/containers/directory.sh"
+    "$PROJECT_ROOT/scripts/containers/bot.sh"
+    "$PROJECT_ROOT/scripts/containers/system.sh"
+    "$PROJECT_ROOT/scripts/containers/social.sh"
+    "$PROJECT_ROOT/scripts/containers/alm-ci.sh"
+    "$PROJECT_ROOT/scripts/containers/drive.sh"
+    "$PROJECT_ROOT/scripts/containers/tables.sh"
+    "$PROJECT_ROOT/scripts/containers/dns.sh"
+    "$PROJECT_ROOT/scripts/containers/doc-editor.sh"
+    "$PROJECT_ROOT/scripts/containers/host.sh"
+    "$PROJECT_ROOT/scripts/containers/vector-db.sh"
+    "$PROJECT_ROOT/scripts/containers/cache.sh"
+    "$PROJECT_ROOT/scripts/containers/desktop.sh"
+    "$PROJECT_ROOT/scripts/containers/meeting.sh"
+    "$PROJECT_ROOT/scripts/containers/email.sh"
+    "$PROJECT_ROOT/scripts/containers/alm.sh"
+    "$PROJECT_ROOT/scripts/containers/table-editor.sh"
+    "$PROJECT_ROOT/scripts/containers/webmail.sh"
+
 )
 
 for file in "${files[@]}"; do
