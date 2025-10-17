@@ -213,6 +213,7 @@
                 max-width: 900px;
                 margin: 0 auto;
                 width: 100%;
+                position: relative;
             }
 
             #emptyState {
@@ -612,6 +613,93 @@
                 background: rgba(255, 215, 0, 0.5);
             }
 
+            /* NEW STYLES FOR IMPROVEMENTS */
+
+            /* Scroll to bottom button */
+            .scroll-to-bottom {
+                position: absolute;
+                bottom: 20px;
+                right: 20px;
+                width: 40px;
+                height: 40px;
+                background: rgba(255, 215, 0, 0.8);
+                border: none;
+                border-radius: 50%;
+                color: #0a0e27;
+                font-size: 18px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                transition: all 0.3s ease;
+                z-index: 10;
+            }
+
+            .scroll-to-bottom:hover {
+                background: rgba(255, 215, 0, 1);
+                transform: scale(1.1);
+            }
+
+            /* Continue button for interrupted responses */
+            .continue-button {
+                display: inline-block;
+                background: rgba(255, 215, 0, 0.2);
+                border: 1px solid rgba(255, 215, 0, 0.4);
+                border-radius: 8px;
+                padding: 8px 16px;
+                color: #ffd700;
+                font-weight: 600;
+                cursor: pointer;
+                margin-top: 10px;
+                transition: all 0.3s ease;
+                font-size: 14px;
+            }
+
+            .continue-button:hover {
+                background: rgba(255, 215, 0, 0.3);
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+            }
+
+            /* Context usage indicator */
+            .context-indicator {
+                position: fixed;
+                bottom: 90px;
+                right: 20px;
+                width: 120px;
+                background: rgba(10, 14, 39, 0.9);
+                border: 1px solid rgba(255, 215, 0, 0.3);
+                border-radius: 8px;
+                padding: 10px;
+                font-size: 12px;
+                text-align: center;
+                z-index: 100;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            .context-progress {
+                height: 6px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 3px;
+                margin-top: 5px;
+                overflow: hidden;
+            }
+
+            .context-progress-bar {
+                height: 100%;
+                background: #90ee90;
+                border-radius: 3px;
+                transition: width 0.3s ease, background-color 0.3s ease;
+            }
+
+            .context-progress-bar.warning {
+                background: #ffd700;
+            }
+
+            .context-progress-bar.danger {
+                background: #ff6b6b;
+            }
+
             /* Mobile Responsiveness */
             @media (max-width: 768px) {
                 .sidebar {
@@ -676,6 +764,20 @@
                     width: 14px;
                     height: 14px;
                 }
+
+                .scroll-to-bottom {
+                    width: 36px;
+                    height: 36px;
+                    font-size: 16px;
+                    bottom: 15px;
+                    right: 15px;
+                }
+
+                .context-indicator {
+                    bottom: 70px;
+                    right: 15px;
+                    width: 100px;
+                }
             }
 
             @media (max-width: 480px) {
@@ -706,6 +808,18 @@
 
                 .empty-title {
                     font-size: 20px;
+                }
+
+                .scroll-to-bottom {
+                    width: 32px;
+                    height: 32px;
+                    font-size: 14px;
+                }
+
+                .context-indicator {
+                    bottom: 65px;
+                    right: 10px;
+                    width: 90px;
                 }
             }
         </style>
@@ -765,6 +879,19 @@
             </footer>
         </div>
 
+        <!-- New elements for improvements -->
+        <button class="scroll-to-bottom" id="scrollToBottom" style="display: none">
+            ↓
+        </button>
+
+        <div class="context-indicator" id="contextIndicator" style="display: none">
+            <div>Contexto</div>
+            <div id="contextPercentage">0%</div>
+            <div class="context-progress">
+                <div class="context-progress-bar" id="contextProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+
         <script>
             let ws = null;
             let currentSessionId = null;
@@ -781,13 +908,21 @@
             let reconnectAttempts = 0;
             const maxReconnectAttempts = 5;
             let reconnectTimeout = null;
+            let thinkingTimeout = null;
+            let lastMessageLength = 0;
+            let contextUsage = 0;
+            let isUserScrolling = false;
+            let autoScrollEnabled = true;
 
             const messagesDiv = document.getElementById("messages");
             const input = document.getElementById("messageInput");
             const sendBtn = document.getElementById("sendBtn");
             const newChatBtn = document.getElementById("newChatBtn");
-            const connectionStatus =
-                document.getElementById("connectionStatus");
+            const connectionStatus = document.getElementById("connectionStatus");
+            const scrollToBottomBtn = document.getElementById("scrollToBottom");
+            const contextIndicator = document.getElementById("contextIndicator");
+            const contextPercentage = document.getElementById("contextPercentage");
+            const contextProgressBar = document.getElementById("contextProgressBar");
 
             marked.setOptions({
                 breaks: true,
@@ -827,6 +962,61 @@
                     sidebar.classList.remove("open");
                 }
             });
+
+            // Scroll management
+            messagesDiv.addEventListener("scroll", function() {
+                // Check if user is scrolling manually
+                const isAtBottom = messagesDiv.scrollHeight - messagesDiv.scrollTop <= messagesDiv.clientHeight + 100;
+                
+                if (!isAtBottom) {
+                    isUserScrolling = true;
+                    showScrollToBottomButton();
+                } else {
+                    isUserScrolling = false;
+                    hideScrollToBottomButton();
+                }
+            });
+
+            function scrollToBottom() {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                isUserScrolling = false;
+                hideScrollToBottomButton();
+            }
+
+            function showScrollToBottomButton() {
+                scrollToBottomBtn.style.display = "flex";
+            }
+
+            function hideScrollToBottomButton() {
+                scrollToBottomBtn.style.display = "none";
+            }
+
+            scrollToBottomBtn.addEventListener("click", scrollToBottom);
+
+            // Context usage management
+            function updateContextUsage(usage) {
+                contextUsage = usage;
+                const percentage = Math.min(100, Math.round(usage * 100));
+                
+                contextPercentage.textContent = `${percentage}%`;
+                contextProgressBar.style.width = `${percentage}%`;
+                
+                // Update color based on usage
+                if (percentage >= 90) {
+                    contextProgressBar.className = "context-progress-bar danger";
+                } else if (percentage >= 70) {
+                    contextProgressBar.className = "context-progress-bar warning";
+                } else {
+                    contextProgressBar.className = "context-progress-bar";
+                }
+                
+                // Show indicator if usage is above 50%
+                if (percentage >= 50) {
+                    contextIndicator.style.display = "block";
+                } else {
+                    contextIndicator.style.display = "none";
+                }
+            }
 
             async function initializeAuth() {
                 try {
@@ -888,6 +1078,8 @@
                             <p class="empty-subtitle">Seu assistente de IA avançado</p>
                         </div>
                     `;
+                    // Reset context usage for new session
+                    updateContextUsage(0);
                     if (isVoiceMode) {
                         await startVoiceSession();
                     }
@@ -935,11 +1127,14 @@
                                 <p class="empty-subtitle">Seu assistente de IA avançado</p>
                             </div>
                         `;
+                        updateContextUsage(0);
                     } else {
                         // Display existing history
                         history.forEach(([role, content]) => {
                             addMessage(role, content, false);
                         });
+                        // Estimate context usage based on message count
+                        updateContextUsage(history.length / 2); // Assuming 20 messages is 100% context
                     }
                 } catch (error) {
                     console.error("Failed to load session history:", error);
@@ -984,6 +1179,11 @@
                     );
                     updateConnectionStatus("disconnected");
 
+                    // If we were streaming and connection was lost, show continue button
+                    if (isStreaming) {
+                        showContinueButton();
+                    }
+
                     if (reconnectAttempts < maxReconnectAttempts) {
                         reconnectAttempts++;
                         const delay = Math.min(1000 * reconnectAttempts, 10000);
@@ -1011,6 +1211,11 @@
                 const emptyState = document.getElementById("emptyState");
                 if (emptyState) {
                     emptyState.remove();
+                }
+
+                // Handle context usage if provided
+                if (response.context_usage !== undefined) {
+                    updateContextUsage(response.context_usage);
                 }
 
                 // Handle complete messages
@@ -1055,6 +1260,9 @@
                     case "warn":
                         showWarning(eventData.message);
                         break;
+                    case "context_usage":
+                        updateContextUsage(eventData.usage);
+                        break;
                 }
             }
 
@@ -1088,14 +1296,28 @@
                     ease: "power2.out",
                 });
 
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                // Auto-scroll to show thinking indicator
+                if (!isUserScrolling) {
+                    scrollToBottom();
+                } else {
+                    showScrollToBottomButton();
+                }
+
+                // Set timeout to automatically hide thinking indicator after 30 seconds
+                // This handles cases where the server restarts and doesn't send thinking_end
+                thinkingTimeout = setTimeout(() => {
+                    if (isThinking) {
+                        hideThinkingIndicator();
+                        showWarning("O servidor pode estar ocupado. A resposta está demorando demais.");
+                    }
+                }, 60000);
+                
                 isThinking = true;
             }
 
             function hideThinkingIndicator() {
                 if (!isThinking) return;
-                const thinkingDiv =
-                    document.getElementById("thinking-indicator");
+                const thinkingDiv = document.getElementById("thinking-indicator");
                 if (thinkingDiv) {
                     gsap.to(thinkingDiv, {
                         opacity: 0,
@@ -1106,6 +1328,11 @@
                             }
                         },
                     });
+                }
+                // Clear the timeout if thinking ends normally
+                if (thinkingTimeout) {
+                    clearTimeout(thinkingTimeout);
+                    thinkingTimeout = null;
                 }
                 isThinking = false;
             }
@@ -1123,7 +1350,11 @@
                     ease: "power2.out",
                 });
 
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                if (!isUserScrolling) {
+                    scrollToBottom();
+                } else {
+                    showScrollToBottomButton();
+                }
 
                 setTimeout(() => {
                     if (warningDiv.parentNode) {
@@ -1134,6 +1365,62 @@
                         });
                     }
                 }, 5000);
+            }
+
+            function showContinueButton() {
+                const continueDiv = document.createElement("div");
+                continueDiv.className = "message-container";
+                continueDiv.innerHTML = `
+                    <div class="assistant-message">
+                        <div class="assistant-avatar">D</div>
+                        <div class="assistant-message-content">
+                            <p>A conexão foi interrompida. Clique em "Continuar" para tentar recuperar a resposta.</p>
+                            <button class="continue-button" onclick="continueInterruptedResponse()">Continuar</button>
+                        </div>
+                    </div>
+                `;
+                messagesDiv.appendChild(continueDiv);
+
+                gsap.to(continueDiv, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.5,
+                    ease: "power2.out",
+                });
+
+                if (!isUserScrolling) {
+                    scrollToBottom();
+                } else {
+                    showScrollToBottomButton();
+                }
+            }
+
+            function continueInterruptedResponse() {
+                if (!ws || ws.readyState !== WebSocket.OPEN) {
+                    connectWebSocket();
+                }
+                
+                // Send a continue request to the server
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    const continueData = {
+                        bot_id: "default_bot",
+                        user_id: currentUserId,
+                        session_id: currentSessionId,
+                        channel: "web",
+                        content: "continue",
+                        message_type: 3, // Special message type for continue requests
+                        media_url: null,
+                        timestamp: new Date().toISOString(),
+                    };
+                    
+                    ws.send(JSON.stringify(continueData));
+                }
+                
+                // Remove the continue button
+                const continueButtons = document.querySelectorAll('.continue-button');
+                continueButtons.forEach(button => {
+                    button.parentElement.parentElement.parentElement.remove();
+                });
             }
 
             function addMessage(
@@ -1161,6 +1448,8 @@
                             <div class="user-message-content">${escapeHtml(content)}</div>
                         </div>
                     `;
+                    // Update context usage when user sends a message
+                    updateContextUsage(contextUsage + 0.05); // Simulate 5% increase per message
                 } else if (role === "assistant") {
                     msg.innerHTML = `
                         <div class="assistant-message">
@@ -1168,6 +1457,15 @@
                             <div class="assistant-message-content markdown-content" id="${msgId || ""}">
                                 ${streaming ? "" : marked.parse(content)}
                             </div>
+                        </div>
+                    `;
+                    // Update context usage when assistant responds
+                    updateContextUsage(contextUsage + 0.03); // Simulate 3% increase per response
+                } else if (role === "voice") {
+                    msg.innerHTML = `
+                        <div class="assistant-message">
+                            <div class="assistant-avatar">🎤</div>
+                            <div class="assistant-message-content">${content}</div>
                         </div>
                     `;
                 } else {
@@ -1188,14 +1486,25 @@
                     ease: "power2.out",
                 });
 
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                // Auto-scroll to bottom if user isn't manually scrolling
+                if (!isUserScrolling) {
+                    scrollToBottom();
+                } else {
+                    showScrollToBottomButton();
+                }
             }
 
             function updateStreamingMessage(content) {
                 const msgElement = document.getElementById(streamingMessageId);
                 if (msgElement) {
                     msgElement.innerHTML = marked.parse(content);
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    
+                    // Auto-scroll to bottom if user isn't manually scrolling
+                    if (!isUserScrolling) {
+                        scrollToBottom();
+                    } else {
+                        showScrollToBottomButton();
+                    }
                 }
             }
 
@@ -1206,6 +1515,13 @@
                         currentStreamingContent,
                     );
                     msgElement.removeAttribute("id");
+                    
+                    // Auto-scroll to bottom if user isn't manually scrolling
+                    if (!isUserScrolling) {
+                        scrollToBottom();
+                    } else {
+                        showScrollToBottomButton();
+                    }
                 }
             }
 
