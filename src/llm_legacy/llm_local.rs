@@ -189,14 +189,22 @@ async fn start_llm_server(
     std::env::set_var("OMP_PROC_BIND", "close");
 
     // "cd {} && numactl --interleave=all ./llama-server -m {} --host 0.0.0.0 --port {} --threads 20 --threads-batch 40 --temp 0.7 --parallel 1 --repeat-penalty 1.1 --ctx-size 8192 --batch-size 8192 -n 4096 --mlock --no-mmap --flash-attn  --no-kv-offload  --no-mmap &",
+    if cfg!(windows) {
+        let mut cmd = tokio::process::Command::new("cmd");
+        cmd.arg("/C").arg(format!(
+            "cd {} && .\\llama-server.exe -m {} --host 0.0.0.0 --port {} --top_p 0.95  --temp 0.6 --flash-attn on  --ctx-size 4096  --repeat-penalty 1.2 -ngl 20 ",
+            llama_cpp_path, model_path, port
+        ));
+        cmd.spawn()?;
+    } else {
+        let mut cmd = tokio::process::Command::new("sh");
+        cmd.arg("-c").arg(format!(
+            "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {} --top_p 0.95  --temp 0.6 --flash-attn on  --ctx-size 4096  --repeat-penalty 1.2 -ngl 20 &",
+            llama_cpp_path, model_path, port
+        ));
+        cmd.spawn()?;
+    }
 
-    let mut cmd = tokio::process::Command::new("sh");
-    cmd.arg("-c").arg(format!(
-        "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {} --top_p 0.95  --temp 0.6 --flash-attn on  --ctx-size 4096  --repeat-penalty 1.2 -ngl 20 &",
-        llama_cpp_path, model_path, port
-    ));
-
-    cmd.spawn()?;
     Ok(())
 }
 
@@ -207,16 +215,24 @@ async fn start_embedding_server(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let port = url.split(':').last().unwrap_or("8082");
 
-    let mut cmd = tokio::process::Command::new("sh");
-    cmd.arg("-c").arg(format!(
-        "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {} --embedding --n-gpu-layers 99 &",
-        llama_cpp_path, model_path, port
-    ));
-
-    cmd.spawn()?;
+      if cfg!(windows) {
+        let mut cmd = tokio::process::Command::new("cmd");
+        cmd.arg("/c").arg(format!(
+            "cd {} && .\\llama-server.exe -m {} --host 0.0.0.0 --port {} --embedding --n-gpu-layers 99",
+            llama_cpp_path, model_path, port
+        ));
+        cmd.spawn()?;
+    } else {
+        let mut cmd = tokio::process::Command::new("sh");
+        cmd.arg("-c").arg(format!(
+            "cd {} && ./llama-server -m {} --host 0.0.0.0 --port {} --embedding --n-gpu-layers 99 &",
+            llama_cpp_path, model_path, port
+        ));
+        cmd.spawn()?;
+    }
+    
     Ok(())
 }
-
 async fn is_server_running(url: &str) -> bool {
     let client = reqwest::Client::new();
     match client.get(&format!("{}/health", url)).send().await {
@@ -275,7 +291,7 @@ pub async fn chat_completions_local(
 
     // Send request to llama.cpp server
     let client = Client::builder()
-        .timeout(Duration::from_secs(180)) // 2 minute timeout
+        .timeout(Duration::from_secs(500)) // 2 minute timeout
         .build()
         .map_err(|e| {
             error!("Error creating HTTP client: {}", e);
