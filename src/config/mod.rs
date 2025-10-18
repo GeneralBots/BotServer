@@ -18,7 +18,7 @@ pub struct AppConfig {
     pub site_path: String,
     pub s3_bucket: String,
     pub stack_path: PathBuf,
-    db_conn: Option<Arc<Mutex<PgConnection>>>,
+    pub(crate) db_conn: Option<Arc<Mutex<PgConnection>>>,
 }
 
 #[derive(Clone)]

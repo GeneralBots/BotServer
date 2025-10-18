@@ -41,7 +41,6 @@ vectordb = ["qdrant-client"]
 email = ["imap"]
 web_automation = ["headless_chrome"]
 
-
 [dependencies]
 actix-cors = "0.7"
 actix-multipart = "0.7"
@@ -67,6 +66,8 @@ livekit = "0.7"
 log = "0.4"
 mailparse = "0.15"
 native-tls = "0.2"
+
+
 num-format = "0.4"
 qdrant-client = { version = "1.12", optional = true }
 rhai = { git = "https://github.com/therealprof/rhai.git", branch = "features/use-web-time" }

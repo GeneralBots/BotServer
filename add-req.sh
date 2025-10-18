@@ -8,7 +8,7 @@ rm -f "$OUTPUT_FILE"
 echo "Consolidated LLM Context" > "$OUTPUT_FILE"
 
 prompts=(
-    "./prompts/dev/shared.md"
+    "./prompts/dev/platform/shared.md"
     "./Cargo.toml"
 )
 
@@ -23,19 +23,20 @@ dirs=(
     #"auth"
     #"automation"
     #"basic"
-    "bot"
+    #"bot"
+    "package_manager"
     #"channels"
     "config"
     "context"
     #"email"
-    "file"
-    "llm"
+    #"file"
+    #"llm"
     #"llm_legacy"
     #"org"
-    "session"
+    #"session"
     "shared"
     #"tests"
-    "tools"
+    #"tools"
     #"web_automation"
     #"whatsapp"
 )
@@ -58,10 +59,7 @@ done
 # Additional specific files
 files=(
     "$PROJECT_ROOT/src/main.rs"
-    "$PROJECT_ROOT/src/basic/keywords/mod.rs"
-    "$PROJECT_ROOT/src/basic/keywords/get.rs"
-    "$PROJECT_ROOT/src/basic/keywords/find.rs"
-    "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs"
+    #"$PROJECT_ROOT/src/basic/keywords/mod.rs"
 
 )
 
