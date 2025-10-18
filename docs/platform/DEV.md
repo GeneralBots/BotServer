@@ -11,7 +11,7 @@ ADD Manual: Claude/DeepSeek -> DeepSeek
 
 cargo install cargo-audit
 cargo install cargo-edit
-
+apt install -y libpq-dev
 apt install -y valkey-cli
 
 ## Cache

@@ -19,6 +19,7 @@ mod file;
 mod llm;
 mod llm_legacy;
 mod org;
+mod package_manager;
 mod session;
 mod shared;
 mod tools;
@@ -44,6 +45,44 @@ use crate::whatsapp::WhatsAppAdapter;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // ----------------------------------------------------------------------
+    // CLI handling - must be first to intercept package manager commands
+    // ----------------------------------------------------------------------
+    let args: Vec<String> = std::env::args().collect();
+
+    // Check if a CLI command was provided (anything beyond just the program name)
+    if args.len() > 1 {
+        let command = &args[1];
+        // Check if it's a recognized CLI command
+        match command.as_str() {
+            "install" | "remove" | "list" | "status" | "--help" | "-h" => {
+                // Run the CLI and exit (don't start the server)
+                match package_manager::cli::run() {
+                    Ok(_) => return Ok(()),
+                    Err(e) => {
+                        eprintln!("CLI error: {}", e);
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::Other,
+                            format!("CLI command failed: {}", e),
+                        ));
+                    }
+                }
+            }
+            _ => {
+                // Unknown command - print error and exit
+                eprintln!("Unknown command: {}", command);
+                eprintln!("Run 'botserver --help' for usage information");
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    format!("Unknown command: {}", command),
+                ));
+            }
+        }
+    }
+
+    // No CLI commands - proceed with normal server startup
+    // ----------------------------------------------------------------------
+
     // Load environment variables from a .env file, if present.
     dotenv().ok();
     let llama_url =
@@ -56,9 +95,6 @@ async fn main() -> std::io::Result<()> {
     let cfg = AppConfig::from_env();
     let config = std::sync::Arc::new(cfg.clone());
 
-    // ----------------------------------------------------------------------
-    // Database connections
-    // ----------------------------------------------------------------------
     let db_pool = match diesel::Connection::establish(&cfg.database_url()) {
         Ok(conn) => {
             info!("Connected to main database successfully");
