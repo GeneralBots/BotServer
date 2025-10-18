@@ -1,5 +1,6 @@
+use actix_web::{web, HttpResponse, Result};
 use async_trait::async_trait;
-use log::info;
+use log::{info, warn};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -7,6 +8,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::shared::models::BotResponse;
+use crate::shared::state::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct WhatsAppMessage {
@@ -196,5 +198,28 @@ impl crate::channels::ChannelAdapter for WhatsAppAdapter {
         info!("Sending WhatsApp response to: {}", response.user_id);
         self.send_whatsapp_message(&response.user_id, &response.content)
             .await
+    }
+}
+
+#[actix_web::get("/api/whatsapp/webhook")]
+async fn whatsapp_webhook_verify(
+    data: web::Data<AppState>,
+    web::Query(params): web::Query<HashMap<String, String>>,
+) -> Result<HttpResponse> {
+    let empty = String::new();
+    let mode = params.get("hub.mode").unwrap_or(&empty);
+    let token = params.get("hub.verify_token").unwrap_or(&empty);
+    let challenge = params.get("hub.challenge").unwrap_or(&empty);
+    info!(
+        "Verification params - mode: {}, token: {}, challenge: {}",
+        mode, token, challenge
+    );
+
+    match data.whatsapp_adapter.verify_webhook(mode, token, challenge) {
+        Ok(challenge_response) => Ok(HttpResponse::Ok().body(challenge_response)),
+        Err(_) => {
+            warn!("WhatsApp webhook verification failed");
+            Ok(HttpResponse::Forbidden().body("Verification failed"))
+        }
     }
 }

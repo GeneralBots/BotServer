@@ -1,4 +1,7 @@
+use crate::bot::BotOrchestrator;
 use crate::shared::models::UserSession;
+use crate::shared::state::AppState;
+use actix_web::{web, HttpResponse, Result};
 use chrono::Utc;
 use diesel::prelude::*;
 use diesel::PgConnection;
@@ -331,5 +334,97 @@ impl SessionManager {
             debug!("Updated user ID for session {}", session_id);
         }
         Ok(())
+    }
+}
+
+#[actix_web::post("/api/sessions")]
+async fn create_session(data: web::Data<AppState>) -> Result<HttpResponse> {
+    let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+    let bot_id = if let Ok(bot_guid) = std::env::var("BOT_GUID") {
+        match Uuid::parse_str(&bot_guid) {
+            Ok(uuid) => uuid,
+            Err(e) => {
+                warn!("Invalid BOT_GUID from env: {}", e);
+                return Ok(HttpResponse::BadRequest()
+                    .json(serde_json::json!({"error": "Invalid BOT_GUID"})));
+            }
+        }
+    } else {
+        warn!("BOT_GUID not set in environment, using nil UUID");
+        Uuid::nil()
+    };
+
+    let session = {
+        let mut session_manager = data.session_manager.lock().await;
+        match session_manager.get_or_create_user_session(user_id, bot_id, "New Conversation") {
+            Ok(Some(s)) => s,
+            Ok(None) => {
+                error!("Failed to create session");
+                return Ok(HttpResponse::InternalServerError()
+                    .json(serde_json::json!({"error": "Failed to create session"})));
+            }
+            Err(e) => {
+                error!("Failed to create session: {}", e);
+                return Ok(HttpResponse::InternalServerError()
+                    .json(serde_json::json!({"error": e.to_string()})));
+            }
+        }
+    };
+
+    Ok(HttpResponse::Ok().json(serde_json::json!({
+        "session_id": session.id,
+        "title": "New Conversation",
+        "created_at": Utc::now()
+    })))
+}
+
+#[actix_web::get("/api/sessions")]
+async fn get_sessions(data: web::Data<AppState>) -> Result<HttpResponse> {
+    let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+    let orchestrator = BotOrchestrator::new(Arc::clone(&data));
+    match orchestrator.get_user_sessions(user_id).await {
+        Ok(sessions) => Ok(HttpResponse::Ok().json(sessions)),
+        Err(e) => {
+            error!("Failed to get sessions: {}", e);
+            Ok(HttpResponse::InternalServerError()
+                .json(serde_json::json!({"error": e.to_string()})))
+        }
+    }
+}
+
+#[actix_web::get("/api/sessions/{session_id}")]
+async fn get_session_history(
+    data: web::Data<AppState>,
+    path: web::Path<String>,
+) -> Result<HttpResponse> {
+    let session_id = path.into_inner();
+    let user_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+
+    match Uuid::parse_str(&session_id) {
+        Ok(session_uuid) => {
+            let orchestrator = BotOrchestrator::new(Arc::clone(&data));
+            match orchestrator
+                .get_conversation_history(session_uuid, user_id)
+                .await
+            {
+                Ok(history) => {
+                    info!(
+                        "Retrieved {} history entries for session {}",
+                        history.len(),
+                        session_id
+                    );
+                    Ok(HttpResponse::Ok().json(history))
+                }
+                Err(e) => {
+                    error!("Failed to get session history for {}: {}", session_id, e);
+                    Ok(HttpResponse::InternalServerError()
+                        .json(serde_json::json!({"error": e.to_string()})))
+                }
+            }
+        }
+        Err(_) => {
+            warn!("Invalid session ID format: {}", session_id);
+            Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": "Invalid session ID"})))
+        }
     }
 }

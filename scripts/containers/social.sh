@@ -1,1 +1,0 @@
-https://www.brasil247.com/mundo/meta-quer-automatizar-totalmente-publicidade-com-ia-ate-2026-diz-wsj

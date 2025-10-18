@@ -4,4 +4,4 @@ TALK resume
 
 let text = GET "default.gbdrive/default.pdf"
 SET_CONTEXT "Este é o documento que você deve usar para responder dúvidas: " + text
-TALK "Olá, pode me perguntar sobre qualquer coisa desta circular..."
+TALK "Olá, pode me perguntar sobre qualquer coisa destas circulares..."

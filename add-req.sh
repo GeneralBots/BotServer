@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
-OUTPUT_FILE="$SCRIPT_DIR/prompt.out"
+OUTPUT_FILE="/tmp/prompt.out"
 
 rm -f "$OUTPUT_FILE"
 echo "Consolidated LLM Context" > "$OUTPUT_FILE"
@@ -10,7 +10,6 @@ echo "Consolidated LLM Context" > "$OUTPUT_FILE"
 prompts=(
     "./prompts/dev/shared.md"
     "./Cargo.toml"
-    "./prompts/dev/generation.md"
 )
 
 for file in "${prompts[@]}"; do
@@ -24,19 +23,19 @@ dirs=(
     #"auth"
     #"automation"
     #"basic"
-    #"bot"
+    "bot"
     #"channels"
     "config"
-    #"context"
+    "context"
     #"email"
-    #"file"
-    #"llm"
+    "file"
+    "llm"
     #"llm_legacy"
     #"org"
     "session"
     "shared"
     #"tests"
-    #"tools"
+    "tools"
     #"web_automation"
     #"whatsapp"
 )
@@ -59,25 +58,10 @@ done
 # Additional specific files
 files=(
     "$PROJECT_ROOT/src/main.rs"
-    "$PROJECT_ROOT/scripts/containers/proxy.sh"
-    "$PROJECT_ROOT/scripts/containers/directory.sh"
-    "$PROJECT_ROOT/scripts/containers/bot.sh"
-    "$PROJECT_ROOT/scripts/containers/system.sh"
-    "$PROJECT_ROOT/scripts/containers/social.sh"
-    "$PROJECT_ROOT/scripts/containers/alm-ci.sh"
-    "$PROJECT_ROOT/scripts/containers/drive.sh"
-    "$PROJECT_ROOT/scripts/containers/tables.sh"
-    "$PROJECT_ROOT/scripts/containers/dns.sh"
-    "$PROJECT_ROOT/scripts/containers/doc-editor.sh"
-    "$PROJECT_ROOT/scripts/containers/host.sh"
-    "$PROJECT_ROOT/scripts/containers/vector-db.sh"
-    "$PROJECT_ROOT/scripts/containers/cache.sh"
-    "$PROJECT_ROOT/scripts/containers/desktop.sh"
-    "$PROJECT_ROOT/scripts/containers/meeting.sh"
-    "$PROJECT_ROOT/scripts/containers/email.sh"
-    "$PROJECT_ROOT/scripts/containers/alm.sh"
-    "$PROJECT_ROOT/scripts/containers/table-editor.sh"
-    "$PROJECT_ROOT/scripts/containers/webmail.sh"
+    "$PROJECT_ROOT/src/basic/keywords/mod.rs"
+    "$PROJECT_ROOT/src/basic/keywords/get.rs"
+    "$PROJECT_ROOT/src/basic/keywords/find.rs"
+    "$PROJECT_ROOT/src/basic/keywords/hear_talk.rs"
 
 )
 
@@ -108,3 +92,4 @@ echo "Context size: $FILE_SIZE bytes"
 
 cat "$OUTPUT_FILE" | xclip -selection clipboard
 echo "Content copied to clipboard (xclip)"
+rm -f "$OUTPUT_FILE"

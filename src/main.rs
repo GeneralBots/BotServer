@@ -18,18 +18,17 @@ mod email;
 mod file;
 mod llm;
 mod llm_legacy;
+mod meet;
 mod org;
 mod package_manager;
 mod session;
 mod shared;
 mod tools;
+mod web_server;
 mod whatsapp;
+use crate::auth::auth_handler;
 use crate::automation::AutomationService;
-use crate::bot::{
-    auth_handler, create_session, get_session_history, get_sessions, index, set_mode_handler,
-    start_session, static_files, voice_start, voice_stop, websocket_handler,
-    whatsapp_webhook_verify,
-};
+use crate::bot::{start_session, websocket_handler};
 use crate::channels::{VoiceAdapter, WebChannelAdapter};
 use crate::config::AppConfig;
 #[cfg(feature = "email")]
@@ -40,7 +39,11 @@ use crate::file::{init_drive, upload_file};
 use crate::llm_legacy::llm_local::{
     chat_completions_local, embeddings_local, ensure_llama_servers_running,
 };
+use crate::meet::{voice_start, voice_stop};
+use crate::session::{create_session, get_session_history, get_sessions};
 use crate::shared::state::AppState;
+use crate::web_server::{index, static_files};
+use crate::whatsapp::whatsapp_webhook_verify;
 use crate::whatsapp::WhatsAppAdapter;
 
 #[actix_web::main]
@@ -269,7 +272,6 @@ async fn main() -> std::io::Result<()> {
             .service(get_sessions)
             .service(start_session)
             .service(get_session_history)
-            .service(set_mode_handler)
             .service(chat_completions_local)
             .service(embeddings_local);
 
