@@ -13,9 +13,11 @@ mod bot;
 mod channels;
 mod config;
 mod context;
+mod drive_monitor;
 #[cfg(feature = "email")]
 mod email;
 mod file;
+mod kb;
 mod llm;
 mod llm_legacy;
 mod meet;
@@ -24,6 +26,8 @@ mod package_manager;
 mod session;
 mod shared;
 mod tools;
+#[cfg(feature = "web_automation")]
+mod web_automation;
 mod web_server;
 mod whatsapp;
 use crate::auth::auth_handler;
@@ -31,6 +35,7 @@ use crate::automation::AutomationService;
 use crate::bot::{start_session, websocket_handler};
 use crate::channels::{VoiceAdapter, WebChannelAdapter};
 use crate::config::AppConfig;
+use crate::drive_monitor::DriveMonitor;
 #[cfg(feature = "email")]
 use crate::email::{
     get_emails, get_latest_email_from, list_emails, save_click, save_draft, send_email,
@@ -242,6 +247,12 @@ async fn main() -> std::io::Result<()> {
         "templates/announcements.gbai/announcements.gbdialog",
     );
     let _automation_handle = automation.spawn();
+
+    // Start Drive Monitor service in background
+    let drive_state = app_state.clone();
+    let bucket_name = format!("{}default.gbai", cfg.minio.org_prefix);
+    let drive_monitor = Arc::new(DriveMonitor::new(drive_state, bucket_name));
+    let _drive_handle = drive_monitor.spawn();
 
     HttpServer::new(move || {
         // CORS configuration – allow any origin/method/header (adjust for production).

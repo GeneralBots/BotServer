@@ -4,9 +4,13 @@ use log::info;
 use rhai::{Dynamic, Engine, EvalAltResult};
 use std::sync::Arc;
 
+pub mod compiler;
 pub mod keywords;
 
+use self::keywords::add_tool::add_tool_keyword;
+use self::keywords::add_website::add_website_keyword;
 use self::keywords::bot_memory::{get_bot_memory_keyword, set_bot_memory_keyword};
+use self::keywords::clear_tools::clear_tools_keyword;
 use self::keywords::create_site::create_site_keyword;
 use self::keywords::find::find_keyword;
 use self::keywords::first::first_keyword;
@@ -17,10 +21,13 @@ use self::keywords::hear_talk::{
     hear_keyword, set_context_keyword, set_user_keyword, talk_keyword,
 };
 use self::keywords::last::last_keyword;
+use self::keywords::list_tools::list_tools_keyword;
 use self::keywords::llm_keyword::llm_keyword;
 use self::keywords::on::on_keyword;
 use self::keywords::print::print_keyword;
+use self::keywords::remove_tool::remove_tool_keyword;
 use self::keywords::set::set_keyword;
+use self::keywords::set_kb::{add_kb_keyword, set_kb_keyword};
 use self::keywords::set_schedule::set_schedule_keyword;
 use self::keywords::wait::wait_keyword;
 
@@ -65,6 +72,15 @@ impl ScriptService {
         talk_keyword(state.clone(), user.clone(), &mut engine);
         set_context_keyword(&state, user.clone(), &mut engine);
         set_user_keyword(state.clone(), user.clone(), &mut engine);
+
+        // KB and Tools keywords
+        set_kb_keyword(state.clone(), user.clone(), &mut engine);
+        add_kb_keyword(state.clone(), user.clone(), &mut engine);
+        add_tool_keyword(state.clone(), user.clone(), &mut engine);
+        remove_tool_keyword(state.clone(), user.clone(), &mut engine);
+        clear_tools_keyword(state.clone(), user.clone(), &mut engine);
+        list_tools_keyword(state.clone(), user.clone(), &mut engine);
+        add_website_keyword(state.clone(), user.clone(), &mut engine);
 
         #[cfg(feature = "web_automation")]
         get_website_keyword(&state, user.clone(), &mut engine);

@@ -4,6 +4,8 @@ use std::sync::Arc;
 
 use crate::shared::models::SearchResult;
 
+pub mod prompt_processor;
+
 #[async_trait]
 pub trait ContextStore: Send + Sync {
     async fn store_embedding(

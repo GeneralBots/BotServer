@@ -1,3 +1,5 @@
+pub mod crawler;
+
 use headless_chrome::browser::tab::Tab;
 use headless_chrome::{Browser, LaunchOptions};
 use std::env;
@@ -11,6 +13,8 @@ use tokio::fs;
 use tokio::sync::Semaphore;
 
 use crate::shared::utils::{download_file, extract_zip_recursive};
+
+pub use crawler::WebCrawler;
 
 pub struct BrowserSetup {
     pub brave_path: String,
