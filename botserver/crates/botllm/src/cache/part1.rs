@@ -11,5 +11,3 @@ impl Default for CacheConfig {
         }
     }
 }
-
-#[derive(Serialize, Deserialize, Clone, Debug)]

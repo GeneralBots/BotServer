@@ -109,5 +109,3 @@ impl LLMProvider for CachedLLMProvider {
         self.provider.cancel_job(session_id).await
     }
 }
-
-#[derive(Debug)]

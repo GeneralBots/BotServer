@@ -1,6 +1,8 @@
 use super::*;
 
 impl KbEmbeddingGenerator {
+    /// Poison-recovering read lock: a panicked writer must not take the
+    /// whole server down (#1368). The guard data is still usable.
     pub(super) fn config_read(&self) -> std::sync::RwLockReadGuard<'_, EmbeddingConfig> {
         self.config.read().unwrap_or_else(|poisoned| poisoned.into_inner())
     }

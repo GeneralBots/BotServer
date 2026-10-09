@@ -55,8 +55,8 @@ impl EmbeddingConfig {
             .and_then(|v| v.parse().ok())
             .unwrap_or_else(|| Self::detect_dimensions(&embedding_model));
 
-        info!("EmbeddingConfig::from_bot_config - bot_id: {}, embedding_url: {}, embedding_key: {}, dimensions: {}", 
-              _bot_id, 
+        info!("EmbeddingConfig::from_bot_config - bot_id: {}, embedding_url: {}, embedding_key: {}, dimensions: {}",
+              _bot_id,
               if embedding_url.len() > 50 { &embedding_url[..50] } else { &embedding_url },
               if embedding_key.is_some() { "SET" } else { "NONE" },
               dimensions);
