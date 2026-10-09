@@ -14,7 +14,7 @@ axum = { version = "0.7", features = ["macros"] }
 tokio = { version = "1", features = ["full"] }
 log = "0.4"
 base64 = { workspace = true }
-rust_decimal = { version = "1.36", default-features = false, features = ["serde-with-str"] }
+rust_decimal = { workspace = true, features = ["serde-with-str", "db-diesel2-postgres"] }
 reqwest = { version = "0.12", features = ["json"], optional = true }
 
 [features]
