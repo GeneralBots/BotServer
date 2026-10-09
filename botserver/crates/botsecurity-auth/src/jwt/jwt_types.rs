@@ -1,14 +1,11 @@
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Utc};
-use jsonwebtoken::{
-    decode, encode, Algorithm, DecodingKey, EncodingKey, Header, TokenData, Validation,
-};
+use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::info;
 use uuid::Uuid;
 
-use crate::blacklist::{BlacklistEntry, BlacklistStore, InMemoryBlacklistStore};
+use crate::blacklist::BlacklistStore;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JwtConfig {

@@ -7,7 +7,6 @@ use sha2::digest::KeyInit;
 use crate::mfa::mfa_types::MfaMethod;
 use crate::mfa::mfa_types::TOTP_DIGITS;
 use crate::mfa::mfa_types::TOTP_SECRET_LENGTH;
-use crate::mfa::mfa_types::RECOVERY_CODE_COUNT;
 use crate::mfa::mfa_types::RECOVERY_CODE_LENGTH;
 
 pub fn generate_totp_secret() -> String {

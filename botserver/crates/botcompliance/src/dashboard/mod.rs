@@ -45,6 +45,7 @@ pub fn configure_dashboard_routes() -> Router<Arc<DbPool>> {
 }
 
 mod overview;
+
 mod tsc;
 mod lists;
 mod actions;

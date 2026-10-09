@@ -1,12 +1,9 @@
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use chrono::{DateTime, Utc};
-use hmac::Hmac;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use uuid::Uuid;
 use tracing::warn;
-
-type HmacSha256 = Hmac<Sha256>;
 
 pub const TOTP_DIGITS: u32 = 6;
 pub const TOTP_PERIOD: u64 = 30;

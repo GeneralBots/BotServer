@@ -6,8 +6,7 @@ use chrono::{DateTime, Duration, Utc};
 use uuid::Uuid;
 use tracing::info;
 use crate::blacklist::{BlacklistEntry, BlacklistStore, InMemoryBlacklistStore};
-use crate::jwt::jwt_types::{JwtAlgorithm, JwtConfig, JwtKey, Claims, TokenPair, JwtManager, TokenType};
-use futures_util::future::ready;
+use crate::jwt::jwt_types::{Claims, JwtAlgorithm, JwtConfig, JwtKey, JwtManager, TokenPair, TokenType};
 
 impl JwtManager {
     pub fn new(config: JwtConfig, key: JwtKey) -> Result<Self> {

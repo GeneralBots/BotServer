@@ -7,10 +7,9 @@ pub mod jwt_types;
 pub mod jwt_manager;
 pub mod jwt_utils;
 
-pub use jwt_types::*;
 pub use jwt_utils::extract_bearer_token;
 
-// Re-export commonly used types at the module root for convenience
+// Re-export the public types at the module root for convenience
 pub use jwt_types::{Claims, JwtAlgorithm, JwtConfig, JwtKey, JwtManager, TokenPair, TokenType};
 
 // Re-export utility types
