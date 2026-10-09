@@ -1,0 +1,46 @@
+use super::*;
+
+impl std::fmt::Display for AuditEventType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::TaskCreated => write!(f, "task_created"),
+            Self::TaskStarted => write!(f, "task_started"),
+            Self::TaskCompleted => write!(f, "task_completed"),
+            Self::TaskFailed => write!(f, "task_failed"),
+            Self::TaskCancelled => write!(f, "task_cancelled"),
+            Self::TaskPaused => write!(f, "task_paused"),
+            Self::TaskResumed => write!(f, "task_resumed"),
+            Self::StepStarted => write!(f, "step_started"),
+            Self::StepCompleted => write!(f, "step_completed"),
+            Self::StepFailed => write!(f, "step_failed"),
+            Self::StepSkipped => write!(f, "step_skipped"),
+            Self::StepRolledBack => write!(f, "step_rolled_back"),
+            Self::ApprovalRequested => write!(f, "approval_requested"),
+            Self::ApprovalGranted => write!(f, "approval_granted"),
+            Self::ApprovalDenied => write!(f, "approval_denied"),
+            Self::ApprovalExpired => write!(f, "approval_expired"),
+            Self::DecisionRequested => write!(f, "decision_requested"),
+            Self::DecisionMade => write!(f, "decision_made"),
+            Self::DecisionTimeout => write!(f, "decision_timeout"),
+            Self::SimulationStarted => write!(f, "simulation_started"),
+            Self::SimulationCompleted => write!(f, "simulation_completed"),
+            Self::ConstraintChecked => write!(f, "constraint_checked"),
+            Self::ConstraintViolated => write!(f, "constraint_violated"),
+            Self::ConstraintOverridden => write!(f, "constraint_overridden"),
+            Self::DataRead => write!(f, "data_read"),
+            Self::DataCreated => write!(f, "data_created"),
+            Self::DataModified => write!(f, "data_modified"),
+            Self::DataDeleted => write!(f, "data_deleted"),
+            Self::ApiCalled => write!(f, "api_called"),
+            Self::McpInvoked => write!(f, "mcp_invoked"),
+            Self::WebhookTriggered => write!(f, "webhook_triggered"),
+            Self::PermissionChecked => write!(f, "permission_checked"),
+            Self::PermissionDenied => write!(f, "permission_denied"),
+            Self::CredentialAccessed => write!(f, "credential_accessed"),
+            Self::ConfigChanged => write!(f, "config_changed"),
+            Self::ErrorOccurred => write!(f, "error_occurred"),
+            Self::WarningRaised => write!(f, "warning_raised"),
+            Self::Custom(s) => write!(f, "{s}"),
+        }
+    }
+}
