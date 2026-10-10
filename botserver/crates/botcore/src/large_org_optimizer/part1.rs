@@ -2,10 +2,10 @@ use super::*;
 
 pub struct LargeOrgOptimizer {
     config: OptimizerConfig,
-    member_cache: Arc<RwLock<HashMap<Uuid, CachedMemberList>>>,
-    permission_cache: Arc<RwLock<HashMap<PermissionCacheKey, CachedPermissions>>>,
-    query_stats: Arc<RwLock<QueryStatistics>>,
-    partition_manager: Arc<PartitionManager>,
+    pub(crate) member_cache: Arc<RwLock<HashMap<Uuid, CachedMemberList>>>,
+    pub(crate) permission_cache: Arc<RwLock<HashMap<PermissionCacheKey, CachedPermissions>>>,
+    pub(crate) query_stats: Arc<RwLock<QueryStatistics>>,
+    pub(crate) partition_manager: Arc<PartitionManager>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizerConfig {
@@ -62,7 +62,7 @@ struct QueryStatistics {
     avg_query_time_ms: AtomicU64,
 }
 pub struct PartitionManager {
-    partitions: RwLock<HashMap<Uuid, Vec<DataPartition>>>,
+    pub(crate) partitions: RwLock<HashMap<Uuid, Vec<DataPartition>>>,
     config: PartitionConfig,
 }
 #[derive(Debug, Clone)]

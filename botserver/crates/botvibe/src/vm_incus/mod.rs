@@ -15,6 +15,7 @@ mod web_entry;
 mod windows;
 mod windows_2;
 mod windows_3;
+mod windows_4;
 
 #[cfg(target_os = "windows")]
 use std::sync::OnceLock;

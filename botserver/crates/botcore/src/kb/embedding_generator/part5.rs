@@ -1,7 +1,7 @@
 use super::*;
 
 impl KbEmbeddingGenerator {
-    async fn generate_local_embeddings(&self, texts: &[String]) -> Result<Vec<Embedding>> {
+    pub(crate) async fn generate_local_embeddings(&self, texts: &[String]) -> Result<Vec<Embedding>> {
         // Apply token-aware truncation to each text before creating request
         let truncated_texts: Vec<String> = texts.iter()
             .map(|text| crate::shared::utils::truncate_text_for_model(text, &self.config_read().embedding_model.clone(), 600))

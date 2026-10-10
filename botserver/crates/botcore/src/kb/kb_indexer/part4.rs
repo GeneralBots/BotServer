@@ -1,7 +1,7 @@
 use super::*;
 
 impl KbIndexer {
-    async fn ensure_collection_exists(&self, collection_name: &str) -> Result<()> {
+    pub(crate) async fn ensure_collection_exists(&self, collection_name: &str) -> Result<()> {
         let check_url = format!("{}/collections/{}", self.qdrant_config.url, collection_name);
         let required_dims = self.embedding_generator.get_dimensions();
 
@@ -159,7 +159,7 @@ impl KbIndexer {
         Ok(points)
     }
 
-    async fn upsert_points(&self, collection_name: &str, points: Vec<QdrantPoint>) -> Result<()> {
+    pub(crate) async fn upsert_points(&self, collection_name: &str, points: Vec<QdrantPoint>) -> Result<()> {
         if points.is_empty() {
             return Ok(());
         }

@@ -10,6 +10,7 @@
 mod collect;
 mod site;
 mod site_2;
+mod site_3;
 #[cfg(test)]
 mod tests;
 
@@ -38,3 +39,6 @@ pub(crate) use collect::{api_base};
 pub use site::{PUBLISH_PRODUCTION_STAMP, publish_project_schema, publish_router, published_domain};
 pub(crate) use site::{collect_workspace_files, production_approved};
 pub(crate) use site_2::{do_publish};
+#[cfg(not(target_os = "windows"))]
+pub(crate) use site_3::start_prod_app;
+pub(crate) use site_3::SitePublish;

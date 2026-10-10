@@ -40,7 +40,7 @@ impl SecurityMonitor {
         info!("IP {} blocked for {} minutes: {}", ip, duration.num_minutes(), reason);
     }
 
-    async fn create_alert_from_event(&self, event: &SecurityEvent) {
+    pub async fn create_alert_from_event(&self, event: &SecurityEvent) {
         let alert = SecurityAlert::new(
             event.severity,
             &format!("Security Event: {}", event.event_type.as_str()),

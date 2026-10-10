@@ -88,7 +88,7 @@ impl DocumentProcessor {
     }
 
     #[cfg(not(feature = "kb-extraction"))]
-    async fn extract_xlsx_text(&self, file_path: &Path) -> Result<String> {
+    pub(crate) async fn extract_xlsx_text(&self, file_path: &Path) -> Result<String> {
         self.fallback_text_extraction(file_path).await
     }
 
@@ -149,7 +149,7 @@ impl DocumentProcessor {
     }
 
     #[cfg(not(feature = "kb-extraction"))]
-    async fn extract_xls_text(&self, file_path: &Path) -> Result<String> {
+    pub(crate) async fn extract_xls_text(&self, file_path: &Path) -> Result<String> {
         self.fallback_text_extraction(file_path).await
     }
 
@@ -228,11 +228,11 @@ impl DocumentProcessor {
     }
 
     #[cfg(not(feature = "kb-extraction"))]
-    async fn extract_doc_text(&self, file_path: &Path) -> Result<String> {
+    pub(crate) async fn extract_doc_text(&self, file_path: &Path) -> Result<String> {
         self.fallback_text_extraction(file_path).await
     }
 
-    async fn extract_xml_text(&self, file_path: &Path) -> Result<String> {
+    pub(crate) async fn extract_xml_text(&self, file_path: &Path) -> Result<String> {
         let bytes = tokio::fs::read(file_path).await?;
         let result = tokio::task::spawn_blocking(move || -> Result<String> {
             use quick_xml::events::Event;
@@ -280,7 +280,7 @@ impl DocumentProcessor {
         Ok(result)
     }
 
-    async fn extract_rtf_text(&self, file_path: &Path) -> Result<String> {
+    pub(crate) async fn extract_rtf_text(&self, file_path: &Path) -> Result<String> {
         let bytes = tokio::fs::read(file_path).await?;
         let result = tokio::task::spawn_blocking(move || -> Result<String> {
             let content = String::from_utf8_lossy(&bytes);

@@ -1,7 +1,7 @@
 use super::*;
 
 impl ZitadelAuthProvider {
-    async fn get_service_token(&self) -> Result<String, AuthError> {
+    pub async fn get_service_token(&self) -> Result<String, AuthError> {
         {
             let token = self.service_token.read().await;
             if let Some(ref t) = *token {
@@ -66,7 +66,7 @@ impl ZitadelAuthProvider {
         Ok(access_token)
     }
 
-    async fn get_cached_user(&self, key: &str) -> Option<AuthenticatedUser> {
+    pub async fn get_cached_user(&self, key: &str) -> Option<AuthenticatedUser> {
         let cache = self.user_cache.read().await;
         cache.get(key).and_then(|cached| {
             if cached.expires_at > chrono::Utc::now().timestamp() {
@@ -77,7 +77,7 @@ impl ZitadelAuthProvider {
         })
     }
 
-    async fn cache_user(&self, key: &str, user: &AuthenticatedUser) {
+    pub async fn cache_user(&self, key: &str, user: &AuthenticatedUser) {
         let expires_at = chrono::Utc::now().timestamp() + self.config.cache_ttl_secs as i64;
         let cached = CachedUser {
             user: user.clone(),

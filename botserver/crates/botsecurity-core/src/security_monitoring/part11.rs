@@ -1,5 +1,3 @@
-use super::*;
-
 pub(super) fn haversine_distance(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
     const EARTH_RADIUS_KM: f64 = 6371.0;
 

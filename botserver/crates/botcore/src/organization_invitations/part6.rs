@@ -1,7 +1,7 @@
 use super::*;
 
 impl InvitationService {
-    async fn send_invitation_email(&self, invitation: &OrganizationInvitation, org_name: &str) {
+    pub(crate) async fn send_invitation_email(&self, invitation: &OrganizationInvitation, org_name: &str) {
         log::info!(
             "Sending invitation email to {} for organization {} (token: {}...)",
             invitation.email,

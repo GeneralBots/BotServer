@@ -1,4 +1,7 @@
 use super::*;
+// Disambiguate against `x509_parser::prelude::pem_to_der` (deprecated) pulled
+// in by the module glob: the local helper is the intended PEM decoder.
+use super::part6::pem_to_der;
 
 impl CertPinningManager {
     pub fn new(config: CertPinningConfig) -> Self {

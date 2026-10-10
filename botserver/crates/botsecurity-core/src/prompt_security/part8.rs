@@ -1,5 +1,3 @@
-use super::*;
-
 pub fn quick_injection_check(input: &str) -> bool {
     let suspicious_patterns = [
         "ignore previous",

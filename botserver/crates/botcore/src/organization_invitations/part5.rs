@@ -185,7 +185,7 @@ impl InvitationService {
         .await;
     }
 
-    async fn find_pending_invitation(
+    pub(crate) async fn find_pending_invitation(
         &self,
         organization_id: &Uuid,
         email: &str,

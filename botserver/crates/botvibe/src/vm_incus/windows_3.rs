@@ -69,51 +69,7 @@ impl VmLifecycle {
                 "    res.writeHead(200,{'Content-Type':mime[path.extname(p)]||'application/octet-stream'});res.end(d);});\n",
                 "}).listen(3000);\n",
             );
-            for file in files {
-                let rel = file
-                    .get("path")
-                    .and_then(|v| v.as_str())
-                    .ok_or_else(|| "run file is missing path".to_string())?;
-                let rel_path = std::path::Path::new(rel);
-                if rel_path.is_absolute()
-                    || rel_path
-                        .components()
-                        .any(|part| matches!(part, std::path::Component::ParentDir))
-                {
-                    return Err(format!("invalid run path '{rel}'"));
-                }
-                let bytes = file
-                    .get("content")
-                    .and_then(|v| v.as_array())
-                    .ok_or_else(|| format!("run file '{rel}' has invalid content"))?
-                    .iter()
-                    .map(|v| {
-                        v.as_u64()
-                            .filter(|n| *n <= u8::MAX as u64)
-                            .map(|n| n as u8)
-                            .ok_or_else(|| format!("run file '{rel}' has invalid byte"))
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
-                let source = temp.join(rel_path);
-                if let Some(parent) = source.parent() {
-                    std::fs::create_dir_all(parent)
-                        .map_err(|e| format!("create run path for '{rel}': {e}"))?;
-                }
-                std::fs::write(&source, bytes)
-                    .map_err(|e| format!("write run file '{rel}': {e}"))?;
-                let destination = format!("{name}/opt/vibe/app/{}", rel.replace('\\', "/"));
-                self.incus_run(
-                    &[
-                        "file".to_string(),
-                        "push".to_string(),
-                        source.to_string_lossy().into_owned(),
-                        destination,
-                        "--create-dirs".to_string(),
-                    ],
-                    60,
-                )
-                .map_err(|e| format!("push run file '{rel}': {e}"))?;
-            }
+            self.push_run_files(name, files, &temp)?;
 
             // Static apps (pure htmx/html) with no node entrypoint get a
             // generated node server so a node process is what shows up in the
@@ -121,20 +77,7 @@ impl VmLifecycle {
             // or a python entry it is honored (has_node_entry /
             // has_python_entry), not overwritten.
             if !has_node_entry && !has_python_entry {
-                let server_path = temp.join("server.js");
-                std::fs::write(&server_path, server_js)
-                    .map_err(|e| format!("write static server: {e}"))?;
-                self.incus_run(
-                    &[
-                        "file".to_string(),
-                        "push".to_string(),
-                        server_path.to_string_lossy().into_owned(),
-                        format!("{name}/opt/vibe/app/server.js"),
-                        "--create-dirs".to_string(),
-                    ],
-                    60,
-                )
-                .map_err(|e| format!("push static server: {e}"))?;
+                self.push_run_static_server(name, &temp, server_js)?;
             }
 
             // Pick the web entry + runtime (extracted + unit-tested — #1276).
@@ -142,208 +85,27 @@ impl VmLifecycle {
             // below.
             let is_python = resolved.is_python;
             let entry = resolved.entry;
-            let service = temp.join("vibe-app.service");
             // #1386 — the project's own database URL is injected into the
             // unit so app code reaches its per-environment database through
             // the standard `DATABASE_URL` convention.
             let db_line = database_url
                 .map(|url| format!("\nEnvironment=DATABASE_URL={url}"))
                 .unwrap_or_default();
-            std::fs::write(
-                &service,
-                format!(
-                    "[Unit]\nDescription=Vibe application\nAfter=network.target\n\n[Service]\nType=simple\nWorkingDirectory=/opt/vibe/app\nEnvironment=PORT=3000{db_line}\nExecStart={} /opt/vibe/app/{entry}\nRestart=always\nRestartSec=2\n\n[Install]\nWantedBy=multi-user.target\n",
-                    if is_python { "/usr/bin/python3" } else { "/usr/bin/node" }
-                ),
-            )
-            .map_err(|e| format!("write service unit: {e}"))?;
-            self.incus_run(
-                &[
-                    "file".to_string(),
-                    "push".to_string(),
-                    service.to_string_lossy().into_owned(),
-                    format!("{name}/etc/systemd/system/vibe-app.service"),
-                    "--create-dirs".to_string(),
-                ],
-                60,
-            )
-            .map_err(|e| format!("push service unit: {e}"))?;
+            let unit = format!(
+                "[Unit]\nDescription=Vibe application\nAfter=network.target\n\n[Service]\nType=simple\nWorkingDirectory=/opt/vibe/app\nEnvironment=PORT=3000{db_line}\nExecStart={} /opt/vibe/app/{entry}\nRestart=always\nRestartSec=2\n\n[Install]\nWantedBy=multi-user.target\n",
+                if is_python { "/usr/bin/python3" } else { "/usr/bin/node" }
+            );
+            self.push_run_unit(name, &temp, &unit)?;
 
-            // Bootstrap the project runtime. Node apps check for nodejs/npm;
-            // python apps check for python3 (and pip so `requirements.txt`
-            // deps resolve before the service starts). Static fallbacks run
-            // with node, so a python-only VM still gets node for the generated
-            // static server.
-            if is_python {
-                if self
-                    .incus_run(
-                        &[
-                            "exec".to_string(),
-                            name.to_string(),
-                            "--".to_string(),
-                            "python3".to_string(),
-                            "--version".to_string(),
-                        ],
-                        30,
-                    )
-                    .is_err()
-                {
-                    // Fresh containers have no TTY; debconf's Dialog frontend
-                    // aborts with exit 100 unless the frontend is noninteractive.
-                    for command in [
-                        vec!["apt-get", "update"],
-                        vec!["apt-get", "install", "-y", "python3", "python3-pip"],
-                    ] {
-                        let mut args = vec!["exec".to_string(), name.to_string()];
-                        args.push("--env".to_string());
-                        args.push("DEBIAN_FRONTEND=noninteractive".to_string());
-                        args.push("--".to_string());
-                        args.extend(command.into_iter().map(str::to_string));
-                        self.incus_run(&args, 300)
-                            .map_err(|e| format!("install Python runtime: {e}"))?;
-                    }
-                }
-                // Resolve project dependencies before the service starts.
-                if files.iter().any(|f| {
-                    let p = f.get("path").and_then(|v| v.as_str()).unwrap_or("");
-                    p == "requirements.txt" || p.ends_with("/requirements.txt")
-                }) {
-                    let mut args = vec![
-                        "exec".to_string(),
-                        name.to_string(),
-                        "--".to_string(),
-                        "python3".to_string(),
-                        "-m".to_string(),
-                        "pip".to_string(),
-                        "install".to_string(),
-                        "-r".to_string(),
-                        "/opt/vibe/app/requirements.txt".to_string(),
-                    ];
-                    // Some base images are externally-managed (PEP 668) and
-                    // refuse system installs; --break-system-packages keeps a
-                    // few-line python app running on Ubuntu 24.04 VMs.
-                    args.push("--break-system-packages".to_string());
-                    let _ = self.incus_run(&args, 300);
-                }
-            } else if self
-                .incus_run(
-                    &[
-                        "exec".to_string(),
-                        name.to_string(),
-                        "--".to_string(),
-                        "node".to_string(),
-                        "--version".to_string(),
-                    ],
-                    30,
-                )
-                .is_err()
-            {
-                // Fresh containers have no TTY; debconf's Dialog frontend
-                // aborts with exit 100 unless the frontend is noninteractive.
-                for command in [
-                    vec!["apt-get", "update"],
-                    vec!["apt-get", "install", "-y", "nodejs", "npm"],
-                ] {
-                    let mut args = vec!["exec".to_string(), name.to_string()];
-                    args.push("--env".to_string());
-                    args.push("DEBIAN_FRONTEND=noninteractive".to_string());
-                    args.push("--".to_string());
-                    args.extend(command.into_iter().map(str::to_string));
-                    self.incus_run(&args, 300)
-                        .map_err(|e| format!("install Node runtime: {e}"))?;
-                }
-            }
+            // Bootstrap the project runtime and install dependencies.
+            self.install_run_dependencies(name, files, is_python)?;
 
-            // Install project dependencies when a package.json exists (the
-            // same trigger the python branch uses for requirements.txt) so a
-            // Run serves the real app even when the agent never ran npm
-            // install itself. Tolerated failure: the static fallback probe
-            // below still rescues projects whose deps cannot resolve.
-            // #1273 — skipped when both manifests are byte-identical to the
-            // previous Run: the hash file written after a successful install
-            // turns every subsequent Run into a no-op instead of re-paying
-            // the npm tax on slow networks.
-            if files
-                .iter()
-                .any(|f| f.get("path").and_then(|v| v.as_str()) == Some("package.json"))
-            {
-                let mut hasher_input = Vec::new();
-                for manifest in ["package.json", "package-lock.json"] {
-                    if let Some(f) = files
-                        .iter()
-                        .find(|f| f.get("path").and_then(|v| v.as_str()) == Some(manifest))
-                    {
-                        if let Some(content) = f.get("content").and_then(|v| v.as_array()) {
-                            for b in content {
-                                hasher_input.push(b.as_u64().unwrap_or(0) as u8);
-                            }
-                        }
-                    }
-                    hasher_input.push(b'\n');
-                }
-                let deps_hash = format!("{:x}", Sha256::digest(&hasher_input));
-                let check = self.incus_run(
-                    &[
-                        "exec".to_string(),
-                        name.to_string(),
-                        "--".to_string(),
-                        "cat".to_string(),
-                        "/opt/vibe/app/.vibe-deps-hash".to_string(),
-                    ],
-                    15,
-                );
-                let unchanged = check
-                    .map(|out| out.stdout.trim() == deps_hash)
-                    .unwrap_or(false);
-                if unchanged {
-                    log::info!("Vibe: {name} dependencies unchanged — skipping npm install");
-                } else {
-                    let args = vec![
-                        "exec".to_string(),
-                        name.to_string(),
-                        "--env".to_string(),
-                        "DEBIAN_FRONTEND=noninteractive".to_string(),
-                        "--".to_string(),
-                        "npm".to_string(),
-                        "install".to_string(),
-                        "--prefix".to_string(),
-                        "/opt/vibe/app".to_string(),
-                        "--no-audit".to_string(),
-                        "--no-fund".to_string(),
-                    ];
-                    if let Err(e) = self.incus_run(&args, 300) {
-                        log::warn!("Vibe: {name} npm install failed: {e}");
-                    } else {
-                        // Record the hash only after a successful install so
-                        // a failed attempt retries on the next Run.
-                        let _ = self.incus_run(
-                            &[
-                                "exec".to_string(),
-                                name.to_string(),
-                                "--".to_string(),
-                                "sh".to_string(),
-                                "-c".to_string(),
-                                format!(
-                                    "printf %s {} > /opt/vibe/app/.vibe-deps-hash",
-                                    deps_hash
-                                ),
-                            ],
-                            15,
-                        );
-                    }
-                }
-            }
-
-            for command in [
-                vec!["systemctl", "daemon-reload"],
-                vec!["systemctl", "enable", "vibe-app.service"],
-                vec!["systemctl", "restart", "vibe-app.service"],
-            ] {
-                let mut args = vec!["exec".to_string(), name.to_string(), "--".to_string()];
-                args.extend(command.into_iter().map(str::to_string));
-                self.incus_run(&args, 60)
-                    .map_err(|e| format!("start Vibe application: {e}"))?;
-            }
+            let start: &[&[&str]] = &[
+                &["systemctl", "daemon-reload"],
+                &["systemctl", "enable", "vibe-app.service"],
+                &["systemctl", "restart", "vibe-app.service"],
+            ];
+            self.run_systemctl(name, "start Vibe application", start)?;
 
             // Health check: if the project entry is not a web server (a CLI
             // that prints usage and exits, a crash, or a long build step)
@@ -356,139 +118,41 @@ impl VmLifecycle {
             // (with `$`, `;`, `>`) is refused and the probe always fails,
             // which wrongly swapped every custom/node app to the static
             // server. A pushed probe script runs with clean arguments.
-            let probe_file = if is_python { "healthcheck.py" } else { "healthcheck.js" };
-            let probe_path = temp.join(format!("vibe-{probe_file}"));
-            let probe_src = if is_python { HEALTH_PROBE_PYTHON } else { HEALTH_PROBE_JS };
-            std::fs::write(&probe_path, probe_src)
-                .map_err(|e| format!("write health probe: {e}"))?;
-            self.incus_run(
-                &[
-                    "file".to_string(),
-                    "push".to_string(),
-                    probe_path.to_string_lossy().into_owned(),
-                    format!("{name}/opt/vibe/{probe_file}"),
-                    "--create-dirs".to_string(),
-                ],
-                60,
-            )
-            .map_err(|e| format!("push health probe: {e}"))?;
+            let probe_dest = self.push_run_health_probe(name, &temp, is_python)?;
             let probe_interp = if is_python { "python3" } else { "node" };
-            let probe_dest = format!("/opt/vibe/{probe_file}");
-            let listening = |attempts: u32| -> bool {
-                self.incus_run(
-                    &[
-                        "exec".to_string(),
-                        name.to_string(),
-                        "--".to_string(),
-                        probe_interp.to_string(),
-                        probe_dest.clone(),
-                        attempts.to_string(),
-                    ],
-                    60,
-                )
-                .is_ok()
-            };
-            if !listening(20) && has_node_entry {
+            if !self.run_is_listening(name, probe_interp, &probe_dest, 20) && has_node_entry {
                 log::info!(
                     "Vibe: {name} entry is not a web server (nothing on :3000) — serving workspace statically"
                 );
-                let server_path = temp.join("server.js");
-                std::fs::write(&server_path, server_js)
-                    .map_err(|e| format!("write static fallback server: {e}"))?;
-                self.incus_run(
-                    &[
-                        "file".to_string(),
-                        "push".to_string(),
-                        server_path.to_string_lossy().into_owned(),
-                        format!("{name}/opt/vibe/app/server.js"),
-                        "--create-dirs".to_string(),
-                    ],
-                    60,
-                )
-                .map_err(|e| format!("push static fallback server: {e}"))?;
+                self.push_run_static_server(name, &temp, server_js)?;
                 let db_line = database_url
                     .map(|url| format!("\nEnvironment=DATABASE_URL={url}"))
                     .unwrap_or_default();
                 let unit = format!(
                     "[Unit]\nDescription=Vibe application (static)\nAfter=network.target\n\n[Service]\nType=simple\nWorkingDirectory=/opt/vibe/app\nEnvironment=PORT=3000{db_line}\nExecStart=/usr/bin/node /opt/vibe/app/server.js\nRestart=always\nRestartSec=2\n\n[Install]\nWantedBy=multi-user.target\n"
                 );
-                let unit_path = temp.join("vibe-app-static.service");
-                std::fs::write(&unit_path, unit).map_err(|e| format!("write static unit: {e}"))?;
-                self.incus_run(
-                    &[
-                        "file".to_string(),
-                        "push".to_string(),
-                        unit_path.to_string_lossy().into_owned(),
-                        format!("{name}/etc/systemd/system/vibe-app.service"),
-                        "--create-dirs".to_string(),
-                    ],
-                    60,
-                )
-                .map_err(|e| format!("push static unit: {e}"))?;
-                for command in [
-                    vec!["systemctl", "daemon-reload"],
-                    vec!["systemctl", "restart", "vibe-app.service"],
-                ] {
-                    let mut args = vec!["exec".to_string(), name.to_string(), "--".to_string()];
-                    args.extend(command.into_iter().map(str::to_string));
-                    self.incus_run(&args, 60)
-                        .map_err(|e| format!("start static fallback: {e}"))?;
-                }
-                if !listening(15) {
+                self.push_run_unit(name, &temp, &unit)?;
+                let restart: &[&[&str]] = &[
+                    &["systemctl", "daemon-reload"],
+                    &["systemctl", "restart", "vibe-app.service"],
+                ];
+                self.run_systemctl(name, "start static fallback", restart)?;
+                if !self.run_is_listening(name, probe_interp, &probe_dest, 15) {
                     log::warn!("Vibe: {name} static fallback is not serving on :3000");
                 }
             }
 
-            let devices = self
-                .incus_run(
-                    &[
-                        "config".to_string(),
-                        "device".to_string(),
-                        "show".to_string(),
-                        name.to_string(),
-                    ],
-                    30,
-                )
-                .map_err(|e| format!("inspect proxy device: {e}"))?;
-            if devices.stdout.contains("vibe-http:") {
-                self.incus_run(
-                    &[
-                        "config".to_string(),
-                        "device".to_string(),
-                        "remove".to_string(),
-                        name.to_string(),
-                        "vibe-http".to_string(),
-                    ],
-                    30,
-                )
-                .map_err(|e| format!("replace proxy device: {e}"))?;
-            }
             // host_port == 0: prod publish path — no proxy device is attached
             // (the app is served through the Caddy domain route → container
             // IP:3000). Attaching a device with the previous default of 80
             // failed with `bind: address already in use` on prod.
-            if host_port != 0 {
-                self.incus_run(
-                    &[
-                        "config".to_string(),
-                        "device".to_string(),
-                        "add".to_string(),
-                        name.to_string(),
-                        "vibe-http".to_string(),
-                        "proxy".to_string(),
-                        format!("listen=tcp:0.0.0.0:{host_port}"),
-                        "connect=tcp:127.0.0.1:3000".to_string(),
-                    ],
-                    60,
-                )
-                .map_err(|e| format!("expose application port: {e}"))?;
-                if host_port == 80 {
-                    Ok("http://localhost".to_string())
-                } else {
-                    Ok(format!("http://localhost:{host_port}"))
-                }
-            } else {
+            self.attach_run_proxy_device(name, host_port)?;
+            if host_port == 0 {
                 Ok("http://localhost:3000".to_string())
+            } else if host_port == 80 {
+                Ok("http://localhost".to_string())
+            } else {
+                Ok(format!("http://localhost:{host_port}"))
             }
         })();
 
@@ -496,5 +160,160 @@ impl VmLifecycle {
             log::warn!("Vibe: failed to remove run temp dir: {e}");
         }
         result
+    }
+
+    /// Push the project's files into `/opt/vibe/app` inside the dev
+    /// container. Relative paths are validated so a crafted name cannot
+    /// escape the app directory.
+    #[cfg(not(target_os = "windows"))]
+    pub(crate) fn push_run_files(
+        &self,
+        name: &str,
+        files: &[serde_json::Value],
+        temp: &std::path::Path,
+    ) -> Result<(), String> {
+        for file in files {
+            let rel = file
+                .get("path")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| "run file is missing path".to_string())?;
+            let rel_path = std::path::Path::new(rel);
+            if rel_path.is_absolute()
+                || rel_path
+                    .components()
+                    .any(|part| matches!(part, std::path::Component::ParentDir))
+            {
+                return Err(format!("invalid run path '{rel}'"));
+            }
+            let bytes = file
+                .get("content")
+                .and_then(|v| v.as_array())
+                .ok_or_else(|| format!("run file '{rel}' has invalid content"))?
+                .iter()
+                .map(|v| {
+                    v.as_u64()
+                        .filter(|n| *n <= u8::MAX as u64)
+                        .map(|n| n as u8)
+                        .ok_or_else(|| format!("run file '{rel}' has invalid byte"))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let source = temp.join(rel_path);
+            if let Some(parent) = source.parent() {
+                std::fs::create_dir_all(parent)
+                    .map_err(|e| format!("create run path for '{rel}': {e}"))?;
+            }
+            std::fs::write(&source, bytes).map_err(|e| format!("write run file '{rel}': {e}"))?;
+            let destination = format!("{name}/opt/vibe/app/{}", rel.replace('\\', "/"));
+            self.incus_run(
+                &[
+                    "file".to_string(),
+                    "push".to_string(),
+                    source.to_string_lossy().into_owned(),
+                    destination,
+                    "--create-dirs".to_string(),
+                ],
+                60,
+            )
+            .map_err(|e| format!("push run file '{rel}': {e}"))?;
+        }
+        Ok(())
+    }
+
+    /// Push the generated static file server as `/opt/vibe/app/server.js`.
+    #[cfg(not(target_os = "windows"))]
+    pub(crate) fn push_run_static_server(
+        &self,
+        name: &str,
+        temp: &std::path::Path,
+        server_js: &str,
+    ) -> Result<(), String> {
+        let server_path = temp.join("server.js");
+        std::fs::write(&server_path, server_js).map_err(|e| format!("write static server: {e}"))?;
+        self.incus_run(
+            &[
+                "file".to_string(),
+                "push".to_string(),
+                server_path.to_string_lossy().into_owned(),
+                format!("{name}/opt/vibe/app/server.js"),
+                "--create-dirs".to_string(),
+            ],
+            60,
+        )
+        .map_err(|e| format!("push static server: {e}"))?;
+        Ok(())
+    }
+
+    /// Write a systemd unit locally and push it as `vibe-app.service`.
+    #[cfg(not(target_os = "windows"))]
+    pub(crate) fn push_run_unit(
+        &self,
+        name: &str,
+        temp: &std::path::Path,
+        unit: &str,
+    ) -> Result<(), String> {
+        let unit_path = temp.join("vibe-app.service");
+        std::fs::write(&unit_path, unit).map_err(|e| format!("write service unit: {e}"))?;
+        self.incus_run(
+            &[
+                "file".to_string(),
+                "push".to_string(),
+                unit_path.to_string_lossy().into_owned(),
+                format!("{name}/etc/systemd/system/vibe-app.service"),
+                "--create-dirs".to_string(),
+            ],
+            60,
+        )
+        .map_err(|e| format!("push service unit: {e}"))?;
+        Ok(())
+    }
+
+    /// Attach (replacing any existing) the `vibe-http` proxy device mapping
+    /// `host_port` → 127.0.0.1:3000. `host_port == 0` is the prod publish
+    /// path, where the app is reached through the Caddy domain route and no
+    /// device is attached.
+    #[cfg(not(target_os = "windows"))]
+    pub(crate) fn attach_run_proxy_device(&self, name: &str, host_port: u16) -> Result<(), String> {
+        let devices = self
+            .incus_run(
+                &[
+                    "config".to_string(),
+                    "device".to_string(),
+                    "show".to_string(),
+                    name.to_string(),
+                ],
+                30,
+            )
+            .map_err(|e| format!("inspect proxy device: {e}"))?;
+        if devices.stdout.contains("vibe-http:") {
+            self.incus_run(
+                &[
+                    "config".to_string(),
+                    "device".to_string(),
+                    "remove".to_string(),
+                    name.to_string(),
+                    "vibe-http".to_string(),
+                ],
+                30,
+            )
+            .map_err(|e| format!("replace proxy device: {e}"))?;
+        }
+        if host_port == 0 {
+            return Ok(());
+        }
+        self.incus_run(
+            &[
+                "config".to_string(),
+                "device".to_string(),
+                "add".to_string(),
+                name.to_string(),
+                "vibe-http".to_string(),
+                "proxy".to_string(),
+                format!("listen=tcp:0.0.0.0:{host_port}"),
+                "connect=tcp:127.0.0.1:3000".to_string(),
+            ],
+            60,
+        )
+        .map_err(|e| format!("expose application port: {e}"))?;
+        Ok(())
     }
 }

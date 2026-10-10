@@ -1,7 +1,7 @@
 use super::*;
 
 impl DocumentProcessor {
-    async fn fallback_text_extraction(&self, file_path: &Path) -> Result<String> {
+    pub(crate) async fn fallback_text_extraction(&self, file_path: &Path) -> Result<String> {
         match tokio::fs::read_to_string(file_path).await {
             Ok(contents) => Ok(contents),
             Err(_) => {

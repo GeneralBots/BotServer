@@ -244,7 +244,7 @@ impl KbEmbeddingGenerator {
         Ok(results)
     }
 
-    async fn generate_batch_embeddings(&self, chunks: &[TextChunk]) -> Result<Vec<Embedding>> {
+    pub(crate) async fn generate_batch_embeddings(&self, chunks: &[TextChunk]) -> Result<Vec<Embedding>> {
         let _permit = self.semaphore.acquire().await
             .map_err(|e| anyhow::anyhow!("Failed to acquire semaphore: {}", e))?;
 
