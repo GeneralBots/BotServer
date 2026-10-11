@@ -1,7 +1,7 @@
 //! Derived per-app command surface.
 //!
 //! In addition to the curated commands in `commands.rs`, every registered REST
-//! endpoint from `endpoint_inventory::ALL_ROUTES` is turned into an executable
+//! endpoint from `endpoint_inventory::all_routes()` is turned into an executable
 //! command on the fly — the VBA-style "drive any app" model. Derived commands
 //! follow the naming convention `<app>.<noun>.<verb>` (e.g. `crm.contacts.create`,
 //! `tickets.resolve`, `products.items.list`) and are executed through the
@@ -94,7 +94,7 @@ pub struct DerivedCommand {
 /// are pure UI fragments (no `/api/` prefix).
 pub fn derived_commands() -> Vec<DerivedCommand> {
     let mut out = Vec::new();
-    for ep in crate::core::bot::endpoint_inventory::ALL_ROUTES {
+    for ep in crate::core::bot::endpoint_inventory::all_routes() {
         if !ep.path.starts_with("/api/") {
             continue;
         }

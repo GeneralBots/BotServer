@@ -229,7 +229,6 @@ pub const SERVICE_MAP: &[(&str, &str, &str, u16, u16)] = &[
     ("llm",       "models",    "10.0.0.16", 8081, 8082),
 ];
 
-mod part1;
 mod part2;
 mod part3;
 mod part4;

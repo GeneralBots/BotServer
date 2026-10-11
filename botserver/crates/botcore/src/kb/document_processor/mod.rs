@@ -18,7 +18,6 @@ pub struct DocumentProcessor {
     chunk_overlap: usize,
 }
 
-    #[cfg(feature = "kb-extraction")]
 
 mod part1;
 mod part2;
@@ -26,4 +25,3 @@ mod part3;
 mod part4;
 mod part5;
 
-use part5::*;

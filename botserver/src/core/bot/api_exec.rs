@@ -1,6 +1,6 @@
 //! Generic `api.exec` executor — the VBA-style "drive any app" surface.
 //!
-//! Any registered REST endpoint (`endpoint_inventory::ALL_ROUTES`) can be
+//! Any registered REST endpoint (`endpoint_inventory::all_routes()`) can be
 //! invoked from chat on ANY channel (web, WhatsApp, Telegram, ...) by running
 //! the derived command or the raw `api.exec` command. The executor mints a
 //! user-scoped JWT (same user as the session), then performs a loopback HTTP
@@ -75,8 +75,7 @@ fn fill_path(template: &str, params: &serde_json::Map<String, Value>) -> Result<
 
 /// Validates that the endpoint is a registered route (defense in depth).
 fn is_registered(method: &str, path: &str) -> bool {
-    crate::core::bot::endpoint_inventory::ALL_ROUTES
-        .iter()
+    crate::core::bot::endpoint_inventory::all_routes()
         .any(|e| e.method == method && path_matches(e.path, path))
 }
 

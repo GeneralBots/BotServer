@@ -51,7 +51,8 @@ pub struct KbIndexer {
     db_pool: Option<DbPool>,
 }
 
-pub async fn index_single_file(
+impl KbIndexer {
+    pub async fn index_single_file(
     &self,
     bot_id: Uuid,
     bot_name: &str,
@@ -140,6 +141,7 @@ pub async fn index_single_file_with_id(
             chunks_indexed: chunks.len(),
         })
     }
+}
 
 #[derive(Debug, Clone)]
 pub struct CollectionInfo {

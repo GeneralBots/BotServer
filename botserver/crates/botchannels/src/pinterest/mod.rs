@@ -12,14 +12,12 @@ pub struct PinterestProvider {
     client: reqwest::Client,
 }
 
+impl PinterestProvider {
     /// Provider endpoints are compile-time constants: tokens are scoped to
     /// this host and must never be sent to a runtime-configured one.
-    const API_BASE: &str = "https://api.pinterest.com/v5";
-    const OAUTH_BASE: &str = "https://api.pinterest.com/v5/oauth";
-
-    /// Delete a board
-
-    /// List campaigns
+    pub(crate) const API_BASE: &str = "https://api.pinterest.com/v5";
+    pub(crate) const OAUTH_BASE: &str = "https://api.pinterest.com/v5/oauth";
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PinCreateRequest {

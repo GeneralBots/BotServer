@@ -1,7 +1,7 @@
 use super::*;
 
 impl VectorDBIndexer {
-    async fn index_user_files(&self, user_id: Uuid) -> Result<()> {
+    pub(crate) async fn index_user_files(&self, user_id: Uuid) -> Result<()> {
         let jobs = self.jobs.read().await;
         let job = jobs
             .get(&user_id)

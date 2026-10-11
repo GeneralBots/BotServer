@@ -2,7 +2,7 @@
 
 use super::*;
 
-    use super::*;
+
 
     #[test]
     fn domain_validation_accepts_fqdns() {

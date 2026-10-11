@@ -8,7 +8,7 @@ impl DiscordProvider {
         }
     }
 
-    async fn send_message(
+    pub async fn send_message(
         &self,
         bot_token: &str,
         channel_id: &str,
@@ -52,7 +52,7 @@ impl DiscordProvider {
             })
     }
 
-    async fn send_webhook_message(
+    pub(crate) async fn send_webhook_message(
         &self,
         webhook_url: &str,
         content: &WebhookContent,
@@ -96,7 +96,7 @@ impl DiscordProvider {
             })
     }
 
-    async fn get_current_user(&self, bot_token: &str) -> Result<DiscordUser, ChannelError> {
+    pub(crate) async fn get_current_user(&self, bot_token: &str) -> Result<DiscordUser, ChannelError> {
         let response = self
             .client
             .get(format!("{}/users/@me", self.base_url))

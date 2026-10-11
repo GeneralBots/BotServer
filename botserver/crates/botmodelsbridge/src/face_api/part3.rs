@@ -1,7 +1,7 @@
 use super::*;
 
 impl FaceApiService {
-    async fn detect_faces_insightface(
+    pub(crate) async fn detect_faces_insightface(
         &self,
         request: FaceDetectionRequest,
     ) -> Result<FaceDetectionResponse, FaceApiError> {

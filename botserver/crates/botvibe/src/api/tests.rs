@@ -3,7 +3,7 @@
 use super::*;
 use super::run::derive_project_name;
 
-    use super::*;
+
 
     #[test]
     fn truncate_chars_never_panics_on_multibyte_boundary() {

@@ -2,7 +2,7 @@
 
 use super::*;
 
-    use super::*;
+
 
     #[test]
     fn protected_container_names_are_rejected() {

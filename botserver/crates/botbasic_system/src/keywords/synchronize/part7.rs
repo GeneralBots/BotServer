@@ -73,7 +73,7 @@ impl SynchronizeService {
         }
     }
 
-    async fn find_existing_record(
+    pub(super) async fn find_existing_record(
         &self,
         _bot_id: Uuid,
         _table_name: &str,
@@ -83,7 +83,7 @@ impl SynchronizeService {
         Ok(None)
     }
 
-    async fn insert_record(
+    pub(super) async fn insert_record(
         &self,
         _bot_id: Uuid,
         _table_name: &str,
@@ -92,7 +92,7 @@ impl SynchronizeService {
         Ok(())
     }
 
-    async fn update_record(
+    pub(super) async fn update_record(
         &self,
         _bot_id: Uuid,
         _table_name: &str,
@@ -103,7 +103,7 @@ impl SynchronizeService {
         Ok(())
     }
 
-    async fn handle_retry(&self, _page: u32) -> Option<std::time::Duration> {
+    pub(super) async fn handle_retry(&self, _page: u32) -> Option<std::time::Duration> {
         Some(std::time::Duration::from_millis(RETRY_DELAY_MS))
     }
 }

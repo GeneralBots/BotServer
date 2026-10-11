@@ -5,7 +5,7 @@ use super::*;
 /// `Uuid::nil()` (the fallback global scope) when no bot is flagged yet.
 /// This replaces the previous hardcoded `Uuid::nil()` stub so suite-mode
 /// handlers stop defaulting to the global shared scope.
-pub(super) fn resolve_default_branch(conn: &mut diesel::PgConnection) -> uuid::Uuid {
+pub(crate) fn resolve_default_branch(conn: &mut diesel::PgConnection) -> uuid::Uuid {
     use diesel::prelude::*;
     if let Some(branch) = diesel::sql_query(
         "SELECT branch_id FROM bots WHERE is_default_for_branch = TRUE LIMIT 1",

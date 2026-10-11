@@ -1,4 +1,3 @@
-use super::*;
 
 /// Strip HTML tags/entities/whitespace noise from a spreadsheet cell
 /// value. The patterns are constants; if one somehow failed to compile

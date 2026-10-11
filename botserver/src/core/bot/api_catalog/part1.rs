@@ -1,4 +1,3 @@
-use super::*;
 
 /// Convenience detection for the API-call trigger. Some models emit the JSON
 /// key as `__api_call__` (canonical) or `api_call` (common off-by-underscore

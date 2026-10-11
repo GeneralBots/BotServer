@@ -9,9 +9,9 @@ pub fn configure_designer_routes() -> Router<Arc<DesignerState>> {
         .route(ROUTE_EXPORT, get(handle_export))
         .route(ROUTE_DIALOGS, get(handle_list_dialogs).post(handle_create_dialog))
         .route(ROUTE_DIALOG_BY_ID, get(handle_get_dialog))
-        .route(ROUTE_MODIFY, post(super::llm_integration::handle_designer_modify))
+        .route(ROUTE_MODIFY, post(crate::designer_api::llm_integration::handle_designer_modify))
         .route(ROUTE_MAGIC, post(handle_magic_suggestions))
-        .route(ROUTE_EDITOR_MAGIC, post(super::llm_integration::handle_editor_magic))
+        .route(ROUTE_EDITOR_MAGIC, post(crate::designer_api::llm_integration::handle_editor_magic))
 }
 pub async fn handle_list_files(State(state): State<Arc<DesignerState>>) -> impl IntoResponse {
     let conn = state.conn.clone();

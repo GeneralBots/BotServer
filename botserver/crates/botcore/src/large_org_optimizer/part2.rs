@@ -38,7 +38,7 @@ impl LargeOrgOptimizer {
         Ok(members)
     }
 
-    async fn get_cached_members(&self, organization_id: Uuid) -> Option<CachedMemberList> {
+    pub(super) async fn get_cached_members(&self, organization_id: Uuid) -> Option<CachedMemberList> {
         let cache = self.member_cache.read().await;
         cache.get(&organization_id).and_then(|cached| {
             if Utc::now() < cached.expires_at {

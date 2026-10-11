@@ -1,7 +1,7 @@
 use super::*;
 
 impl AlertManager {
-    async fn persist_history(&self, alert: &UsageAlert) {
+    pub(crate) async fn persist_history(&self, alert: &UsageAlert) {
         let Some(pool) = self.pool.clone() else { return };
         let alert = alert.clone();
         let metric = serde_json::to_string(&alert.metric).unwrap_or_else(|_| "unknown".into());
@@ -38,7 +38,7 @@ impl AlertManager {
     }
 
     /// Load recent history from the DB (falling back to memory when no pool).
-    async fn load_history_from_db(&self, org_id: Uuid, limit: usize) -> Vec<UsageAlert> {
+    pub(crate) async fn load_history_from_db(&self, org_id: Uuid, limit: usize) -> Vec<UsageAlert> {
         let Some(pool) = self.pool.clone() else { return Vec::new() };
         let result = tokio::task::spawn_blocking(move || -> Result<Vec<UsageAlert>, String> {
             let mut conn = pool.get().map_err(|e| format!("db pool: {e}"))?;
@@ -112,7 +112,7 @@ impl AlertManager {
         }
     }
 
-    async fn send_notifications(&self, org_id: Uuid, alert: &UsageAlert) {
+    pub(crate) async fn send_notifications(&self, org_id: Uuid, alert: &UsageAlert) {
         let prefs = self.get_notification_preferences(org_id).await;
 
         if !prefs.enabled {

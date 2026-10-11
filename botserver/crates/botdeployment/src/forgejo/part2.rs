@@ -1,7 +1,7 @@
 use super::*;
 
 impl ForgejoClient {
-    async fn push_workflow_preserving(
+    pub(crate) async fn push_workflow_preserving(
         &self,
         repo_url: &str,
         app: &GeneratedApp,

@@ -27,7 +27,5 @@ use crate::vm_lifecycle::VmLifecycle;
 
 pub(crate) use health::{HEALTH_PROBE_JS, checked_run};
 pub(crate) use web_entry::{HEALTH_PROBE_PYTHON, resolve_web_entry};
-#[cfg(test)]
-pub(crate) use web_entry::{entry_resolution_tests};
 #[cfg(target_os = "windows")]
 pub(crate) use windows::{ensure_wsl_keepalive, windows_path_to_wsl, wsl_distro, wsl_exec_args};

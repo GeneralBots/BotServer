@@ -30,7 +30,7 @@ pub struct DeepLinkParam {
     /// Example value shown to the LLM.
     pub example: &'static str,
 }
-const fn cmd(
+pub(crate) const fn cmd(
     app: &'static str,
     name: &'static str,
     label: &'static str,

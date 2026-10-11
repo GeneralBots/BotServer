@@ -1,7 +1,7 @@
 use super::*;
 
 impl DriveMonitor {
-    async fn index_kb_file(&self, bot_name: &str, full_key: &str, s3_key: &str, etag: Option<String>) {
+    pub(crate) async fn index_kb_file(&self, bot_name: &str, full_key: &str, s3_key: &str, etag: Option<String>) {
         let parsed = match parse_kb_path(s3_key) {
             Some(p) => p,
             None => {
@@ -101,7 +101,7 @@ impl DriveMonitor {
         });
     }
 
-    async fn sync_bot_config(&self, bot_name: &str, s3_key: &str, etag: Option<String>) {
+    pub(crate) async fn sync_bot_config(&self, bot_name: &str, s3_key: &str, etag: Option<String>) {
         let s3 = match &self.state.drive {
             Some(s3) => s3,
             None => {
@@ -183,7 +183,7 @@ impl DriveMonitor {
     }
 
 
-    async fn sync_gbot_to_work(&self, bot_name: &str, s3_key: &str, etag: Option<String>) {
+    pub(crate) async fn sync_gbot_to_work(&self, bot_name: &str, s3_key: &str, etag: Option<String>) {
         let s3 = match &self.state.drive {
             Some(s3) => s3,
             None => {

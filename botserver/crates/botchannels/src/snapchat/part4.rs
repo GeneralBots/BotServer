@@ -180,7 +180,7 @@ impl SnapchatProvider {
             })
     }
 
-    async fn parse_error_response(&self, response: reqwest::Response) -> ChannelError {
+    pub(crate) async fn parse_error_response(&self, response: reqwest::Response) -> ChannelError {
         let status = response.status();
 
         if status.as_u16() == 401 {

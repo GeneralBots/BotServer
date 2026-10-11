@@ -18,6 +18,8 @@ pub mod policy_checker;
 pub mod risk_assessment;
 pub mod schema;
 pub mod soc2;
+mod soc2_controls;
+mod soc2_ops;
 pub mod sop_middleware;
 pub mod storage;
 pub mod training_tracker;

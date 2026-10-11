@@ -1,7 +1,7 @@
 use super::*;
 
 pub struct LargeOrgOptimizer {
-    config: OptimizerConfig,
+    pub(crate) config: OptimizerConfig,
     pub(crate) member_cache: Arc<RwLock<HashMap<Uuid, CachedMemberList>>>,
     pub(crate) permission_cache: Arc<RwLock<HashMap<PermissionCacheKey, CachedPermissions>>>,
     pub(crate) query_stats: Arc<RwLock<QueryStatistics>>,
@@ -35,35 +35,35 @@ impl Default for OptimizerConfig {
     }
 }
 #[derive(Debug, Clone)]
-struct CachedMemberList {
-    member_ids: Vec<Uuid>,
-    total_count: usize,
-    expires_at: DateTime<Utc>,
-    is_partial: bool,
-    loaded_pages: Vec<usize>,
+pub(crate) struct CachedMemberList {
+    pub(crate) member_ids: Vec<Uuid>,
+    pub(crate) total_count: usize,
+    pub(crate) expires_at: DateTime<Utc>,
+    pub(crate) is_partial: bool,
+    pub(crate) loaded_pages: Vec<usize>,
 }
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-struct PermissionCacheKey {
-    organization_id: Uuid,
-    user_id: Uuid,
-    resource_type: String,
+pub(crate) struct PermissionCacheKey {
+    pub(crate) organization_id: Uuid,
+    pub(crate) user_id: Uuid,
+    pub(crate) resource_type: String,
 }
 #[derive(Debug, Clone)]
-struct CachedPermissions {
-    permissions: Vec<String>,
-    expires_at: DateTime<Utc>,
+pub(crate) struct CachedPermissions {
+    pub(crate) permissions: Vec<String>,
+    pub(crate) expires_at: DateTime<Utc>,
 }
 #[derive(Debug, Default)]
-struct QueryStatistics {
-    total_queries: AtomicU64,
-    cache_hits: AtomicU64,
-    cache_misses: AtomicU64,
-    slow_queries: AtomicU64,
-    avg_query_time_ms: AtomicU64,
+pub(crate) struct QueryStatistics {
+    pub(crate) total_queries: AtomicU64,
+    pub(crate) cache_hits: AtomicU64,
+    pub(crate) cache_misses: AtomicU64,
+    pub(crate) slow_queries: AtomicU64,
+    pub(crate) avg_query_time_ms: AtomicU64,
 }
 pub struct PartitionManager {
     pub(crate) partitions: RwLock<HashMap<Uuid, Vec<DataPartition>>>,
-    config: PartitionConfig,
+    pub(crate) config: PartitionConfig,
 }
 #[derive(Debug, Clone)]
 pub struct DataPartition {
@@ -74,8 +74,8 @@ pub struct DataPartition {
 }
 #[derive(Debug, Clone)]
 pub struct PartitionConfig {
-    auto_split_threshold: usize,
-    merge_threshold: usize,
+    pub(crate) auto_split_threshold: usize,
+    pub(crate) merge_threshold: usize,
 }
 impl Default for PartitionConfig {
     fn default() -> Self {

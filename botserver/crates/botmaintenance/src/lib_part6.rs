@@ -1,7 +1,7 @@
 use super::*;
 
 impl CleanupService {
-    async fn save_cleanup_history(&self, history: &CleanupHistory) -> Result<(), CleanupError> {
+    pub(crate) async fn save_cleanup_history(&self, history: &CleanupHistory) -> Result<(), CleanupError> {
         let mut conn = self.pool.get().map_err(|_| CleanupError::DatabaseConnection)?;
 
         let trigger_str = match history.trigger {
@@ -58,7 +58,7 @@ impl CleanupService {
         Ok(())
     }
 
-    async fn get_organization_quota(&self, organization_id: Uuid) -> Result<i64, CleanupError> {
+    pub(crate) async fn get_organization_quota(&self, organization_id: Uuid) -> Result<i64, CleanupError> {
         let mut conn = self.pool.get().map_err(|_| CleanupError::DatabaseConnection)?;
 
         #[derive(QueryableByName)]

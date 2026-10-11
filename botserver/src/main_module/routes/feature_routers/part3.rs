@@ -1,6 +1,6 @@
 use super::*;
 
-pub(super) fn make_saas_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_saas_router(app_state: &Arc<AppState>) -> Router<()> {
     use botcloud::{SaasService, SaasConfig, stripe::StripeClient, cloud_ui, api};
     let stripe_secret = match std::env::var("STRIPE_SECRET_KEY") {
         Ok(key) => key,
@@ -125,7 +125,7 @@ pub(super) fn make_saas_router(app_state: &Arc<AppState>) -> Router<()> {
         .merge(botcloud::webhook::configure_webhook_routes().with_state(saas_service))
 }
 #[cfg(feature = "marketing")]
-pub(super) fn make_marketing_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_marketing_router(app_state: &Arc<AppState>) -> Router<()> {
     let base = botmarketing::state::AppState {
         conn: Arc::new(app_state.conn.clone()),
         // #1441 B — a bot id, not a branch id: `botmarketing::state::get_scope`
@@ -149,15 +149,15 @@ pub(super) fn make_marketing_router(app_state: &Arc<AppState>) -> Router<()> {
     crate::marketing::routes::configure_marketing_routes().with_state(marketing_state)
 }
 #[cfg(feature = "telegram")]
-pub(super) fn make_telegram_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_telegram_router(app_state: &Arc<AppState>) -> Router<()> {
     crate::telegram::webhook::configure().with_state(Arc::new(bottelegram::ChannelState {
         conn: Arc::new(app_state.conn.clone()),
         get_default_bot: Arc::new(|conn: &mut diesel::PgConnection| {
             let branch = resolve_default_branch(conn);
             (branch, "default".to_string())
         }),
-        get_config: super::channel_support::make_channel_config_reader(app_state),
-        put_media: super::channel_support::make_put_media_fn(app_state),
+        get_config: crate::main_module::routes::channel_support::make_channel_config_reader(app_state),
+        put_media: crate::main_module::routes::channel_support::make_put_media_fn(app_state),
         stream_response: {
             let app_state = app_state.clone();
             Arc::new(move |msg: botlib::models::UserMessage, tx: tokio::sync::mpsc::Sender<botlib::models::BotResponse>| {
@@ -175,9 +175,9 @@ pub(super) fn make_telegram_router(app_state: &Arc<AppState>) -> Router<()> {
     }))
 }
 #[cfg(feature = "instagram")]
-pub(super) fn make_instagram_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_instagram_router(app_state: &Arc<AppState>) -> Router<()> {
     crate::instagram::webhook::configure().with_state(Arc::new(botinstagram::state::ChannelState {
-        get_config: super::channel_support::make_channel_config_reader_by_handle(app_state),
+        get_config: crate::main_module::routes::channel_support::make_channel_config_reader_by_handle(app_state),
         stream_response: {
             let app_state = app_state.clone();
             Arc::new(move |msg: botlib::models::UserMessage, tx: tokio::sync::mpsc::Sender<botlib::models::BotResponse>| {
@@ -195,14 +195,14 @@ pub(super) fn make_instagram_router(app_state: &Arc<AppState>) -> Router<()> {
     }))
 }
 #[cfg(feature = "msteams")]
-pub(super) fn make_msteams_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_msteams_router(app_state: &Arc<AppState>) -> Router<()> {
     crate::msteams::webhook::configure().with_state(Arc::new(botmsteams::state::ChannelState {
         conn: Arc::new(app_state.conn.clone()),
         get_default_bot: Arc::new(|conn: &mut diesel::PgConnection| {
             let branch = resolve_default_branch(conn);
             (branch, "default".to_string())
         }),
-        get_config: super::channel_support::make_channel_config_reader(app_state),
+        get_config: crate::main_module::routes::channel_support::make_channel_config_reader(app_state),
         stream_response: {
             let app_state = app_state.clone();
             Arc::new(move |msg: botlib::models::UserMessage, tx: tokio::sync::mpsc::Sender<botlib::models::BotResponse>| {
@@ -220,7 +220,7 @@ pub(super) fn make_msteams_router(app_state: &Arc<AppState>) -> Router<()> {
     }))
 }
 #[cfg(feature = "attendant")]
-pub(super) fn make_attendant_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_attendant_router(app_state: &Arc<AppState>) -> Router<()> {
     Router::new()
         .merge(crate::attendance::routes::configure_attendance_routes().with_state(Arc::new(botattendance::AttendanceConfig {
             pool: Arc::new(app_state.conn.clone()),

@@ -35,8 +35,8 @@ pub(super) fn find_api_entries(state: &Arc<AppState>, user_id: Uuid, query: &str
     }
     // Harvested on-the-fly commands derived from the endpoint inventory. These
     // are proposed as `api.exec` candidates (method + path) for regular users.
-    let derived = super::commands_derived::derived_commands();
-    let mut scored_dc: Vec<(i32, &super::commands_derived::DerivedCommand)> = derived
+    let derived = crate::core::bot::commands_derived::derived_commands();
+    let mut scored_dc: Vec<(i32, &crate::core::bot::commands_derived::DerivedCommand)> = derived
         .iter()
         .filter(|c| {
             if role != crate::security::user_role::ROLE_ADMIN
@@ -65,7 +65,7 @@ pub(super) fn find_api_entries(state: &Arc<AppState>, user_id: Uuid, query: &str
     }
     let mut scored_ep: Vec<(i32, &ApiEndpoint)> = all_endpoints()
         .iter()
-        .chain(super::endpoint_inventory::ALL_ROUTES)
+        .chain(crate::core::bot::endpoint_inventory::all_routes())
         .filter_map(|ep| {
             if crate::security::user_role::is_admin_only_endpoint(&state.conn, user_id, ep.method, ep.path) {
                 return None;

@@ -232,7 +232,7 @@ pub struct InvoiceService {
     next_invoice_number: std::sync::atomic::AtomicU64,
 }
 
-struct StripeInvoiceResult {
+pub(crate) struct StripeInvoiceResult {
     id: String,
     hosted_url: Option<String>,
     pdf_url: Option<String>,

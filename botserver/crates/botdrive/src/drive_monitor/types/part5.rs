@@ -1,4 +1,3 @@
-use super::*;
 
 pub(super) fn classify_file(key: &str) -> &'static str {
     let lower = key.to_lowercase();

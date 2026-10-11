@@ -192,7 +192,7 @@ pub struct MediaUploadService {
     platform_limits: HashMap<Platform, PlatformLimits>,
 }
 
-struct PlatformUploadResult {
+pub(crate) struct PlatformUploadResult {
     media_id: String,
     url: Option<String>,
     thumbnail_url: Option<String>,

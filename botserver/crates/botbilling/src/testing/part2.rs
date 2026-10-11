@@ -258,7 +258,7 @@ impl MockStripeClient {
         events.iter().rev().take(limit).cloned().collect()
     }
 
-    async fn emit_event<T: Serialize>(&self, event_type: &str, data: &T) {
+    pub(crate) async fn emit_event<T: Serialize>(&self, event_type: &str, data: &T) {
         let event = MockStripeEvent {
             id: format!("evt_{}", generate_stripe_id()),
             event_type: event_type.to_string(),

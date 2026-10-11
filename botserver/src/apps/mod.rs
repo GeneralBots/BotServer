@@ -76,6 +76,9 @@ mod part4;
 mod part5;
 
 pub use part1::*;
+// Explicit import: the `botuifragments::*` glob above also exports a
+// `register`, so the app-level one must shadow it by name.
+pub use part1::register;
 pub use part2::*;
 pub use part3::*;
 use part4::*;

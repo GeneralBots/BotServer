@@ -1,4 +1,4 @@
-use super::*;
+
 
 /// Builds the Vertex AI OpenAI-compatible endpoint URL
 pub fn build_vertex_url(project: &str, location: &str) -> String {

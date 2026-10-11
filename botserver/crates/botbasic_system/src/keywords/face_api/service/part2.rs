@@ -213,7 +213,7 @@ impl FaceApiService {
             return Err(FaceApiError::ApiError(error_text));
         }
 
-        let result: super::azure::AzureVerifyResponse = response.json().await
+        let result: AzureVerifyResponse = response.json().await
             .map_err(|e| FaceApiError::ParseError(e.to_string()))?;
 
         Ok(FaceVerificationResult::match_found(

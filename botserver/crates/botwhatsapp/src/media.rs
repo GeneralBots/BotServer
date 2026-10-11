@@ -268,8 +268,11 @@ mod tests {
         let message = message_with_image(Some(image("media-1", "image/jpeg")));
         let selected = select_media(&message);
 
-        assert_eq!(selected.map(|m| m.kind), Some("image"));
-        assert_eq!(selected.map(|m| m.media_id), Some("media-1".to_string()));
+        assert_eq!(selected.as_ref().map(|m| m.kind), Some("image"));
+        assert_eq!(
+            selected.as_ref().map(|m| m.media_id.clone()),
+            Some("media-1".to_string())
+        );
     }
 
     #[test]

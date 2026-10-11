@@ -1,7 +1,7 @@
 use super::*;
 
 impl MediaUploadService {
-    async fn upload_to_azure_blob(
+    pub(crate) async fn upload_to_azure_blob(
         &self,
         data: &[u8],
         upload: &MediaUpload,
@@ -52,7 +52,7 @@ impl MediaUploadService {
         })
     }
 
-    async fn upload_to_local_storage(
+    pub(crate) async fn upload_to_local_storage(
         &self,
         data: &[u8],
         upload: &MediaUpload,

@@ -1,7 +1,7 @@
 use super::*;
 
 impl SearchService {
-    async fn fetch_transcriptions_for_indexing(
+    pub(crate) async fn fetch_transcriptions_for_indexing(
         &self,
         organization_id: Uuid,
     ) -> Result<Vec<DocumentToIndex>, SearchError> {
@@ -59,7 +59,7 @@ impl SearchService {
         Ok(documents)
     }
 
-    async fn fetch_chat_messages_for_indexing(
+    pub(crate) async fn fetch_chat_messages_for_indexing(
         &self,
         organization_id: Uuid,
     ) -> Result<Vec<DocumentToIndex>, SearchError> {
@@ -121,7 +121,7 @@ impl SearchService {
         Ok(documents)
     }
 
-    async fn fetch_contacts_for_indexing(
+    pub(crate) async fn fetch_contacts_for_indexing(
         &self,
         organization_id: Uuid,
     ) -> Result<Vec<DocumentToIndex>, SearchError> {
@@ -196,7 +196,7 @@ impl SearchService {
         Ok(documents)
     }
 
-    async fn fetch_notes_for_indexing(
+    pub(crate) async fn fetch_notes_for_indexing(
         &self,
         organization_id: Uuid,
     ) -> Result<Vec<DocumentToIndex>, SearchError> {

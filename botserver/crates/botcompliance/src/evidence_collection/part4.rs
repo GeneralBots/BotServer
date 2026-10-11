@@ -1,7 +1,7 @@
 use super::*;
 
 impl EvidenceCollectionService {
-    async fn initialize_soc2_controls(&self) {
+    pub(crate) async fn initialize_soc2_controls(&self) {
         let soc2_controls = vec![
             ControlMapping {
                 id: Uuid::new_v4(),

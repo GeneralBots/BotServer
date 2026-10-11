@@ -194,3 +194,10 @@ use std::sync::Arc;
 use crate::security::set_global_panic_hook;
 
 mod main_body;
+
+/// Crate entry point. The boot sequence lives in [`main_body`] (split from
+/// this file for the 450-line limit) and carries `#[tokio::main]`, so this
+/// wrapper only forwards the exit status.
+fn main() -> std::io::Result<()> {
+    main_body::main()
+}

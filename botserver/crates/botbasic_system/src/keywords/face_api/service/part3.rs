@@ -1,7 +1,7 @@
 use super::*;
 
 impl FaceApiService {
-    async fn verify_faces_aws(
+    pub async fn verify_faces_aws(
         &self,
         face1: &FaceSource,
         face2: &FaceSource,
@@ -48,7 +48,7 @@ impl FaceApiService {
         ).with_face_ids(face1_id, face2_id))
     }
 
-    async fn analyze_face_aws(
+    pub async fn analyze_face_aws(
         &self,
         source: &FaceSource,
         attributes: &[FaceAttributeType],
@@ -136,7 +136,7 @@ impl FaceApiService {
     // OpenCV Implementation (Local Processing)
     // ========================================================================
 
-    async fn detect_faces_opencv(
+    pub async fn detect_faces_opencv(
         &self,
         image: &ImageSource,
         options: &DetectionOptions,
@@ -162,7 +162,7 @@ impl FaceApiService {
         Ok(FaceDetectionResult::success(faces, processing_time))
     }
 
-    async fn verify_faces_opencv(
+    pub async fn verify_faces_opencv(
         &self,
         face1: &FaceSource,
         face2: &FaceSource,
@@ -197,7 +197,7 @@ impl FaceApiService {
         })
     }
 
-    async fn analyze_face_opencv(
+    pub async fn analyze_face_opencv(
         &self,
         source: &FaceSource,
         attributes: &[FaceAttributeType],
@@ -265,7 +265,7 @@ impl FaceApiService {
     // InsightFace Implementation (Deep Learning)
     // ========================================================================
 
-    async fn detect_faces_insightface(
+    pub async fn detect_faces_insightface(
         &self,
         image: &ImageSource,
         options: &DetectionOptions,

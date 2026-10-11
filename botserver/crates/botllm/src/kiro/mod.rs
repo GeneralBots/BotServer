@@ -42,10 +42,6 @@ pub struct KiroClient {
 mod tests {
     use super::*;
 
-    fn test_client() -> KiroClient {
-        KiroClient::new("https://q.us-east-1.amazonaws.com".to_string())
-    }
-
     // #1390 — the kiro.dev key is currently NOT entitled (403
     // "User is not authorized to make this call"), so error classification
     // must distinguish it from an invalid key. When the account becomes

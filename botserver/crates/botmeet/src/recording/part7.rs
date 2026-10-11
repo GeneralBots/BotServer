@@ -54,7 +54,7 @@ impl RecordingService {
 
     // Database helper methods
 
-    async fn get_recording_from_db(&self, recording_id: Uuid) -> Result<WebinarRecording, RecordingError> {
+    pub(crate) async fn get_recording_from_db(&self, recording_id: Uuid) -> Result<WebinarRecording, RecordingError> {
         let pool = self.pool.clone();
 
         tokio::task::spawn_blocking(move || {
@@ -198,7 +198,7 @@ impl RecordingService {
         .map_err(|e| RecordingError::DatabaseError(e.to_string()))?
     }
 
-    async fn create_recording_record(
+    pub(crate) async fn create_recording_record(
         &self,
         recording_id: Uuid,
         webinar_id: Uuid,
@@ -239,7 +239,7 @@ impl RecordingService {
         .map_err(|e| RecordingError::DatabaseError(e.to_string()))?
     }
 
-    async fn update_recording_stopped(
+    pub(crate) async fn update_recording_stopped(
         &self,
         recording_id: Uuid,
         ended_at: DateTime<Utc>,
@@ -268,7 +268,7 @@ impl RecordingService {
         .map_err(|e| RecordingError::DatabaseError(e.to_string()))?
     }
 
-    async fn update_recording_processed(
+    pub(crate) async fn update_recording_processed(
         &self,
         recording_id: Uuid,
         file_url: &str,

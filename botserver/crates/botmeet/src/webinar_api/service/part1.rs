@@ -8,7 +8,7 @@ impl WebinarService {
         Self { pool, event_sender }
     }
 
-    pub fn subscribe(&self) -> broadcast::Receiver<super::types::WebinarEvent> {
+    pub fn subscribe(&self) -> broadcast::Receiver<crate::webinar_api::types::WebinarEvent> {
         self.event_sender.subscribe()
     }
 

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::*;
     use serde_json::json;
 
     #[test]
@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     pub(super) fn unknown_actions_reject_before_any_network_activity() {
-        let names = super::super::STRIPE_IMPLEMENTED_ACTIONS;
+        let names = super::super::super::STRIPE_IMPLEMENTED_ACTIONS;
         assert!(!names.contains(&"payouts.create"));
         assert!(names.contains(&"balance.retrieve"));
     }

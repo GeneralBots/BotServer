@@ -220,15 +220,14 @@ pub enum StripeError {
     NotConfigured,
 }
 
+impl StripeClient {
     /// Stripe API base URL is a compile-time constant: it must never be
     /// configurable at runtime, which would open a server-side request
     /// forgery path (credentials would be sent to an attacker-chosen host).
-    const API_BASE: &str = "https://api.stripe.com/v1";
+    pub(crate) const API_BASE: &str = "https://api.stripe.com/v1";
+}
 
-    /// Attaches an existing PaymentMethod (e.g. created by a SetupIntent) to
-    /// a customer.
-
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum WebhookEventType {
     SubscriptionCreated(StripeSubscription),
     SubscriptionUpdated(StripeSubscription),

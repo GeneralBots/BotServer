@@ -115,6 +115,7 @@ pub fn recall_block(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::SCOPE_PRIVATE;
     use chrono::{Duration, Utc};
 
     fn memory(content: &str, kind: &str, pinned: bool, minutes_ago: i64) -> UserMemory {

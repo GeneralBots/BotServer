@@ -188,8 +188,8 @@ pub struct S3Object {
     pub version: Option<String>,
 }
 pub struct RekognitionService {
-    config: Arc<RwLock<RekognitionConfig>>,
-    collections: Arc<RwLock<HashMap<String, FaceCollection>>>,
-    indexed_faces: Arc<RwLock<HashMap<String, Vec<IndexedFace>>>>,
-    face_details: Arc<RwLock<HashMap<String, RekognitionFace>>>,
+    pub(crate) config: Arc<RwLock<RekognitionConfig>>,
+    pub(crate) collections: Arc<RwLock<HashMap<String, FaceCollection>>>,
+    pub(crate) indexed_faces: Arc<RwLock<HashMap<String, Vec<IndexedFace>>>>,
+    pub(crate) face_details: Arc<RwLock<HashMap<String, RekognitionFace>>>,
 }

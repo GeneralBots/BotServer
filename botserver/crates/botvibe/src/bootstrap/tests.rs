@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use super::bot_slug;
+    use super::super::bot_slug;
 
     #[test]
     pub(super) fn bot_slug_normalizes() {
@@ -11,7 +11,7 @@ mod tests {
 
     #[test]
     pub(super) fn alm_org_slug_is_url_safe() {
-        assert_eq!(super::alm_org_from_slug("My Branch"), "mybranch");
-        assert_eq!(super::alm_org_from_slug("cristo"), "cristo");
+        assert_eq!(super::super::alm_org_from_slug("My Branch"), "mybranch");
+        assert_eq!(super::super::alm_org_from_slug("cristo"), "cristo");
     }
 }

@@ -143,7 +143,7 @@ impl IncidentResponseService {
         }
     }
 
-    async fn trigger_hooks(&self, trigger: HookTrigger, incident: &Incident) {
+    pub(crate) async fn trigger_hooks(&self, trigger: HookTrigger, incident: &Incident) {
         let hooks = self.hooks.read().await;
         for hook in hooks.iter() {
             if hook.enabled && hook.trigger == trigger {

@@ -83,7 +83,7 @@ impl MockStripeClient {
         *failure_code = code;
     }
 
-    async fn check_failure(&self) -> Result<(), MockStripeError> {
+    pub(crate) async fn check_failure(&self) -> Result<(), MockStripeError> {
         let should_fail = *self.should_fail.read().await;
         if should_fail {
             let code = self.failure_code.read().await.clone();

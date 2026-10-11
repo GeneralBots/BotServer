@@ -1,6 +1,6 @@
 fn main() {
-let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
-let ui_path = std::path::Path::new(&manifest_dir).join("ui");
+let manifest_dir = env!("CARGO_MANIFEST_DIR");
+let ui_path = std::path::Path::new(manifest_dir).join("ui");
 println!("cargo:rustc-env=BOTUI_UI_PATH={}", ui_path.display());
 
 let commit = std::env::var("BOTUI_COMMIT")

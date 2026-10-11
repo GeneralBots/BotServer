@@ -1,4 +1,3 @@
-use super::*;
 
 /// Builds the system-prompt fragment teaching the LLM the `__ui_plan__`
 /// contract. Includes the app catalog so the model only references apps

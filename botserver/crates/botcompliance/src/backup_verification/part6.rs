@@ -1,7 +1,7 @@
 use super::*;
 
 impl BackupVerificationService {
-    async fn perform_partial_restore(
+    pub(crate) async fn perform_partial_restore(
         &self,
         backup: &BackupRecord,
     ) -> (VerificationCheck, Option<VerificationError>) {
@@ -41,7 +41,7 @@ impl BackupVerificationService {
         true
     }
 
-    async fn validate_sample_data(
+    pub(crate) async fn validate_sample_data(
         &self,
         backup: &BackupRecord,
     ) -> (VerificationCheck, Option<VerificationError>) {
@@ -81,7 +81,7 @@ impl BackupVerificationService {
         true
     }
 
-    async fn full_integrity_check(
+    pub(crate) async fn full_integrity_check(
         &self,
         backup: &BackupRecord,
     ) -> (Vec<VerificationCheck>, Vec<VerificationError>, Vec<String>) {

@@ -13,6 +13,8 @@ pub(crate) struct SitePublish<'a> {
     pub(crate) env: &'a str,
     pub(crate) site_env: crate::site_env::SiteEnv,
     pub(crate) requested_production: bool,
+    /// Whether the deploy pipeline sanctioned this production request.
+    pub(crate) approved: bool,
     pub(crate) deploy_rev: Option<String>,
     pub(crate) domain: &'a Option<String>,
     pub(crate) launcher_requested: bool,
@@ -32,6 +34,7 @@ impl SitePublish<'_> {
             env,
             site_env,
             requested_production,
+            approved,
             deploy_rev,
             domain,
             launcher_requested,

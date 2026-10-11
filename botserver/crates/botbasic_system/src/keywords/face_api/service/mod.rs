@@ -3,7 +3,7 @@
 //! This module contains the main FaceApiService implementation with support for
 //! multiple providers: Azure Face API, AWS Rekognition, OpenCV, and InsightFace.
 
-pub(crate) use super::azure::AzureFaceResponse;
+pub(crate) use super::azure::{AzureFaceResponse, AzureVerifyResponse};
 pub(crate) use super::error::FaceApiError;
 pub(crate) use super::results::{FaceAnalysisResult, FaceDetectionResult, FaceVerificationResult};
 pub(crate) use super::types::{AnalysisOptions, DetectionOptions, FaceAttributeType, FaceSource, ImageSource, VerificationOptions};

@@ -5,8 +5,6 @@
 
 use super::*;
 
-use super::*;
-
 #[test]
 fn an_empty_document_is_refused_before_any_call() {
     assert_eq!(bad_request("text is required").0, StatusCode::BAD_REQUEST);

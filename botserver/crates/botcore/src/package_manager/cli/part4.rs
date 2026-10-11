@@ -170,7 +170,7 @@ pub(super) fn rustc_version() -> String {
         .unwrap_or_else(|| "unknown".to_string())
 }
 pub(super) fn generate_password(length: usize) -> String {
-    super::generate_random_string(length)
+    crate::package_manager::generate_random_string(length)
 }
 pub(super) fn generate_access_key() -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

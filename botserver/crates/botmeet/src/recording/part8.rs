@@ -1,7 +1,7 @@
 use super::*;
 
 impl RecordingService {
-    async fn create_transcription_record(
+    pub(crate) async fn create_transcription_record(
         &self,
         _transcription_id: Uuid,
         _recording_id: Uuid,
@@ -21,7 +21,7 @@ impl RecordingService {
         }
     }
 
-    async fn update_transcription_completed(
+    pub(crate) async fn update_transcription_completed(
         &self,
         _transcription_id: Uuid,
         _text: &str,
@@ -30,14 +30,14 @@ impl RecordingService {
         Ok(())
     }
 
-    async fn get_transcription_from_db(
+    pub(crate) async fn get_transcription_from_db(
         &self,
         _transcription_id: Uuid,
     ) -> Result<WebinarTranscription, RecordingError> {
         Err(RecordingError::NotFound)
     }
 
-    async fn delete_recording_files(&self, _recording_id: Uuid) -> Result<(), RecordingError> {
+    pub(crate) async fn delete_recording_files(&self, _recording_id: Uuid) -> Result<(), RecordingError> {
         Ok(())
     }
 }

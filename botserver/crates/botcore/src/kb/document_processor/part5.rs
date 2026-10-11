@@ -1,4 +1,3 @@
-use super::*;
 
 #[cfg(feature = "kb-extraction")]
 pub(super) fn extract_text_from_word_document(stream_data: &[u8]) -> String {

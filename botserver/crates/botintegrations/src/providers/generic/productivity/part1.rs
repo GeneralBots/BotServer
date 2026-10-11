@@ -215,7 +215,7 @@ pub const TRELLO_SPEC: ProviderSpec = ProviderSpec {
 // Mailchimp Marketing API 3.0 - Basic anystring:{key}, host picked from the
 // data center suffix of the key.
 // ---------------------------------------------------------------------------
-const TODOIST_ACTIONS: &[ActionSpec] = &[
+pub const TODOIST_ACTIONS: &[ActionSpec] = &[
     ActionSpec {
         key: "todoist.tasks.list",
         method: "GET",
@@ -289,7 +289,7 @@ const TODOIST_ACTIONS: &[ActionSpec] = &[
         params: &resource_id(),
     },
 ];
-const TODOIST_KEYS: &[&str] = &[
+pub const TODOIST_KEYS: &[&str] = &[
     "todoist.tasks.list",
     "todoist.tasks.search",
     "todoist.tasks.create",

@@ -224,7 +224,7 @@ impl McpCsvLoader {
 
         let auth = match (auth_type.as_deref(), auth_env.as_ref()) {
             (Some("api_key"), Some(env)) => {
-                use super::mcp_client::{McpAuthType, McpCredentials};
+                use crate::keywords::mcp_client::{McpAuthType, McpCredentials};
                 McpAuth {
                     auth_type: McpAuthType::ApiKey,
                     credentials: McpCredentials::ApiKey {
@@ -234,7 +234,7 @@ impl McpCsvLoader {
                 }
             }
             (Some("bearer"), Some(env)) => {
-                use super::mcp_client::{McpAuthType, McpCredentials};
+                use crate::keywords::mcp_client::{McpAuthType, McpCredentials};
                 McpAuth {
                     auth_type: McpAuthType::Bearer,
                     credentials: McpCredentials::Bearer {

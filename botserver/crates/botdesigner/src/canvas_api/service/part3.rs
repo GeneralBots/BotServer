@@ -20,7 +20,7 @@ impl CanvasService {
         Ok(html)
     }
 
-    async fn save_canvas_elements(
+    pub(crate) async fn save_canvas_elements(
         &self,
         canvas_id: Uuid,
         elements: &[CanvasElement],
@@ -46,7 +46,7 @@ impl CanvasService {
         Ok(())
     }
 
-    async fn save_canvas_layers(
+    pub(crate) async fn save_canvas_layers(
         &self,
         canvas_id: Uuid,
         layers: &[Layer],

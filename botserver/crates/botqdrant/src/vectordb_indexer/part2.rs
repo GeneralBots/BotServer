@@ -103,7 +103,7 @@ impl VectorDBIndexer {
         .await?
     }
 
-    async fn index_user_data(&self, user_id: Uuid, bot_id: Uuid) -> Result<()> {
+    pub(crate) async fn index_user_data(&self, user_id: Uuid, bot_id: Uuid) -> Result<()> {
         info!("Indexing user: {} (bot: {})", user_id, bot_id);
 
         let mut jobs = self.jobs.write().await;

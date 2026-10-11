@@ -1,7 +1,7 @@
 use super::*;
 
 impl SubscriptionLifecycleService {
-    async fn record_event(
+    pub(crate) async fn record_event(
         &self,
         subscription_id: Uuid,
         organization_id: Uuid,

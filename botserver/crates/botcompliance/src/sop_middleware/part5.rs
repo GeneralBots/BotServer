@@ -171,7 +171,7 @@ impl SopLogger {
             )
     }
 
-    async fn send_alert(&self, entry: &SopLogEntry) {
+    pub(crate) async fn send_alert(&self, entry: &SopLogEntry) {
         log::warn!(
             "SOP ALERT: [{:?}] {:?} - {} - {}",
             entry.severity,
@@ -181,7 +181,7 @@ impl SopLogger {
         );
     }
 
-    async fn log_to_persistent_storage(&self, entry: &SopLogEntry) {
+    pub(crate) async fn log_to_persistent_storage(&self, entry: &SopLogEntry) {
         log::info!(
             "SOP LOG: [{:?}] {:?}/{:?} - {} - {}",
             entry.severity,
@@ -192,12 +192,12 @@ impl SopLogger {
         );
     }
 
-    async fn send_to_webhook(&self, webhook_url: &str, entry: &SopLogEntry) {
+    pub(crate) async fn send_to_webhook(&self, webhook_url: &str, entry: &SopLogEntry) {
         log::debug!("Sending SOP entry to webhook: {}", webhook_url);
         let _ = entry;
     }
 
-    async fn send_to_siem(&self, siem_endpoint: &str, entry: &SopLogEntry) {
+    pub(crate) async fn send_to_siem(&self, siem_endpoint: &str, entry: &SopLogEntry) {
         log::debug!("Sending SOP entry to SIEM: {}", siem_endpoint);
         let _ = entry;
     }

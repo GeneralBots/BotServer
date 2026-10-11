@@ -230,7 +230,7 @@ mod tests {
         let now = Utc::now();
         let soon = row("payment", true, 600);
         let kept = effective_expiry(&soon, now).expect("within cycle");
-        assert_eq!(kept, soon.expires_at);
+        assert_eq!(Some(kept), soon.expires_at);
     }
 
     #[test]

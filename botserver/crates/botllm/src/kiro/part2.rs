@@ -1,7 +1,7 @@
 use super::*;
 
 impl KiroClient {
-    async fn emit_stream(
+    pub(crate) async fn emit_stream(
         &self,
         stream: impl futures_util::Stream<Item = reqwest::Result<bytes::Bytes>>,
         tx: &mpsc::Sender<String>,

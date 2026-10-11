@@ -53,7 +53,7 @@ impl CachedLLMProvider {
         format!("{}:{}:{}:{}", self.config.key_prefix, bot_id, model, hex::encode(hash))
     }
 
-    async fn is_cache_enabled(&self, bot_id: &str) -> bool {
+    pub(crate) async fn is_cache_enabled(&self, bot_id: &str) -> bool {
         if let Some(ref db_pool) = self.db_pool {
             let bot_uuid = match Uuid::parse_str(bot_id) {
                 Ok(uuid) => uuid,
@@ -142,7 +142,7 @@ impl CachedLLMProvider {
         }
     }
 
-    async fn get_cached_response(
+    pub(crate) async fn get_cached_response(
         &self,
         prompt: &str,
         messages: &Value,

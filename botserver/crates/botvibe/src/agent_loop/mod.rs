@@ -33,8 +33,6 @@ pub(crate) use llm::{LLM_REQUEST_TIMEOUT_SECS, LLM_RETRY_BACKOFF_SECS, LLM_USER_
 pub(crate) use llm_5::{looks_like_tool_intent};
 pub use llm_6::{LlmUsage};
 pub(crate) use llm_6::{estimate_llm_cost, native_tool_calls_from_value, parse_sse, restore_tool_name_from_llm, sanitize_tool_name_for_llm, usage_from_payload};
-#[cfg(test)]
-pub(crate) use llm_6::{tool_name_encoding_tests};
 pub(crate) use parsing::{ExtractedToolCall, MAX_EMPTY_PARSE_RETRIES, canonical_tool_calls_json, extract_json_array, extract_json_object};
 pub(crate) use run_loop::{DEFAULT_MAX_STEPS, truncate};
 pub(crate) use verification::{MAX_VERIFY_FAILURES, ToolStep};

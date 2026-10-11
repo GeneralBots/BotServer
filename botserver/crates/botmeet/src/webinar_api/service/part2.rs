@@ -80,7 +80,7 @@ impl WebinarService {
         webinar_id: Uuid,
         asker_id: Option<Uuid>,
         asker_name: String,
-        request: super::types::SubmitQuestionRequest,
+        request: crate::webinar_api::types::SubmitQuestionRequest,
     ) -> Result<QAQuestion, WebinarError> {
         let webinar = self.get_webinar(webinar_id).await?;
 
@@ -149,7 +149,7 @@ impl WebinarService {
         &self,
         question_id: Uuid,
         answerer_id: Uuid,
-        request: super::types::AnswerQuestionRequest,
+        request: crate::webinar_api::types::AnswerQuestionRequest,
     ) -> Result<QAQuestion, WebinarError> {
         let mut conn = self.pool.get().map_err(|_| WebinarError::DatabaseConnection)?;
 
@@ -229,7 +229,7 @@ impl WebinarService {
         Ok(self.row_to_question(row))
     }
 
-    async fn get_participant(&self, participant_id: Uuid) -> Result<WebinarParticipant, WebinarError> {
+    pub(crate) async fn get_participant(&self, participant_id: Uuid) -> Result<WebinarParticipant, WebinarError> {
         let mut conn = self.pool.get().map_err(|_| WebinarError::DatabaseConnection)?;
 
         let sql = r#"
@@ -281,7 +281,7 @@ impl WebinarService {
     }
 
     pub(super) fn broadcast_event(&self, event_type: WebinarEventType, webinar_id: Uuid, data: serde_json::Value) {
-        let event = super::types::WebinarEvent {
+        let event = crate::webinar_api::types::WebinarEvent {
             event_type,
             webinar_id,
             data,

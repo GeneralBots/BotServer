@@ -58,14 +58,14 @@ pub struct ItemRow {
     pub deleted_at: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ConnectBody {
     pub kind: String,
     pub display_name: Option<String>,
     pub credentials: Value,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SearchQuery {
     pub q: String,
     #[serde(default)]

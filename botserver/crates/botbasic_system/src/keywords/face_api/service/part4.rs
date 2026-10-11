@@ -1,7 +1,7 @@
 use super::*;
 
 impl FaceApiService {
-    async fn verify_faces_insightface(
+    pub async fn verify_faces_insightface(
         &self,
         face1: &FaceSource,
         face2: &FaceSource,
@@ -36,7 +36,7 @@ impl FaceApiService {
         })
     }
 
-    async fn analyze_face_insightface(
+    pub async fn analyze_face_insightface(
         &self,
         source: &FaceSource,
         attributes: &[FaceAttributeType],
@@ -124,7 +124,7 @@ impl FaceApiService {
     // Helper Methods for Provider Implementations
     // ========================================================================
 
-    async fn get_image_bytes(&self, source: &ImageSource) -> Result<Vec<u8>, FaceApiError> {
+    pub async fn get_image_bytes(&self, source: &ImageSource) -> Result<Vec<u8>, FaceApiError> {
         match source {
             ImageSource::Variable(var) => {
                 Err(FaceApiError::InvalidInput(format!("Variable image source '{}' not supported in this context", var)))
@@ -155,7 +155,7 @@ impl FaceApiService {
         }
     }
 
-    async fn simulate_face_detection(
+    pub async fn simulate_face_detection(
         &self,
         image_bytes: &[u8],
         options: &DetectionOptions,
@@ -239,7 +239,7 @@ impl FaceApiService {
     // Helper Methods
     // ========================================================================
 
-    async fn get_or_detect_face_id(&self, source: &FaceSource) -> Result<Uuid, FaceApiError> {
+    pub async fn get_or_detect_face_id(&self, source: &FaceSource) -> Result<Uuid, FaceApiError> {
         match source {
             FaceSource::FaceId(id) => Ok(*id),
             FaceSource::DetectedFace(face) => Ok(face.id),

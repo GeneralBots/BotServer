@@ -1,7 +1,7 @@
 use super::*;
 
 impl McpClient {
-    async fn invoke_http(
+    pub(crate) async fn invoke_http(
         &self,
         server: &McpServer,
         request: &McpRequest,
@@ -64,7 +64,7 @@ impl McpClient {
         }
     }
 
-    async fn invoke_stdio(
+    pub(crate) async fn invoke_stdio(
         &self,
         server: &McpServer,
         request: &McpRequest,

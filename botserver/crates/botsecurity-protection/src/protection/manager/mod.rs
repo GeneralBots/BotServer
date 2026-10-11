@@ -6,6 +6,9 @@ pub(crate) use std::sync::Arc;
 pub(crate) use tokio::sync::RwLock;
 pub(crate) use tracing::{info, warn};
 pub(crate) use botsecurity_core::command_guard::SafeCommand;
+// Split fallout (#1492): `manager/part*.rs` refers to sibling tool
+// modules through `super::`, which now means `manager`.
+pub(crate) use super::{chkrootkit, lmd, lynis, rkhunter, suricata};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]

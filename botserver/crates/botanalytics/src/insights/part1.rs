@@ -176,7 +176,7 @@ impl InsightsService {
         Ok(result)
     }
 
-    async fn generate_recommendations(&self, user_id: Uuid) -> Vec<WellbeingRecommendation> {
+    pub(crate) async fn generate_recommendations(&self, user_id: Uuid) -> Vec<WellbeingRecommendation> {
         let pool = self.pool.clone();
 
         tokio::task::spawn_blocking(move || {

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod harness_cmd_tests {
-    use super::*;
+    use super::super::*;
 
     #[test]
     pub(super) fn runs_node_expression() {

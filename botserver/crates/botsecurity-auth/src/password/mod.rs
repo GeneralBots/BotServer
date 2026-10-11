@@ -72,6 +72,7 @@ pub struct PasswordHasher2 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::part5::*;
 
     #[test]
     fn test_hash_and_verify() {

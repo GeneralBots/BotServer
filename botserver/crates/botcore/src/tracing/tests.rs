@@ -4,7 +4,7 @@
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::super::*;
 
     #[test]
     pub(super) fn test_traceparent_roundtrip() {

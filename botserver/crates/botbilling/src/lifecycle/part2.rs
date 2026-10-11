@@ -262,7 +262,7 @@ impl SubscriptionLifecycleService {
         applied
     }
 
-    async fn create_retention_offer(
+    pub(crate) async fn create_retention_offer(
         &self,
         subscription_id: Uuid,
     ) -> Result<RetentionOffer, LifecycleError> {

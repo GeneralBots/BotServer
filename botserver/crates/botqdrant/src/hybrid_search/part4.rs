@@ -1,7 +1,7 @@
 use super::*;
 
 impl HybridSearchEngine {
-    async fn upsert_to_qdrant(&self, doc_id: &str, embedding: &[f32]) -> Result<(), String> {
+    pub(crate) async fn upsert_to_qdrant(&self, doc_id: &str, embedding: &[f32]) -> Result<(), String> {
         let client = reqwest::Client::new();
 
         let upsert_request = serde_json::json!({
@@ -29,7 +29,7 @@ impl HybridSearchEngine {
         Ok(())
     }
 
-    async fn delete_from_qdrant(&self, doc_id: &str) -> Result<(), String> {
+    pub(crate) async fn delete_from_qdrant(&self, doc_id: &str) -> Result<(), String> {
         let client = reqwest::Client::new();
 
         let delete_request = serde_json::json!({

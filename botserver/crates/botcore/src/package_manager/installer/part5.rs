@@ -10,14 +10,14 @@ impl PackageManager {
     ) -> Result<()> {
         info!("Seeding default credentials into Vault...");
 
-        let drive_user = super::generate_random_string(16);
-        let drive_pass = super::generate_random_string(32);
-        let cache_pass = super::generate_random_string(32);
-        let db_pass = super::generate_random_string(32);
-        let master_key = super::generate_random_string(64);
-        let meet_app_id = super::generate_random_string(24);
-        let meet_app_secret = super::generate_random_string(48);
-        let alm_token = super::generate_random_string(40);
+        let drive_user = crate::package_manager::generate_random_string(16);
+        let drive_pass = crate::package_manager::generate_random_string(32);
+        let cache_pass = crate::package_manager::generate_random_string(32);
+        let db_pass = crate::package_manager::generate_random_string(32);
+        let master_key = crate::package_manager::generate_random_string(64);
+        let meet_app_id = crate::package_manager::generate_random_string(24);
+        let meet_app_secret = crate::package_manager::generate_random_string(48);
+        let alm_token = crate::package_manager::generate_random_string(40);
 
         info!(
             "Generated strong random credentials for: drive, cache, tables, encryption, meet, alm"

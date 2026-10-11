@@ -1,7 +1,7 @@
 use super::*;
 
 impl CachedLLMProvider {
-    async fn find_similar_cached(
+    pub(crate) async fn find_similar_cached(
         &self,
         prompt: &str,
         messages: &Value,
@@ -115,7 +115,7 @@ impl CachedLLMProvider {
         None
     }
 
-    async fn cache_response(&self, prompt: &str, messages: &Value, model: &str, response: &str, bot_id: &str) {
+    pub(crate) async fn cache_response(&self, prompt: &str, messages: &Value, model: &str, response: &str, bot_id: &str) {
         let actual_messages = if messages.get("messages").is_some() {
             messages.get("messages").unwrap_or(messages)
         } else {

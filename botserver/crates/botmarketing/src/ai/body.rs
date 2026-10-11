@@ -40,7 +40,7 @@ pub(super) fn build_personalization_prompt(
 }
 
 #[derive(Debug, Clone)]
-struct ContactInfo {
+pub(super) struct ContactInfo {
     first_name: Option<String>,
     last_name: Option<String>,
     email: Option<String>,

@@ -93,5 +93,4 @@ mod part5;
 mod part6;
 mod part7;
 
-pub use part3::*;
 use part4::*;

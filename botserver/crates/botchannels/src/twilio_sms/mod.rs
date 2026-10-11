@@ -157,9 +157,11 @@ pub struct TwilioSmsChannel {
     conversations: Arc<RwLock<HashMap<String, ConversationContext>>>,
 }
 
+impl TwilioSmsChannel {
     /// Twilio API base URL is a compile-time constant: credentials are scoped
     /// to this host and must never be sent to a runtime-configured one.
-    const API_BASE: &str = "https://api.twilio.com/2010-04-01";
+    pub(crate) const API_BASE: &str = "https://api.twilio.com/2010-04-01";
+}
 
 #[derive(Debug, Deserialize)]
 struct TwilioMessageResponse {

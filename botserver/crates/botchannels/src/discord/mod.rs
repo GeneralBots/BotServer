@@ -7,7 +7,7 @@ pub struct DiscordProvider {
 }
 
 #[derive(Debug, Serialize)]
-struct MessageContent {
+pub struct MessageContent {
     #[serde(skip_serializing_if = "Option::is_none")]
     content: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -17,7 +17,7 @@ struct MessageContent {
 }
 
 #[derive(Debug, Serialize)]
-struct WebhookContent {
+pub struct WebhookContent {
     #[serde(skip_serializing_if = "Option::is_none")]
     content: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -8,6 +8,9 @@ pub(crate) use tokio::sync::RwLock;
 pub(crate) use tracing::warn;
 pub(crate) use super::manager::{ProtectionConfig, ProtectionManager, ProtectionTool, ScanResult, ToolStatus};
 pub(crate) use super::security_fix::{run_security_fix, run_security_status, SecurityFixReport};
+// Split fallout (#1492): `api/part*.rs` refers to sibling tool
+// modules through `super::`, which now means `api`.
+pub(crate) use super::lmd;
 
 static PROTECTION_MANAGER: OnceLock<Arc<RwLock<ProtectionManager>>> = OnceLock::new();
 

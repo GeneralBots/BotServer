@@ -117,6 +117,7 @@ mod tests {
             None,
             None,
         );
+        assert!(Arc::strong_count(&provider) >= 1);
         // The client is built; a silent downgrade would still build, so assert
         // the dispatch decision instead of the concrete type.
         assert_eq!(

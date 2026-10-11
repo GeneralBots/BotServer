@@ -67,8 +67,4 @@ mod part3;
 mod part4;
 mod part5;
 
-use part1::*;
-pub use part2::*;
-pub use part3::*;
-pub use part4::*;
 pub use part5::*;

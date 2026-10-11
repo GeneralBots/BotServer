@@ -149,10 +149,13 @@ mod tests {
     }
 
     #[test]
-    fn search_sql_embeds_kind_placeholders() {
-        assert!(build_search_sql(0).contains("c.status = 'connected'"));
-        assert!(!build_search_sql(0).contains("c.kind"));
-        let two = build_search_sql(2);
-        assert!(two.contains("c.kind IN ($3, $4)"), "got: {two}");
+    fn search_sql_embeds_validated_kind_literals() {
+        assert!(build_search_sql(&[]).contains("c.status = 'connected'"));
+        assert!(!build_search_sql(&[]).contains("c.kind"));
+        let two = build_search_sql(&["chat".to_string(), "mail".to_string()]);
+        assert!(two.contains("c.kind IN ('chat', 'mail')"), "got: {two}");
+        // Kinds outside the closed registry are ignored, never interpolated.
+        let bogus = build_search_sql(&["chat'; DROP TABLE indexed_items --".to_string()]);
+        assert!(!bogus.contains("c.kind"), "got: {bogus}");
     }
 }

@@ -128,7 +128,7 @@ impl WebsiteCrawlerService {
         Ok(())
     }
 
-    async fn crawl_website(
+    pub(crate) async fn crawl_website(
         website: WebsiteCrawlRecord,
         db_pool: DbPool,
         active_crawls: Arc<tokio::sync::RwLock<HashSet<String>>>,

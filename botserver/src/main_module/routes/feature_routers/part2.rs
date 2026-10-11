@@ -5,7 +5,7 @@ use super::*;
 /// $1`) and into email/trigger writers, so handing it a branch id made every
 /// lookup miss: campaigns were written with `branch_id = nil` and the CRM
 /// Campaigns view (branch-scoped) showed nothing.
-pub(super) fn resolve_default_bot_id(conn: &mut diesel::PgConnection) -> uuid::Uuid {
+pub(crate) fn resolve_default_bot_id(conn: &mut diesel::PgConnection) -> uuid::Uuid {
     use diesel::prelude::*;
     diesel::sql_query("SELECT id FROM bots WHERE is_default_for_branch = TRUE LIMIT 1")
         .get_result::<DefaultBotRow>(conn)
@@ -22,7 +22,7 @@ pub(super) fn resolve_default_bot_id(conn: &mut diesel::PgConnection) -> uuid::U
 /// bootstrap admin PAT (`conf/directory/admin-pat.txt`) and validate the
 /// chosen token against the management API so signup user creation and login
 /// password checks never run with a dead token.
-pub(super) fn resolve_directory_service_token(api_url: &str, configured: Option<String>) -> Option<String> {
+pub(crate) fn resolve_directory_service_token(api_url: &str, configured: Option<String>) -> Option<String> {
     let mut candidates: Vec<String> = Vec::new();
     if let Some(token) = configured.as_ref() {
         if !token.is_empty() {
@@ -80,7 +80,7 @@ pub(super) fn resolve_directory_service_token(api_url: &str, configured: Option<
     }
     configured
 }
-pub(super) fn resolve_default_branch_pool(
+pub(crate) fn resolve_default_branch_pool(
     _pool: &diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>,
 ) -> (uuid::Uuid, uuid::Uuid) {
     let mut conn = match _pool.get() {
@@ -91,7 +91,7 @@ pub(super) fn resolve_default_branch_pool(
     (branch, branch)
 }
 #[cfg(feature = "paper")]
-pub(super) fn make_paper_state(app_state: &Arc<AppState>) -> Arc<crate::paper::state::PaperState> {
+pub(crate) fn make_paper_state(app_state: &Arc<AppState>) -> Arc<crate::paper::state::PaperState> {
     let drive = app_state.drive.clone();
     let llm_provider = app_state.llm_provider.clone();
 
@@ -182,7 +182,7 @@ pub(super) fn make_paper_state(app_state: &Arc<AppState>) -> Arc<crate::paper::s
     })
 }
 #[cfg(feature = "designer")]
-pub(super) fn make_designer_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_designer_router(app_state: &Arc<AppState>) -> Router<()> {
     let make_state = || Arc::new(botdesigner::DesignerState {
         conn: Arc::new(app_state.conn.clone()),
         get_default_bot: Arc::new(|conn: &mut diesel::PgConnection| {
@@ -206,8 +206,8 @@ pub(super) fn make_designer_router(app_state: &Arc<AppState>) -> Router<()> {
         .merge(crate::designer::plugin_manifest::configure_plugin_routes().with_state(state))
 }
 #[cfg(feature = "dashboards")]
-pub(super) fn make_dashboards_router(app_state: &Arc<AppState>) -> Router<()> {
-    pub(super) fn default_bot_fn(conn: &mut diesel::PgConnection) -> uuid::Uuid {
+pub(crate) fn make_dashboards_router(app_state: &Arc<AppState>) -> Router<()> {
+    pub(crate) fn default_bot_fn(conn: &mut diesel::PgConnection) -> uuid::Uuid {
         resolve_default_branch(conn)
     }
     Router::new()
@@ -221,7 +221,7 @@ pub(super) fn make_dashboards_router(app_state: &Arc<AppState>) -> Router<()> {
         })))
 }
 #[cfg(feature = "canvas")]
-pub(super) fn make_canvas_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_canvas_router(app_state: &Arc<AppState>) -> Router<()> {
     let make_state = || Arc::new(botcanvas::CanvasState {
         pool: Arc::new(app_state.conn.clone()),
         get_bot_context: Arc::new(
@@ -234,7 +234,7 @@ pub(super) fn make_canvas_router(app_state: &Arc<AppState>) -> Router<()> {
         .merge(crate::canvas::configure_canvas_ui_routes().with_state(state))
 }
 #[cfg(feature = "social")]
-pub(super) fn make_social_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_social_router(app_state: &Arc<AppState>) -> Router<()> {
     let make_state = || Arc::new(botsocial::SocialState {
         pool: Arc::new(app_state.conn.clone()),
         get_default_bot: Arc::new(|conn: &mut _| {
@@ -247,7 +247,7 @@ pub(super) fn make_social_router(app_state: &Arc<AppState>) -> Router<()> {
         .merge(crate::social::configure_social_routes().with_state(state.clone()))
         .merge(crate::social::configure_social_ui_routes().with_state(state))
 }
-pub(super) fn make_billing_router(app_state: &Arc<AppState>) -> Router<()> {
+pub(crate) fn make_billing_router(app_state: &Arc<AppState>) -> Router<()> {
     let make_state = || Arc::new(botbilling::api::BillingApiState {
         pool: Arc::new(app_state.conn.clone()),
         get_default_bot: Some(

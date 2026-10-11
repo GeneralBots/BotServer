@@ -25,6 +25,7 @@ pub struct OriginValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::part3::*;
 
     #[test]
     fn test_default_config() {

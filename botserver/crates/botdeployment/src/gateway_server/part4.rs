@@ -273,7 +273,7 @@ pub(super) async fn deploy_to_incus(
     // systemd service bound to port 80 (auto-restart + start on boot).
     // #1386 — the per-environment database URL rides on the deploy request
     // and lands in the unit as DATABASE_URL.
-    super::gateway_runtime::bootstrap_app_runtime(
+    crate::gateway_runtime::bootstrap_app_runtime(
         state,
         container_name,
         request.database_url.as_deref(),

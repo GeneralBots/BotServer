@@ -1,4 +1,4 @@
-use super::*;
+
 
 /// Contains any of the substrings (case already normalized by caller).
 pub(super) fn has_any(lower: &str, phrases: &[&str]) -> bool {

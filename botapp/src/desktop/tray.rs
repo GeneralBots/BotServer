@@ -97,8 +97,20 @@ impl TrayManager {
                 self.running_mode
             );
 
-            let tray_menu = Menu::new(app).unwrap();
-            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).unwrap();
+            let tray_menu = match Menu::new(app) {
+                Ok(menu) => menu,
+                Err(e) => {
+                    log::error!("Failed to create tray menu: {e}");
+                    return;
+                }
+            };
+            let quit_i = match MenuItem::with_id(app, "quit", "Quit", true, None::<&str>) {
+                Ok(item) => item,
+                Err(e) => {
+                    log::error!("Failed to create tray quit item: {e}");
+                    return;
+                }
+            };
             let _ = tray_menu.append(&quit_i);
 
             // Create a simple red icon

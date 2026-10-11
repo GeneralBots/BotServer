@@ -133,7 +133,7 @@ mod tests {
     fn build_urls_have_required_segments() {
         let client = SharePointClient::new("tid".into(), "tok".into());
         let svc = OutlookService::new(client);
-        assert!(svc.me_messages_url(10).contains("/me/messages"));
+        assert!(svc.me_messages_url(10).expect("graph URL").contains("/me/messages"));
         assert!(svc.send_mail_url().contains("/me/sendMail"));
     }
 }

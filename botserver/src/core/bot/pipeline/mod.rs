@@ -1,6 +1,8 @@
+pub mod api_call;
 pub mod attachments;
 pub mod channel_entry;
 pub mod exec;
+pub mod history;
 pub mod kb;
 pub mod llm;
 pub mod mentions;
@@ -8,6 +10,8 @@ pub mod sink;
 pub mod start_bas;
 pub mod tool_exec;
 pub mod types;
+pub mod enriched_llm;
+pub mod vibe_route;
 
 pub use channel_entry::run_pipeline_for_channel;
 pub use exec::{process_message_internal, PipelineFn};

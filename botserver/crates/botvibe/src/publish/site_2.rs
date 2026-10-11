@@ -101,6 +101,7 @@ pub(crate) async fn do_publish(args: Value, pool: crate::types::DbPool) -> Resul
             env: env.as_str(),
             site_env,
             requested_production,
+            approved,
             deploy_rev,
             domain: &domain,
             launcher_requested,

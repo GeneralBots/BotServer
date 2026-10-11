@@ -237,7 +237,7 @@ impl ClaudeClient {
     }
 
     /// Single streaming attempt with full error handling
-    async fn stream_single_attempt(
+    pub(crate) async fn stream_single_attempt(
         &self,
         prompt: &str,
         messages: &Value,

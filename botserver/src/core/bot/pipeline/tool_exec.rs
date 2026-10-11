@@ -285,7 +285,7 @@ pub async fn run_llm_tool_call(
                 // Boxed: the command path can reroute a session tool back
                 // into this executor, so the two futures are mutually
                 // recursive.
-                Box::pin(super::llm::handle_api_call(
+                Box::pin(super::api_call::handle_api_call(
                     sink, state, provider, &model, &key, bot_uuid, session_id, user_id,
                     bot_name, &api_call, user_text, rx,
                 ))

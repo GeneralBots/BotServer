@@ -12,7 +12,7 @@ impl KbEmbeddingGenerator {
         let embeddings = self
             .generate_batch_embeddings(&[TextChunk {
                 content: text.to_string(),
-                metadata: super::document_processor::ChunkMetadata {
+                metadata: crate::kb::document_processor::ChunkMetadata {
                     document_path: "query".to_string(),
                     document_title: None,
                     chunk_index: 0,

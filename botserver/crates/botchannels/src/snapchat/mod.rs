@@ -6,15 +6,6 @@
 pub(crate) use crate::{ ChannelAccount, ChannelCredentials, ChannelError, ChannelProvider, ChannelType, PostContent, PostResult, };
 pub(crate) use serde::{Deserialize, Serialize};
 
-    /// Provider endpoints are compile-time constants: tokens are scoped to
-    /// these hosts and must never be sent to a runtime-configured one.
-    const API_BASE: &str = "https://adsapi.snapchat.com/v1";
-    const OAUTH_BASE: &str = "https://accounts.snapchat.com";
-
-    /// Create a creative
-
-    /// Create a custom audience
-
 mod part1;
 mod part2;
 mod part3;

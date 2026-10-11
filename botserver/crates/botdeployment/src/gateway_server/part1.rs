@@ -1,4 +1,3 @@
-use super::*;
 
 /// Published-app site domain. Deployed vibe apps are reachable at
 /// `{appname}.{domain}` (#1261). Prefer the platform domain

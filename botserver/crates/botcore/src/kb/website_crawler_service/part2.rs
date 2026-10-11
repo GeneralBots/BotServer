@@ -1,7 +1,7 @@
 use super::*;
 
 impl WebsiteCrawlerService {
-    async fn do_crawl_website(
+    pub(crate) async fn do_crawl_website(
         website: WebsiteCrawlRecord,
         db_pool: DbPool,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

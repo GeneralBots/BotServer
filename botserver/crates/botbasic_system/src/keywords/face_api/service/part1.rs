@@ -1,4 +1,4 @@
-use super::*;
+
 
 /// Calculate cosine similarity between two embedding vectors
 pub(super) fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {

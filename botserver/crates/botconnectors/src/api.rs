@@ -362,6 +362,22 @@ mod tests {
         assert!(!jwt_is_admin(&HeaderMap::new()));
     }
 
+    fn jwt_groups(headers: &HeaderMap) -> Vec<String> {
+        jwt_claims(headers)
+            .and_then(|claims| {
+                claims
+                    .get("groups")
+                    .and_then(|groups| groups.as_array())
+                    .map(|groups| {
+                        groups
+                            .iter()
+                            .filter_map(|g| g.as_str().map(str::to_string))
+                            .collect()
+                    })
+            })
+            .unwrap_or_default()
+    }
+
     #[test]
     fn extracts_groups_and_org_from_claims() {
         let headers = header_with_payload(

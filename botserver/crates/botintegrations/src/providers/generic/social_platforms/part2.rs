@@ -246,7 +246,7 @@ pub const TWITCH_SPEC: ProviderSpec = ProviderSpec {
     actions: TWITCH_ACTIONS,
     action_keys: TWITCH_KEYS,
 };
-const BASECAMP_ACTIONS: &[ActionSpec] = &[
+pub const BASECAMP_ACTIONS: &[ActionSpec] = &[
     ActionSpec {
         key: "basecamp.work_items.list",
         method: "GET",

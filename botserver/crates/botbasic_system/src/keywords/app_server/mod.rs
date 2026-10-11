@@ -94,5 +94,10 @@ mod part2;
 mod part3;
 
 pub use part1::*;
+// part2's handlers only exist when the Vibe app server is not compiled in; its
+// helpers must stay in scope either way.
+#[cfg(not(feature = "vibe"))]
 pub use part2::*;
+#[cfg(feature = "vibe")]
+use part2::*;
 pub use part3::*;

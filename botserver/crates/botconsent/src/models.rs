@@ -97,20 +97,20 @@ mod tests {
     #[test]
     fn decision_serde_roundtrip_lowercase() {
         assert_eq!(
-            serde_json::from_str::<Decision>("\"allow_once\""),
-            Ok(Decision::AllowOnce)
+            serde_json::from_str::<Decision>("\"allow_once\"").expect("parse allow_once"),
+            Decision::AllowOnce
         );
         assert_eq!(
-            serde_json::from_str::<Decision>("\"always\""),
-            Ok(Decision::Always)
+            serde_json::from_str::<Decision>("\"always\"").expect("parse always"),
+            Decision::Always
         );
         assert_eq!(
-            serde_json::from_str::<Decision>("\"deny\""),
-            Ok(Decision::Deny)
+            serde_json::from_str::<Decision>("\"deny\"").expect("parse deny"),
+            Decision::Deny
         );
         assert_eq!(
-            serde_json::to_string(&Decision::AllowOnce).as_deref(),
-            Ok("\"allow_once\"")
+            serde_json::to_string(&Decision::AllowOnce).expect("serialize allow_once"),
+            "\"allow_once\""
         );
     }
 

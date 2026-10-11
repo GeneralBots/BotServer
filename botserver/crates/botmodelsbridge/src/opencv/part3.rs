@@ -263,7 +263,7 @@ impl OpenCvFaceDetector {
         })
     }
 
-    async fn extract_embedding(
+    pub(crate) async fn extract_embedding(
         &self,
         image_data: &[u8],
         bbox: &BoundingBox,

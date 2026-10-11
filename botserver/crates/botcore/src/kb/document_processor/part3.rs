@@ -1,6 +1,7 @@
 use super::*;
 
 impl DocumentProcessor {
+    #[cfg(feature = "kb-extraction")]
     pub(super) fn strip_html_tags(s: &str) -> String {
         // #1368 — constant patterns are valid by construction; on the
         // impossible parse error, skip the step instead of panicking.
@@ -32,7 +33,7 @@ impl DocumentProcessor {
     }
 
     #[cfg(feature = "kb-extraction")]
-    async fn extract_xlsx_text(&self, file_path: &Path) -> Result<String> {
+    pub(crate) async fn extract_xlsx_text(&self, file_path: &Path) -> Result<String> {
         let path = file_path.to_path_buf();
         let result = tokio::task::spawn_blocking(move || -> Result<String> {
             use calamine::{open_workbook, Reader, Xlsx};
@@ -93,7 +94,7 @@ impl DocumentProcessor {
     }
 
     #[cfg(feature = "kb-extraction")]
-    async fn extract_xls_text(&self, file_path: &Path) -> Result<String> {
+    pub(crate) async fn extract_xls_text(&self, file_path: &Path) -> Result<String> {
         let path = file_path.to_path_buf();
         let result = tokio::task::spawn_blocking(move || -> Result<String> {
             use calamine::{open_workbook, Reader, Xls};
@@ -154,7 +155,7 @@ impl DocumentProcessor {
     }
 
     #[cfg(feature = "kb-extraction")]
-    async fn extract_doc_text(&self, file_path: &Path) -> Result<String> {
+    pub(crate) async fn extract_doc_text(&self, file_path: &Path) -> Result<String> {
         let path = file_path.to_path_buf();
         let result = tokio::task::spawn_blocking(move || -> Result<String> {
             use std::io::Read;
@@ -182,7 +183,7 @@ impl DocumentProcessor {
             }
 
             if let Some(stream_data) = word_doc_data {
-                let text = extract_text_from_word_document(&stream_data);
+                let text = super::part5::extract_text_from_word_document(&stream_data);
                 if !text.trim().is_empty() {
                     return Ok(text);
                 }

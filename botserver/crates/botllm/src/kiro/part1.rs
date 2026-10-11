@@ -80,7 +80,7 @@ impl KiroClient {
 
     /// Single streaming request → parsed events. Capacity errors are retried
     /// with exponential backoff; everything else fails fast.
-    async fn request_stream(
+    pub(crate) async fn request_stream(
         &self,
         request: &Value,
         key: &str,

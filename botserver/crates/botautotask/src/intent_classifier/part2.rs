@@ -140,7 +140,7 @@ impl IntentClassifier {
         })
     }
 
-    async fn call_llm(&self, _prompt: &str, _bot_id: Uuid) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    pub(crate) async fn call_llm(&self, _prompt: &str, _bot_id: Uuid) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
         #[cfg(feature = "llm")]
         {
             // A present-but-empty value is as good as an error: chaining on

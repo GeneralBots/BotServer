@@ -236,7 +236,7 @@ impl TwilioSmsChannel {
         signature == computed_signature
     }
 
-    async fn update_conversation(
+    pub(crate) async fn update_conversation(
         &self,
         phone_number: &str,
         message: &SmsMessage,

@@ -2,7 +2,7 @@
 
 use super::*;
 
-    use super::*;
+
 
     fn event(run_id: Uuid, event_type: VibeTelemetryEventType, success: bool, latency: u64, cost: f64) -> VibeTelemetryEvent {
         VibeTelemetryEvent {

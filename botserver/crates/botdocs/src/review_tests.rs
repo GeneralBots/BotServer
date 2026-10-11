@@ -5,8 +5,6 @@
 
 use super::*;
 
-use super::*;
-
 fn finding(severity: Severity, category: &str, summary: &str) -> Finding {
     Finding {
         severity,

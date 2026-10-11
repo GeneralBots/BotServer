@@ -26,6 +26,7 @@ pub struct ErrorSanitizer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::part2::*;
 
     #[derive(Debug)]
     struct TestError(String);

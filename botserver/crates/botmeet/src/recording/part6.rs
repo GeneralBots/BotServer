@@ -1,7 +1,7 @@
 use super::*;
 
 impl RecordingService {
-    async fn run_transcription(&self, transcription_id: Uuid, recording_id: Uuid) {
+    pub(crate) async fn run_transcription(&self, transcription_id: Uuid, recording_id: Uuid) {
         log::info!("Starting transcription {transcription_id} for recording {recording_id}");
         // Update status to in progress
         {

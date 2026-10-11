@@ -1,7 +1,7 @@
 use super::*;
 
 impl Default for EmbeddingConfig {
-pub(super) fn default() -> Self {
+fn default() -> Self {
     Self {
         embedding_url: "".to_string(),
         embedding_model: "BAAI/bge-multilingual-gemma2".to_string(),

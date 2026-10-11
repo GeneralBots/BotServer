@@ -30,7 +30,7 @@ impl VertexClient {
         }
     }
 
-    async fn get_auth_header(&self, key: &str) -> (&'static str, String) {
+    pub(crate) async fn get_auth_header(&self, key: &str) -> (&'static str, String) {
         // If the key is a path or JSON (starts with {), it's a Service Account
         if key.starts_with('{') || key.starts_with('~') || key.starts_with('/') || key.ends_with(".json") {
             let mut manager_opt = self.token_manager.write().await;

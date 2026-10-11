@@ -149,7 +149,7 @@ impl BackupVerificationService {
         Ok(result)
     }
 
-    async fn verify_checksum(
+    pub(crate) async fn verify_checksum(
         &self,
         backup: &BackupRecord,
     ) -> (VerificationCheck, Option<VerificationError>) {
@@ -190,7 +190,7 @@ impl BackupVerificationService {
         Some("computed_checksum_placeholder".to_string())
     }
 
-    async fn verify_metadata(
+    pub(crate) async fn verify_metadata(
         &self,
         backup: &BackupRecord,
     ) -> (VerificationCheck, Option<VerificationError>) {

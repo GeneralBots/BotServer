@@ -156,7 +156,7 @@ impl RedditChannel {
         Ok(tokens)
     }
 
-    async fn get_access_token(&self) -> Result<String, RedditError> {
+    pub(crate) async fn get_access_token(&self) -> Result<String, RedditError> {
         let tokens = self.tokens.read().await;
         match tokens.as_ref() {
             Some(t) if t.expires_at > Utc::now() => Ok(t.access_token.clone()),

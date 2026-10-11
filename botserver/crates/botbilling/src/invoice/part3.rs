@@ -234,11 +234,11 @@ td {{ padding: 12px; border-bottom: 1px solid #e5e7eb; }}
         }
     }
 
-    async fn html_to_pdf(&self, _html: &str) -> Result<Vec<u8>, InvoiceError> {
+    pub(crate) async fn html_to_pdf(&self, _html: &str) -> Result<Vec<u8>, InvoiceError> {
         Ok(Vec::new())
     }
 
-    async fn create_stripe_invoice(
+    pub(crate) async fn create_stripe_invoice(
         &self,
         invoice: &Invoice,
         _stripe_key: &str,

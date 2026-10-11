@@ -1,6 +1,8 @@
 use super::*;
 
 impl StripeClient {
+    /// Attaches an existing PaymentMethod (e.g. created by a SetupIntent) to
+    /// a customer.
     pub async fn attach_payment_method(
         &self,
         customer_id: &str,
@@ -184,7 +186,7 @@ impl StripeClient {
         }
     }
 
-    async fn handle_response<T: serde::de::DeserializeOwned>(&self, response: reqwest::Response) -> Result<T, StripeError> {
+    pub(crate) async fn handle_response<T: serde::de::DeserializeOwned>(&self, response: reqwest::Response) -> Result<T, StripeError> {
         let status = response.status();
         let body = response
             .text()
