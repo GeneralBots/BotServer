@@ -5,8 +5,6 @@
 
 use super::*;
 
-use super::*;
-
 fn plan(cores: u32, ram: u32, gpu: Option<&str>) -> Result<&'static str, ProviderError> {
     VultrProvider::map_plan(&spec(cores, ram, gpu))
 }

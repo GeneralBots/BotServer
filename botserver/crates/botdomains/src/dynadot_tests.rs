@@ -5,7 +5,6 @@
 
 use super::*;
 
-use super::*;
 use crate::Registrar;
 
 #[test]

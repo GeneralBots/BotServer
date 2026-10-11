@@ -5,8 +5,6 @@
 
 use super::*;
 
-use super::*;
-
 fn spec(cores: u32, ram: u32) -> MachineSpec {
     MachineSpec { cpu_cores: cores, ram_gb: ram, ..MachineSpec::default() }
 }

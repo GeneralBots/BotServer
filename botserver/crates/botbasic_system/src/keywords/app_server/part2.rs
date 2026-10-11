@@ -1,3 +1,6 @@
+// Only the non-vibe build compiles the route handlers below, and they are the
+// sole users of the items re-exported by the parent module.
+#[cfg(not(feature = "vibe"))]
 use super::*;
 
 #[cfg(not(feature = "vibe"))]

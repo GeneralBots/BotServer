@@ -5,7 +5,6 @@
 
 use super::*;
 
-use super::*;
 use crate::Registrar;
 
 const ZONE_XML: &str = r#"<?xml version="1.0"?>
