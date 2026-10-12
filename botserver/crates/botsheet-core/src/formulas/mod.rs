@@ -68,7 +68,10 @@ pub fn evaluate_function_call(formula: &str, worksheet: &Worksheet) -> FormulaRe
 }
 
 fn evaluate_legacy(formula: &str, worksheet: &Worksheet) -> FormulaResult {
-    let expr = formula[1..].to_uppercase();
+    // Drop the leading '=' without assuming it is there (an empty formula used
+    // to panic with "byte index 1 is out of bounds") and without cutting into a
+    // multi-byte first character.
+    let expr = formula.strip_prefix('=').unwrap_or(formula).to_uppercase();
 
     // Otimização de busca direta O(1) com base no prefixo do nome da função.
     // Evita iterar linearmente sobre mais de 170 ponteiros de função de fórmula em casos de fallback.

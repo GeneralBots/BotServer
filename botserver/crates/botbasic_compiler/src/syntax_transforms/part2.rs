@@ -92,7 +92,14 @@ pub fn convert_if_then_syntax(script: &str) -> String {
                     let else_pos = match else_upper.find(" ELSE ") { Some(p) => p, None => continue };
                     let after_else = after_then[else_pos + 6..].trim();
                     let else_body = if after_else.to_uppercase().ends_with(" END IF") {
-                        after_else[..after_else.len() - 7].trim().to_string()
+                        // `to_uppercase` can change a character's byte length, so the
+                        // guard above says nothing about where `len() - 7` lands.
+                        botlib::text::truncate_at_char_boundary(
+                            after_else,
+                            after_else.len().saturating_sub(7),
+                        )
+                        .trim()
+                        .to_string()
                     } else {
                         after_else.trim_end().to_string()
                     };

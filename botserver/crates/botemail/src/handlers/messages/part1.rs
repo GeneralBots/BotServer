@@ -99,7 +99,8 @@ pub async fn list_emails(
                 .map_or_else(String::new, |bp| bp.get_body().unwrap_or_default());
 
             let preview: String = body_text.lines().take(3).collect::<Vec<_>>().join(" ");
-            let preview_truncated = if preview.len() > 150 { format!("{}...", &preview[..150]) } else { preview };
+            // Mail bodies are arbitrary text; cut on a char boundary.
+            let preview_truncated = botlib::text::truncate_with_suffix(&preview, 150, "...");
 
             let (from_name, from_email) = parse_from_field(&from);
             let has_attachments = parsed.subparts.iter().any(|p| {

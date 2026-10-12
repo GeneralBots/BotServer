@@ -163,7 +163,11 @@ fn extract_user_id(request: &Request<Body>) -> Option<String> {
         if let Ok(auth_str) = auth.to_str() {
             if let Some(token) = auth_str.strip_prefix("Bearer ") {
                 if token.len() > 10 {
-                    return Some(format!("token:{}", &token[..10]));
+                    // The header is caller-supplied: never slice it mid-character.
+                    return Some(format!(
+                        "token:{}",
+                        botlib::text::truncate_at_char_boundary(token, 10)
+                    ));
                 }
             }
         }

@@ -129,11 +129,8 @@ impl MinutesGenerator {
         let segment_texts: Vec<&str> = transcript.segments.iter().map(|s| s.text.as_str()).collect();
         let full = segment_texts.join(" ");
 
-        let summary = if full.len() > 200 {
-            format!("{}...", &full[..200])
-        } else {
-            full.clone()
-        };
+        // Transcripts are speech in any language; cut on a char boundary.
+        let summary = botlib::text::truncate_with_suffix(&full, 200, "...");
 
         let action_phrases = ["i will", "i'll", "action item", "to-do", "todo", "need to", "must", "should", "follow up", "assign"];
         let decision_phrases = ["decided", "agreed", "consensus", "approved", "confirmed", "finalized"];

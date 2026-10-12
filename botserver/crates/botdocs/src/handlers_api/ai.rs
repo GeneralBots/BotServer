@@ -137,7 +137,10 @@ pub async fn handle_docs_ai(
 fn fallback_ai(req: &AiRequest) -> AiResponse {
     let text = req.selected_text.clone().unwrap_or_default();
     let content = match req.action.as_str() {
-        "summarize" if text.len() > 200 => format!("Summary: {}...", &text[..200]),
+        "summarize" if text.len() > 200 => format!(
+            "Summary: {}...",
+            botlib::text::truncate_at_char_boundary(&text, 200)
+        ),
         "summarize" => format!("Summary: {}", text),
         "expand" => format!("{}\n\n[Additional context and details would be added here by AI]", text),
         "translate" => {

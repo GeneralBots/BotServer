@@ -216,11 +216,8 @@ pub fn sanitize_filename(name: &str) -> String {
         return format!("_{}", sanitized);
     }
 
-    if sanitized.len() > 255 {
-        sanitized[..255].to_string()
-    } else {
-        sanitized.to_string()
-    }
+    // Path components are user input; cut on a char boundary.
+    botlib::text::truncate_at_char_boundary(sanitized, 255).to_string()
 }
 pub fn sanitize_path_component(component: &str) -> String {
     sanitize_filename(component)

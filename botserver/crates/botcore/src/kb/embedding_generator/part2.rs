@@ -57,7 +57,7 @@ impl EmbeddingConfig {
 
         info!("EmbeddingConfig::from_bot_config - bot_id: {}, embedding_url: {}, embedding_key: {}, dimensions: {}",
               _bot_id,
-              if embedding_url.len() > 50 { &embedding_url[..50] } else { &embedding_url },
+              botlib::text::truncate_at_char_boundary(&embedding_url, 50),
               if embedding_key.is_some() { "SET" } else { "NONE" },
               dimensions);
 

@@ -104,7 +104,7 @@ impl KbEmbeddingGenerator {
                 let embedding_vec: Vec<f32> = serde_json::from_slice(&response_bytes)
                     .with_context(|| {
                         let preview = std::str::from_utf8(&response_bytes)
-                            .map(|s| if s.len() > 200 { &s[..200] } else { s })
+                            .map(|s| botlib::text::truncate_at_char_boundary(s, 200))
                             .unwrap_or("<invalid utf8>");
                         format!("Failed to parse HuggingFace Inference embedding response. Preview: {}", preview)
                     })?;
@@ -181,7 +181,7 @@ impl KbEmbeddingGenerator {
         let embedding_response: EmbeddingResponse = serde_json::from_slice(&response_bytes)
             .with_context(|| {
                 let preview = std::str::from_utf8(&response_bytes)
-                    .map(|s| if s.len() > 200 { &s[..200] } else { s })
+                    .map(|s| botlib::text::truncate_at_char_boundary(s, 200))
                     .unwrap_or("<invalid utf8>");
                 format!("Failed to parse embedding response. Preview: {}", preview)
             })?;

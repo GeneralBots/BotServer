@@ -95,11 +95,8 @@ pub async fn auth_middleware_with_providers(
     info!(
         "Authorization header: {:?}",
         auth_header.as_ref().map(|h| {
-            if h.len() > 30 {
-                format!("{}...", &h[..30])
-            } else {
-                h.clone()
-            }
+            // The header is caller-supplied: never slice it mid-character.
+            botlib::text::truncate_with_suffix(h, 30, "...")
         })
     );
 

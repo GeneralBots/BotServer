@@ -226,11 +226,8 @@ impl VectorDBIndexer {
                                 "From: {} <{}>\nSubject: {}\n\n{}",
                                 email.from_name, email.from_email, email.subject, email.body_text
                             );
-                            let text = if text.len() > 8000 {
-                                &text[..8000]
-                            } else {
-                                &text
-                            };
+                            // Indexed mail is arbitrary text; cut on a char boundary.
+                            let text = botlib::text::truncate_at_char_boundary(&text, 8000);
 
                             match self.embedding_generator.generate_text_embedding(text).await {
                                 Ok(embedding) => {
