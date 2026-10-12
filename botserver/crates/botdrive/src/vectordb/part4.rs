@@ -211,61 +211,6 @@ pub(super) async fn extract_docx_text(file_path: &Path) -> Result<String> {
     }
 }
 
-#[cfg(feature = "sheet")]
-pub(super) async fn extract_xlsx_text(file_path: &Path) -> Result<String> {
-    let path = file_path.to_path_buf();
-
-    let result = tokio::task::spawn_blocking(move || {
-        let mut workbook: calamine::Xlsx<_> = calamine::open_workbook(&path)?;
-        let mut content = String::new();
-
-        for sheet_name in workbook.sheet_names() {
-            if let Ok(range) = workbook.worksheet_range(&sheet_name) {
-                use std::fmt::Write;
-                let _ = writeln!(&mut content, "=== {} ===", sheet_name);
-
-                for row in range.rows() {
-                    let row_text: Vec<String> = row
-                        .iter()
-                        .map(|cell| match cell {
-                            calamine::Data::Empty => String::new(),
-                            calamine::Data::String(s)
-                            | calamine::Data::DateTimeIso(s)
-                            | calamine::Data::DurationIso(s) => {
-                                // Remove HTML tags and formatting artifacts
-                                sanitize_cell_text(s)
-                            },
-                            calamine::Data::Float(f) => f.to_string(),
-                            calamine::Data::Int(i) => i.to_string(),
-                            calamine::Data::Bool(b) => b.to_string(),
-                            calamine::Data::Error(e) => format!("{e:?}"),
-                            calamine::Data::DateTime(dt) => dt.to_string(),
-                        })
-                        .collect();
-
-                    let line = row_text.join("\t");
-                    if !line.trim().is_empty() {
-                        content.push_str(&line);
-                        content.push('\n');
-                    }
-                }
-                content.push('\n');
-            }
-        }
-
-        Ok::<String, anyhow::Error>(content)
-    })
-    .await?;
-
-    match result {
-        Ok(text) => Ok(text),
-        Err(e) => {
-            log::warn!("XLSX extraction failed for {}: {}", file_path.display(), e);
-            Ok(String::new())
-        }
-    }
-}
-
 pub fn should_index(mime_type: &str, file_size: u64) -> bool {
     if file_size > 10 * 1024 * 1024 {
         return false;

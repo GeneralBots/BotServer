@@ -1,6 +1,10 @@
 use super::*;
 
 impl DriveMonitor {
+    // Gated like the `kb_manager` / `pending_kb_index` / `files_being_indexed`
+    // / `kb_indexed_folders` fields it reads; without the attribute a build that
+    // leaves `research`/`llm` off could not compile.
+    #[cfg(any(feature = "research", feature = "llm"))]
     pub fn start_kb_processor(&self) {
         let kb_manager = self.kb_manager.clone();
         let bot_id = self.bot_id;

@@ -199,21 +199,14 @@ pub(super) fn redact_around_pattern(text: &str, pattern: &str) -> String {
         return text.to_string();
     }
 
-    // Compiled only on a hit: callers already matched the pattern
-    // case-insensitively before calling. Hoisting these into a cache is tracked
-    // with the crate's other per-call regexes.
-    let Ok(re) = regex::Regex::new(&format!("(?i){}", regex::escape(pattern))) else {
+    // Both offsets come from `text` and land on char boundaries, so the slices
+    // below are always valid.
+    let Some(found) = botlib::text::find_ignore_case(text, pattern) else {
         return text.to_string();
     };
 
-    let Some(found) = re.find(text) else {
-        return text.to_string();
-    };
-
-    // `Regex::find` reports char-boundary offsets into `text`, and `token_end`
-    // walks chars, so both slices below are always valid.
-    let (before, _) = text.split_at(found.start());
-    let (_, after) = text.split_at(token_end(text, found.end()));
+    let (before, _) = text.split_at(found.start);
+    let (_, after) = text.split_at(token_end(text, found.end));
     format!("{before}[REDACTED]{after}")
 }
 

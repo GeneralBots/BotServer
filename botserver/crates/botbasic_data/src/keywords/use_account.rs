@@ -297,7 +297,8 @@ async fn index_imap_account_emails(
         for email_doc in chunk {
             let text = format!("From: {} <{}>\nSubject: {}\n\n{}",
                 email_doc.from_name, email_doc.from_email, email_doc.subject, email_doc.body_text);
-            let text = if text.len() > 6000 { &text[..6000] } else { &text };
+            // Email bodies are arbitrary user text; cut on a char boundary.
+            let text = botlib::text::truncate_at_char_boundary(&text, 6000);
 
             match embedding_gen.generate_text_embedding(text).await {
                 Ok(embedding) => {

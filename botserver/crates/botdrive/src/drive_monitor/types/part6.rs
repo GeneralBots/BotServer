@@ -1,3 +1,5 @@
+// The only item here is feature-gated, so the glob must be as well.
+#[cfg(any(feature = "research", feature = "llm"))]
 use super::*;
 
 #[cfg(any(feature = "research", feature = "llm"))]

@@ -335,11 +335,9 @@ pub(super) async fn handle_api_call(
                 }
             } else {
                 let text = serde_json::to_string_pretty(&result).unwrap_or_default();
-                let text = if text.len() > 2000 {
-                    format!("{}...", &text[..2000])
-                } else {
-                    text
-                };
+                // The result can contain any language: cut on a char boundary
+                // rather than aborting the process mid-conversation.
+                let text = botlib::text::truncate_with_suffix(&text, 2000, "...");
                 let resp = botlib::models::BotResponse::new(
                     bot_uuid.to_string(), session_id.to_string(), user_id.to_string(),
                     &text, &channel,

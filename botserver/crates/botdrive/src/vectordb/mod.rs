@@ -67,4 +67,7 @@ mod part3;
 mod part4;
 mod part5;
 
+// The extractors only exist with one of these features; without them the glob
+// re-export is empty and unused.
+#[cfg(any(feature = "drive", feature = "sheet"))]
 pub use part5::*;

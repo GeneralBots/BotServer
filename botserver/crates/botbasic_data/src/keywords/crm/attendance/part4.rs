@@ -15,9 +15,7 @@ pub fn polish_message_impl(_state: &Arc<dyn BasicRuntime>, message: &str, _tone:
         .replace("im ", "I'm ")
         .replace("ive ", "I've ");
 
-    if let Some(first_char) = polished.chars().next() {
-        polished = first_char.to_uppercase().to_string() + &polished[1..];
-    }
+    polished = botlib::text::capitalize_first(&polished);
 
     if !polished.ends_with('.') && !polished.ends_with('!') && !polished.ends_with('?') {
         polished.push('.');

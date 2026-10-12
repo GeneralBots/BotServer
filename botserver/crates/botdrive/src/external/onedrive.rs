@@ -272,12 +272,7 @@ pub(crate) fn parse_ts(value: &str) -> Option<DateTime<Utc>> {
 }
 
 fn truncate(body: &str) -> String {
-    let trimmed = body.trim();
-    if trimmed.len() > 300 {
-        format!("{}…", &trimmed[..300])
-    } else {
-        trimmed.to_string()
-    }
+    botlib::text::truncate_with_suffix(body.trim(), 300, "…")
 }
 
 fn percent_encode(value: &str) -> String {

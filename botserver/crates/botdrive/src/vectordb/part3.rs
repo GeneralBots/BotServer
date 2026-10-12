@@ -63,27 +63,28 @@ pub async fn search(
 }
 
 pub(super) fn create_snippet(content: &str, query: &str, max_length: usize) -> String {
-    let content_lower = content.to_lowercase();
-    let query_lower = query.to_lowercase();
+    // Offsets are taken from `content` itself and clamped to char boundaries.
+    // Searching a lower-cased copy and reusing its offsets panicked on
+    // non-ASCII documents (`İ` folds to two code points, `K` to one) and, when
+    // it did not panic, sliced the snippet out of the wrong place.
+    let Some(found) = botlib::text::find_ignore_case(content, query) else {
+        return botlib::text::truncate_with_suffix(content, max_length, "...");
+    };
 
-    if let Some(pos) = content_lower.find(&query_lower) {
-        let start = pos.saturating_sub(max_length / 2);
-        let end = (pos + query.len() + max_length / 2).min(content.len());
-        let snippet = &content[start..end];
+    let half = max_length / 2;
+    let start =
+        botlib::text::char_boundary_at_or_before(content, found.start.saturating_sub(half));
+    let end = botlib::text::char_boundary_at_or_before(
+        content,
+        found.end.saturating_add(half).min(content.len()),
+    );
+    let snippet = &content[start..end];
 
-        if start > 0 && end < content.len() {
-            format!("...{}...", snippet)
-        } else if start > 0 {
-            format!("...{}", snippet)
-        } else if end < content.len() {
-            format!("{}...", snippet)
-        } else {
-            snippet.to_string()
-        }
-    } else if content.len() > max_length {
-        format!("{}...", &content[..max_length])
-    } else {
-        content.to_string()
+    match (start > 0, end < content.len()) {
+        (true, true) => format!("...{snippet}..."),
+        (true, false) => format!("...{snippet}"),
+        (false, true) => format!("{snippet}..."),
+        (false, false) => snippet.to_string(),
     }
 }
 

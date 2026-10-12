@@ -3425,6 +3425,7 @@ name = "bottasks"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "cron",

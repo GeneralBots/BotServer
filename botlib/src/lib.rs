@@ -14,6 +14,7 @@ pub mod models;
 pub mod os;
 pub mod resilience;
 pub mod security;
+pub mod text;
 pub mod traits;
 pub mod version;
 pub mod work_path;

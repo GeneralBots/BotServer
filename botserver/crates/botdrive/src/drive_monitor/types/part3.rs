@@ -1,6 +1,10 @@
 use super::*;
 
 impl DriveMonitor {
+    // Gated like the KB fields and `parse_kb_path` that this method uses: it
+    // was the only armed user of them, so a build without `research`/`llm`
+    // failed to compile. Callers (part2.rs) carry the same attribute.
+    #[cfg(any(feature = "research", feature = "llm"))]
     pub(crate) async fn index_kb_file(&self, bot_name: &str, full_key: &str, s3_key: &str, etag: Option<String>) {
         let parsed = match parse_kb_path(s3_key) {
             Some(p) => p,

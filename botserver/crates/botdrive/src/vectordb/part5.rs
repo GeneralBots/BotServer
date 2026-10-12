@@ -1,4 +1,13 @@
+// Everything below is behind `drive` or `sheet`; the glob carries `Result` and
+// `Path`, so it must be gated too or it is unused in a default build.
+#[cfg(any(feature = "drive", feature = "sheet"))]
 use super::*;
+
+// The glob does not reach `pub(super)` items of a sibling submodule, so the
+// sheet-only helper needs its own import — without it `--features sheet` did
+// not compile (the feature is never enabled by the workspace build).
+#[cfg(feature = "sheet")]
+use super::part1::sanitize_cell_text;
 
 #[cfg(feature = "drive")]
 pub fn extract_pdf_text_sync(file_path: &Path) -> Result<String> {
