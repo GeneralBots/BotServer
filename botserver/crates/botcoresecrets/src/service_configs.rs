@@ -11,7 +11,7 @@ impl SecretsManager {
                 let ca_cert = std::env::var("VAULT_CACERT").unwrap_or_default();
                 log::info!("Attempting to read drive config from Vault: {}", vault_addr);
                 let url = format!("{}/v1/secret/data/gbo/drive", vault_addr);
-                let auth = format!("X-Vault-Token: {}", &vault_token);
+                let auth = format!("X-Vault-Token: {vault_token}");
 
                 let mut args = vec!["-sf".to_string(), "-H".to_string(), auth, url];
                 if !ca_cert.is_empty() && std::path::Path::new(&ca_cert).exists() {
@@ -58,7 +58,7 @@ impl SecretsManager {
                 let ca_cert = std::env::var("VAULT_CACERT").unwrap_or_default();
                 log::info!("Attempting to read cache config from Vault: {}", vault_addr);
                 let url = format!("{}/v1/secret/data/gbo/cache", vault_addr);
-                let auth = format!("X-Vault-Token: {}", &vault_token);
+                let auth = format!("X-Vault-Token: {vault_token}");
 
                 let mut args = vec!["-sf".to_string(), "-H".to_string(), auth, url];
                 if !ca_cert.is_empty() && std::path::Path::new(&ca_cert).exists() {
@@ -102,7 +102,7 @@ impl SecretsManager {
                 let ca_cert = std::env::var("VAULT_CACERT").unwrap_or_default();
                 log::info!("Attempting to read qdrant config from Vault: {}", vault_addr);
                 let url = format!("{}/v1/secret/data/gbo/vectordb", vault_addr);
-                let auth = format!("X-Vault-Token: {}", &vault_token);
+                let auth = format!("X-Vault-Token: {vault_token}");
 
                 let mut args = vec!["-sf".to_string(), "-H".to_string(), auth, url];
                 if !ca_cert.is_empty() && std::path::Path::new(&ca_cert).exists() {

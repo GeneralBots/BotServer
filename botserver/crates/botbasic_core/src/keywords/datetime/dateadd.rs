@@ -52,15 +52,6 @@ fn parse_datetime_only(trimmed: &str) -> Option<NaiveDateTime> {
         .or_else(|| NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M").ok())
 }
 
-/// A bare date, or the date part of a timestamp.
-///
-/// The two parsers must not call each other: an input matching neither format
-/// would recurse until the stack overflowed.
-fn parse_date(date_str: &str) -> Option<NaiveDate> {
-    let trimmed = date_str.trim();
-    parse_date_only(trimmed).or_else(|| parse_datetime_only(trimmed).map(|dt| dt.date()))
-}
-
 /// A timestamp, or a bare date read as midnight.
 fn parse_datetime(datetime_str: &str) -> Option<NaiveDateTime> {
     let trimmed = datetime_str.trim();
@@ -178,10 +169,16 @@ mod tests {
         assert_eq!(datediff_impl("2024-01-01", "2025-01-01", "year"), 1);
     }
 
+    /// DATEADD reads its argument through `parse_datetime`, which accepts both
+    /// a bare date (read as midnight) and a timestamp. Inputs matching neither
+    /// must return `None` rather than recursing into the date parser.
     #[test]
-    fn test_parse_date() {
-        assert!(parse_date("2025-01-15").is_some());
-        assert!(parse_date("15/01/2025").is_some());
-        assert!(parse_date("invalid").is_none());
+    fn test_parse_datetime_accepts_dates_and_rejects_junk() {
+        assert!(parse_datetime("2025-01-15").is_some());
+        assert!(parse_datetime("15/01/2025").is_some());
+        assert!(parse_datetime("2025-01-15 10:30:00").is_some());
+        for junk in ["invalid", "", "not a date", "2025-13-45"] {
+            assert!(parse_datetime(junk).is_none(), "{junk} should not parse");
+        }
     }
 }

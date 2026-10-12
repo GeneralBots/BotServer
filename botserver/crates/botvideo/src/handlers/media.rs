@@ -29,7 +29,9 @@ pub async fn upload_media(
         );
     }
 
-    while let Ok(Some(field)) = multipart.next_field().await {
+    // Only the first field is served: the handler answers with that upload and
+    // returns, so this was never a loop despite reading like one.
+    if let Ok(Some(field)) = multipart.next_field().await {
         let file_name = field
             .file_name()
             .map(|s| s.to_string())
