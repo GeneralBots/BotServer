@@ -12,7 +12,11 @@ pub mod memory_monitor;
 pub mod models;
 pub mod schema;
 pub mod state;
-pub mod test_utils;
+// Test doubles are built only for tests. The module was compiled into every
+// release binary, where its `create_mock_auth_service` stub was reachable and
+// would abort the process if ever called.
+#[cfg(test)]
+mod test_utils;
 pub mod utils;
 
 pub use state::AppState;
