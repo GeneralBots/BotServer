@@ -184,25 +184,53 @@ impl ErrorSanitizer {
         response
     }
 }
+/// Redacts from the first occurrence of `pattern` through the end of the token
+/// that follows it (`password=abc rest` becomes `[REDACTED] rest`).
+///
+/// The match is case-insensitive and the cuts are taken on char boundaries of
+/// `text` itself. The search deliberately does not lower-case a copy and reuse
+/// its offsets: `str::to_lowercase` can change the byte length (`İ` becomes two
+/// code points), which made `&text[..start]` panic with "byte index N is not a
+/// char boundary" — from inside the sanitizer every error path depends on.
+///
+/// An empty pattern is ignored; it used to redact the first token of the text.
 pub(super) fn redact_around_pattern(text: &str, pattern: &str) -> String {
-    let lower_text = text.to_lowercase();
-    let lower_pattern = pattern.to_lowercase();
-
-    if let Some(pos) = lower_text.find(&lower_pattern) {
-        let start = pos;
-        let mut end = pos + pattern.len();
-
-        let chars: Vec<char> = text.chars().collect();
-        while end < chars.len() && !chars[end].is_whitespace() && chars[end] != ',' && chars[end] != ';' {
-            end += 1;
-        }
-
-        let before = &text[..start];
-        let after = if end < text.len() { &text[end..] } else { "" };
-        format!("{}[REDACTED]{}", before, after)
-    } else {
-        text.to_string()
+    if pattern.is_empty() {
+        return text.to_string();
     }
+
+    // Compiled only on a hit: callers already matched the pattern
+    // case-insensitively before calling. Hoisting these into a cache is tracked
+    // with the crate's other per-call regexes.
+    let Ok(re) = regex::Regex::new(&format!("(?i){}", regex::escape(pattern))) else {
+        return text.to_string();
+    };
+
+    let Some(found) = re.find(text) else {
+        return text.to_string();
+    };
+
+    // `Regex::find` reports char-boundary offsets into `text`, and `token_end`
+    // walks chars, so both slices below are always valid.
+    let (before, _) = text.split_at(found.start());
+    let (_, after) = text.split_at(token_end(text, found.end()));
+    format!("{before}[REDACTED]{after}")
+}
+
+/// The byte offset just past the token starting at `from`: every character up
+/// to the next whitespace, comma or semicolon, or the end of `text`.
+fn token_end(text: &str, from: usize) -> usize {
+    let Some(rest) = text.get(from..) else {
+        return text.len();
+    };
+
+    for (offset, ch) in rest.char_indices() {
+        if ch.is_whitespace() || ch == ',' || ch == ';' {
+            return from + offset;
+        }
+    }
+
+    text.len()
 }
 pub(super) fn redact_stack_traces(text: &str) -> String {
     let patterns = [

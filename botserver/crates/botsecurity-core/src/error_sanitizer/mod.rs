@@ -147,6 +147,48 @@ mod tests {
     }
 
     #[test]
+    fn test_redact_around_pattern_redacts_the_token_after_the_match() {
+        assert_eq!(redact_around_pattern("password=hunter2 rest", "password"), "[REDACTED] rest");
+        assert_eq!(redact_around_pattern("value is secret", "secret"), "value is [REDACTED]");
+        assert_eq!(redact_around_pattern("api_key=abc,next=1", "api_key"), "[REDACTED],next=1");
+        assert_eq!(redact_around_pattern("token", "token"), "[REDACTED]");
+        assert_eq!(redact_around_pattern("PASSWORD=x", "password"), "[REDACTED]");
+    }
+
+    #[test]
+    fn test_redact_around_pattern_leaves_unmatched_text_alone() {
+        assert_eq!(redact_around_pattern("nothing here", "zzz"), "nothing here");
+        // An empty pattern must not eat the first token of the message.
+        assert_eq!(redact_around_pattern("keep me", ""), "keep me");
+    }
+
+    #[test]
+    fn test_redact_around_pattern_survives_multibyte_before_the_match() {
+        // `İ` lowercases to two code points, so the lowercased copy is longer
+        // than the input. Reusing its byte offsets produced
+        // "İstanbul error p[REDACTED]2 tail" — a partial secret leak plus a
+        // misplaced marker.
+        let result = redact_around_pattern("İstanbul error password=hunter2 tail", "password");
+        assert_eq!(result, "İstanbul error [REDACTED] tail");
+    }
+
+    #[test]
+    fn test_redact_around_pattern_cuts_multibyte_tokens() {
+        // Used to return "[REDACTED]ta fim", leaking the tail of the token.
+        let result = redact_around_pattern("senha=ção-secreta fim", "senha");
+        assert_eq!(result, "[REDACTED] fim");
+    }
+
+    #[test]
+    fn test_redact_around_pattern_handles_a_lowercase_that_shrinks() {
+        // `K` (Kelvin sign) is three bytes and lowercases to one, so the match
+        // offset taken from the lowercased copy landed inside the `€` —
+        // "byte index 5 is not a char boundary", aborting the process.
+        let result = redact_around_pattern("\u{212A}\u{20AC} password=hunter2 tail", "password");
+        assert_eq!(result, "\u{212A}\u{20AC} [REDACTED] tail");
+    }
+
+    #[test]
     fn test_safe_response_for_status() {
         let sanitizer = ErrorSanitizer::production();
 
