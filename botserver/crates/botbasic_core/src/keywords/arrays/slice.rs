@@ -122,11 +122,11 @@ mod tests {
 
     fn make_test_array() -> Array {
         vec![
-            Dynamic::from(1),
-            Dynamic::from(2),
-            Dynamic::from(3),
-            Dynamic::from(4),
-            Dynamic::from(5),
+            Dynamic::from_int(1),
+            Dynamic::from_int(2),
+            Dynamic::from_int(3),
+            Dynamic::from_int(4),
+            Dynamic::from_int(5),
         ]
     }
 

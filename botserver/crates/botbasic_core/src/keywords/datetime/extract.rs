@@ -5,23 +5,39 @@ use log::debug;
 use rhai::Engine;
 use std::sync::Arc;
 
-fn parse_date(date_str: &str) -> Option<NaiveDate> {
-    let trimmed = date_str.trim();
+/// The date formats accepted on their own.
+fn parse_date_only(trimmed: &str) -> Option<NaiveDate> {
     NaiveDate::parse_from_str(trimmed, "%Y-%m-%d")
         .ok()
         .or_else(|| NaiveDate::parse_from_str(trimmed, "%d/%m/%Y").ok())
         .or_else(|| NaiveDate::parse_from_str(trimmed, "%m/%d/%Y").ok())
         .or_else(|| NaiveDate::parse_from_str(trimmed, "%Y/%m/%d").ok())
-        .or_else(|| parse_datetime(trimmed).map(|dt| dt.date()))
 }
 
-fn parse_datetime(datetime_str: &str) -> Option<NaiveDateTime> {
-    let trimmed = datetime_str.trim();
+/// The timestamp formats accepted on their own.
+fn parse_datetime_only(trimmed: &str) -> Option<NaiveDateTime> {
     NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S")
         .ok()
         .or_else(|| NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%dT%H:%M:%S").ok())
         .or_else(|| NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M").ok())
-        .or_else(|| parse_date(trimmed).and_then(|d| d.and_hms_opt(0, 0, 0)))
+}
+
+/// A bare date, or the date part of a timestamp.
+///
+/// The two parsers deliberately do not call each other: they previously fell
+/// back on one another, so any string that matched neither a date nor a
+/// timestamp (a typo, a sentence, an empty keyword argument) recursed until the
+/// stack overflowed and aborted the process.
+fn parse_date(date_str: &str) -> Option<NaiveDate> {
+    let trimmed = date_str.trim();
+    parse_date_only(trimmed).or_else(|| parse_datetime_only(trimmed).map(|dt| dt.date()))
+}
+
+/// A timestamp, or a bare date read as midnight.
+fn parse_datetime(datetime_str: &str) -> Option<NaiveDateTime> {
+    let trimmed = datetime_str.trim();
+    parse_datetime_only(trimmed)
+        .or_else(|| parse_date_only(trimmed).and_then(|d| d.and_hms_opt(0, 0, 0)))
 }
 
 pub fn year_keyword(_state: &Arc<dyn BasicRuntime>, _user: UserSession, engine: &mut Engine) {
@@ -206,7 +222,21 @@ mod tests {
 
     #[test]
     fn test_invalid_date() {
-        let date = parse_date("invalid");
-        assert!(date.is_none());
+        // Inputs that match neither a date nor a timestamp must return `None`
+        // instead of recursing between the two parsers.
+        for input in ["invalid", "", "   ", "not a date at all", "2026-13-45"] {
+            assert!(parse_date(input).is_none(), "{input} should not parse");
+            assert!(parse_datetime(input).is_none(), "{input} should not parse");
+        }
+    }
+
+    #[test]
+    fn a_date_is_read_as_midnight_and_a_timestamp_keeps_its_time() {
+        assert_eq!(
+            parse_datetime("2026-06-15"),
+            parse_date("2026-06-15").and_then(|d| d.and_hms_opt(0, 0, 0))
+        );
+        assert_eq!(parse_date("2026-06-15 10:30:00"), parse_date("2026-06-15"));
+        assert!(parse_datetime("2026-06-15 10:30").is_some());
     }
 }

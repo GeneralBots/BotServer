@@ -35,25 +35,37 @@ pub fn datediff_keyword(_state: &Arc<dyn BasicRuntime>, _user: UserSession, engi
     debug!("Registered DATEDIFF keyword");
 }
 
-fn parse_date(date_str: &str) -> Option<NaiveDate> {
-    let trimmed = date_str.trim();
-
+/// The date formats accepted on their own.
+fn parse_date_only(trimmed: &str) -> Option<NaiveDate> {
     NaiveDate::parse_from_str(trimmed, "%Y-%m-%d")
         .ok()
         .or_else(|| NaiveDate::parse_from_str(trimmed, "%d/%m/%Y").ok())
         .or_else(|| NaiveDate::parse_from_str(trimmed, "%m/%d/%Y").ok())
         .or_else(|| NaiveDate::parse_from_str(trimmed, "%Y/%m/%d").ok())
-        .or_else(|| parse_datetime(trimmed).map(|dt| dt.date()))
 }
 
-fn parse_datetime(datetime_str: &str) -> Option<NaiveDateTime> {
-    let trimmed = datetime_str.trim();
-
+/// The timestamp formats accepted on their own.
+fn parse_datetime_only(trimmed: &str) -> Option<NaiveDateTime> {
     NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S")
         .ok()
         .or_else(|| NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%dT%H:%M:%S").ok())
         .or_else(|| NaiveDateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M").ok())
-        .or_else(|| parse_date(trimmed).and_then(|d| d.and_hms_opt(0, 0, 0)))
+}
+
+/// A bare date, or the date part of a timestamp.
+///
+/// The two parsers must not call each other: an input matching neither format
+/// would recurse until the stack overflowed.
+fn parse_date(date_str: &str) -> Option<NaiveDate> {
+    let trimmed = date_str.trim();
+    parse_date_only(trimmed).or_else(|| parse_datetime_only(trimmed).map(|dt| dt.date()))
+}
+
+/// A timestamp, or a bare date read as midnight.
+fn parse_datetime(datetime_str: &str) -> Option<NaiveDateTime> {
+    let trimmed = datetime_str.trim();
+    parse_datetime_only(trimmed)
+        .or_else(|| parse_date_only(trimmed).and_then(|d| d.and_hms_opt(0, 0, 0)))
 }
 
 pub fn dateadd_impl(date_str: &str, amount: i64, unit: &str) -> String {

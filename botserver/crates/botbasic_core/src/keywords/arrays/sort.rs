@@ -79,11 +79,11 @@ mod tests {
     #[test]
     fn test_sort_integers() {
         let arr: Array = vec![
-            Dynamic::from(3),
-            Dynamic::from(1),
-            Dynamic::from(4),
-            Dynamic::from(1),
-            Dynamic::from(5),
+            Dynamic::from_int(3),
+            Dynamic::from_int(1),
+            Dynamic::from_int(4),
+            Dynamic::from_int(1),
+            Dynamic::from_int(5),
         ];
         let sorted = sort_array(arr, false);
         assert_eq!(sorted[0].as_int().unwrap(), 1);
@@ -108,7 +108,7 @@ mod tests {
 
     #[test]
     fn test_sort_descending() {
-        let arr: Array = vec![Dynamic::from(1), Dynamic::from(3), Dynamic::from(2)];
+        let arr: Array = vec![Dynamic::from_int(1), Dynamic::from_int(3), Dynamic::from_int(2)];
         let sorted = sort_array(arr, true);
         assert_eq!(sorted[0].as_int().unwrap(), 3);
         assert_eq!(sorted[1].as_int().unwrap(), 2);
@@ -117,8 +117,8 @@ mod tests {
 
     #[test]
     fn test_compare_dynamic_numbers() {
-        let a = Dynamic::from(5);
-        let b = Dynamic::from(3);
+        let a = Dynamic::from_int(5);
+        let b = Dynamic::from_int(3);
         assert_eq!(compare_dynamic(&a, &b), std::cmp::Ordering::Greater);
     }
 
