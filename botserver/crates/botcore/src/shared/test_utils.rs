@@ -1,6 +1,3 @@
-#[cfg(feature = "directory")]
-use std::sync::Arc;
-
 #[cfg(feature = "llm")]
 #[derive(Debug, Clone)]
 pub struct MockLLMProvider {
@@ -50,7 +47,3 @@ impl botlib::traits::LLMProvider for MockLLMProvider {
     }
 }
 
-#[cfg(feature = "directory")]
-pub fn create_mock_auth_service() -> Arc<tokio::sync::Mutex<dyn botlib::traits::AuthServiceTrait>> {
-    unimplemented!()
-}

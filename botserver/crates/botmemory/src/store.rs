@@ -371,7 +371,7 @@ pub fn list(
         query = query.filter(scope.eq(scope_value));
     }
     if let Some(term) = filter.q.map(str::trim).filter(|t| !t.is_empty()) {
-        let neutralized = term.replace('%', "").replace('_', "");
+        let neutralized = term.replace(['%', '_'], "");
         if !neutralized.is_empty() {
             query = query.filter(content.ilike(format!("%{neutralized}%")));
         }
