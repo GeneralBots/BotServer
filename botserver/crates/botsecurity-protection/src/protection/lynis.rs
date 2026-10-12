@@ -157,13 +157,26 @@ pub async fn apply_suggestion(suggestion_id: &str) -> Result<()> {
     Ok(())
 }
 
+/// Extracts the section name of a Lynis header such as `[+] Boot and services`.
+///
+/// Lynis writes the pass/fail marker inside the brackets and the section name
+/// after them. Stopping at the first `]` would reduce every section to a bare
+/// "+" and leave findings uncategorised, so the marker and the name are joined
+/// back together without the surrounding brackets.
 fn extract_category(line: &str) -> Option<String> {
     let start = line.find('[')?;
     let end = line.find(']')?;
-    if start < end {
-        Some(line[start + 1..end].trim().to_string())
-    } else {
+    if start >= end {
+        return None;
+    }
+
+    let marker = &line[start + 1..end];
+    let category = format!("{marker}{}", &line[end + 1..]);
+    let category = category.trim();
+    if category.is_empty() {
         None
+    } else {
+        Some(category.to_string())
     }
 }
 

@@ -1,5 +1,42 @@
 use super::*;
 
+/// Launchers a registered MCP stdio server may be started with.
+///
+/// The stdio command comes from a bot-registered, database-backed
+/// configuration, so it is untrusted input. `SafeCommand` matches on the
+/// command basename against a server-wide allowlist that necessarily contains
+/// shells (`sh`, `bash`, `cmd`, `powershell`) and `sudo` — which would turn
+/// "register an MCP server" into arbitrary host command execution. Restricting
+/// stdio transports to package and runtime launchers keeps the blast radius at
+/// "run this published MCP package".
+const MCP_STDIO_LAUNCHERS: &[&str] = &[
+    "npx", "uvx", "uv", "node", "deno", "bun", "python", "python3", "docker",
+];
+
+/// Validates the stdio launcher of an MCP server, accepting a bare name or an
+/// absolute path whose basename is a known launcher.
+pub(crate) fn validate_stdio_command(
+    command: &str,
+) -> Result<&str, Box<dyn std::error::Error + Send + Sync>> {
+    let trimmed = command.trim();
+    if trimmed.is_empty() {
+        return Err(anyhow::anyhow!("MCP stdio command must not be empty").into());
+    }
+    let basename = std::path::Path::new(trimmed)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or(trimmed);
+    if MCP_STDIO_LAUNCHERS.contains(&basename) {
+        return Ok(trimmed);
+    }
+    Err(anyhow::anyhow!(
+        "MCP stdio command '{basename}' is not an accepted launcher ({}); \
+         register the server with a package runner such as npx or uvx",
+        MCP_STDIO_LAUNCHERS.join(", ")
+    )
+    .into())
+}
+
 impl McpClient {
     pub(crate) async fn invoke_http(
         &self,
@@ -79,7 +116,8 @@ impl McpClient {
             "id": request.id
         });
 
-        let cmd = SafeCommand::new(&server.connection.url)
+        let command = validate_stdio_command(&server.connection.url)?;
+        let cmd = SafeCommand::new(command)
             .map_err(|e| anyhow::anyhow!("Failed to build MCP command: {}", e))?;
 
         let output = cmd.execute_async()
@@ -203,6 +241,44 @@ impl McpClient {
                     consecutive_failures: 1,
                 })
             }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validate_stdio_command;
+
+    #[test]
+    fn accepts_package_and_runtime_launchers() {
+        for command in [
+            "npx",
+            "uvx",
+            "uv",
+            "node",
+            "deno",
+            "bun",
+            "python3",
+            "/usr/bin/npx",
+            " /opt/tools/uvx ",
+        ] {
+            assert!(
+                validate_stdio_command(command).is_ok(),
+                "{command} should be an accepted MCP launcher"
+            );
+        }
+    }
+
+    #[test]
+    fn rejects_shells_and_prives_of_the_server_allowlist() {
+        for command in [
+            "sh", "bash", "cmd", "powershell", "sudo", "curl", "rm", "nc", "/bin/sh",
+            "/usr/bin/sudo", "",
+        ] {
+            assert!(
+                validate_stdio_command(command).is_err(),
+                "{command} must not be accepted as an MCP launcher"
+            );
         }
     }
 }

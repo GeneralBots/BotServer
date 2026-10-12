@@ -186,7 +186,9 @@ mod tests {
     const VALID_CPF: &str = "529.982.247-25";
     const INVALID_CPF: &str = "529.982.247-26";
     const VALID_CEP: &str = "01310-100";
-    const VALID_NFE_KEY: &str = "43250911122233300018155001000000010012345678";
+    // Check digit (cDV) is the last position: modulo 11 over the preceding 43
+    // digits with weights 43..1, yielding 3 for this body.
+    const VALID_NFE_KEY: &str = "43250911122233300018155001000000010012345673";
 
     #[test]
     fn cnpj_validator() {
@@ -213,6 +215,14 @@ mod tests {
     fn nfe_access_key_validator() {
         assert!(is_valid_nfe_access_key(VALID_NFE_KEY));
         assert!(!is_valid_nfe_access_key("123"));
+        // A tampered check digit must be rejected.
+        assert!(!is_valid_nfe_access_key(&format!("{}8", &VALID_NFE_KEY[..43])));
+        // A tampered body must invalidate the check digit as well.
+        assert!(!is_valid_nfe_access_key(&format!(
+            "{}1{}",
+            &VALID_NFE_KEY[..5],
+            &VALID_NFE_KEY[6..]
+        )));
     }
 
     #[test]

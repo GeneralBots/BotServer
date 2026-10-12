@@ -188,7 +188,10 @@ pub fn audit(
 mod tests {
     use super::*;
 
-    fn row(class: &str, granted: bool, expires_in_secs: i64) -> AppPermissionRow {
+    /// Builds a row whose expiry is anchored on `base`, so tests that exercise
+    /// the exact expiry boundary compare against a known instant instead of
+    /// racing a fresh `Utc::now()`.
+    fn row_at(base: DateTime<Utc>, class: &str, granted: bool, expires_in_secs: i64) -> AppPermissionRow {
         AppPermissionRow {
             id: Uuid::new_v4(),
             user_id: Uuid::nil(),
@@ -199,18 +202,25 @@ mod tests {
             scope: serde_json::json!({}),
             granted,
             granted_via: "prompt".to_string(),
-            expires_at: Some(Utc::now() + chrono::Duration::seconds(expires_in_secs)),
-            granted_at: Utc::now(),
+            expires_at: Some(base + chrono::Duration::seconds(expires_in_secs)),
+            granted_at: base,
         }
+    }
+
+    fn row(class: &str, granted: bool, expires_in_secs: i64) -> AppPermissionRow {
+        row_at(Utc::now(), class, granted, expires_in_secs)
     }
 
     #[test]
     fn expiry_is_honored() {
         let now = Utc::now();
-        assert!(effective_expiry(&row("read", true, 3600), now).is_some());
-        assert!(effective_expiry(&row("read", true, -1), now).is_none());
-        assert!(effective_expiry(&row("read", true, 0), now).is_none());
-        assert!(effective_expiry(&row("read", false, 3600), now).is_none());
+        assert!(effective_expiry(&row_at(now, "read", true, 3600), now).is_some());
+        assert!(effective_expiry(&row_at(now, "read", true, -1), now).is_none());
+        // Expiring exactly at `now` is already expired.
+        assert!(effective_expiry(&row_at(now, "read", true, 0), now).is_none());
+        // One second in the future still counts.
+        assert!(effective_expiry(&row_at(now, "read", true, 1), now).is_some());
+        assert!(effective_expiry(&row_at(now, "read", false, 3600), now).is_none());
     }
 
     #[test]

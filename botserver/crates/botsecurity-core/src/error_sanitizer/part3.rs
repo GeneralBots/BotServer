@@ -12,6 +12,34 @@ pub(super) fn looks_like_connection_string(text: &str) -> bool {
     ];
 
     let lower = text.to_lowercase();
+
+    // A scheme-qualified URL is a connection string on its own: it carries the
+    // host, and frequently the credentials (`postgres://user:pass@host/db`).
+    // Counting indicators alone missed it, because such a string usually
+    // contains only `://`.
+    const CONNECTION_SCHEMES: &[&str] = &[
+        "postgres://",
+        "postgresql://",
+        "mysql://",
+        "mariadb://",
+        "mongodb://",
+        "mongodb+srv://",
+        "redis://",
+        "rediss://",
+        "valkey://",
+        "amqp://",
+        "kafka://",
+        "ldap://",
+        "jdbc:",
+        "ftp://",
+        "sftp://",
+        "http://",
+        "https://",
+    ];
+    if CONNECTION_SCHEMES.iter().any(|scheme| lower.contains(scheme)) {
+        return true;
+    }
+
     let count = indicators.iter().filter(|i| lower.contains(*i)).count();
     count >= 2
 }

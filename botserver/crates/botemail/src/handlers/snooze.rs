@@ -68,39 +68,38 @@ pub async fn get_snoozed_emails(
     Ok(Json(email_ids))
 }
 
+/// Resolves a snooze preset into an instant that is always in the future.
+///
+/// A preset names a wall-clock slot ("later today at 18:00") which is already
+/// gone once the day has moved past it; without this guard the message is
+/// snoozed into the past and resurfaces immediately. When the slot has passed,
+/// `rollback` days are added to reach the next occurrence.
 fn calculate_snooze_time(preset: &str) -> DateTime<Utc> {
     let now = Utc::now();
 
+    let slot = |hour: u32, day_offset: i64, rollback: Duration| {
+        let day = (now + Duration::days(day_offset)).date_naive();
+        let candidate = day
+            .and_hms_opt(hour, 0, 0)
+            .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
+            .unwrap_or(now + Duration::days(day_offset));
+        if candidate > now {
+            candidate
+        } else {
+            candidate + rollback
+        }
+    };
+
     match preset {
-        "later-today" => {
-            let today = now.date_naive();
-            today
-                .and_hms_opt(18, 0, 0)
-                .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
-                .unwrap_or(now + Duration::hours(6))
-        }
-        "tomorrow" => {
-            let tomorrow = (now + Duration::days(1)).date_naive();
-            tomorrow
-                .and_hms_opt(8, 0, 0)
-                .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
-                .unwrap_or(now + Duration::days(1))
-        }
+        "later-today" => slot(18, 0, Duration::days(1)),
+        "tomorrow" => slot(8, 1, Duration::days(1)),
         "this-weekend" => {
             let days_until_saturday = (6 - now.weekday().num_days_from_monday()) % 7;
-            let saturday = (now + Duration::days(days_until_saturday as i64)).date_naive();
-            saturday
-                .and_hms_opt(9, 0, 0)
-                .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
-                .unwrap_or(now + Duration::days(days_until_saturday as i64))
+            slot(9, days_until_saturday as i64, Duration::days(7))
         }
         "next-week" => {
             let days_until_next_monday = (7 - now.weekday().num_days_from_monday() + 1) % 7 + 7;
-            let next_monday = (now + Duration::days(days_until_next_monday as i64)).date_naive();
-            next_monday
-                .and_hms_opt(8, 0, 0)
-                .map(|dt| DateTime::from_naive_utc_and_offset(dt, Utc))
-                .unwrap_or(now + Duration::days(days_until_next_monday as i64))
+            slot(8, days_until_next_monday as i64, Duration::days(7))
         }
         _ => now + Duration::hours(1),
     }
@@ -112,13 +111,20 @@ mod tests {
 
     #[test]
     fn test_calculate_snooze_time() {
-        let later_today = calculate_snooze_time("later-today");
-        assert!(later_today > Utc::now());
-
-        let tomorrow = calculate_snooze_time("tomorrow");
-        assert!(tomorrow > Utc::now());
-
-        let weekend = calculate_snooze_time("this-weekend");
-        assert!(weekend > Utc::now());
+        // Every preset must resolve to an instant strictly in the future, even
+        // once the slot it names has already passed.
+        for preset in [
+            "later-today",
+            "tomorrow",
+            "this-weekend",
+            "next-week",
+            "unknown",
+        ] {
+            let resolved = calculate_snooze_time(preset);
+            assert!(
+                resolved > Utc::now(),
+                "preset {preset} resolved to the past: {resolved}"
+            );
+        }
     }
 }

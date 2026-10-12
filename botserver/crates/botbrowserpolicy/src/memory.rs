@@ -198,8 +198,11 @@ mod tests {
                 pf::facts.eq(diesel::pg::upsert::excluded(pf::facts)),
             ));
         let sql = diesel::debug_query::<diesel::pg::Pg, _>(&q).to_string();
-        assert!(sql.contains("on conflict"), "sql: {sql}");
-        assert!(sql.contains("\"visit_count\" + "), "sql: {sql}");
+        // The upsert must conflict on the natural key, increment the stored
+        // counter instead of overwriting it, and take the payload from the row
+        // that lost the conflict.
+        assert!(sql.contains("ON CONFLICT"), "sql: {sql}");
+        assert!(sql.contains("\"page_facts\".\"visit_count\" + "), "sql: {sql}");
         assert!(sql.contains("excluded"), "sql: {sql}");
     }
 }

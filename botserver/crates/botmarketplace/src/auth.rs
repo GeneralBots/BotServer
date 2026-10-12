@@ -92,9 +92,14 @@ mod tests {
 
     #[test]
     fn extracts_admin_from_single_role() {
-        let headers = header_with_payload(r#"{"role":"admin","org_id":"00000000-0000-0000-0000-000000000001"}"#);
+        const ORG: &str = "00000000-0000-0000-0000-000000000001";
+        let headers =
+            header_with_payload(&format!(r#"{{"role":"admin","org_id":"{ORG}"}}"#));
         assert!(jwt_is_admin(&headers));
-        assert_eq!(jwt_org_id(&headers), Some(Uuid::nil()));
+        assert_eq!(
+            jwt_org_id(&headers),
+            Some(Uuid::parse_str(ORG).expect("uuid"))
+        );
     }
 
     #[test]

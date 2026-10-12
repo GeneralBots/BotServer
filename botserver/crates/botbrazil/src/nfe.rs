@@ -39,6 +39,26 @@ pub fn build_nfe(mut document: FiscalDocument) -> Result<NFeDraft, TaxError> {
     })
 }
 
+/// Maps one character of the 43 significant positions onto its numeric value
+/// for the modulo 11 check digit. Digits keep their value and letters continue
+/// the sequence at 10 (`A` = 10 ... `Z` = 35), as specified for the NFe access
+/// key; anything else counts as zero.
+///
+/// The previous implementation subtracted `b'0'` from every byte, which
+/// overflowed on any letter and aborted the build.
+fn key_digit_value(character: char) -> u32 {
+    match character {
+        '0'..='9' => character as u32 - '0' as u32,
+        'A'..='Z' => character as u32 - 'A' as u32 + 10,
+        'a'..='z' => character as u32 - 'a' as u32 + 10,
+        _ => 0,
+    }
+}
+
+/// Builds the 44-digit NFe access key (chave de acesso).
+///
+/// Layout, one digit per position: cUF (2) + AAMM (4) + CNPJ (14) + mod (2) +
+/// série (3) + nNF (9) + tpEmis (1) + cNF (8) + cDV (1).
 pub fn build_access_key(
     state: &str,
     issue_year: u16,
@@ -54,35 +74,59 @@ pub fn build_access_key(
     if cnpj_digits.len() != 14 {
         return Err(TaxError::InvalidCnpj(cnpj.to_string()));
     }
+
+    let state_digits = state.chars().filter(|c| c.is_ascii_digit()).collect::<String>();
+    if state_digits.len() != 2 {
+        return Err(TaxError::InvalidAccessKey(state.to_string()));
+    }
+
+    let model_digits = model.chars().filter(|c| c.is_ascii_digit()).collect::<String>();
+    if model_digits.len() != 2 {
+        return Err(TaxError::InvalidAccessKey(model.to_string()));
+    }
+
+    let kind_digit = emission_kind
+        .chars()
+        .find(|c| c.is_ascii_digit())
+        .ok_or_else(|| TaxError::InvalidAccessKey(emission_kind.to_string()))?;
+
+    if issue_month == 0 || issue_month > 12 {
+        return Err(TaxError::InvalidAccessKey(issue_month.to_string()));
+    }
+
+    let series_number = series
+        .chars()
+        .filter(|c| c.is_ascii_digit())
+        .collect::<String>()
+        .parse::<u32>()
+        .unwrap_or(0);
+    if series_number > 999 {
+        return Err(TaxError::InvalidAccessKey(series.to_string()));
+    }
+
+    // 2 + 4 + 14 + 2 + 3 + 9 + 1 + 8 = 43 significant positions.
     let key = format!(
-        "{}{:02}{}{}{}{:09}{:03}{}{}",
-        state,
+        "{}{:02}{:02}{}{}{:03}{:09}{}{:08}",
+        state_digits,
         issue_year % 100,
         issue_month,
-        &cnpj_digits,
-        model,
-        emission_kind,
-        series
-            .chars()
-            .filter(|c| c.is_ascii_digit())
-            .collect::<String>()
-            .parse::<u32>()
-            .unwrap_or(0),
+        cnpj_digits,
+        model_digits,
+        series_number,
         number,
+        kind_digit,
         code,
     );
-    let mut with_dv = key.clone();
-    let bytes: Vec<u8> = key.bytes().map(|b| b - b'0').collect();
-    let weights: [u8; 43] = std::array::from_fn(|i| (43 - i) as u8);
-    let sum: u32 = bytes
-        .iter()
-        .zip(weights.iter())
-        .map(|(d, w)| (*d as u32) * (*w as u32))
+
+    let sum: u32 = key
+        .chars()
+        .enumerate()
+        .map(|(index, character)| key_digit_value(character) * (43 - index) as u32)
         .sum();
     let remainder = sum % 11;
-    let dv = if remainder < 2 { 0 } else { (11 - remainder) as u8 };
-    with_dv.push((dv + b'0') as char);
-    Ok(with_dv)
+    let dv = if remainder < 2 { 0 } else { 11 - remainder };
+
+    Ok(format!("{key}{dv}"))
 }
 
 pub fn validate_nfe_key(key: &str) -> Result<(), TaxError> {

@@ -68,8 +68,23 @@ fn parse_field(field: &str, min: u32, max: u32) -> Option<Vec<u32>> {
 }
 
 /// Maps day-of-week `7` to `0` (Sunday) so both notations are accepted.
-fn normalize_dow(values: Vec<u32>) -> Vec<u32> {
-    values.into_iter().map(|v| if v == 7 { 0 } else { v }).collect()
+///
+/// The remap has to happen before the deduplication that `parse_field` performs:
+/// folding `7` onto an existing `0` afterwards would leave the vector with a
+/// duplicate, and `dow_restricted` compares it against `0..=6`. The mismatch
+/// made an unrestricted day-of-week look restricted, which switched `day_matches`
+/// into the day-of-month-OR-day-of-week branch and matched every Sunday.
+fn normalize_dow(mut values: Vec<u32>) -> Vec<u32> {
+    for value in values.iter_mut() {
+        if *value == 7 {
+            *value = 0;
+        }
+    }
+    // Remapping 7 onto Sunday can collide with an explicit 0, so the duplicate
+    // has to be removed after the remap, not before it.
+    values.sort_unstable();
+    values.dedup();
+    values
 }
 
 impl CronExpr {
@@ -220,17 +235,28 @@ mod tests {
 
     #[test]
     fn restricted_dom_and_dow_use_vixie_or_rule() {
-        // Friday the 13th OR any Friday (dow=5), OR the 13th of any month.
+        // 13th of any month OR any Friday (dow=5): Vixie OR semantics, so a
+        // matching Friday wins even when the day-of-month does not match.
         let c = CronExpr::parse("0 0 13 * 5").expect("parse");
-        // 2026-03-13 is a Friday; next is April 13 regardless of weekday.
-        assert_eq!(c.next_after(at(2026, 3, 14, 0, 0, 0)), Some(at(2026, 4, 13, 0, 0, 0)));
+        // 2026-03-13 is a Friday; the following Friday, 2026-03-20, matches on
+        // the day-of-week rule alone.
+        assert_eq!(c.next_after(at(2026, 3, 14, 0, 0, 0)), Some(at(2026, 3, 20, 0, 0, 0)));
+        // 2026-04-13 is a Monday: it matches only through the day-of-month rule,
+        // which the OR semantics keeps in play after the Friday run.
+        assert_eq!(c.next_after(at(2026, 4, 11, 0, 0, 0)), Some(at(2026, 4, 13, 0, 0, 0)));
     }
 
     #[test]
     fn list_fields_are_supported() {
         let c = CronExpr::parse("5,35 8-18 * * *").expect("parse");
         assert_eq!(c.next_after(at(2026, 6, 1, 7, 0, 0)), Some(at(2026, 6, 1, 8, 5, 0)));
-        assert_eq!(c.next_after(at(2026, 6, 1, 8, 36, 0)), Some(at(2026, 6, 1, 9, 35, 0)));
+        // Both minutes of the list are honoured: after 08:05 the next hit is
+        // still within hour 8, and only once that list is exhausted does the
+        // search move to the next hour.
+        assert_eq!(c.next_after(at(2026, 6, 1, 8, 6, 0)), Some(at(2026, 6, 1, 8, 35, 0)));
+        // After 08:35 both minutes of hour 8 have passed, so the next hit is the
+        // first list entry of the next hour.
+        assert_eq!(c.next_after(at(2026, 6, 1, 8, 36, 0)), Some(at(2026, 6, 1, 9, 5, 0)));
     }
 
     #[test]

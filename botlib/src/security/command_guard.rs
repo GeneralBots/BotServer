@@ -7,22 +7,25 @@ use super::command_validation::{validate_argument, validate_path};
 pub use super::command_validation::CommandGuardError;
 use super::utils::get_stack_path;
 
+// Server-side allowlist. Desktop-only binaries (`rclone`, `osascript`, `rm`)
+// are deliberately absent: the desktop shell carries its own guard, and
+// `nc`/`netcat` would turn any caller into a reverse shell.
 static ALLOWED_COMMANDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     HashSet::from([
         "pdftotext", "pandoc", "nvidia-smi", "powershell", "clamscan",
         "freshclam", "mc", "ffmpeg", "ffprobe", "convert", "gs",
         "tesseract", "which", "where", "sh", "bash", "cmd", "pkill",
-        "pgrep", "kill", "fuser", "curl", "tar", "unzip", "openssl",
+        "pgrep", "kill", "fuser", "curl", "tar", "unzip",
         "pg_dump", "pg_isready", "lxc", "lxc-execute", "lxd", "docker",
-        "apt-get", "brew", "rustc", "nvcc", "rclone", "notify-send",
-        "osascript", "true", "rm", "find", "ss", "cargo",
+        "apt-get", "brew", "rustc", "nvcc", "notify-send",
+        "true", "find", "ss", "cargo",
         "redis-server", "redis-cli", "valkey-cli", "valkey-server",
         "minio", "chromedriver", "chrome", "chromium", "brave", "diesel",
-        "initdb", "pg_ctl", "createdb", "psql", "forgejo",
+        "psql", "forgejo",
         "forgejo-runner", "incus", "lynis", "rkhunter", "chkrootkit",
-        "suricata", "suricata-update", "maldet", "systemctl", "sudo",
+        "suricata", "suricata-update", "maldet", "sudo",
         "visudo", "id", "netsh", "llama-server", "ollama", "vault",
-        "nc", "netcat", "python", "python3", "python3.11", "python3.12",
+        "python", "python3", "python3.11", "python3.12",
         "tasklist", "tar.exe", "git",
     ])
 });
@@ -444,22 +447,5 @@ impl SafeCommand {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_safe_command_allowed() {
-        assert!(SafeCommand::new("pdftotext").is_ok());
-        assert!(SafeCommand::new("pandoc").is_ok());
-        assert!(SafeCommand::new("nvidia-smi").is_ok());
-    }
-
-    #[test]
-    fn test_safe_command_disallowed() {
-        assert!(SafeCommand::new("wget").is_err());
-        assert!(SafeCommand::new("nc").is_err());
-        assert!(SafeCommand::new("netcat").is_err());
-        assert!(SafeCommand::new("dd").is_err());
-        assert!(SafeCommand::new("mkfs").is_err());
-    }
-}
+#[path = "command_guard_tests.rs"]
+mod tests;

@@ -1,5 +1,5 @@
 pub(crate) use super::table_access::{ check_field_write_access, check_table_access, filter_fields_by_role, AccessType, UserRoles, };
-pub(crate) use botsecurity::sql_guard::{ build_safe_count_query, build_safe_select_by_id_query, build_safe_select_query, is_table_allowed_with_conn, validate_table_name, };
+pub(crate) use botsecurity::sql_guard::{ build_safe_count_query_for_dynamic_table, build_safe_select_by_id_query_for_dynamic_table, build_safe_select_query_for_dynamic_table, is_table_allowed_with_conn };
 pub(crate) use axum::{ extract::{Path, Query, State}, http::{HeaderMap, StatusCode}, response::IntoResponse, routing::{get, post}, Json, Router, };
 pub(crate) use log::{info, warn};
 pub(crate) use serde::{Deserialize, Serialize};

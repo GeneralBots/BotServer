@@ -21,9 +21,11 @@ mod tests {
             sanitize_url_for_collection("https://docs.example.com/path"),
             "docs_example_com_path"
         );
+        // The port is part of the sanitised name: it must survive the
+        // replacement of `/`, `:` and `.` by `_`.
         assert_eq!(
             sanitize_url_for_collection("http://test.site:9000"),
-            "test_site_8080"
+            "test_site_9000"
         );
     }
 }

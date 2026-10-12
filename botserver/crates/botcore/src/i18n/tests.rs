@@ -46,10 +46,18 @@
 
     #[test]
     fn test_negotiate_locale_fallback() {
-        let requested = vec![("ja".to_string(), 1.0)];
+        // A language outside AVAILABLE_LOCALES falls back to the default.
+        let requested = vec![("sv".to_string(), 1.0)];
         let result = negotiate_locale(&requested);
         assert!(result.is_some());
         assert_eq!(result.as_ref().map(|l| l.language()), Some("en"));
+
+        // A supported language is honoured rather than falling back.
+        let requested = vec![("ja".to_string(), 1.0)];
+        assert_eq!(
+            negotiate_locale(&requested).as_ref().map(|l| l.language()),
+            Some("ja")
+        );
     }
 
     #[test]

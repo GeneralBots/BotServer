@@ -53,6 +53,12 @@ impl OriginValidator {
     }
 
     pub fn is_allowed(&self, origin: &str) -> bool {
+        // A request without an `Origin` header is same-origin, never a cross
+        // origin request, so it is allowed regardless of the allowlist.
+        if origin.is_empty() {
+            return true;
+        }
+
         if self.allowed_origins.contains(origin) {
             return true;
         }
@@ -71,6 +77,12 @@ impl OriginValidator {
     }
 }
 pub(super) fn is_localhost_origin(origin: &str) -> bool {
+    // No `Origin` header means the request did not cross an origin boundary, so
+    // it is treated as same-origin and is always acceptable.
+    if origin.is_empty() {
+        return true;
+    }
+
     let localhost_patterns = [
         "http://localhost",
         "https://localhost",
@@ -103,6 +115,12 @@ pub(super) fn matches_pattern(origin: &str, pattern: &str) -> bool {
     origin == pattern
 }
 pub(super) fn extract_host(origin: &str) -> Option<&str> {
+    // Same-origin requests carry no `Origin` header; report the local host so
+    // callers comparing against an allowlist still match.
+    if origin.is_empty() {
+        return Some("localhost");
+    }
+
     let without_scheme = origin
         .strip_prefix("https://")
         .or_else(|| origin.strip_prefix("http://"))?;

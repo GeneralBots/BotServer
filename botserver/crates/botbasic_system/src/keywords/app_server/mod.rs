@@ -36,14 +36,37 @@ mod tests {
     use super::*;
     use botsecurity::sanitize_path_component;
 
+    /// `sanitize_path_component` flattens a single path component: separators
+    /// and traversal dots are neutralised so the result can never escape its
+    /// parent directory. Directory structure is preserved by
+    /// `sanitize_file_path` instead.
     #[test]
     fn test_sanitize_path_component() {
         assert_eq!(sanitize_path_component("clinic"), "clinic");
-        assert_eq!(sanitize_path_component("../etc/passwd"), "etc/passwd");
-        assert_eq!(sanitize_path_component("app/../secret"), "app/secret");
-        assert_eq!(sanitize_path_component("/leading/slash"), "leading/slash");
         assert_eq!(sanitize_path_component("file.html"), "file.html");
         assert_eq!(sanitize_path_component("my-app_v2"), "my-app_v2");
+        // Traversal attempts collapse into a harmless single name.
+        assert_eq!(sanitize_path_component("../etc/passwd"), "_etc_passwd");
+        assert_eq!(sanitize_path_component("app/../secret"), "app_.._secret");
+        assert_eq!(sanitize_path_component("/leading/slash"), "_leading_slash");
+        // The result is always a single name, so no traversal can be expressed:
+        // without a separator a `..` segment cannot address a parent directory,
+        // and a lone `..` is reduced to the `unnamed` placeholder.
+        for hostile in ["../etc/passwd", "..", "/etc/shadow", "a/../../b"] {
+            let safe = sanitize_path_component(hostile);
+            assert!(!safe.contains('/'), "{hostile} -> {safe}");
+            assert!(!safe.contains('\\'), "{hostile} -> {safe}");
+        }
+        assert_eq!(sanitize_path_component(".."), "unnamed");
+    }
+
+    #[test]
+    fn test_sanitize_file_path_keeps_directories() {
+        // The path variant is the one that preserves structure while dropping
+        // traversal segments.
+        assert_eq!(sanitize_file_path("css/styles.css"), "css/styles.css");
+        assert_eq!(sanitize_file_path("../../../etc/passwd"), "etc/passwd");
+        assert_eq!(sanitize_file_path("./styles.css"), "styles.css");
     }
 
     #[test]

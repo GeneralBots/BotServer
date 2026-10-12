@@ -173,11 +173,24 @@ fn record_attempt(
 /// delivery metadata does not leak full recipient identities into logs.
 fn mask_destination(to: &str) -> String {
     match to.split_once('@') {
-        Some((local, domain)) => {
+        // An empty local part means a handle such as a Telegram or Matrix
+        // nickname, not an email address; fall through to the opaque mask.
+        Some((local, domain)) if !local.is_empty() => {
             let prefix = local.chars().take(2).collect::<String>();
             format!("{prefix}***@{domain}")
         }
-        None => to.chars().take(4).chain(std::iter::repeat('*')).take(8).collect(),
+        _ => {
+            // Phone numbers and other opaque destinations keep their leading
+            // significant digits; formatting such as a leading `+` is dropped so
+            // the visible characters are the subscriber prefix.
+            let significant: String = to.chars().filter(char::is_ascii_digit).collect();
+            significant
+                .chars()
+                .take(4)
+                .chain(std::iter::repeat('*'))
+                .take(8)
+                .collect()
+        }
     }
 }
 

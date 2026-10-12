@@ -105,9 +105,9 @@ impl std::fmt::Display for SqlGuardError {
 
 impl std::error::Error for SqlGuardError {}
 
-/// Validate table name - checks system tables safelist only
-/// For full validation including dynamic tables, use validate_table_name_with_conn
-pub fn validate_table_name(table: &str) -> Result<&str, SqlGuardError> {
+/// Rejects a table name that is not a usable SQL identifier. Shared by every
+/// validation path: safelist check, dynamic-table check, and the query builders.
+fn check_table_syntax(table: &str) -> Result<String, SqlGuardError> {
     let sanitized = sanitize_identifier(table);
 
     // Check basic identifier validity (no SQL injection)
@@ -120,19 +120,34 @@ pub fn validate_table_name(table: &str) -> Result<&str, SqlGuardError> {
         return Err(SqlGuardError::PotentialInjection(table.to_string()));
     }
 
-    // System tables are always allowed
+    Ok(sanitized)
+}
+
+/// Validate table name - checks system tables safelist only
+/// For full validation including dynamic tables, use validate_table_name_with_conn
+pub fn validate_table_name(table: &str) -> Result<&str, SqlGuardError> {
+    // Deny by default: only the known system tables pass without a database.
+    // Callers that legitimately serve dynamically created tables (the app
+    // generator) hold a connection and must use
+    // `validate_table_name_with_conn`, which additionally requires the table to
+    // exist. Letting this function wave through any syntactically valid name
+    // would let an unvalidated table name reach a query.
+    let sanitized = check_table_syntax(table)?;
+
     if SYSTEM_TABLES.contains(sanitized.as_str()) {
         return Ok(table);
     }
 
-    // For non-system tables, we allow them if they look safe
-    // The actual existence check should be done with validate_table_name_with_conn
-    // This allows dynamically created tables from app_generator to work
-    if sanitized.chars().all(|c| c.is_alphanumeric() || c == '_') {
-        Ok(table)
-    } else {
-        Err(SqlGuardError::InvalidTableName(table.to_string()))
-    }
+    Err(SqlGuardError::InvalidTableName(table.to_string()))
+}
+
+/// Validate the syntax of a table name whose existence has already been
+/// confirmed with `validate_table_name_with_conn` (or an equivalent
+/// connection-aware check). It applies every injection and identifier rule, but
+/// skips the system-table safelist so tables created at runtime stay reachable.
+pub fn validate_dynamic_table_name(table: &str) -> Result<&str, SqlGuardError> {
+    check_table_syntax(table)?;
+    Ok(table)
 }
 
 /// Validate table name with database connection - checks if table actually exists
@@ -262,7 +277,35 @@ pub fn build_safe_select_query(
     limit: i32,
     offset: i32,
 ) -> Result<String, SqlGuardError> {
-    let validated_table = validate_table_name(table)?;
+    build_select_query_for(validate_table_name(table)?, order_by, order_dir, limit, offset)
+}
+
+/// Same as [`build_safe_select_query`] for a table that exists in the database
+/// but is not part of the system safelist. The caller must have confirmed its
+/// existence with a connection-aware check first.
+pub fn build_safe_select_query_for_dynamic_table(
+    table: &str,
+    order_by: Option<&str>,
+    order_dir: Option<&str>,
+    limit: i32,
+    offset: i32,
+) -> Result<String, SqlGuardError> {
+    build_select_query_for(
+        validate_dynamic_table_name(table)?,
+        order_by,
+        order_dir,
+        limit,
+        offset,
+    )
+}
+
+fn build_select_query_for(
+    validated_table: &str,
+    order_by: Option<&str>,
+    order_dir: Option<&str>,
+    limit: i32,
+    offset: i32,
+) -> Result<String, SqlGuardError> {
 
     let safe_limit = limit.clamp(1, 1000);
     let safe_offset = offset.max(0);
@@ -291,6 +334,13 @@ pub fn build_safe_count_query(table: &str) -> Result<String, SqlGuardError> {
     Ok(format!("SELECT COUNT(*) as count FROM {}", validated_table))
 }
 
+/// Same as [`build_safe_count_query`] for a table that exists in the database
+/// but is not part of the system safelist.
+pub fn build_safe_count_query_for_dynamic_table(table: &str) -> Result<String, SqlGuardError> {
+    let validated_table = validate_dynamic_table_name(table)?;
+    Ok(format!("SELECT COUNT(*) as count FROM {}", validated_table))
+}
+
 pub fn build_safe_delete_query(table: &str) -> Result<String, SqlGuardError> {
     let validated_table = validate_table_name(table)?;
     Ok(format!("DELETE FROM {} WHERE id = $1", validated_table))
@@ -298,6 +348,18 @@ pub fn build_safe_delete_query(table: &str) -> Result<String, SqlGuardError> {
 
 pub fn build_safe_select_by_id_query(table: &str) -> Result<String, SqlGuardError> {
     let validated_table = validate_table_name(table)?;
+    Ok(format!(
+        "SELECT row_to_json(t.*) as data FROM {} t WHERE id = $1",
+        validated_table
+    ))
+}
+
+/// Same as [`build_safe_select_by_id_query`] for a table that exists in the
+/// database but is not part of the system safelist.
+pub fn build_safe_select_by_id_query_for_dynamic_table(
+    table: &str,
+) -> Result<String, SqlGuardError> {
+    let validated_table = validate_dynamic_table_name(table)?;
     Ok(format!(
         "SELECT row_to_json(t.*) as data FROM {} t WHERE id = $1",
         validated_table
@@ -316,15 +378,15 @@ pub fn is_system_table(table: &str) -> bool {
 
 /// Check if table is allowed (system table or valid identifier)
 /// For full check including database existence, use is_table_allowed_with_conn
+/// Reports whether `table` may be queried without a database round-trip.
+/// Deny by default, mirroring [`validate_table_name`]: anything outside
+/// `SYSTEM_TABLES` needs `is_table_allowed_with_conn` to confirm it exists.
 pub fn is_table_allowed(table: &str) -> bool {
     let sanitized = sanitize_identifier(table);
-    if SYSTEM_TABLES.contains(sanitized.as_str()) {
-        return true;
+    if sanitized.is_empty() || sanitized.len() > 63 {
+        return false;
     }
-    // Allow valid identifiers (actual existence checked elsewhere)
-    !sanitized.is_empty()
-        && sanitized.len() <= 63
-        && sanitized.chars().all(|c| c.is_alphanumeric() || c == '_')
+    SYSTEM_TABLES.contains(sanitized.as_str())
 }
 
 /// Check if table is allowed with database connection
@@ -337,111 +399,5 @@ pub fn is_table_allowed_with_conn(conn: &mut diesel::PgConnection, table: &str) 
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_validate_table_name_allowed() {
-        assert!(validate_table_name("users").is_ok());
-        assert!(validate_table_name("bots").is_ok());
-        assert!(validate_table_name("tasks").is_ok());
-    }
-
-    #[test]
-    fn test_validate_table_name_disallowed() {
-        assert!(validate_table_name("evil_table").is_err());
-        assert!(validate_table_name("users; DROP TABLE users;--").is_err());
-        assert!(validate_table_name("").is_err());
-    }
-
-    #[test]
-    fn test_validate_order_direction() {
-        assert_eq!(validate_order_direction("ASC").unwrap(), "ASC");
-        assert_eq!(validate_order_direction("desc").unwrap(), "DESC");
-        assert_eq!(validate_order_direction("Asc").unwrap(), "ASC");
-        assert!(validate_order_direction("RANDOM").is_err());
-    }
-
-    #[test]
-    fn test_sanitize_identifier() {
-        assert_eq!(sanitize_identifier("valid_name"), "valid_name");
-        assert_eq!(sanitize_identifier("name123"), "name123");
-        assert_eq!(sanitize_identifier("name; DROP--"), "nameDROP");
-        assert_eq!(sanitize_identifier(""), "");
-    }
-
-    #[test]
-    fn test_check_for_injection_patterns() {
-        assert!(check_for_injection_patterns("normal text").is_ok());
-        assert!(check_for_injection_patterns("hello world").is_ok());
-
-        assert!(check_for_injection_patterns("'; DROP TABLE users;--").is_err());
-        assert!(check_for_injection_patterns("1 UNION SELECT * FROM passwords").is_err());
-        assert!(check_for_injection_patterns("test/*comment*/").is_err());
-        assert!(check_for_injection_patterns("WAITFOR DELAY '0:0:5'").is_err());
-    }
-
-    #[test]
-    fn test_escape_string_literal() {
-        assert_eq!(escape_string_literal("hello"), "hello");
-        assert_eq!(escape_string_literal("it's"), "it''s");
-        assert_eq!(escape_string_literal("back\\slash"), "back\\\\slash");
-        assert_eq!(escape_string_literal("O'Brien's"), "O''Brien''s");
-    }
-
-    #[test]
-    fn test_build_safe_select_query() {
-        let query = build_safe_select_query("users", Some("created_at"), Some("DESC"), 10, 0);
-        assert!(query.is_ok());
-        let q = query.unwrap();
-        assert!(q.contains("users"));
-        assert!(q.contains("ORDER BY created_at DESC"));
-        assert!(q.contains("LIMIT 10"));
-        assert!(q.contains("OFFSET 0"));
-    }
-
-    #[test]
-    fn test_build_safe_select_query_invalid_table() {
-        let query = build_safe_select_query("evil_table", None, None, 10, 0);
-        assert!(query.is_err());
-    }
-
-    #[test]
-    fn test_build_safe_count_query() {
-        let query = build_safe_count_query("users");
-        assert!(query.is_ok());
-        assert!(query.unwrap().contains("SELECT COUNT(*)"));
-    }
-
-    #[test]
-    fn test_build_safe_delete_query() {
-        let query = build_safe_delete_query("tasks");
-        assert!(query.is_ok());
-        assert!(query.unwrap().contains("DELETE FROM tasks WHERE id = $1"));
-    }
-
-    #[test]
-    fn test_validate_identifier() {
-        assert!(validate_identifier("valid_name").is_ok());
-        assert!(validate_identifier("name123").is_ok());
-        assert!(validate_identifier("").is_err());
-        assert!(validate_identifier("123name").is_err());
-    }
-
-    #[test]
-    fn test_limit_clamping() {
-        let query = build_safe_select_query("users", None, None, 10000, 0).unwrap();
-        assert!(query.contains("LIMIT 1000"));
-
-        let query2 = build_safe_select_query("users", None, None, -5, -10).unwrap();
-        assert!(query2.contains("LIMIT 1"));
-        assert!(query2.contains("OFFSET 0"));
-    }
-
-    #[test]
-    fn test_is_table_allowed() {
-        assert!(is_table_allowed("users"));
-        assert!(is_table_allowed("bots"));
-        assert!(!is_table_allowed("hacked_table"));
-    }
-}
+#[path = "sql_guard_tests.rs"]
+mod tests;

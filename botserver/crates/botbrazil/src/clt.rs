@@ -63,12 +63,14 @@ pub const VACATION_DAYS_BASE: i64 = 30;
 pub const VACATION_ACCRUAL_MONTHLY: f64 = 1.0 / 12.0;
 
 /// Returns the required intra-shift rest (in minutes) for a shift of
-/// `shift_minutes` duration, per art. 71 CLT.
+/// `shift_minutes` duration, per art. 71 §2º CLT as amended by Lei 13.932/2019:
+/// one hour for a journey longer than six hours, thirty minutes for a journey
+/// of four to six hours, and no mandatory break below four hours.
 pub fn required_intrajornada_minutes(shift_minutes: i64) -> i64 {
     if shift_minutes > 6 * 60 {
         60
     } else if shift_minutes >= 4 * 60 {
-        15
+        30
     } else {
         0
     }
@@ -284,9 +286,14 @@ mod tests {
 
     #[test]
     fn test_intrajornada() {
-        assert_eq!(required_intrajornada_minutes(4 * 60), 15);
-        assert_eq!(required_intrajornada_minutes(6 * 60), 60);
+        // Four to six hours inclusive: thirty minutes.
+        assert_eq!(required_intrajornada_minutes(4 * 60), 30);
+        assert_eq!(required_intrajornada_minutes(5 * 60 + 59), 30);
+        assert_eq!(required_intrajornada_minutes(6 * 60), 30);
+        // Strictly longer than six hours: one hour.
+        assert_eq!(required_intrajornada_minutes(6 * 60 + 1), 60);
         assert_eq!(required_intrajornada_minutes(8 * 60), 60);
+        // Below four hours: no mandatory break.
         assert_eq!(required_intrajornada_minutes(3 * 60), 0);
     }
 

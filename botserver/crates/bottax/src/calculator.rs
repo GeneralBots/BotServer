@@ -114,10 +114,12 @@ mod tests {
 
     #[test]
     fn test_dynamic_rate_override() {
+        // Rates are percentages: 2.00 ISS and 1.50 IRPJ, which is how the
+        // defaults are expressed (Decimal::new(500, 2) == 5.00%).
         let mut rates = TaxRates::default();
-        rates.set("ISS", Decimal::new(200, 1));
+        rates.set("ISS", Decimal::new(200, 2));
         rates.set("IRPJ", Decimal::new(150, 2));
-        assert_eq!(rates.iss_pct, Decimal::new(200, 1));
+        assert_eq!(rates.iss_pct, Decimal::new(200, 2));
         assert_eq!(rates.irpj_pct, Decimal::new(150, 2));
 
         let b = calculate_service_tax(Decimal::new(10000, 0), &rates);

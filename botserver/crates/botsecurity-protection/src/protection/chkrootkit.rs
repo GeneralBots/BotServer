@@ -55,7 +55,9 @@ pub fn parse_chkrootkit_output(output: &str) -> Vec<Finding> {
 
         if trimmed.starts_with("Checking") || trimmed.starts_with("Searching") {
             current_check = trimmed.to_string();
-            continue;
+            // chkrootkit normally appends the verdict to the very same line
+            // ("Checking `basename'... INFECTED"), so the line must still be
+            // evaluated below instead of being skipped as pure context.
         }
 
         if trimmed.contains("INFECTED") {
@@ -64,7 +66,7 @@ pub fn parse_chkrootkit_output(output: &str) -> Vec<Finding> {
                 severity: FindingSeverity::Critical,
                 category: "Rootkit Detection".to_string(),
                 title: "Infected File or Process Detected".to_string(),
-                description: format!("{current_check}: {trimmed}"),
+                description: describe(&current_check, trimmed),
                 file_path: extract_file_path(trimmed),
                 remediation: Some("Immediately investigate and consider system recovery from clean backup".to_string()),
             };
@@ -77,7 +79,7 @@ pub fn parse_chkrootkit_output(output: &str) -> Vec<Finding> {
                 severity: FindingSeverity::High,
                 category: "Vulnerability".to_string(),
                 title: "Vulnerable Component Detected".to_string(),
-                description: format!("{current_check}: {trimmed}"),
+                description: describe(&current_check, trimmed),
                 file_path: extract_file_path(trimmed),
                 remediation: Some("Update the affected component to patch the vulnerability".to_string()),
             };
@@ -90,7 +92,7 @@ pub fn parse_chkrootkit_output(output: &str) -> Vec<Finding> {
                 severity: FindingSeverity::High,
                 category: "Rootkit Detection".to_string(),
                 title: "Possible Rootkit Detected".to_string(),
-                description: format!("{current_check}: {trimmed}"),
+                description: describe(&current_check, trimmed),
                 file_path: extract_file_path(trimmed),
                 remediation: Some("Investigate the suspicious activity and verify system integrity".to_string()),
             };
@@ -144,11 +146,25 @@ pub async fn get_version() -> Result<String> {
     Ok(version)
 }
 
+/// Builds the finding description, avoiding a duplicated line when chkrootkit
+/// reports the verdict on the same line it introduced the check.
+fn describe(context: &str, detail: &str) -> String {
+    if context == detail {
+        detail.to_string()
+    } else {
+        format!("{context}: {detail}")
+    }
+}
+
 fn extract_file_path(line: &str) -> Option<String> {
+    // chkrootkit quotes the item it is checking: Checking `/usr/bin/ls'...
+    // The quotes surround the whole token, so strip them before looking for the
+    // leading slash, and again from the tail of the path.
     let words: Vec<&str> = line.split_whitespace().collect();
     for word in words {
-        if word.starts_with('/') {
-            return Some(word.trim_matches(|c| c == ':' || c == ',' || c == ';' || c == '`' || c == '\'').to_string());
+        let trimmed = word.trim_matches(|c| c == ':' || c == ',' || c == ';' || c == '`' || c == '\'');
+        if trimmed.starts_with('/') {
+            return Some(trimmed.to_string());
         }
     }
     None

@@ -155,7 +155,7 @@ pub fn starter_skills() -> Vec<StarterSkill> {
                     "notify_outage.bas",
                     "status = RECALL \"last_status\"\n\
                      IF status != 200 THEN\n\
-                         SEND MAIL TO USER.email WITH subject \"Outage detected\", body \"Status was {status}\"\n\
+                         SEND MAIL TO USER.email WITH subject \"Outage detected\", body \"Status: {status}\"\n\
                          TALK \"Alert email sent.\"\n\
                      END IF",
                 ),

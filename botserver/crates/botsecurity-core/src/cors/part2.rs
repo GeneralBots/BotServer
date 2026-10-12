@@ -31,6 +31,13 @@ pub(super) fn validate_origin(origin: &HeaderValue, _request: &axum::http::reque
     false
 }
 pub(super) fn is_valid_origin_format(origin: &str) -> bool {
+    // A request without an `Origin` header is same-origin by definition (a
+    // direct navigation, or a non-browser client). There is no foreign origin
+    // to validate, so the format check passes.
+    if origin.is_empty() {
+        return true;
+    }
+
     if !origin.starts_with("http://") && !origin.starts_with("https://") {
         return false;
     }

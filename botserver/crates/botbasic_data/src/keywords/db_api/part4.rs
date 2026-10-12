@@ -95,16 +95,6 @@ pub async fn count_records_handler(
     let table_name = sanitize_identifier(&table);
     let user_roles = user_roles_from_headers(&headers);
 
-    // Validate table name (basic check - no SQL injection)
-    if let Err(e) = validate_table_name(&table_name) {
-        warn!("Invalid table name attempted: {} - {}", table_name, e);
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(json!({ "error": "Invalid table name" })),
-        )
-            .into_response();
-    }
-
     let mut conn = match state.conn.get() {
         Ok(c) => c,
         Err(e) => {
@@ -128,7 +118,7 @@ pub async fn count_records_handler(
         return (StatusCode::FORBIDDEN, Json(json!({ "error": e }))).into_response();
     }
 
-    let query = match build_safe_count_query(&table_name) {
+    let query = match build_safe_count_query_for_dynamic_table(&table_name) {
         Ok(q) => q,
         Err(e) => {
             warn!("Failed to build count query: {}", e);

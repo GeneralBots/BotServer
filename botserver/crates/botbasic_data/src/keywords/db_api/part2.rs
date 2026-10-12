@@ -18,16 +18,6 @@ pub async fn list_records_handler(
     let limit = params.limit.unwrap_or(20).min(100);
     let offset = params.offset.unwrap_or(0);
 
-    // Validate table name (basic check - no SQL injection)
-    if let Err(e) = validate_table_name(&table_name) {
-        warn!("Invalid table name attempted: {} - {}", table_name, e);
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(json!({ "error": "Invalid table name" })),
-        )
-            .into_response();
-    }
-
     let order_by = params.order_by.as_deref();
     let order_dir = params.order_dir.as_deref();
 
@@ -66,7 +56,16 @@ pub async fn list_records_handler(
         };
 
     // Build safe queries using sql_guard
-    let query = match build_safe_select_query(&table_name, order_by, order_dir, limit, offset) {
+    // The table was confirmed to exist above, so it may be a runtime-created
+    // table outside the system safelist; the builders still enforce identifier
+    // and injection rules.
+    let query = match build_safe_select_query_for_dynamic_table(
+        &table_name,
+        order_by,
+        order_dir,
+        limit,
+        offset,
+    ) {
         Ok(q) => q,
         Err(e) => {
             warn!("Failed to build safe query: {}", e);
@@ -78,7 +77,7 @@ pub async fn list_records_handler(
         }
     };
 
-    let count_query = match build_safe_count_query(&table_name) {
+    let count_query = match build_safe_count_query_for_dynamic_table(&table_name) {
         Ok(q) => q,
         Err(e) => {
             warn!("Failed to build count query: {}", e);
@@ -178,7 +177,7 @@ pub async fn get_record_handler(
             }
         };
 
-    let query = match build_safe_select_by_id_query(&table_name) {
+    let query = match build_safe_select_by_id_query_for_dynamic_table(&table_name) {
         Ok(q) => q,
         Err(e) => {
             warn!("Failed to build safe query for {}: {}", table_name, e);

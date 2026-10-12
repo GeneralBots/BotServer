@@ -61,9 +61,17 @@ pub(crate) fn candidate_of_row(row: &UserMemory) -> DedupeCandidate {
     DedupeCandidate::build(row.id, &row.content, row.confidence, row.updated_at)
 }
 
-/// Collapses whitespace runs and lowercases for duplicate detection.
+/// Collapses whitespace runs, drops sentence punctuation and lowercases, so
+/// that "Prefers   dark mode." and "prefers dark mode" are recognised as the
+/// same memory.
 pub fn normalize_content(raw: &str) -> String {
-    raw.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase()
+    raw.chars()
+        .filter(|c| !c.is_ascii_punctuation())
+        .collect::<String>()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
 }
 
 /// Resolves how new content relates to the active candidate set.
@@ -77,10 +85,37 @@ pub fn decide_dedupe(
     raw_lowercase: &str,
     confidence: f32,
 ) -> DedupeDecision {
+    // Strongest candidate whose normalised content matches the incoming memory.
+    let mut duplicate: Option<&DedupeCandidate> = None;
     for candidate in candidates {
-        if candidate.normalized == normalized {
-            return DedupeDecision::SkipDuplicate { candidate: candidate.id };
+        if candidate.normalized != normalized {
+            continue;
         }
+        let replaces = match duplicate {
+            None => true,
+            Some(best) => {
+                candidate.confidence > best.confidence
+                    || (candidate.confidence == best.confidence
+                        && candidate.updated_at > best.updated_at)
+            }
+        };
+        if replaces {
+            duplicate = Some(candidate);
+        }
+    }
+
+    if let Some(best) = duplicate {
+        // The same memory restated: skip it. When the wording is also identical
+        // the incoming row is a revision, so a stronger confidence supersedes
+        // the stored one instead of being discarded.
+        if best.raw_lowercase.eq_ignore_ascii_case(raw_lowercase) {
+            return if confidence > best.confidence {
+                DedupeDecision::Supersede { candidate: best.id }
+            } else {
+                DedupeDecision::SkipLowerConfidence { candidate: best.id }
+            };
+        }
+        return DedupeDecision::SkipDuplicate { candidate: best.id };
     }
 
     let mut incumbent: Option<&DedupeCandidate> = None;

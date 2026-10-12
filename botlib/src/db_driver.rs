@@ -126,13 +126,29 @@ mod tests {
         assert_eq!(driver_for(SqlDialect::Postgres).dialect(), SqlDialect::Postgres);
     }
 
+    /// Only Postgres reaches a live connection, through diesel. The SQLite and
+    /// MySQL drivers exist so a URL can be classified into a dialect; they
+    /// deliberately refuse to open a connection instead of pretending to.
     #[test]
-    fn sqlite_driver_runs_simple_query() {
-        let driver = SqliteDriver;
-        let mut conn = driver.connect(":memory:").expect("open");
-        conn.execute("CREATE TABLE t (v TEXT)").expect("create");
-        conn.execute("INSERT INTO t VALUES ('hi')").expect("insert");
-        let v = conn.query_scalar("SELECT v FROM t LIMIT 1").expect("query");
-        assert_eq!(v.as_deref(), Some("hi"));
+    fn only_the_diesel_backed_driver_connects() {
+        assert!(matches!(
+            SqliteDriver.connect(":memory:"),
+            Err(DbError::UnsupportedDialect(_))
+        ));
+        assert!(matches!(
+            MySqlDriver.connect("mysql://localhost/db"),
+            Err(DbError::UnsupportedDialect(_))
+        ));
+        assert!(matches!(
+            PostgresDriver.connect("postgres://localhost/db"),
+            Err(DbError::UnsupportedDialect(_))
+        ));
+    }
+
+    #[test]
+    fn sqlite_urls_are_detected_as_sqlite() {
+        assert_eq!(detect_dialect("sqlite://data.db"), SqlDialect::Sqlite);
+        assert_eq!(detect_dialect(":memory:"), SqlDialect::Sqlite);
+        assert_eq!(detect_dialect("mysql://localhost/db"), SqlDialect::Mysql);
     }
 }
