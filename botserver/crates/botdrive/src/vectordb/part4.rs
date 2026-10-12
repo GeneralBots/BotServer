@@ -1,5 +1,42 @@
 use super::*;
 
+/// The extraction patterns are constants and `extract_text` runs once per
+/// indexed file, so they are compiled once per process instead of per call
+/// (#1493).
+const MARKUP_TAG_PATTERN: &str = r"<[^>]+>";
+const RTF_CONTROL_PATTERN: &str = r"\\[a-z]+[\-0-9]*[ ]?";
+const RTF_GROUP_PATTERN: &str = r"[\{\}]";
+
+fn markup_tag_re() -> Option<&'static regex::Regex> {
+    static RE: std::sync::OnceLock<Option<regex::Regex>> = std::sync::OnceLock::new();
+    RE.get_or_init(|| {
+        regex::Regex::new(MARKUP_TAG_PATTERN)
+            .inspect_err(|e| log::error!("markup tag pattern failed to compile: {e}"))
+            .ok()
+    })
+    .as_ref()
+}
+
+fn rtf_control_re() -> Option<&'static regex::Regex> {
+    static RE: std::sync::OnceLock<Option<regex::Regex>> = std::sync::OnceLock::new();
+    RE.get_or_init(|| {
+        regex::Regex::new(RTF_CONTROL_PATTERN)
+            .inspect_err(|e| log::error!("RTF control pattern failed to compile: {e}"))
+            .ok()
+    })
+    .as_ref()
+}
+
+fn rtf_group_re() -> Option<&'static regex::Regex> {
+    static RE: std::sync::OnceLock<Option<regex::Regex>> = std::sync::OnceLock::new();
+    RE.get_or_init(|| {
+        regex::Regex::new(RTF_GROUP_PATTERN)
+            .inspect_err(|e| log::error!("RTF group pattern failed to compile: {e}"))
+            .ok()
+    })
+    .as_ref()
+}
+
 impl FileContentExtractor {
     pub async fn extract_text(file_path: &PathBuf, mime_type: &str) -> Result<String> {
         match mime_type {
@@ -99,7 +136,9 @@ impl FileContentExtractor {
                 })
                 .await??;
 
-                let tag_regex = regex::Regex::new(r"<[^>]+>").map_err(|e| anyhow::anyhow!("Invalid regex: {}", e))?;
+                let Some(tag_regex) = markup_tag_re() else {
+                    return Err(anyhow::anyhow!("Invalid markup tag pattern"));
+                };
                 let text = tag_regex.replace_all(&content, " ").to_string();
                 Ok(text.trim().to_string())
             }
@@ -111,8 +150,10 @@ impl FileContentExtractor {
                 })
                 .await??;
 
-                let control_regex = regex::Regex::new(r"\\[a-z]+[\-0-9]*[ ]?").map_err(|e| anyhow::anyhow!("Invalid regex: {}", e))?;
-                let group_regex = regex::Regex::new(r"[\{\}]").map_err(|e| anyhow::anyhow!("Invalid regex: {}", e))?;
+                let (Some(control_regex), Some(group_regex)) = (rtf_control_re(), rtf_group_re())
+                else {
+                    return Err(anyhow::anyhow!("Invalid RTF extraction pattern"));
+                };
 
                 let mut text = control_regex.replace_all(&content, " ").to_string();
                 text = group_regex.replace_all(&text, "").to_string();

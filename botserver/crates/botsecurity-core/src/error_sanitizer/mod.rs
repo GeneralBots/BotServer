@@ -96,6 +96,35 @@ mod tests {
         assert_eq!(response.message, "Simple error message");
     }
 
+    /// Micro-benchmark for the redaction path (#1493). Ignored by default so it
+    /// never slows the suite down; run it explicitly with
+    /// `cargo test --lib -p botsecurity-core -- --ignored --nocapture bench_`
+    /// and compare the printed per-call cost with and without the pattern
+    /// cache.
+    #[test]
+    #[ignore = "micro-benchmark, run with --ignored --nocapture"]
+    fn bench_redaction_per_call() {
+        // An error shaped like the ones this path sees: a connection string, a
+        // file path, an IP and a stack trace.
+        let text = "Connection failed for postgres://app:pw@10.1.2.3:5432/app\n\
+                    at /home/app/src/main.rs:42:17\n\
+                    Error: connect ECONNREFUSED\n";
+        const ITERATIONS: u32 = 5_000;
+
+        let start = std::time::Instant::now();
+        for _ in 0..ITERATIONS {
+            let _ = part2::redact_stack_traces(text);
+            let _ = part2::redact_file_paths(text);
+            let _ = part2::redact_ip_addresses(text);
+            let _ = part2::redact_connection_strings(text);
+        }
+        let elapsed = start.elapsed();
+        println!(
+            "#1493 bench: {ITERATIONS} redactions in {elapsed:?} = {:?} per call",
+            elapsed / ITERATIONS
+        );
+    }
+
     #[test]
     fn test_contains_sensitive() {
         let sanitizer = ErrorSanitizer::default();

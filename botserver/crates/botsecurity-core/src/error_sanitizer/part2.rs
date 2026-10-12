@@ -1,4 +1,5 @@
 use super::*;
+use std::sync::OnceLock;
 
 impl Default for ErrorSanitizer {
     fn default() -> Self {
@@ -225,70 +226,117 @@ fn token_end(text: &str, from: usize) -> usize {
 
     text.len()
 }
-pub(super) fn redact_stack_traces(text: &str) -> String {
-    let patterns = [
-        r"at .+:\d+:\d+",
-        r"File .+, line \d+",
-        r"\s+at .+\(.+\)",
-        r"\.rs:\d+",
-        r"\.go:\d+",
-        r"\.py:\d+",
-        r"\.java:\d+",
-        r"\.js:\d+",
-        r"\.ts:\d+",
-    ];
+/// Redaction patterns. They are constants and the sanitizer runs on every
+/// `log_and_sanitize` call, so compiling them per call (22 `Regex::new` calls
+/// per sanitisation, on a path with 13 call sites) is pure waste: they are
+/// compiled once per process instead.
+const STACK_TRACE_PATTERNS: &[&str] = &[
+    r"at .+:\d+:\d+",
+    r"File .+, line \d+",
+    r"\s+at .+\(.+\)",
+    r"\.rs:\d+",
+    r"\.go:\d+",
+    r"\.py:\d+",
+    r"\.java:\d+",
+    r"\.js:\d+",
+    r"\.ts:\d+",
+];
 
+const FILE_PATH_PATTERNS: &[&str] = &[
+    r"/[a-zA-Z0-9_\-./]+\.(rs|go|py|java|js|ts|rb|php|c|cpp|h)",
+    r"[A-Z]:\\[a-zA-Z0-9_\-\\]+\.\w+",
+    r"/home/[a-zA-Z0-9_\-/]+",
+    r"/root/[a-zA-Z0-9_\-/]+",
+    r"/var/[a-zA-Z0-9_\-/]+",
+    r"/etc/[a-zA-Z0-9_\-/]+",
+];
+
+const IP_ADDRESS_PATTERN: &str = r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b";
+
+const CONNECTION_STRING_PATTERNS: &[&str] = &[
+    r"postgres://[^\s]+",
+    r"postgresql://[^\s]+",
+    r"mysql://[^\s]+",
+    r"mongodb://[^\s]+",
+    r"mongodb\+srv://[^\s]+",
+    r"redis://[^\s]+",
+    r"amqp://[^\s]+",
+    r"jdbc:[^\s]+",
+];
+
+/// Compiles `patterns` into `cache` on first use. A pattern that fails to
+/// compile is logged and skipped, never panicking on a path that exists to
+/// report errors.
+fn compiled_patterns(
+    cache: &'static OnceLock<Vec<regex::Regex>>,
+    patterns: &[&str],
+) -> &'static [regex::Regex] {
+    cache.get_or_init(|| {
+        patterns
+            .iter()
+            .filter_map(|pattern| match regex::Regex::new(pattern) {
+                Ok(re) => Some(re),
+                Err(e) => {
+                    log::error!("error_sanitizer pattern failed to compile ({pattern}): {e}");
+                    None
+                }
+            })
+            .collect()
+    })
+}
+
+fn stack_trace_res() -> &'static [regex::Regex] {
+    static CACHE: OnceLock<Vec<regex::Regex>> = OnceLock::new();
+    compiled_patterns(&CACHE, STACK_TRACE_PATTERNS)
+}
+
+fn file_path_res() -> &'static [regex::Regex] {
+    static CACHE: OnceLock<Vec<regex::Regex>> = OnceLock::new();
+    compiled_patterns(&CACHE, FILE_PATH_PATTERNS)
+}
+
+fn ip_address_re() -> Option<&'static regex::Regex> {
+    static CACHE: OnceLock<Option<regex::Regex>> = OnceLock::new();
+    CACHE
+        .get_or_init(|| match regex::Regex::new(IP_ADDRESS_PATTERN) {
+            Ok(re) => Some(re),
+            Err(e) => {
+                log::error!("error_sanitizer IP pattern failed to compile: {e}");
+                None
+            }
+        })
+        .as_ref()
+}
+
+fn connection_string_res() -> &'static [regex::Regex] {
+    static CACHE: OnceLock<Vec<regex::Regex>> = OnceLock::new();
+    compiled_patterns(&CACHE, CONNECTION_STRING_PATTERNS)
+}
+
+pub(super) fn redact_stack_traces(text: &str) -> String {
     let mut result = text.to_string();
-    for pattern in &patterns {
-        if let Ok(re) = regex::Regex::new(pattern) {
-            result = re.replace_all(&result, "[STACK_TRACE_REDACTED]").to_string();
-        }
+    for re in stack_trace_res() {
+        result = re.replace_all(&result, "[STACK_TRACE_REDACTED]").to_string();
     }
     result
 }
 pub(super) fn redact_file_paths(text: &str) -> String {
-    let patterns = [
-        r"/[a-zA-Z0-9_\-./]+\.(rs|go|py|java|js|ts|rb|php|c|cpp|h)",
-        r"[A-Z]:\\[a-zA-Z0-9_\-\\]+\.\w+",
-        r"/home/[a-zA-Z0-9_\-/]+",
-        r"/root/[a-zA-Z0-9_\-/]+",
-        r"/var/[a-zA-Z0-9_\-/]+",
-        r"/etc/[a-zA-Z0-9_\-/]+",
-    ];
-
     let mut result = text.to_string();
-    for pattern in &patterns {
-        if let Ok(re) = regex::Regex::new(pattern) {
-            result = re.replace_all(&result, "[PATH_REDACTED]").to_string();
-        }
+    for re in file_path_res() {
+        result = re.replace_all(&result, "[PATH_REDACTED]").to_string();
     }
     result
 }
 pub(super) fn redact_ip_addresses(text: &str) -> String {
-    let ip_pattern = r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b";
-    if let Ok(re) = regex::Regex::new(ip_pattern) {
-        re.replace_all(text, "[IP_REDACTED]").to_string()
-    } else {
-        text.to_string()
+    match ip_address_re() {
+        Some(re) => re.replace_all(text, "[IP_REDACTED]").to_string(),
+        None => text.to_string(),
     }
 }
 pub(super) fn redact_connection_strings(text: &str) -> String {
-    let patterns = [
-        r"postgres://[^\s]+",
-        r"postgresql://[^\s]+",
-        r"mysql://[^\s]+",
-        r"mongodb://[^\s]+",
-        r"mongodb\+srv://[^\s]+",
-        r"redis://[^\s]+",
-        r"amqp://[^\s]+",
-        r"jdbc:[^\s]+",
-    ];
-
     let mut result = text.to_string();
-    for pattern in &patterns {
-        if let Ok(re) = regex::Regex::new(pattern) {
-            result = re.replace_all(&result, "[CONNECTION_STRING_REDACTED]").to_string();
-        }
+    for re in connection_string_res() {
+        result = re.replace_all(&result, "[CONNECTION_STRING_REDACTED]").to_string();
     }
     result
 }

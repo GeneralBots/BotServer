@@ -174,10 +174,6 @@ impl PromptSecurityManager {
         }
     }
 
-    /// Compile a constant security pattern. These are hard-coded valid
-    /// regexes; on the impossible parse error, degrade to a pattern that
-    /// matches nothing (sanitizer becomes a no-op for that rule) instead
-    /// of panicking inside the running server (#1368).
     pub(super) fn compile_pattern(pattern: &str) -> Option<Regex> {
         match Regex::new(pattern) {
             Ok(re) => Some(re),
@@ -191,21 +187,36 @@ impl PromptSecurityManager {
         }
     }
 
+    /// The two patterns `sanitize_input` applies on every message, compiled
+    /// once per process instead of once per call (#1493).
+    const SYSTEM_DELIMITER_PATTERN: &'static str =
+        r"(?i)(\[/?system\]|\{/?system\}|```system|<\|im_start\|>|<\|im_end\|>)";
+    const INSTRUCTION_OVERRIDE_PATTERN: &'static str =
+        r"(?i)(ignore|disregard|forget)\s+(all\s+)?(previous|prior|above)";
+
+    fn system_delimiter_re() -> Option<&'static Regex> {
+        static RE: std::sync::OnceLock<Option<Regex>> = std::sync::OnceLock::new();
+        RE.get_or_init(|| Self::compile_pattern(Self::SYSTEM_DELIMITER_PATTERN))
+            .as_ref()
+    }
+
+    fn instruction_override_re() -> Option<&'static Regex> {
+        static RE: std::sync::OnceLock<Option<Regex>> = std::sync::OnceLock::new();
+        RE.get_or_init(|| Self::compile_pattern(Self::INSTRUCTION_OVERRIDE_PATTERN))
+            .as_ref()
+    }
+
     pub fn sanitize_input(&self, input: &str) -> String {
         let mut sanitized = input.to_string();
 
         sanitized = sanitized.replace('<', "&lt;");
         sanitized = sanitized.replace('>', "&gt;");
 
-        if let Some(delimiter_pattern) =
-            Self::compile_pattern(r"(?i)(\[/?system\]|\{/?system\}|```system|<\|im_start\|>|<\|im_end\|>)")
-        {
+        if let Some(delimiter_pattern) = Self::system_delimiter_re() {
             sanitized = delimiter_pattern.replace_all(&sanitized, "[FILTERED]").to_string();
         }
 
-        if let Some(override_pattern) =
-            Self::compile_pattern(r"(?i)(ignore|disregard|forget)\s+(all\s+)?(previous|prior|above)")
-        {
+        if let Some(override_pattern) = Self::instruction_override_re() {
             sanitized = override_pattern.replace_all(&sanitized, "[FILTERED]").to_string();
         }
 

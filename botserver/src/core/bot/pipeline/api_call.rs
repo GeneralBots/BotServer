@@ -56,10 +56,25 @@ fn inject_tax_value_from_user(params: &serde_json::Value, user_text: &str) -> se
     }
 }
 
+/// The BRL amount pattern, compiled once per process: this runs on every
+/// API-call fallback in the message pipeline (see #1493).
+const MONEY_AMOUNT_PATTERN: &str = r"(?i)R\$\s*([\d.,]+)|\b([\d.,]+)\s*reais";
+
+fn money_amount_re() -> Option<&'static regex::Regex> {
+    static RE: std::sync::OnceLock<Option<regex::Regex>> = std::sync::OnceLock::new();
+    RE.get_or_init(|| {
+        regex::Regex::new(MONEY_AMOUNT_PATTERN)
+            .inspect_err(|e| log::error!("money amount pattern failed to compile: {e}"))
+            .ok()
+    })
+    .as_ref()
+}
+
+
 /// Extracts a BRL amount from free text, e.g. "R$ 10.000,50" or "10.000 reais".
 /// Returns a normalized decimal string ("10000.50").
 fn extract_money_amount(text: &str) -> Option<String> {
-    let re = regex::Regex::new(r"(?i)R\$\s*([\d.,]+)|\b([\d.,]+)\s*reais").ok()?;
+    let re = money_amount_re()?;
     let caps = re.captures(text)?;
     let raw = caps.get(1).or_else(|| caps.get(2))?.as_str();
     let cleaned = raw.replace('.', "");
@@ -355,5 +370,26 @@ pub(super) async fn handle_api_call(
             let _ = sink.send_bot_response(&resp).await;
             true
         }
+    }
+}
+
+#[cfg(test)]
+mod money_tests {
+    use super::*;
+
+    /// The cached accessor must extract exactly what the per-call compile did.
+    #[test]
+    fn extracts_the_same_amounts_as_before() {
+        assert_eq!(extract_money_amount("custa R$ 10.000,50 hoje"), Some("10000.50".into()));
+        assert_eq!(extract_money_amount("pague 10.000 reais"), Some("10000".into()));
+        assert_eq!(extract_money_amount("R$ 250"), Some("250".into()));
+        assert_eq!(extract_money_amount("sem valor aqui"), None);
+    }
+
+    /// The pattern is compiled once and reused; a second call must not fail.
+    #[test]
+    fn the_cached_pattern_is_reusable() {
+        assert!(money_amount_re().is_some());
+        assert_eq!(extract_money_amount("R$ 1,50"), Some("1.50".into()));
     }
 }
