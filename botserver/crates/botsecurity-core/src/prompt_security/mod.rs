@@ -288,6 +288,37 @@ mod tests {
         let patterns = manager.custom_patterns.read().await;
         assert_eq!(patterns.len(), 1);
     }
+
+    /// `max_input_length` is a byte budget and the prompt is in any language.
+    /// Truncating with `String::truncate` at byte 10 of a run of '€' panics with
+    /// "byte index 10 is not a char boundary", which aborts the whole process.
+    #[test]
+    fn sanitize_input_stops_at_a_char_boundary() {
+        let config = PromptSecurityConfig {
+            max_input_length: 10,
+            ..PromptSecurityConfig::default()
+        };
+        let manager = PromptSecurityManager::new(config).expect("Failed to create manager");
+
+        let sanitized = manager.sanitize_input(&"€".repeat(10));
+
+        // 9 bytes: the boundary at or before the budget that keeps the text valid.
+        assert_eq!(sanitized, "€€€");
+    }
+
+    /// The output side has the same byte budget over model text.
+    #[test]
+    fn filter_output_stops_at_a_char_boundary() {
+        let config = PromptSecurityConfig {
+            max_output_length: 10,
+            ..PromptSecurityConfig::default()
+        };
+        let manager = PromptSecurityManager::new(config).expect("Failed to create manager");
+
+        let filtered = manager.filter_output(&"€".repeat(10));
+
+        assert_eq!(filtered, "€€€... [TRUNCATED]");
+    }
 }
 
 mod part1;

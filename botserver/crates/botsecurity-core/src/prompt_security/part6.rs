@@ -212,7 +212,13 @@ impl PromptSecurityManager {
         sanitized = sanitized.chars().filter(|c| !c.is_control() || *c == '\n' || *c == '\t').collect();
 
         if sanitized.len() > self.config.max_input_length {
-            sanitized.truncate(self.config.max_input_length);
+            // The budget is in bytes and the prompt is in any language;
+            // `String::truncate` panics inside a multi-byte character.
+            let end = botlib::text::char_boundary_at_or_before(
+                &sanitized,
+                self.config.max_input_length,
+            );
+            sanitized.truncate(end);
         }
 
         sanitized
@@ -276,7 +282,12 @@ impl PromptSecurityManager {
         }
 
         if filtered.len() > self.config.max_output_length {
-            filtered.truncate(self.config.max_output_length);
+            // Same byte-budget problem as the input side: model output is text.
+            let end = botlib::text::char_boundary_at_or_before(
+                &filtered,
+                self.config.max_output_length,
+            );
+            filtered.truncate(end);
             filtered.push_str("... [TRUNCATED]");
         }
 
