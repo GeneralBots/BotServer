@@ -120,7 +120,7 @@ impl AIAssistant {
             "very_negative"
         } else if score < 0 {
             "negative"
-        } else if score > 0 {
+        } else if score >= 1 {
             "positive"
         } else {
             "neutral"
