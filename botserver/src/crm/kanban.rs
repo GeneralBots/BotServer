@@ -75,39 +75,38 @@ impl KanbanBoard {
         column.cards.last()
     }
 
+    /// Moves a card into another column: the card leaves the source column's
+    /// list and joins the target's, with its `column_id` updated to match.
+    /// Returns false when the card or the target column is unknown, or the
+    /// target column is already at its WIP limit.
     pub fn move_card(&mut self, card_id: &Uuid, target_column_id: &Uuid) -> bool {
-        let card_col_id = self.columns.iter().find_map(|col| {
-            if col.cards.iter().any(|c| &c.id == card_id) {
-                Some(col.id.clone())
-            } else {
-                None
-            }
-        });
-        let card_col_id = match card_col_id {
-            Some(id) => id,
-            None => return false,
+        let Some(source_idx) = self
+            .columns
+            .iter()
+            .position(|col| col.cards.iter().any(|c| &c.id == card_id))
+        else {
+            return false;
         };
-
-        if &card_col_id == target_column_id {
+        let Some(target_idx) = self.columns.iter().position(|col| &col.id == target_column_id)
+        else {
+            return false;
+        };
+        if source_idx == target_idx {
             return true;
         }
 
-        let wip_ok = self.columns.iter().any(|col| {
-            &col.id != target_column_id
-                || col.wip_limit.map_or(true, |limit| col.cards.len() < limit)
-        });
-        if !wip_ok {
+        let target = &self.columns[target_idx];
+        if target.wip_limit.is_some_and(|limit| target.cards.len() >= limit) {
             return false;
         }
 
-        if let Some(col) = self.columns.iter_mut().find(|c| c.id == card_col_id) {
-            if let Some(card) = col.cards.iter_mut().find(|c| &c.id == card_id) {
-                card.column_id = *target_column_id;
-                return true;
-            }
-        }
-
-        false
+        let Some(pos) = self.columns[source_idx].cards.iter().position(|c| &c.id == card_id) else {
+            return false;
+        };
+        let mut card = self.columns[source_idx].cards.remove(pos);
+        card.column_id = *target_column_id;
+        self.columns[target_idx].cards.push(card);
+        true
     }
 
     pub fn delete_card(&mut self, card_id: &Uuid) -> bool {
@@ -171,6 +170,23 @@ mod tests {
         let target_id = b.columns[1].id;
         assert!(b.move_card(&card_id, &target_id));
         assert_eq!(b.columns[0].cards.len(), 0);
+        assert_eq!(b.columns[1].cards.len(), 1);
+    }
+
+    /// The WIP limit belongs to the target column, so a full target rejects
+    /// the move and leaves the card where it was.
+    #[test]
+    fn move_card_respects_the_target_wip_limit() {
+        let mut b = KanbanBoard::default_attendance();
+        let source_id = b.columns[0].id;
+        let target_id = b.columns[1].id;
+        b.set_column_wip_limit(&target_id, 1);
+        assert!(b.add_card("Test Ticket", "Description", &source_id).is_some());
+        assert!(b.add_card("Occupying", "Description", &target_id).is_some());
+
+        let card_id = b.columns[0].cards[0].id;
+        assert!(!b.move_card(&card_id, &target_id));
+        assert_eq!(b.columns[0].cards.len(), 1);
         assert_eq!(b.columns[1].cards.len(), 1);
     }
 

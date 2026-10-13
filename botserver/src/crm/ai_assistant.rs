@@ -113,11 +113,14 @@ impl AIAssistant {
             }
         }
 
+        // Symmetric bands: a single lexicon hit already moves the message off
+        // neutral ("Excelente atendimento!" scores 1 and must read positive,
+        // the same way one negative word reads negative).
         if score < -2 {
             "very_negative"
         } else if score < 0 {
             "negative"
-        } else if score > 1 {
+        } else if score > 0 {
             "positive"
         } else {
             "neutral"

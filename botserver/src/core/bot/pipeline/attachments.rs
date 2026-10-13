@@ -57,11 +57,11 @@ pub fn find_staged_attachment(user_text: &str) -> Option<StagedAttachment> {
 mod tests {
     use super::find_staged_attachment;
 
-    /// Telegram photo with caption: the marker is `[image] inbox/…` and the
-    /// caption follows on the next line (bottelegram::media::marker).
+    /// Telegram photo with caption: `bottelegram::media::marker` emits
+    /// `[image] inbox/…` followed by the caption on the next line.
     #[test]
     fn channel_marker_with_caption_yields_path_and_caption() {
-        let text = "recibo do pagamento\n[image] inbox/40d1b057.jpg";
+        let text = "[image] inbox/40d1b057.jpg\nrecibo do pagamento";
         let staged = find_staged_attachment(text).expect("attachment must be found");
         assert_eq!(staged.path, "inbox/40d1b057.jpg");
         assert_eq!(staged.caption, "recibo do pagamento");
