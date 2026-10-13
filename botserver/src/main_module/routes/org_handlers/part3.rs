@@ -17,9 +17,13 @@ pub async fn handle_create_organization(
     let org_id = uuid::Uuid::new_v4();
 
     let mut conn = state.conn.get().map_err(|e| {
-        (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-            "error": format!("Database unavailable: {e}")
-        })))
+        (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(
+            crate::security::error_sanitizer::log_and_sanitize_json(
+                &e,
+                "organization create: database pool",
+                None,
+            ),
+        ))
     })?;
 
     // Resolve a real tenant row — the FK requires an existing tenants.id
@@ -37,9 +41,13 @@ pub async fn handle_create_organization(
     .get_result::<TenantRow>(&mut conn)
     .optional()
     .map_err(|e| {
-        (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-            "error": format!("Tenant lookup failed: {e}")
-        })))
+        (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(
+            crate::security::error_sanitizer::log_and_sanitize_json(
+                &e,
+                "organization create: tenant lookup",
+                None,
+            ),
+        ))
     })?
     .map(|r| r.id)
     .ok_or((axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
@@ -56,9 +64,13 @@ pub async fn handle_create_organization(
     .bind::<diesel::sql_types::Text, _>(&slug)
     .execute(&mut conn)
     .map_err(|e| {
-        (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-            "error": format!("Organization insert failed: {e}")
-        })))
+        (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(
+            crate::security::error_sanitizer::log_and_sanitize_json(
+                &e,
+                "organization create: insert",
+                None,
+            ),
+        ))
     })?;
 
     if inserted == 0 {
@@ -69,9 +81,13 @@ pub async fn handle_create_organization(
         .bind::<diesel::sql_types::Text, _>(&slug)
         .get_result::<TenantRow>(&mut conn)
         .map_err(|e| {
-            (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-                "error": format!("Organization lookup failed: {e}")
-            })))
+            (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(
+                crate::security::error_sanitizer::log_and_sanitize_json(
+                    &e,
+                    "organization create: lookup by slug",
+                    None,
+                ),
+            ))
         })?;
         return Ok(Json(serde_json::json!({
             "success": true,

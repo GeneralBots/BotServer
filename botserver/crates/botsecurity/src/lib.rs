@@ -38,8 +38,8 @@ pub use botsecurity_core::command_guard::{
     sanitize_filename, validate_argument, validate_path, CommandGuardError, SafeCommand,
 };
 pub use botsecurity_core::error_sanitizer::{
-    log_and_sanitize, safe_error, safe_error_with_request_id, sanitize_for_log,
-    ErrorSanitizer, SafeErrorResponse,
+    log_and_sanitize, log_and_sanitize_json, log_and_sanitize_str, safe_error,
+    safe_error_with_request_id, sanitize_for_log, ErrorSanitizer, SafeErrorResponse,
 };
 pub use botsecurity_core::sql_guard::{
     build_safe_count_query, build_safe_delete_query, build_safe_select_by_id_query,

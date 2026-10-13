@@ -349,7 +349,14 @@ pub async fn upload_media_handler(
     let handler = DefaultMultimediaHandler::new();
     match handler.upload_media(request).await {
         Ok(response) => (axum::http::StatusCode::OK, axum::Json(serde_json::json!(response))),
-        Err(e) => (axum::http::StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"error": e.to_string()}))),
+        Err(e) => (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            axum::Json(crate::security::error_sanitizer::log_and_sanitize_json(
+                &e.to_string(),
+                "multimedia upload_media",
+                None,
+            )),
+        ),
     }
 }
 
@@ -373,6 +380,13 @@ pub async fn web_search_handler(
     let handler = DefaultMultimediaHandler::new();
     match handler.web_search(query, max_results).await {
         Ok(results) => (axum::http::StatusCode::OK, axum::Json(serde_json::json!({"query": query, "results": results}))),
-        Err(e) => (axum::http::StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"error": e.to_string()}))),
+        Err(e) => (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            axum::Json(crate::security::error_sanitizer::log_and_sanitize_json(
+                &e.to_string(),
+                "multimedia web_search",
+                None,
+            )),
+        ),
     }
 }

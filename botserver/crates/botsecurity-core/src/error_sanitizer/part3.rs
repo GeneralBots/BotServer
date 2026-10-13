@@ -73,6 +73,29 @@ pub fn log_and_sanitize<E: std::error::Error>(
     let sanitizer = ErrorSanitizer::production();
     sanitizer.sanitize_error(error, request_id)
 }
+/// [`log_and_sanitize`] as a JSON body, ready to be wrapped in `Json(...)`.
+///
+/// Handler arms that must keep the concrete type of a sibling success arm (a
+/// `Json<serde_json::Value>` tuple, typically) cannot return
+/// `Json<SafeErrorResponse>`. This is the shared shape those call sites use, so
+/// the mandated sanitizer stays a one-liner and no new handler needs to decide
+/// what to leak (#1503).
+///
+/// The parameter is deliberately `Display` rather than `std::error::Error`: the
+/// handlers in this tree pass `diesel::result::Error`, `r2d2::Error`,
+/// `FromUtf8Error`, a bare `String`, `anyhow::Error`, `SafeCommand`'s
+/// `GuardError` and boxed `dyn Error` values, and of those only some implement
+/// `Error`. A narrower bound turns the shared helper into a compile error at
+/// one call site per crate, which is exactly the churn this helper exists to
+/// remove.
+pub fn log_and_sanitize_json(
+    error: &(impl std::fmt::Display + ?Sized),
+    context: &str,
+    request_id: Option<&str>,
+) -> serde_json::Value {
+    serde_json::json!(log_and_sanitize_str(&error.to_string(), context, request_id))
+}
+
 pub fn log_and_sanitize_str(
     error_msg: &str,
     context: &str,

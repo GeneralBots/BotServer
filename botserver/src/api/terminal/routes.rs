@@ -103,7 +103,7 @@ async fn create_terminal(
             log::error!("terminal create failed: {e}");
             (
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "api::terminal::routes", None)})),
             )
         }
     };
