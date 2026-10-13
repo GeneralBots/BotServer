@@ -53,11 +53,11 @@ jobs:
           key: ${{ runner.os }}-cargo-boteval-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build boteval-run
-        run: cargo build -p boteval --features http
+        run: cargo build -p boteval --features http,vibe
 
       - name: Validate dataset artifact is deterministic
         run: |
-          cargo run -p boteval --features http --bin boteval-run -- --dump-dataset > /tmp/vibe-200.dump.json
+          cargo run -p boteval --features http,vibe --bin boteval-run -- --dump-dataset > /tmp/vibe-200.dump.json
           if ! diff -q /tmp/vibe-200.dump.json botserver/crates/boteval/datasets/vibe-200.json; then
             echo "::error::committed datasets/vibe-200.json is stale — regenerate with: boteval-run --dump-dataset"
             exit 1
@@ -76,7 +76,7 @@ jobs:
             echo "::error::BOTEVAL_ENDPOINT secret not configured — the evaluation gate cannot run. Configure the secret to run the gate (this is mandatory for main)."
             exit 1
           fi
-          cargo run -p boteval --features http --bin boteval-run -- \
+          cargo run -p boteval --features http,vibe --bin boteval-run -- \
             --gate botserver/crates/boteval/ci/gate.toml \
             --dataset botserver/crates/boteval/datasets/vibe-200.json \
             --endpoint "$BOTEVAL_ENDPOINT" \
