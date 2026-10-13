@@ -12,29 +12,11 @@ pub struct MockLLM {
     server: MockServer,
     port: u16,
     expectations: ExpectationStore,
-    completion_responses: Arc<Mutex<Vec<CompletionExpectation>>>,
-    embedding_responses: Arc<Mutex<Vec<EmbeddingExpectation>>>,
     default_model: String,
     latency: Arc<Mutex<Option<Duration>>>,
     error_rate: Arc<Mutex<f32>>,
     call_count: Arc<AtomicUsize>,
     next_error: Arc<Mutex<Option<(u16, String)>>>,
-}
-
-#[derive(Clone)]
-struct CompletionExpectation {
-    prompt_contains: Option<String>,
-    response: String,
-    stream: bool,
-    chunks: Vec<String>,
-    tool_calls: Vec<ToolCall>,
-}
-
-#[derive(Clone)]
-struct EmbeddingExpectation {
-    input_contains: Option<String>,
-    dimensions: usize,
-    embedding: Vec<f32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,20 +30,6 @@ pub struct ToolCall {
 pub struct ToolFunction {
     pub name: String,
     pub arguments: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct ChatCompletionRequest {
-    model: String,
-    messages: Vec<ChatMessage>,
-    #[serde(default)]
-    stream: bool,
-    #[serde(default)]
-    temperature: Option<f32>,
-    #[serde(default)]
-    max_tokens: Option<u32>,
-    #[serde(default)]
-    tools: Option<Vec<serde_json::Value>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -97,19 +65,6 @@ struct Usage {
     pub completion: u32,
     #[serde(rename = "total_tokens")]
     pub total: u32,
-}
-
-#[derive(Debug, Deserialize)]
-struct EmbeddingRequest {
-    model: String,
-    input: EmbeddingInput,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-enum EmbeddingInput {
-    Single(String),
-    Multiple(Vec<String>),
 }
 
 #[derive(Serialize)]
@@ -182,8 +137,6 @@ impl MockLLM {
             server,
             port,
             expectations: new_expectation_store(),
-            completion_responses: Arc::new(Mutex::new(Vec::new())),
-            embedding_responses: Arc::new(Mutex::new(Vec::new())),
             default_model: "gpt-4".to_string(),
             latency: Arc::new(Mutex::new(None)),
             error_rate: Arc::new(Mutex::new(0.0)),
@@ -212,19 +165,6 @@ impl MockLLM {
     }
 
     pub async fn expect_completion(&self, prompt_contains: &str, response: &str) {
-        let expectation = CompletionExpectation {
-            prompt_contains: Some(prompt_contains.to_string()),
-            response: response.to_string(),
-            stream: false,
-            chunks: Vec::new(),
-            tool_calls: Vec::new(),
-        };
-
-        self.completion_responses
-            .lock()
-            .unwrap()
-            .push(expectation.clone());
-
         {
             let mut store = self.expectations.lock().unwrap();
             store.insert(
@@ -279,19 +219,6 @@ impl MockLLM {
     }
 
     pub async fn expect_streaming(&self, prompt_contains: &str, chunks: Vec<&str>) {
-        let expectation = CompletionExpectation {
-            prompt_contains: Some(prompt_contains.to_string()),
-            response: chunks.join(""),
-            stream: true,
-            chunks: chunks.iter().map(|s| (*s).to_string()).collect(),
-            tool_calls: Vec::new(),
-        };
-
-        self.completion_responses
-            .lock()
-            .unwrap()
-            .push(expectation.clone());
-
         let model = self.default_model.clone();
         let id = format!("chatcmpl-{}", uuid::Uuid::new_v4());
         let created = chrono::Utc::now().timestamp() as u64;
@@ -368,6 +295,11 @@ impl MockLLM {
         Mock::given(method("POST"))
             .and(path("/v1/chat/completions"))
             .and(body_partial_json(serde_json::json!({"stream": true})))
+            // The caller names the prompt this stream belongs to; match on it
+            // the same way `expect_completion` does.
+            .and(body_partial_json(serde_json::json!({
+                "messages": [{"content": prompt_contains}]
+            })))
             .respond_with(template)
             .mount(&self.server)
             .await;
@@ -595,8 +527,6 @@ impl MockLLM {
 
     pub async fn reset(&self) {
         self.server.reset().await;
-        self.completion_responses.lock().unwrap().clear();
-        self.embedding_responses.lock().unwrap().clear();
         self.expectations.lock().unwrap().clear();
         self.call_count.store(0, Ordering::SeqCst);
         *self.next_error.lock().unwrap() = None;

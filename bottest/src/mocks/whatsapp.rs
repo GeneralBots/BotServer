@@ -217,17 +217,6 @@ pub struct Pricing {
     pub category: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct SendMessageRequest {
-    messaging_product: String,
-    recipient_type: Option<String>,
-    to: String,
-    #[serde(rename = "type")]
-    message_type: String,
-    #[serde(flatten)]
-    content: serde_json::Value,
-}
-
 #[derive(Serialize)]
 struct SendMessageResponse {
     messaging_product: String,
@@ -261,7 +250,6 @@ struct ErrorDetail {
 }
 
 pub struct MessageExpectation {
-    to: String,
     message_type: Option<MessageType>,
     contains: Option<String>,
 }
@@ -279,7 +267,6 @@ impl MessageExpectation {
 }
 
 pub struct TemplateExpectation {
-    name: String,
     to: Option<String>,
     language: Option<String>,
 }
@@ -480,20 +467,18 @@ impl MockWhatsApp {
     }
 
     #[must_use]
-    pub fn expect_send_message(&self, to: &str) -> MessageExpectation {
+    pub fn expect_send_message(&self) -> MessageExpectation {
         let _ = self;
         MessageExpectation {
-            to: to.to_string(),
             message_type: None,
             contains: None,
         }
     }
 
     #[must_use]
-    pub fn expect_send_template(&self, name: &str) -> TemplateExpectation {
+    pub fn expect_send_template(&self) -> TemplateExpectation {
         let _ = self;
         TemplateExpectation {
-            name: name.to_string(),
             to: None,
             language: None,
         }

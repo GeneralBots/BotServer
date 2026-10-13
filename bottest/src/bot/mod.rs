@@ -1,6 +1,6 @@
 
-mod conversation;
-mod runner;
+pub mod conversation;
+pub mod runner;
 
 use crate::fixtures::MessageDirection;
 use serde::{Deserialize, Serialize};

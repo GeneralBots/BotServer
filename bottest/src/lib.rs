@@ -1,8 +1,5 @@
-#![allow(dead_code)]
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-
 pub mod bot;
+pub mod cli;
 pub mod desktop;
 pub mod fixtures;
 mod harness;

@@ -5,6 +5,7 @@ edition = "2021"
 description = "General Bots App - Tauri wrapper for desktop/mobile"
 license = "MIT"
 repository = "https://github.com/generalbots/generalbots"
+readme = "README.md"
 keywords = ["bot", "ai", "chatbot", "tauri", "desktop"]
 categories = ["gui", "network-programming"]
 

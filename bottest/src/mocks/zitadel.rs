@@ -42,11 +42,6 @@ impl Default for TestUser {
 
 #[derive(Debug, Clone)]
 struct TokenInfo {
-    user_id: String,
-    access_token: String,
-    refresh_token: Option<String>,
-    expires_at: u64,
-    scopes: Vec<String>,
     active: bool,
 }
 
@@ -262,27 +257,12 @@ impl MockZitadel {
 
         let access_token = format!("test_access_{}", Uuid::new_v4());
         let refresh_token = format!("test_refresh_{}", Uuid::new_v4());
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
         let expires_in = 3600u64;
 
-        self.tokens.lock().unwrap().insert(
-            access_token.clone(),
-            TokenInfo {
-                user_id: user.id.clone(),
-                access_token: access_token.clone(),
-                refresh_token: Some(refresh_token.clone()),
-                expires_at: now + expires_in,
-                scopes: vec![
-                    "openid".to_string(),
-                    "profile".to_string(),
-                    "email".to_string(),
-                ],
-                active: true,
-            },
-        );
+        self.tokens
+            .lock()
+            .unwrap()
+            .insert(access_token.clone(), TokenInfo { active: true });
 
         let token_response = TokenResponse {
             access_token: access_token.clone(),
@@ -548,33 +528,6 @@ impl MockZitadel {
         let signature = base64_url_encode("mock-signature");
 
         format!("{header}.{payload}.{signature}")
-    }
-
-    #[must_use]
-    pub fn generate_token(&self, user: &TestUser) -> String {
-        let access_token = format!("test_access_{}", Uuid::new_v4());
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-
-        self.tokens.lock().unwrap().insert(
-            access_token.clone(),
-            TokenInfo {
-                user_id: user.id.clone(),
-                access_token: access_token.clone(),
-                refresh_token: None,
-                expires_at: now + 3600,
-                scopes: vec![
-                    "openid".to_string(),
-                    "profile".to_string(),
-                    "email".to_string(),
-                ],
-                active: true,
-            },
-        );
-
-        access_token
     }
 
     pub fn invalidate_token(&self, token: &str) {

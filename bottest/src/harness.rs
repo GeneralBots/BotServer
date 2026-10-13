@@ -100,7 +100,6 @@ impl DefaultPorts {
     pub const MINIO: u16 = 9000;
     pub const REDIS: u16 = 6379;
     pub const ZITADEL: u16 = 8080;
-    pub const BOTSERVER: u16 = 8080;
 }
 
 pub struct TestContext {
@@ -236,7 +235,7 @@ impl TestContext {
     }
 
     pub async fn start_botui(&self, botserver_url: &str) -> Result<BotUIInstance> {
-        BotUIInstance::start(self, botserver_url).await
+        BotUIInstance::start(botserver_url).await
     }
 
     pub async fn cleanup(&mut self) -> Result<()> {
@@ -579,7 +578,7 @@ impl BotUIInstance {
 }
 
 impl BotUIInstance {
-    pub async fn start(ctx: &TestContext, botserver_url: &str) -> Result<Self> {
+    pub async fn start(botserver_url: &str) -> Result<Self> {
         let port = crate::ports::PortAllocator::allocate();
         let url = format!("http://127.0.0.1:{port}");
 
@@ -780,80 +779,8 @@ impl BotServerInstance {
         self.process.is_some()
     }
 
-    fn setup_test_stack_config(stack_path: &std::path::Path, ctx: &TestContext) -> Result<()> {
-        let directory_conf = stack_path.join("conf/directory");
-        std::fs::create_dir_all(&directory_conf)?;
-
-        let zitadel_config = format!(
-            r#"Log:
-  Level: info
-
-Database:
-  postgres:
-    Host: 127.0.0.1
-    Port: {}
-    Database: bottest
-    User: bottest
-    Password: "bottest"
-    SSL:
-      Mode: disable
-
-ExternalSecure: false
-ExternalDomain: localhost
-ExternalPort: {}
-"#,
-            ctx.ports.postgres, ctx.ports.mock_zitadel
-        );
-
-        std::fs::write(directory_conf.join("zitadel.yaml"), zitadel_config)?;
-        log::info!("Created test zitadel.yaml config");
-
-        let certs_dir = stack_path.join("conf/system/certificates");
-        std::fs::create_dir_all(&certs_dir)?;
-
-        Self::generate_test_certificates(&certs_dir)?;
-
-        Ok(())
+    
     }
-
-    fn generate_test_certificates(certs_dir: &std::path::Path) -> Result<()> {
-        use std::process::Command;
-
-        let api_dir = certs_dir.join("api");
-        std::fs::create_dir_all(&api_dir)?;
-
-        let openssl_check = Command::new("which").arg("openssl").output();
-        if openssl_check.map(|o| o.status.success()).unwrap_or(false) {
-            let key_path = api_dir.join("server.key");
-            let cert_path = api_dir.join("server.crt");
-
-            if !key_path.exists() {
-                let _ = Command::new("openssl")
-                    .args([
-                        "req",
-                        "-x509",
-                        "-newkey",
-                        "rsa:2048",
-                        "-keyout",
-                        key_path.to_str().unwrap(),
-                        "-out",
-                        cert_path.to_str().unwrap(),
-                        "-days",
-                        "1",
-                        "-nodes",
-                        "-subj",
-                        "/CN=localhost",
-                    ])
-                    .output();
-                log::info!("Generated test TLS certificates");
-            }
-        } else {
-            log::warn!("openssl not found, skipping certificate generation");
-        }
-
-        Ok(())
-    }
-}
 
 impl Drop for BotServerInstance {
     fn drop(&mut self) {

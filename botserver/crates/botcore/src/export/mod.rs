@@ -1,5 +1,4 @@
 pub mod docx;
-pub mod pdf;
 pub mod pptx;
 pub mod pptx_doc;
 pub mod pptx_zip_writer;

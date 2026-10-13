@@ -182,26 +182,6 @@ pub struct TeamsChannelAccount {
     pub surname: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TeamsMeetingInfo {
-    pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub join_url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub title: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AdaptiveCardInvokeResponse {
-    pub status_code: u16,
-    #[serde(rename = "type")]
-    pub response_type: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub value: Option<serde_json::Value>,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse {
     pub error: ErrorBody,
@@ -211,14 +191,6 @@ pub struct ErrorResponse {
 pub struct ErrorBody {
     pub code: String,
     pub message: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct InvokeResponse {
-    pub status: u16,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub body: Option<serde_json::Value>,
 }
 
 impl MockTeams {
@@ -778,6 +750,8 @@ impl MockTeams {
     }
 }
 
+/// Test-only helper: build an Adaptive Card attachment.
+#[cfg(test)]
 pub fn adaptive_card(content: serde_json::Value) -> Attachment {
     Attachment {
         content_type: "application/vnd.microsoft.card.adaptive".to_string(),
@@ -788,6 +762,8 @@ pub fn adaptive_card(content: serde_json::Value) -> Attachment {
     }
 }
 
+/// Test-only helper: build a Hero Card attachment.
+#[cfg(test)]
 pub fn hero_card(title: &str, subtitle: Option<&str>, text: Option<&str>) -> Attachment {
     Attachment {
         content_type: "application/vnd.microsoft.card.hero".to_string(),
@@ -796,26 +772,6 @@ pub fn hero_card(title: &str, subtitle: Option<&str>, text: Option<&str>) -> Att
             "title": title,
             "subtitle": subtitle,
             "text": text
-        })),
-        name: None,
-        thumbnail_url: None,
-    }
-}
-
-pub fn thumbnail_card(
-    title: &str,
-    subtitle: Option<&str>,
-    text: Option<&str>,
-    image_url: Option<&str>,
-) -> Attachment {
-    Attachment {
-        content_type: "application/vnd.microsoft.card.thumbnail".to_string(),
-        content_url: None,
-        content: Some(serde_json::json!({
-            "title": title,
-            "subtitle": subtitle,
-            "text": text,
-            "images": image_url.map(|url| vec![serde_json::json!({"url": url})])
         })),
         name: None,
         thumbnail_url: None,

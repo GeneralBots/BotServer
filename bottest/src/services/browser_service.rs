@@ -8,7 +8,6 @@ pub const DEFAULT_DEBUG_PORT: u16 = 9222;
 pub struct BrowserService {
     port: u16,
     process: Option<Child>,
-    binary_path: String,
     user_data_dir: String,
 }
 
@@ -74,7 +73,6 @@ impl BrowserService {
         let service = Self {
             port,
             process: Some(process),
-            binary_path,
             user_data_dir,
         };
 
