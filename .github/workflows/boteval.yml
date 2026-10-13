@@ -27,6 +27,16 @@ jobs:
       - name: "Guard: no pre-merge repository URLs (#1473)"
         run: ./scripts/check-repo-urls.sh
 
+      # .cargo/config.toml links every target with `-fuse-ld=/usr/bin/mold`, so
+      # the runner must provide mold (and clang) or the very first build-script
+      # link dies with "clang: error: invalid linker name". libpq/libssl/liblzma
+      # are what the workspace's native dependencies (diesel/pq-sys,
+      # openssl-sys) compile against.
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang mold libpq-dev libssl-dev liblzma-dev pkg-config
+
       - name: Install Rust
         run: |
           rustup set profile minimal
