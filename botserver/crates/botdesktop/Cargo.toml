@@ -7,16 +7,16 @@ description = "Desktop session proxy — WebSocket-to-TCP relay for remote deskt
 
 [dependencies]
 axum = { workspace = true, features = ["ws", "macros"] }
-tokio = { version = "1", features = ["full"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-uuid = { version = "1", features = ["v4", "serde"] }
-chrono = { version = "0.4", features = ["serde"] }
-diesel = { version = "2", features = ["postgres", "r2d2", "uuid", "chrono", "serde_json"] }
-reqwest = { version = "0.12", features = ["json"] }
-tower-http = { version = "0.6", features = ["cors", "trace"] }
-futures-util = "0.3"
-tracing = "0.1"
-thiserror = "2"
+tokio = { workspace = true, features = ["full"], default-features = true }
+serde = { workspace = true, features = ["derive"], default-features = true }
+serde_json = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"], default-features = true }
+chrono = { workspace = true, features = ["serde"], default-features = true }
+diesel = { workspace = true, features = ["postgres", "r2d2", "uuid", "chrono", "serde_json"] }
+reqwest = { workspace = true, features = ["json"], default-features = true }
+tower-http = { workspace = true, features = ["cors", "trace"], default-features = true }
+futures-util = { workspace = true, default-features = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
 botcoresecrets = { workspace = true }
 botsecurity-auth = { workspace = true }

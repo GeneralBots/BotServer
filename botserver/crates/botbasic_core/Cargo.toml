@@ -11,7 +11,7 @@ default = []
 [dependencies]
 botcoresecrets = { workspace = true }
 botlib = { workspace = true, features = ["database", "http-client"] }
-botbasic_types = { path = "../botbasic_types" }
+botbasic_types = { workspace = true }
 rhai = { workspace = true, features = ["sync"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

@@ -12,8 +12,8 @@ automation = []
 cache = []
 
 [dependencies]
-botbasic_types = { path = "../botbasic_types" }
-botbasic_core = { path = "../botbasic_core" }
+botbasic_types = { workspace = true }
+botbasic_core = { workspace = true }
 botcoresecrets = { workspace = true }
 botlib = { workspace = true }
 botschema = { workspace = true }
@@ -35,10 +35,10 @@ serde_json = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 rss = { workspace = true }
 
-botcore = { path = "../botcore" }
-botllm = { path = "../botllm" }
-botmultimodal = { path = "../botmultimodal" }
-botsecurity = { path = "../botsecurity" }
+botcore = { workspace = true }
+botllm = { workspace = true }
+botmultimodal = { workspace = true }
+botsecurity = { workspace = true }
 axum = { workspace = true, features = ["ws", "macros"] }
 anyhow = { workspace = true }
 async-trait = { workspace = true }

@@ -8,7 +8,7 @@ authors = ["General Bots"]
 repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
-botlib = { path = "../../../botlib", features = ["http-client"] }
+botlib = { workspace = true, features = ["http-client"] }
 chrono = { workspace = true, features = ["serde", "clock"] }
 log = { workspace = true }
 reqwest = { workspace = true, features = ["rustls-tls"] }

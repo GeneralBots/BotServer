@@ -11,7 +11,7 @@ axum = { workspace = true, features = ["ws", "multipart", "macros"] }
 chrono = { workspace = true, features = ["serde"] }
 diesel = { workspace = true, features = ["postgres", "r2d2", "chrono", "serde_json", "uuid"] }
 r2d2 = { workspace = true }
-serde = { version = "1.0", features = ["derive"] }
+serde = { workspace = true, features = ["derive"], default-features = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, default-features = false }

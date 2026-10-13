@@ -32,6 +32,6 @@ tokio = { workspace = true, features = ["rt", "sync", "macros", "time"] }
 axum = { workspace = true }
 thiserror = { workspace = true }
 futures = { workspace = true }
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { workspace = true, features = ["json"], default-features = true }
 base64 = { workspace = true }
 tokio-tungstenite = { workspace = true, features = ["connect"] }

@@ -8,9 +8,9 @@ description = "Banking reconciliation and delivery-platform integration."
 
 [dependencies]
 botcore = { workspace = true }
-botlib = { path = "../../../botlib" }
-botbasic_core = { path = "../botbasic_core" }
-bottax = { path = "../bottax" }
+botlib = { workspace = true }
+botbasic_core = { workspace = true }
+bottax = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 rust_decimal = { workspace = true, features = ["serde-with-str", "db-diesel2-postgres"] }
 rust_decimal_macros = { workspace = true }

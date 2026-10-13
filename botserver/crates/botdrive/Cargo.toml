@@ -13,11 +13,11 @@ research = []
 llm = []
 
 [dependencies]
-botcore = { path = "../botcore" }
-botlib = { path = "../../../botlib" }
-botbasic_core = { path = "../botbasic_core" }
-botschema = { path = "../../../botschema" }
-botqdrant = { path = "../botqdrant" }
+botcore = { workspace = true }
+botlib = { workspace = true }
+botbasic_core = { workspace = true }
+botschema = { workspace = true }
+botqdrant = { workspace = true }
 axum = { workspace = true, features = ["ws", "macros"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -38,11 +38,11 @@ hmac = { workspace = true }
 sha2 = { workspace = true }
 hex = { workspace = true }
 base64 = { workspace = true }
-botsecurity-auth = { path = "../botsecurity-auth" }
+botsecurity-auth = { workspace = true }
 botsecurity-crypto = { workspace = true }
-http = "1.4"
-url = "2.5"
-time = { version = "0.3", default-features = false, features = ["formatting", "macros", "parsing"] }
+http = { workspace = true }
+url = { workspace = true }
+time = { workspace = true, features = ["formatting", "macros", "parsing"] }
 
 [lints]
 workspace = true

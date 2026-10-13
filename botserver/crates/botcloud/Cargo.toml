@@ -29,8 +29,8 @@ lettre = { workspace = true, features = ["tokio1-rustls-tls", "tokio1"] }
 botbilling = { workspace = true }
 botdomains = { workspace = true }
 botproviders = { workspace = true }
-botsecurity = { path = "../botsecurity" }
-botsecurity-auth = { path = "../botsecurity-auth" }
+botsecurity = { workspace = true }
+botsecurity-auth = { workspace = true }
 botsecurity-crypto = { workspace = true }
 botproducts = { workspace = true, optional = true }
 botcoredirectory = { workspace = true }

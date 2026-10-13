@@ -8,8 +8,8 @@ authors = ["General Bots"]
 repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
-botsecurity-core = { path = "../botsecurity-core" }
-botcore = { path = "../botcore" }
+botsecurity-core = { workspace = true }
+botcore = { workspace = true }
 anyhow = { workspace = true }
 axum = { workspace = true, features = ["ws", "macros"] }
 chrono = { workspace = true, features = ["serde", "clock"] }

@@ -314,29 +314,29 @@ botchannels = { workspace = true }
 botbrowser = { workspace = true }
 botcoresecrets = { workspace = true }
 botcoresession = { workspace = true }
-botsecurity-crypto = { path = "crates/botsecurity-crypto" }
+botsecurity-crypto = { workspace = true }
 botcoreoauth = { workspace = true }
 botcorebot = { workspace = true }
 botcoredirectory = { workspace = true }
 botcorepkg = { workspace = true }
 botautotask = { workspace = true, features = ["llm"] }
 botvibe = { workspace = true, optional = true }
-botbasic_types = { path = "crates/botbasic_types" }
-botcore = { path = "crates/botcore" }
-botsecurity-core = { path = "crates/botsecurity-core" }
-botbasic_core = { path = "crates/botbasic_core" }
-botbasic_data = { path = "crates/botbasic_data" }
-botbasic_comms = { path = "crates/botbasic_comms" }
-botbasic_ai = { path = "crates/botbasic_ai" }
-botbasic_system = { path = "crates/botbasic_system" }
-botbasic_compiler = { path = "crates/botbasic_compiler" }
-botapi = { path = "crates/botapi" }
-boteditor = { path = "crates/boteditor", optional = true }
-botdatabase = { path = "crates/botdatabase", optional = true }
-botgit = { path = "crates/botgit", optional = true }
-botmeet = { path = "crates/botmeet" }
-botsettings = { path = "crates/botsettings" }
-botdrive = { path = "crates/botdrive", features = ["llm", "vectordb", "drive"] }
+botbasic_types = { workspace = true }
+botcore = { workspace = true }
+botsecurity-core = { workspace = true }
+botbasic_core = { workspace = true }
+botbasic_data = { workspace = true }
+botbasic_comms = { workspace = true }
+botbasic_ai = { workspace = true }
+botbasic_system = { workspace = true }
+botbasic_compiler = { workspace = true }
+botapi = { workspace = true }
+boteditor = { workspace = true, optional = true }
+botdatabase = { workspace = true, optional = true }
+botgit = { workspace = true, optional = true }
+botmeet = { workspace = true }
+botsettings = { workspace = true }
+botdrive = { workspace = true, features = ["llm", "vectordb", "drive"] }
 
 # === EXTRACTED CRATES (optional - enabled by feature flags) ===
 botbilling = { workspace = true, optional = true }
@@ -418,8 +418,8 @@ bothandoff = { workspace = true, optional = true }
 botkyc = { workspace = true, optional = true }
 bottimeclock = { workspace = true, optional = true }
 botmodelsbridge = { workspace = true }
-botcloud = { path = "crates/botcloud", optional = true }
-botproviders = { path = "crates/botproviders", optional = true }
+botcloud = { workspace = true, optional = true }
+botproviders = { workspace = true, optional = true }
 
 [dev-dependencies]
 mockito = { workspace = true }

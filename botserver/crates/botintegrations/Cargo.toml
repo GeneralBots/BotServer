@@ -11,7 +11,7 @@ axum = { workspace = true }
 base64 = { workspace = true }
 botcore = { workspace = true }
 botcoresecrets = { workspace = true }
-botdrive = { path = "../botdrive" }
+botdrive = { workspace = true }
 botsecurity-auth = { workspace = true }
 bytes = { workspace = true }
 chrono = { workspace = true, features = ["serde", "clock"] }

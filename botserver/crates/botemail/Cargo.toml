@@ -38,4 +38,4 @@ tower = { workspace = true }
 tower-http = { workspace = true, features = ["cors", "fs", "trace"] }
 url = { workspace = true }
 futures = { workspace = true }
-qdrant-client = { version = "1.12", optional = true }
+qdrant-client = { workspace = true, optional = true }

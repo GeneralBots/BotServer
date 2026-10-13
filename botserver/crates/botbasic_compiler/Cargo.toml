@@ -13,7 +13,7 @@ security = []
 automation = []
 
 [dependencies]
-botbasic_types = { path = "../botbasic_types" }
+botbasic_types = { workspace = true }
 rhai = { workspace = true, features = ["sync"] }
 
 botlib = { workspace = true }
@@ -26,7 +26,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 
-botcore = { path = "../botcore" }
+botcore = { workspace = true }
 
 [lints]
 workspace = true

@@ -10,8 +10,8 @@ repository = "https://github.com/generalbots/generalbots"
 [dependencies]
 async-trait = { workspace = true }
 axum = { workspace = true }
-botcore = { path = "../botcore" }
-botbasic_core = { path = "../botbasic_core" }
+botcore = { workspace = true }
+botbasic_core = { workspace = true }
 chrono = { workspace = true, features = ["serde", "clock"] }
 diesel = { workspace = true, features = ["postgres", "r2d2", "uuid", "chrono", "serde_json"] }
 log = { workspace = true }

@@ -17,7 +17,7 @@ thiserror = { workspace = true }
 uuid = { workspace = true, features = ["v4", "serde"] }
 axum = { workspace = true, features = ["macros"] }
 diesel = { workspace = true, features = ["postgres", "r2d2", "serde_json", "chrono", "uuid"] }
-botdrive = { path = "../botdrive" }
+botdrive = { workspace = true }
 
 [lints]
 workspace = true

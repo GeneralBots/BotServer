@@ -8,10 +8,10 @@ license = "MIT"
 default = []
 
 [dependencies]
-botcore = { path = "../botcore" }
-botsecurity = { path = "../botsecurity" }
-botlib = { path = "../../../botlib" }
-botschema = { path = "../../../botschema", features = ["meet"] }
+botcore = { workspace = true }
+botsecurity = { workspace = true }
+botlib = { workspace = true }
+botschema = { workspace = true, features = ["meet"] }
 axum = { workspace = true, features = ["ws", "macros"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -27,11 +27,11 @@ futures = { workspace = true }
 async-trait = { workspace = true }
 png = { workspace = true }
 tracing = { workspace = true }
-hmac = "0.12"
-sha1 = "0.10"
-base64 = "0.22"
-sha2 = "0.10"
-hex = "0.4"
+hmac = { workspace = true }
+sha1 = { workspace = true }
+base64 = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
 
 [lints]
 workspace = true

@@ -17,7 +17,7 @@ vibe = ["dep:botdeployment"]
 
 [dependencies]
 botcoresecrets = { workspace = true }
-botbasic_types = { path = "../botbasic_types" }
+botbasic_types = { workspace = true }
 rhai = { workspace = true, features = ["sync"] }
 
 botlib = { workspace = true }
@@ -32,12 +32,12 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 uuid = { workspace = true, features = ["v4"] }
 
-botcore = { path = "../botcore" }
-botcorepkg = { path = "../botcorepkg" }
-botsecurity = { path = "../botsecurity" }
-botmodelsbridge = { path = "../botmodelsbridge" }
-botbasic_core = { path = "../botbasic_core" }
-botbasic_data = { path = "../botbasic_data" }
+botcore = { workspace = true }
+botcorepkg = { workspace = true }
+botsecurity = { workspace = true }
+botmodelsbridge = { workspace = true }
+botbasic_core = { workspace = true }
+botbasic_data = { workspace = true }
 axum = { workspace = true, features = ["ws", "macros"] }
 anyhow = { workspace = true }
 async-trait = { workspace = true }

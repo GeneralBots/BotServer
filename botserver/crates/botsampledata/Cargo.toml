@@ -17,8 +17,8 @@ serde_json = { workspace = true }
 tokio = { workspace = true, features = ["sync", "time", "rt", "macros", "io-util"] }
 uuid = { workspace = true, features = ["serde", "v4"] }
 botcore = { workspace = true }
-botbasic_core = { path = "../botbasic_core" }
-botlib = { path = "../../../botlib" }
+botbasic_core = { workspace = true }
+botlib = { workspace = true }
 
 [lints]
 workspace = true

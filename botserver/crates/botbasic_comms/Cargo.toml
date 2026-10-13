@@ -19,9 +19,9 @@ drive = []
 [dependencies]
 botschema = { workspace = true, features = ["calendar"] }
 botlib = { workspace = true, features = ["database", "http-client"] }
-botbasic_types = { path = "../botbasic_types" }
-botbasic_core = { path = "../botbasic_core" }
-botbasic_data = { path = "../botbasic_data" }
+botbasic_types = { workspace = true }
+botbasic_core = { workspace = true }
+botbasic_data = { workspace = true }
 rhai = { workspace = true, features = ["sync"] }
 diesel = { workspace = true, features = ["postgres", "uuid", "chrono", "serde_json", "r2d2", "numeric", "32-column-tables"] }
 serde = { workspace = true, features = ["derive"] }
@@ -39,8 +39,8 @@ urlencoding = { workspace = true }
 num-format = { workspace = true }
 bigdecimal = { workspace = true }
 
-botcore = { path = "../botcore" }
-botsecurity = { path = "../botsecurity" }
+botcore = { workspace = true }
+botsecurity = { workspace = true }
 axum = { workspace = true, features = ["ws", "macros"] }
 anyhow = { workspace = true }
 async-trait = { workspace = true }

@@ -13,10 +13,10 @@ cache = ["botsecurity-auth/cache"]
 directory = ["botsecurity-auth/directory"]
 
 [dependencies]
-botsecurity-core = { path = "../botsecurity-core" }
-botsecurity-crypto = { path = "../botsecurity-crypto" }
-botsecurity-auth = { path = "../botsecurity-auth" }
-botsecurity-protection = { path = "../botsecurity-protection" }
+botsecurity-core = { workspace = true }
+botsecurity-crypto = { workspace = true }
+botsecurity-auth = { workspace = true }
+botsecurity-protection = { workspace = true }
 anyhow = { workspace = true }
 
 diesel = { workspace = true, features = ["postgres", "r2d2"] }

@@ -8,18 +8,17 @@ authors = ["General Bots"]
 repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-chrono = { version = "0.4", features = ["serde"] }
-thiserror = "1"
-log = "0.4"
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
-reqwest = { version = "0.12", features = ["json"], optional = true }
-async-trait = "0.1"
-uuid = { version = "1", features = ["v4", "serde"] }
-toml = "0.8"
-botvibe = { path = "../botvibe", optional = true }
-diesel = { version = "2", features = ["postgres", "r2d2"], optional = true }
+serde = { workspace = true, features = ["derive"], default-features = true }
+serde_json = { workspace = true }
+chrono = { workspace = true, features = ["serde"], default-features = true }
+log = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time"], default-features = true }
+reqwest = { workspace = true, features = ["json"], optional = true, default-features = true }
+async-trait = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"], default-features = true }
+toml = { workspace = true }
+botvibe = { workspace = true, optional = true }
+diesel = { workspace = true, features = ["postgres", "r2d2"], optional = true }
 
 [features]
 default = []
@@ -32,4 +31,4 @@ path = "src/bin/boteval_run.rs"
 required-features = ["http", "vibe"]
 
 [dev-dependencies]
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"], default-features = true }

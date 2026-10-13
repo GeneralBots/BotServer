@@ -13,9 +13,9 @@ cache = ["dep:redis"]
 directory = []
 
 [dependencies]
-botcoresecrets = { path = "../botcoresecrets" }
-botlib = { path = "../../../botlib", features = ["http-client"] }
-botsecurity-core = { path = "../botsecurity-core" }
+botcoresecrets = { workspace = true }
+botlib = { workspace = true, features = ["http-client"] }
+botsecurity-core = { workspace = true }
 anyhow = { workspace = true }
 argon2 = { workspace = true }
 async-trait = { workspace = true }

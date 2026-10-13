@@ -11,8 +11,8 @@ botlib = { workspace = true, features = ["database"] }
 botsecurity-crypto = { workspace = true }
 # botsecurity removed to break circular dep — use botlib::security:: instead
 botcorepkg = { workspace = true }
-botcoresecrets = { path = "../botcoresecrets" }
-botsecurity-core = { path = "../botsecurity-core" }
+botcoresecrets = { workspace = true }
+botsecurity-core = { workspace = true }
 base64 = { workspace = true }
 dotenvy = { workspace = true }
 hex = { workspace = true }
@@ -29,7 +29,7 @@ async-trait = { workspace = true }
 axum = { workspace = true }
 calamine = { workspace = true }
 ole = { version = "0.1", optional = true }
-pdf-extract = { version = "0.10", optional = true }
+pdf-extract = { workspace = true, optional = true }
 chrono = { workspace = true }
 cron = { workspace = true }
 dirs = { workspace = true }

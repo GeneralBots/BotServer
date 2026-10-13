@@ -10,12 +10,12 @@ rbac = []
 mail = ["dep:lettre"]
 
 [dependencies]
-botcore = { path = "../botcore" }
-botsecurity = { path = "../botsecurity" }
-botcoredirectory = { path = "../botcoredirectory" }
-botcoreoauth = { path = "../botcoreoauth" }
-botcoresecrets = { path = "../botcoresecrets" }
-botschema = { path = "../../../botschema" }
+botcore = { workspace = true }
+botsecurity = { workspace = true }
+botcoredirectory = { workspace = true }
+botcoreoauth = { workspace = true }
+botcoresecrets = { workspace = true }
+botschema = { workspace = true }
 axum = { workspace = true, features = ["ws", "macros"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

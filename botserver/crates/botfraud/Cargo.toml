@@ -5,17 +5,17 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1", features = ["v4", "serde"] }
-diesel = { version = "2", features = ["postgres", "r2d2", "uuid", "serde_json", "chrono", "numeric"] }
-axum = { version = "0.7", features = ["macros"] }
-tokio = { version = "1", features = ["full"] }
-log = "0.4"
+serde = { workspace = true, features = ["derive"], default-features = true }
+serde_json = { workspace = true }
+chrono = { workspace = true, features = ["serde"], default-features = true }
+uuid = { workspace = true, features = ["v4", "serde"], default-features = true }
+diesel = { workspace = true, features = ["postgres", "r2d2", "uuid", "serde_json", "chrono", "numeric"] }
+axum = { workspace = true, features = ["macros"] }
+tokio = { workspace = true, features = ["full"], default-features = true }
+log = { workspace = true }
 base64 = { workspace = true }
 rust_decimal = { workspace = true, features = ["serde-with-str", "db-diesel2-postgres"] }
-reqwest = { version = "0.12", features = ["json"], optional = true }
+reqwest = { workspace = true, features = ["json"], optional = true, default-features = true }
 
 [features]
 ml = ["dep:reqwest"]

@@ -8,12 +8,12 @@ authors = ["General Bots"]
 repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1", features = ["v4", "serde"] }
-log = "0.4"
-thiserror = "1"
+serde = { workspace = true, features = ["derive"], default-features = true }
+serde_json = { workspace = true }
+chrono = { workspace = true, features = ["serde"], default-features = true }
+uuid = { workspace = true, features = ["v4", "serde"], default-features = true }
+log = { workspace = true }
+thiserror = { workspace = true }
 
 [features]
 default = []

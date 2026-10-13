@@ -161,6 +161,7 @@ botcalendar = { path = "botserver/crates/botcalendar" }
 botcanvas = { path = "botserver/crates/botcanvas" }
 botchannels = { path = "botserver/crates/botchannels" }
 botchannels-core = { path = "botserver/crates/botchannels-core" }
+botcloud = { path = "botserver/crates/botcloud" }
 botcompliance = { path = "botserver/crates/botcompliance" }
 botcontacts = { path = "botserver/crates/botcontacts" }
 botdashboards = { path = "botserver/crates/botdashboards" }

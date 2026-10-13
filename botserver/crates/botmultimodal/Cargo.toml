@@ -9,7 +9,7 @@ repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
  botcore = { workspace = true }
- botlib = { path = "../../../botlib", features = ["http-client"] }
+ botlib = { workspace = true, features = ["http-client"] }
 log = { workspace = true }
 reqwest = { workspace = true, features = ["rustls-tls", "json", "multipart"] }
 serde = { workspace = true, features = ["derive"] }

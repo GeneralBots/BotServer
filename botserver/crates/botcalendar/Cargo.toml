@@ -8,7 +8,7 @@ repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
 axum = { workspace = true, features = ["ws", "multipart", "macros"] }
-botschema = { path = "../../../botschema", features = ["calendar"] }
+botschema = { workspace = true, features = ["calendar"] }
 botsecurity-core = { workspace = true }
 chrono = { workspace = true, features = ["serde", "clock"] }
 diesel = { workspace = true, features = ["postgres", "r2d2", "uuid", "chrono", "serde_json"] }
