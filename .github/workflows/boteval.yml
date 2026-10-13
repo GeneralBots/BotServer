@@ -18,10 +18,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Guard: no hx-get on POST-only fragment routes (#1139)
+      # Quoted: a plain YAML scalar cannot contain ": " — the unquoted forms
+      # made this file invalid, so GitHub rejected the whole workflow with
+      # "workflow file issue" and every run died in 0s.
+      - name: "Guard: no hx-get on POST-only fragment routes (#1139)"
         run: ./scripts/check-hx-fragments.sh
 
-      - name: Guard: no pre-merge repository URLs (#1473)
+      - name: "Guard: no pre-merge repository URLs (#1473)"
         run: ./scripts/check-repo-urls.sh
 
       - name: Install Rust
@@ -69,3 +72,39 @@ jobs:
             --endpoint "$BOTEVAL_ENDPOINT" \
             --api-key "$BOTEVAL_API_KEY" \
             --model "$BOTEVAL_MODEL"
+
+  # #1512 — botserver is a BINARY crate: its unit tests only build with
+  # `--bin botserver`. `cargo test -p botserver --lib` fails with "no library
+  # targets found" and silently tests nothing, which is how four stale
+  # expectations accumulated unnoticed. This job is the regression guard.
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang mold libpq-dev libssl-dev liblzma-dev pkg-config
+
+      - name: Install Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install stable
+          rustup default stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-unit-tests-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-unit-tests-
+
+      - name: Run botserver unit tests
+        run: cargo test -p botserver --bin botserver
