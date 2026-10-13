@@ -6,7 +6,7 @@ target*
 *.env
 work
 *.out
-bin
+/bin
 botserver-stack
 *logfile*
 *.log
