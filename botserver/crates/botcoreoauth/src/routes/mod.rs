@@ -2,15 +2,13 @@ pub(crate) use crate::{OAuthProvider, OAuthState, OAuthUserInfo};
 pub(crate) use crate::providers::{get_enabled_providers, load_oauth_config};
 pub(crate) use anyhow::anyhow;
 pub(crate) use axum::{ extract::{Path, Query, State}, http::{header, StatusCode}, response::{Html, IntoResponse, Redirect, Response}, routing::get, Json, Router, };
-pub(crate) use diesel::r2d2::{ConnectionManager, Pool};
-pub(crate) use diesel::PgConnection;
 pub(crate) use log::{debug, info, warn};
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use std::collections::HashMap;
 pub(crate) use std::sync::Arc;
 pub(crate) use uuid::Uuid;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub struct OAuthState_ {
     pub conn: DbPool,

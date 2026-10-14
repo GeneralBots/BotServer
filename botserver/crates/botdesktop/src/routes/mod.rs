@@ -22,7 +22,7 @@ pub(crate) use crate::types::{ConnectionCreateRequest, HealthCheckResponse, mask
 /// Remote-desktop protocols the proxy tunnel may carry.
 const SUPPORTED_PROTOCOLS: &[&str] = &["vnc", "rdp"];
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 // ---------------------------------------------------------------------------
 // Shared application state

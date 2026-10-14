@@ -10,7 +10,7 @@ default = []
 [dependencies]
 botcore = { workspace = true }
 botsecurity = { workspace = true }
-botlib = { workspace = true }
+botlib = { workspace = true, features = ["database"] }
 botschema = { workspace = true, features = ["meet"] }
 axum = { workspace = true, features = ["ws", "macros"] }
 serde = { workspace = true, features = ["derive"] }

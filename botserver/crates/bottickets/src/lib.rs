@@ -13,12 +13,11 @@ use axum::{
 
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
-use r2d2::Pool;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub type GetDefaultBotFn = fn(&mut diesel::PgConnection) -> Uuid;
 

@@ -1,7 +1,7 @@
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+use diesel::r2d2::{ConnectionManager, PooledConnection};
 use diesel::PgConnection;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 pub type DbConn = PooledConnection<ConnectionManager<PgConnection>>;
 
 pub struct SessionPool {

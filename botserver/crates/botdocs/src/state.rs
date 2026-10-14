@@ -1,10 +1,8 @@
 use std::sync::Arc;
 
 use botlib::traits::DriveRepository;
-use diesel::pg::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool};
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 use crate::Document;
 
 /// Per-document undo/redo snapshot stacks (session-lifetime, capped).

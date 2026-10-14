@@ -4,13 +4,11 @@
 
 use axum::{Json, Extension};
 use diesel::prelude::*;
-use diesel::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool};
 use crate::models::Project;
 use super::router::DeploymentRouter;
 use super::types::*;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub fn configure_deployment_routes(pool: DbPool) -> axum::Router<()> {
     let pool_ext = Extension(pool);

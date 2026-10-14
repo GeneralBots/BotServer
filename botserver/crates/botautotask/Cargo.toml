@@ -12,7 +12,7 @@ llm = []
 drive = ["rust-s3"]
 
 [dependencies]
-botlib = { workspace = true }
+botlib = { workspace = true, features = ["database"] }
 botcore = { workspace = true }
 botbasic_compiler = { workspace = true }
 botbasic_core = { workspace = true }

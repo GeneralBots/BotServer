@@ -7,13 +7,11 @@ use axum::{
     routing::{delete, get, post},
     Router,
 };
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub struct DirectoryApiState {
     pub conn: DbPool,

@@ -6,8 +6,6 @@ mod schema;
 #[cfg(test)]
 mod tests;
 
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;

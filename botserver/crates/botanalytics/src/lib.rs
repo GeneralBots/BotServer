@@ -21,7 +21,7 @@ pub mod goals_types;
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub type GetDefaultBotFn = Arc<dyn Fn(&mut diesel::PgConnection) -> Uuid + Send + Sync>;
 

@@ -23,7 +23,7 @@ pub mod llm_assist_commands;
 
 use std::sync::Arc;
 
-pub type DbPool = r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub type GetDefaultBotFn = Arc<dyn Fn(&mut diesel::PgConnection) -> uuid::Uuid + Send + Sync>;
 

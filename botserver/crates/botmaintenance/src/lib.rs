@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 const DEFAULT_RETENTION_DAYS: i64 = 180;
 const MIN_RETENTION_DAYS: i64 = 7;

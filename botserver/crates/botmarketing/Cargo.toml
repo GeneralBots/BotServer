@@ -8,6 +8,7 @@ authors = ["General Bots"]
 repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
+botlib = { workspace = true, features = ["database"] }
 botsecurity-core = { workspace = true }
 botmultimodal = { workspace = true }
 botinstagram = { workspace = true }

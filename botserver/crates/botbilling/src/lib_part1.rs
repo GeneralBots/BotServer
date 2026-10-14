@@ -1,6 +1,6 @@
 use super::*;
 
-pub type DbPool = r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BillingAlertNotification {
     pub alert_id: Uuid,

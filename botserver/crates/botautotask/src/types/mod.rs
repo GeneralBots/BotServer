@@ -1,13 +1,11 @@
 pub(crate) use botbasic_core::utils::BotDriveLocation;
-pub(crate) use diesel::r2d2::{ConnectionManager, Pool};
-pub(crate) use diesel::PgConnection;
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use std::collections::HashMap;
 pub(crate) use std::sync::{Arc, RwLock};
 pub(crate) use tokio::sync::broadcast;
 pub(crate) use uuid::Uuid;
 
-pub type DbPool = Arc<Pool<ConnectionManager<PgConnection>>>;
+pub type DbPool = Arc<botlib::db_pool::DbPool>;
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 pub type BoxFuture<T> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<T, BoxError>> + Send>>;
 

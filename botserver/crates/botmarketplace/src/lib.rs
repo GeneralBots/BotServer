@@ -10,15 +10,13 @@ mod publish;
 pub mod seed;
 mod seed_data;
 
-use diesel::PgConnection;
-use r2d2::Pool;
 use serde_json::Value;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = Pool<diesel::r2d2::ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 /// Async consent hook receiving (bot_id, ConsentRequest json) and answering allow/deny.
 pub type ConsentFuture = Pin<Box<dyn Future<Output = Result<bool, String>> + Send>>;

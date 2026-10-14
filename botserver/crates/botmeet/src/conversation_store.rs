@@ -16,7 +16,7 @@ use crate::conversations::{
     LeaveConversationRequest, ParticipantResponse, SuccessResponse,
 };
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 pub type PgConnection = diesel::PgConnection;
 
 /// Resolves a nil bot id to the default bot so requests without an explicit

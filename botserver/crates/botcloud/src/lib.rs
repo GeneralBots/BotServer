@@ -17,7 +17,7 @@ use botbilling::stripe_integration::StripeClient;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-pub type DbPool = r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CalculatorPayload {

@@ -6,7 +6,7 @@ use diesel::prelude::*;
 use std::fmt;
 use uuid::Uuid;
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum MemoryError {

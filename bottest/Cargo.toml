@@ -10,6 +10,7 @@ keywords = ["testing", "bot", "integration-testing", "e2e", "general-bots"]
 categories = ["development-tools::testing"]
 
 [dependencies]
+botlib = { workspace = true, features = ["database"] }
 # Async runtime
 tokio = { workspace = true, features = ["full", "test-util", "macros"] }
 async-trait = { workspace = true }

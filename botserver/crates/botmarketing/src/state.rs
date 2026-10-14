@@ -1,9 +1,8 @@
-use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::{OptionalExtension, RunQueryDsl};
 use diesel::PgConnection;
 use std::sync::Arc;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub type GetDefaultBotFn = Arc<dyn Fn(&mut PgConnection) -> (uuid::Uuid, String) + Send + Sync>;
 

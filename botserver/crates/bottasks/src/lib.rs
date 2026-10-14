@@ -30,7 +30,7 @@ pub const TASKS_CARDS: &str = "/api/tasks/{id}/cards";
 pub const TASKS_TERMINAL: &str = "/api/tasks/{id}/terminal";
 pub const TASKS_LOG: &str = "/api/tasks/{id}/log";
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub fn configure_tasks_routes() -> Router<Arc<TasksState>> {
     Router::new()

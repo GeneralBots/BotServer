@@ -16,12 +16,10 @@ pub mod schema;
 pub mod tasks;
 
 use axum::Router;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
 use std::sync::Arc;
 
 /// Shared PostgreSQL connection pool (same shape as sibling crates).
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub struct BrowserPolicyService {
     pool: DbPool,

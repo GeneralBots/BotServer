@@ -5,12 +5,10 @@ use axum::{
     response::{IntoResponse, Json},
 };
 use chrono::Utc;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub struct SessionState {
     pub conn: DbPool,

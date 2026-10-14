@@ -4,8 +4,6 @@ pub(crate) use tokio::sync::RwLock;
 pub(crate) use uuid::Uuid;
 pub(crate) use chrono::Utc;
 pub(crate) use diesel::prelude::*;
-pub(crate) use diesel::r2d2::{ConnectionManager, Pool};
-pub(crate) use diesel::PgConnection;
 pub(crate) use log::warn;
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use crate::import::ImportResult;
@@ -13,7 +11,7 @@ pub(crate) use crate::types::*;
 
 /// Postgres pool shared by every persistence operation. Kept as a concrete
 /// diesel type (not botcore's alias) so this leaf crate stays decoupled.
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 /// Full tenant snapshot: one org's projects and everything hanging off them.
 /// Serialized to a single JSONB row keyed by org_id in `project_snapshots`.

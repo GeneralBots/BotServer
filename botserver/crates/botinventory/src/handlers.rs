@@ -12,7 +12,7 @@ use diesel::prelude::*;
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 #[derive(Clone)]
 pub struct InventoryState {

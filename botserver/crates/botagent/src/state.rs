@@ -1,6 +1,6 @@
 //! Shared state primitives: DB pool alias and the in-memory rate limiter.
 
-pub type DbPool = r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 /// Simple token bucket: each key holds the last refill instant and the
 /// remaining tokens. Capacity equals `per_sec`, refilled linearly.

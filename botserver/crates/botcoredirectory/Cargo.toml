@@ -30,5 +30,5 @@ once_cell = { workspace = true }
 rand = { workspace = true }
 dirs = { workspace = true }
 botcore = { workspace = true }
-botlib = { workspace = true }
+botlib = { workspace = true, features = ["database"] }
 botsecurity = { workspace = true }

@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use tokio::sync::OnceCell;
 use uuid::Uuid;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 #[derive(Debug, Clone)]
 pub struct TestConfig {

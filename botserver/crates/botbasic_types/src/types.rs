@@ -76,7 +76,7 @@ pub struct Attachment {
     pub size: Option<u64>,
 }
 
-pub type DbPool = botlib::db_pool::DbPool;
+pub use botlib::db_pool::DbPool;
 
 impl From<botlib::models::UserSession> for UserSession {
     fn from(u: botlib::models::UserSession) -> Self {

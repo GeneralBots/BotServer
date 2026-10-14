@@ -1,6 +1,6 @@
 use super::*;
 
-pub type DbPool = Pool<ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 diesel::table! {
     branches (id) {

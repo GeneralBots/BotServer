@@ -1,8 +1,6 @@
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
 use std::sync::Arc;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub type S3PutFn = Arc<dyn Fn(&str, &str, Vec<u8>, Option<&str>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), String>> + Send>> + Send + Sync>;
 pub type S3GetFn = Arc<dyn Fn(&str, &str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<u8>, String>> + Send>> + Send + Sync>;

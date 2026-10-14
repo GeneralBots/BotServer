@@ -6,6 +6,7 @@ license = "MIT"
 description = "Desktop session proxy — WebSocket-to-TCP relay for remote desktop connections"
 
 [dependencies]
+botlib = { workspace = true, features = ["database"] }
 axum = { workspace = true, features = ["ws", "macros"] }
 botsecurity-core = { workspace = true }
 tokio = { workspace = true, features = ["full"], default-features = true }

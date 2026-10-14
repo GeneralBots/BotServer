@@ -19,7 +19,7 @@ pub(crate) use botcoresecrets::SecretsManager;
 
 struct SecretsManagerVaultProvider(SecretsManager);
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 mod part1;
 mod part2;

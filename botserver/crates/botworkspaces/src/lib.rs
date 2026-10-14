@@ -7,14 +7,13 @@ use axum::{
 };
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Pool};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{broadcast, RwLock};
 use uuid::Uuid;
 
-pub type DbPool = Pool<ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub mod scope;
 

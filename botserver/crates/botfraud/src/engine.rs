@@ -4,7 +4,7 @@ use crate::types::*;
 use diesel::prelude::*;
 use uuid::Uuid;
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 #[derive(Clone)]
 pub struct FraudEngine {

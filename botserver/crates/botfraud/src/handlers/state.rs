@@ -3,10 +3,9 @@
 use crate::engine::FraudEngine;
 use axum::http::HeaderMap;
 use base64::Engine as _;
-use diesel::prelude::*;
 use uuid::Uuid;
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 #[derive(Clone)]
 pub struct FraudState {

@@ -19,9 +19,8 @@ pub mod store;
 
 use std::sync::Arc;
 
-use r2d2::Pool;
 
-pub type DbPool = Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub use state::{LlmFn, MemoryService};
 

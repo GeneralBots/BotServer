@@ -14,7 +14,7 @@ cache = ["dep:redis"]
 anyhow = { workspace = true }
 botsecurity-core = { workspace = true }
 botsecurity-crypto = { workspace = true }
-botlib = { workspace = true }
+botlib = { workspace = true, features = ["database"] }
 axum = { workspace = true }
 chrono = { workspace = true, features = ["clock", "std", "serde"] }
 diesel = { workspace = true, features = ["postgres", "uuid", "chrono", "serde_json", "r2d2", "numeric", "32-column-tables"] }

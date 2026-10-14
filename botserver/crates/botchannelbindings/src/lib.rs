@@ -2,10 +2,8 @@ mod api;
 pub mod models;
 pub mod schema;
 
-use diesel::PgConnection;
-use r2d2::Pool;
 
-pub type DbPool = Pool<diesel::r2d2::ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 #[derive(Clone)]
 pub struct ChannelBindingsService {

@@ -2,15 +2,13 @@
 //! delivery channels, tools, owner e-mail resolution) are injected by the
 //! integrator; the crate never constructs providers itself.
 
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
 use std::collections::HashMap;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
 /// Shared PostgreSQL connection pool (same shape as sibling crates).
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 /// Injected LLM chat-completion function (shared contract, see BRIEF):
 /// `(system prompt, user prompt, json params) -> raw completion or error`.

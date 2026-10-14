@@ -14,10 +14,8 @@ pub mod models;
 pub mod schema;
 pub mod store;
 
-use diesel::PgConnection;
-use r2d2::Pool;
 
-pub type DbPool = Pool<diesel::r2d2::ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub use enforce::{
     authorize, resolve, take_pending_approved, ConsentDecision, ConsentService, PendingRequest,

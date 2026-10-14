@@ -10,7 +10,7 @@ repository = "https://github.com/generalbots/generalbots"
 diesel = { workspace = true, features = ["postgres", "uuid", "chrono", "serde_json", "r2d2", "numeric", "32-column-tables"] }
 r2d2 = { workspace = true }
 botcore = { workspace = true }
-botlib = { workspace = true }
+botlib = { workspace = true, features = ["database"] }
 axum = { workspace = true }
 serde = { workspace = true, features = ["derive", "std"] }
 serde_json = { workspace = true }

@@ -2,7 +2,7 @@
 
 use super::*;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub(crate) type BoxError = Box<dyn std::error::Error + Send + Sync>;
 

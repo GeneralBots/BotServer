@@ -20,7 +20,7 @@ botcoresecrets = { workspace = true }
 botbasic_types = { workspace = true }
 rhai = { workspace = true, features = ["sync"] }
 
-botlib = { workspace = true }
+botlib = { workspace = true, features = ["database"] }
 botschema = { workspace = true }
 chrono = { workspace = true, features = ["clock", "std"] }
 cron = { workspace = true }

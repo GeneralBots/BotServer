@@ -5,6 +5,7 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
+botlib = { workspace = true, features = ["database"] }
 serde = { workspace = true, features = ["derive"], default-features = true }
 serde_json = { workspace = true }
 chrono = { workspace = true, features = ["serde"], default-features = true }

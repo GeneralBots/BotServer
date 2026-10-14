@@ -1174,6 +1174,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "bigdecimal",
+ "botlib",
  "chrono",
  "diesel",
  "log",
@@ -1236,6 +1237,7 @@ version = "6.7.0"
 dependencies = [
  "anyhow",
  "axum",
+ "botlib",
  "botsecurity-core",
  "botsecurity-crypto",
  "chrono",
@@ -1259,6 +1261,7 @@ version = "6.7.0"
 dependencies = [
  "anyhow",
  "axum",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",
@@ -1276,6 +1279,7 @@ version = "6.7.0"
 dependencies = [
  "async-stream",
  "axum",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",
@@ -1529,6 +1533,7 @@ dependencies = [
  "async-trait",
  "axum",
  "bigdecimal",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",
@@ -1595,6 +1600,7 @@ version = "6.7.0"
 dependencies = [
  "async-stream",
  "axum",
+ "botlib",
  "botsecurity-auth",
  "chrono",
  "diesel",
@@ -1611,6 +1617,7 @@ name = "botcalendar"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "botschema",
  "botsecurity-core",
  "chrono",
@@ -1630,6 +1637,7 @@ name = "botcanvas"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "chrono",
  "diesel",
  "r2d2",
@@ -1643,6 +1651,7 @@ name = "botchannelbindings"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "botlib",
  "chrono",
  "diesel",
  "r2d2",
@@ -1716,6 +1725,7 @@ dependencies = [
  "botcoredirectory",
  "botcoresecrets",
  "botdomains",
+ "botlib",
  "botproducts",
  "botproviders",
  "botsecurity",
@@ -1744,6 +1754,7 @@ dependencies = [
  "anyhow",
  "axum",
  "bigdecimal",
+ "botlib",
  "chrono",
  "csv",
  "diesel",
@@ -1784,6 +1795,7 @@ name = "botconsent"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "botlib",
  "chrono",
  "diesel",
  "r2d2",
@@ -1800,6 +1812,7 @@ version = "6.7.0"
 dependencies = [
  "anyhow",
  "axum",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "csv",
@@ -1931,6 +1944,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "botcoresecrets",
+ "botlib",
  "chrono",
  "diesel",
  "log",
@@ -2010,6 +2024,7 @@ name = "botdashboards"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "chrono",
  "diesel",
  "r2d2",
@@ -2044,6 +2059,7 @@ version = "6.7.0"
 dependencies = [
  "axum",
  "botcoresecrets",
+ "botlib",
  "botsecurity-auth",
  "chrono",
  "diesel",
@@ -2082,6 +2098,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "botcoresecrets",
+ "botlib",
  "botsecurity-auth",
  "botsecurity-core",
  "chrono",
@@ -2258,6 +2275,7 @@ version = "6.7.0"
 dependencies = [
  "axum",
  "base64 0.22.1",
+ "botlib",
  "chrono",
  "diesel",
  "log",
@@ -2287,6 +2305,7 @@ name = "botgl"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",
@@ -2382,6 +2401,7 @@ name = "botinventory"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",
@@ -2442,6 +2462,7 @@ name = "botlegal"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "chrono",
  "diesel",
  "r2d2",
@@ -2528,6 +2549,7 @@ name = "botmaintenance"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "chrono",
  "diesel",
  "log",
@@ -2545,6 +2567,7 @@ dependencies = [
  "axum",
  "bigdecimal",
  "botinstagram",
+ "botlib",
  "botmultimodal",
  "botsecurity-core",
  "chrono",
@@ -2565,6 +2588,7 @@ name = "botmarketplace"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "botlib",
  "botsecurity",
  "chrono",
  "diesel",
@@ -2610,6 +2634,7 @@ name = "botmemory"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "botlib",
  "chrono",
  "diesel",
  "r2d2",
@@ -2713,6 +2738,7 @@ name = "botpaper"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "chrono",
  "diesel",
  "log",
@@ -2728,6 +2754,7 @@ version = "6.7.0"
 dependencies = [
  "axum",
  "bigdecimal",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",
@@ -2796,6 +2823,7 @@ version = "6.7.0"
 dependencies = [
  "axum",
  "bigdecimal",
+ "botlib",
  "botsecurity-core",
  "bottax",
  "chrono",
@@ -2814,6 +2842,7 @@ name = "botproject"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "botsecurity-auth",
  "chrono",
  "diesel",
@@ -3400,6 +3429,7 @@ name = "botsocial"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "chrono",
  "diesel",
  "r2d2",
@@ -3417,6 +3447,7 @@ dependencies = [
  "axum",
  "base64 0.22.1",
  "botcoresecrets",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",
@@ -3510,6 +3541,7 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "botbilling",
+ "botlib",
  "chromiumoxide",
  "chrono",
  "cookie",
@@ -3539,6 +3571,7 @@ name = "bottickets"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",
@@ -3705,6 +3738,7 @@ name = "botwhatsapp"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",
@@ -3721,6 +3755,7 @@ name = "botworkspaces"
 version = "6.7.0"
 dependencies = [
  "axum",
+ "botlib",
  "botsecurity-core",
  "chrono",
  "diesel",

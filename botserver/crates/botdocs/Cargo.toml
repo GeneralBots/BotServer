@@ -8,7 +8,7 @@ authors = ["General Bots"]
 repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
-botlib = { workspace = true }
+botlib = { workspace = true, features = ["database"] }
 axum = { workspace = true, features = ["ws", "multipart", "macros"] }
 botsecurity-core = { workspace = true }
 chrono = { workspace = true, features = ["serde", "clock"] }

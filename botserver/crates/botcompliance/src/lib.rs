@@ -47,7 +47,7 @@ pub use types::{
     TrainingType, TreatmentStrategy, UpdateIssueRequest,
 };
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 pub type AppState = Arc<DbPool>;
 
 #[derive(Debug, thiserror::Error)]

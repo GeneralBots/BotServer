@@ -6,11 +6,10 @@ pub mod ui;
 pub mod workflow_canvas;
 
 use diesel::pg::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool};
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub type GetDefaultBotFn = Arc<dyn Fn(&mut PgConnection) -> (Uuid, String) + Send + Sync>;
 

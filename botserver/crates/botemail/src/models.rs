@@ -4,7 +4,6 @@ use axum::{
 };
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::sql_types::{
     Bool, Integer, Nullable, Text, Timestamptz, Uuid as DieselUuid, Varchar,
 };
@@ -13,7 +12,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub type GetDefaultBotFn = Arc<dyn Fn(&mut PgConnection) -> (Uuid, String) + Send + Sync>;
 

@@ -11,8 +11,6 @@ use axum::{
 use botllm::{create_llm_provider, LLMProviderType};
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -114,7 +112,7 @@ pub type PlanStore = Arc<RwLock<HashMap<String, Plan>>>;
 static STORE: std::sync::OnceLock<PlanStore> = std::sync::OnceLock::new();
 
 /// Postgres pool shared by persistence operations (set once at server mount).
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 static POOL: std::sync::OnceLock<Option<DbPool>> = std::sync::OnceLock::new();
 
 #[derive(Debug, Clone, Deserialize)]

@@ -4,7 +4,7 @@ use serde_json::Value;
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub trait SessionManager: Send + Sync {
     fn get_session_by_id(&self, session_id: Uuid) -> BotResult<Option<UserSession>>;

@@ -13,6 +13,7 @@ goals = []
 llm = []
 
 [dependencies]
+botlib = { workspace = true, features = ["database"] }
 axum = { workspace = true }
 base64 = { workspace = true }
 bigdecimal = { workspace = true, features = ["serde"] }

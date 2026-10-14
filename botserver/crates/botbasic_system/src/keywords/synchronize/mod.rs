@@ -207,7 +207,7 @@ use std::sync::Arc;
 use botbasic_types::{BasicRuntime, UserSession};
 use rhai::Engine;
 use uuid::Uuid;
-type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+type DbPool = botlib::db_pool::DbPool;
 
 mod part1;
 mod part2;

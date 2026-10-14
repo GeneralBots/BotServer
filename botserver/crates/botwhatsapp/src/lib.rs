@@ -23,7 +23,7 @@ pub const WHATSAPP_SEND: &str = "/api/whatsapp/send";
 pub const WHATSAPP_STATUS: &str = "/api/whatsapp/status";
 pub const WHATSAPP_SESSIONS: &str = "/api/whatsapp/sessions";
 
-pub type DbPool = diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 pub fn configure_whatsapp_routes() -> Router<Arc<WhatsAppState>> {
     Router::new()

@@ -2,7 +2,7 @@ pub use diesel::r2d2::Pool;
 pub use diesel::r2d2::ConnectionManager;
 pub use diesel::PgConnection;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 use std::sync::Arc;
 

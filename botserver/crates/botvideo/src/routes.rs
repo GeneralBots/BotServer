@@ -1,9 +1,7 @@
 use axum::Router;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
 use std::sync::Arc;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 #[derive(Clone)]
 pub struct AppState {

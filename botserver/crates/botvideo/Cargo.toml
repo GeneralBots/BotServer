@@ -7,7 +7,7 @@ authors = ["General Bots"]
 repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
-botlib = { workspace = true }
+botlib = { workspace = true, features = ["database"] }
 
 axum = { workspace = true, features = ["ws", "multipart", "macros"] }
 diesel = { workspace = true, features = ["postgres", "r2d2", "serde_json", "chrono", "uuid"] }

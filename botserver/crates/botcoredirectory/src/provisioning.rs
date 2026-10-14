@@ -1,11 +1,9 @@
 use anyhow::Result;
-use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::PgConnection;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+pub use botlib::db_pool::DbPool;
 
 #[cfg(feature = "drive")]
 pub struct S3ClientStub;

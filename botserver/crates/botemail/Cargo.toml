@@ -12,7 +12,7 @@ mail = ["imap"]
 vectordb = ["qdrant-client"]
 
 [dependencies]
-botlib = { workspace = true }
+botlib = { workspace = true, features = ["database"] }
 botsecurity-core = { workspace = true }
 diesel = { workspace = true, features = ["postgres", "r2d2", "chrono", "uuid", "serde_json"] }
 serde = { workspace = true, features = ["derive"] }
