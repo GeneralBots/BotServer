@@ -1,7 +1,7 @@
 use super::*;
 
 impl ObjectiveStatus {
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s {
             "active" => Self::Active,
             "on_track" => Self::OnTrack,

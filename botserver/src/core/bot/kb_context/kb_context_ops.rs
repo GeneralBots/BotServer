@@ -162,7 +162,7 @@ pub async fn inject_kb_context(
 
     let rag_mode_str = cfg.get_config(&bot_id, "rag-mode", Some("standard"))
         .unwrap_or_else(|_| "standard".to_string());
-    let rag_mode = RagMode::from_str(&rag_mode_str);
+    let rag_mode = RagMode::from_label(&rag_mode_str);
 
     info!(
         "KB context injection for session {}: rag-mode={}",

@@ -268,7 +268,7 @@ pub(crate) async fn search_pages(
         .map(|p| {
             let icon = match (&p.icon_type, &p.icon_value) {
                 (Some(t), Some(v)) => Some(WorkspaceIcon {
-                    icon_type: IconType::from_str(t),
+                    icon_type: IconType::from_label(t),
                     value: v.clone(),
                 }),
                 _ => None,

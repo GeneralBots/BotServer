@@ -21,7 +21,7 @@ impl AuthType {
         }
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s {
             "api_key" | "apikey" => Self::ApiKey,
             "bearer" => Self::Bearer,

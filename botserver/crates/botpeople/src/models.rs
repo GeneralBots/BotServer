@@ -38,7 +38,7 @@ impl EmploymentStatus {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<EmploymentStatus> {
+    pub fn from_label(s: &str) -> Option<EmploymentStatus> {
         match s {
             "Active" => Some(EmploymentStatus::Active),
             "Inactive" => Some(EmploymentStatus::Inactive),
@@ -104,7 +104,7 @@ impl LeaveType {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<LeaveType> {
+    pub fn from_label(s: &str) -> Option<LeaveType> {
         match s {
             "Vacation" => Some(LeaveType::Vacation),
             "Sick" => Some(LeaveType::Sick),
@@ -136,7 +136,7 @@ impl LeaveStatus {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<LeaveStatus> {
+    pub fn from_label(s: &str) -> Option<LeaveStatus> {
         match s {
             "Pending" => Some(LeaveStatus::Pending),
             "Approved" => Some(LeaveStatus::Approved),
@@ -177,7 +177,7 @@ impl PayrollStatus {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<PayrollStatus> {
+    pub fn from_label(s: &str) -> Option<PayrollStatus> {
         match s {
             "Processing" => Some(PayrollStatus::Processing),
             "Completed" => Some(PayrollStatus::Completed),

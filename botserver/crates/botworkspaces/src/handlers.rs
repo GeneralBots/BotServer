@@ -44,7 +44,7 @@ pub(crate) async fn list_workspaces(
             .into_iter()
             .map(|m| WorkspaceMember {
                 user_id: m.user_id,
-                role: WorkspaceRole::from_str(&m.role),
+                role: WorkspaceRole::from_label(&m.role),
                 joined_at: m.joined_at,
                 invited_by: m.invited_by,
             })
@@ -148,7 +148,7 @@ pub(crate) async fn get_workspace(
         .into_iter()
         .map(|m| WorkspaceMember {
             user_id: m.user_id,
-            role: WorkspaceRole::from_str(&m.role),
+            role: WorkspaceRole::from_label(&m.role),
             joined_at: m.joined_at,
             invited_by: m.invited_by,
         })
@@ -207,7 +207,7 @@ pub(crate) async fn update_workspace(
         .into_iter()
         .map(|m| WorkspaceMember {
             user_id: m.user_id,
-            role: WorkspaceRole::from_str(&m.role),
+            role: WorkspaceRole::from_label(&m.role),
             joined_at: m.joined_at,
             invited_by: m.invited_by,
         })
@@ -293,7 +293,7 @@ pub(crate) async fn list_pages(
             .map(|p| {
                 let icon = match (&p.icon_type, &p.icon_value) {
                     (Some(t), Some(v)) => Some(WorkspaceIcon {
-                        icon_type: IconType::from_str(t),
+                        icon_type: IconType::from_label(t),
                         value: v.clone(),
                     }),
                     _ => None,

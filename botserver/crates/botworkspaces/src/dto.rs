@@ -3,7 +3,7 @@ use super::*;
 pub(crate) fn db_to_workspace(db: DbWorkspace, members: Vec<WorkspaceMember>, root_pages: Vec<Uuid>) -> Workspace {
     let icon = match (&db.icon_type, &db.icon_value) {
         (Some(t), Some(v)) => Some(WorkspaceIcon {
-            icon_type: IconType::from_str(t),
+            icon_type: IconType::from_label(t),
             value: v.clone(),
         }),
         _ => None,
@@ -29,7 +29,7 @@ pub(crate) fn db_to_workspace(db: DbWorkspace, members: Vec<WorkspaceMember>, ro
 pub(crate) fn db_to_page(db: DbWorkspacePage, children: Vec<Uuid>) -> Page {
     let icon = match (&db.icon_type, &db.icon_value) {
         (Some(t), Some(v)) => Some(WorkspaceIcon {
-            icon_type: IconType::from_str(t),
+            icon_type: IconType::from_label(t),
             value: v.clone(),
         }),
         _ => None,

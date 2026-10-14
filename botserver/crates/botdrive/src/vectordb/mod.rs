@@ -6,6 +6,7 @@ pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use std::path::{Path, PathBuf};
 #[cfg(feature = "vectordb")]
 pub(crate) use std::sync::Arc;
+#[cfg(not(feature = "vectordb"))]
 pub(crate) use tokio::fs;
 pub(crate) use uuid::Uuid;
 #[cfg(feature = "drive")]

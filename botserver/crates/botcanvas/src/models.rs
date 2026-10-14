@@ -146,7 +146,7 @@ impl ElementType {
         }
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s {
             "rectangle" => Self::Rectangle,
             "ellipse" => Self::Ellipse,

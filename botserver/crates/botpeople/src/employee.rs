@@ -125,7 +125,7 @@ impl EmployeeService {
             emp.salary = s_val;
         }
         if let Some(ref s) = status {
-            if let Some(st) = EmploymentStatus::from_str(s) {
+            if let Some(st) = EmploymentStatus::from_label(s) {
                 emp.status = st;
             }
         }

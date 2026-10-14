@@ -1,7 +1,7 @@
 use super::*;
 
 impl KRStatus {
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s {
             "in_progress" => Self::InProgress,
             "at_risk" => Self::AtRisk,

@@ -20,7 +20,7 @@ impl TicketStatus {
         }
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "pending" => Self::Pending,
             "resolved" => Self::Resolved,
@@ -48,7 +48,7 @@ impl TicketPriority {
         }
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "low" => Self::Low,
             "high" => Self::High,

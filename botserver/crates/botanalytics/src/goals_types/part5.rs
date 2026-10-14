@@ -1,7 +1,7 @@
 use super::*;
 
 impl Confidence {
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s {
             "low" => Self::Low,
             "high" => Self::High,

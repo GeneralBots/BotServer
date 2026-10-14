@@ -1,7 +1,7 @@
 use super::*;
 
 impl MetricType {
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s {
             "percentage" => Self::Percentage,
             "currency" => Self::Currency,

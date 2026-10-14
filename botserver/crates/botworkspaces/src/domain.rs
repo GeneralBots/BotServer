@@ -39,7 +39,7 @@ impl IconType {
         }
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s {
             "emoji" => Self::Emoji,
             "image" => Self::Image,
@@ -78,7 +78,7 @@ impl WorkspaceRole {
         }
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s {
             "owner" => Self::Owner,
             "admin" => Self::Admin,

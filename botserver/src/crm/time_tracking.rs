@@ -20,7 +20,7 @@ impl TimeEvent {
         }
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "check_out" => Self::CheckOut,
             "break_start" => Self::BreakStart,

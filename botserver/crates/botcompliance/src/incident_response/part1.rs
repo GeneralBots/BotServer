@@ -11,7 +11,7 @@ impl IncidentSeverity {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn from_label(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "critical" => Some(Self::Critical),
             "high" => Some(Self::High),

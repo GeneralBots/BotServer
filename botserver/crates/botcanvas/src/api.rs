@@ -6,7 +6,7 @@ pub(crate) fn db_to_canvas_element(db: DbCanvasElement) -> CanvasElement {
     CanvasElement {
         id: db.id,
         canvas_id: db.canvas_id,
-        element_type: ElementType::from_str(&db.element_type),
+        element_type: ElementType::from_label(&db.element_type),
         x: db.x,
         y: db.y,
         width: db.width,

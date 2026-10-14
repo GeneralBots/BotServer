@@ -1,7 +1,7 @@
 use super::*;
 
 impl UiOp {
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn from_label(s: &str) -> Option<Self> {
         match s.to_ascii_lowercase().as_str() {
             "open" => Some(Self::Open),
             "click" => Some(Self::Click),

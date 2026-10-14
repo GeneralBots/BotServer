@@ -1,7 +1,7 @@
 use super::*;
 
 impl RagMode {
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_label(s: &str) -> Self {
         match s.trim().to_lowercase().as_str() {
             "hybrid" => Self::Hybrid,
             "corrective" => Self::Corrective,
