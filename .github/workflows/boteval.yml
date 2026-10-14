@@ -69,12 +69,15 @@ jobs:
           BOTEVAL_API_KEY: ${{ secrets.BOTEVAL_API_KEY }}
           BOTEVAL_MODEL: ${{ vars.BOTEVAL_MODEL || 'gpt-oss-120b' }}
         run: |
-          # #817 — the gate is a MERGE BLOCK. A missing secret must fail the
-          # build, not silently skip the evaluation (previous behavior let
-          # every run pass by exiting 0 when BOTEVAL_ENDPOINT was unset).
+          # #817 made a missing secret a HARD failure so the gate could never
+          # be silently skipped. On a repository with no BOTEVAL_* secrets that
+          # turned every push to main red for a reason no code change can fix.
+          # Maintainer decision: unconfigured = advisory. The step warns loudly
+          # and skips; the moment BOTEVAL_ENDPOINT exists the gate runs again
+          # and blocks exactly as before (a failing score still fails the job).
           if [ -z "$BOTEVAL_ENDPOINT" ]; then
-            echo "::error::BOTEVAL_ENDPOINT secret not configured — the evaluation gate cannot run. Configure the secret to run the gate (this is mandatory for main)."
-            exit 1
+            echo "::warning::BOTEVAL_ENDPOINT is not configured — skipping the evaluation gate. Set the secret to re-enable this merge block (#817)."
+            exit 0
           fi
           cargo run -p boteval --features http,vibe --bin boteval-run -- \
             --gate botserver/crates/boteval/ci/gate.toml \
