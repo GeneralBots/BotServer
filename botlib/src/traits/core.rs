@@ -11,8 +11,17 @@ pub type BoxFutureVecDriveObject = std::pin::Pin<Box<dyn std::future::Future<Out
 pub type BoxFutureOptionDriveMeta = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Option<DriveObjectMetadata>, String>> + Send>>;
 pub type BoxFutureDriveList = std::pin::Pin<Box<dyn std::future::Future<Output = Result<DriveListResult, String>> + Send>>;
 pub type BoxFutureOptionValue = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Option<serde_json::Value>, String>> + Send>>;
+pub type BoxFutureOptionString = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Option<String>, String>> + Send>>;
 pub type BoxFutureValue = std::pin::Pin<Box<dyn std::future::Future<Output = Result<serde_json::Value, String>> + Send>>;
 pub type BoxFutureVecValue = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Vec<serde_json::Value>, String>> + Send>>;
+/// Future that borrows the adapter, for trait methods that build a boxed
+/// future from `&self` (the channel-transport half of [`ChannelAdapter`]).
+pub type BoxFutureRefUnit<'a> =
+    std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BoxError>> + Send + 'a>>;
+pub type BoxFutureRefOptionString<'a> =
+    std::pin::Pin<Box<dyn std::future::Future<Output = Result<Option<String>, String>> + Send + 'a>>;
+pub type BoxFutureRefValue<'a> =
+    std::pin::Pin<Box<dyn std::future::Future<Output = Result<serde_json::Value, String>> + Send + 'a>>;
 
 pub trait LLMProvider: Send + Sync + Debug {
     fn generate(&self, prompt: &str, config: &serde_json::Value, model: &str, key: &str) -> BoxFutureResult;
@@ -33,9 +42,71 @@ pub trait LLMProvider: Send + Sync + Debug {
     ) -> BoxFutureUnit;
 }
 
+/// The single channel contract (#1499).
+///
+/// The web and voice runtime adapters and the Telegram, Instagram and Teams
+/// adapters all implement it, so a caller holding `dyn ChannelAdapter` can
+/// drive any transport. A new channel registers itself by implementing this
+/// trait — there is no per-channel copy of it any more.
+///
+/// Delivery has two shapes:
+///
+/// * `send_message` — the synchronous runtime path (web socket, voice);
+/// * `send_bot_response` — the asynchronous path every channel transport uses,
+///   since posting a full bot response is always I/O.
+///
+/// A transport that cannot serve one of them inherits the default, which says
+/// so explicitly rather than silently succeeding.
 pub trait ChannelAdapter: Send + Sync + Debug {
+    /// Stable channel id: `web`, `voice`, `telegram`, `instagram`, `msteams`.
     fn channel_type(&self) -> &str;
-    fn send_message(&self, to: &str, message: &str) -> Result<(), String>;
+
+    /// Human-readable name for the UI.
+    fn display_name(&self) -> &'static str {
+        "Unknown"
+    }
+
+    /// `false` when the channel is missing its credentials.
+    fn is_configured(&self) -> bool {
+        true
+    }
+
+    fn send_message(&self, to: &str, message: &str) -> Result<(), String> {
+        let _ = (to, message);
+        Err(format!(
+            "{}: synchronous send is not supported, use send_bot_response",
+            self.channel_type()
+        ))
+    }
+
+    /// Delivers a full bot response through the channel transport.
+    fn send_bot_response<'a>(
+        &'a self,
+        _response: crate::models::BotResponse,
+    ) -> BoxFutureRefUnit<'a> {
+        let channel = self.channel_type().to_string();
+        Box::pin(async move {
+            Err(Box::new(std::io::Error::other(format!(
+                "{channel}: delivery is not implemented"
+            ))) as BoxError)
+        })
+    }
+
+    /// Normalises an inbound payload into chat text; `None` when the payload
+    /// carries no message for this channel.
+    fn receive_message<'a>(
+        &'a self,
+        _payload: serde_json::Value,
+    ) -> BoxFutureRefOptionString<'a> {
+        Box::pin(async { Ok(None) })
+    }
+
+    /// Platform-specific user record, defaulting to id + platform.
+    fn get_user_info<'a>(&'a self, user_id: &str) -> BoxFutureRefValue<'a> {
+        let platform = self.channel_type().to_string();
+        let id = user_id.to_string();
+        Box::pin(async move { Ok(serde_json::json!({ "id": id, "platform": platform })) })
+    }
 
     fn send_message_to_session(&self, session_id: &str, message: &str) -> Result<(), String> {
         let _ = (session_id, message);

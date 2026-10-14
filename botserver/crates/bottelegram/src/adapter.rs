@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use botlib::models::BotResponse;
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
@@ -79,6 +78,7 @@ pub struct TelegramResponse {
     pub description: Option<String>,
 }
 
+#[derive(Debug)]
 pub struct TelegramAdapter {
     bot_token: String,
 }
@@ -324,9 +324,12 @@ impl TelegramAdapter {
     }
 }
 
-#[async_trait]
-impl crate::ChannelAdapter for TelegramAdapter {
-    fn name(&self) -> &'static str {
+impl botlib::traits::ChannelAdapter for TelegramAdapter {
+    fn channel_type(&self) -> &str {
+        "telegram"
+    }
+
+    fn display_name(&self) -> &'static str {
         "Telegram"
     }
 
@@ -334,43 +337,48 @@ impl crate::ChannelAdapter for TelegramAdapter {
         !self.bot_token.is_empty()
     }
 
-    async fn send_message(
-        &self,
+    fn send_bot_response<'a>(
+        &'a self,
         response: BotResponse,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        if !self.is_configured() {
-            log::error!("Telegram adapter not configured. Please write telegram-bot-token to the bot's Vault path (secret/gbo/{{org_id}}/{{branch_id}}/{{bot_id}})");
-            return Err("Telegram not configured".into());
-        }
+    ) -> botlib::traits::BoxFutureRefUnit<'a> {
+        Box::pin(async move {
+            if !self.is_configured() {
+                log::error!("Telegram adapter not configured. Please write telegram-bot-token to the bot's Vault path (secret/gbo/{{org_id}}/{{branch_id}}/{{bot_id}})");
+                return Err("Telegram not configured".into());
+            }
 
-        let chat_id = &response.user_id;
+            let chat_id = &response.user_id;
 
-        // LLM output is not guaranteed to be valid HTML — Telegram rejects
-        // the whole message on any parse-entity error ("can't parse
-        // entities: Unsupported start tag \"?xml\""). Sanitize up front so
-        // supported tags survive and anything else is neutralized; the
-        // plain-text retry below stays as a last-resort safety net.
-        let safe_html = crate::html::sanitize_for_html(&response.content);
-        if let Err(e) = self.send_text_message(chat_id, &safe_html, Some("HTML")).await {
-            log::warn!("Telegram HTML send failed ({e}); retrying as plain text");
-            self.send_text_message(chat_id, &response.content, None).await?;
-        }
+            // LLM output is not guaranteed to be valid HTML — Telegram rejects
+            // the whole message on any parse-entity error ("can't parse
+            // entities: Unsupported start tag \"?xml\""). Sanitize up front so
+            // supported tags survive and anything else is neutralized; the
+            // plain-text retry below stays as a last-resort safety net.
+            let safe_html = crate::html::sanitize_for_html(&response.content);
+            if let Err(e) = self.send_text_message(chat_id, &safe_html, Some("HTML")).await {
+                log::warn!("Telegram HTML send failed ({e}); retrying as plain text");
+                self.send_text_message(chat_id, &response.content, None).await?;
+            }
 
-        debug!(
-            "Telegram message sent to {} for session {}",
-            chat_id, response.session_id
-        );
-        Ok(())
+            debug!(
+                "Telegram message sent to {} for session {}",
+                chat_id, response.session_id
+            );
+            Ok(())
+        })
     }
 
-    async fn get_user_info(
-        &self,
+    fn get_user_info<'a>(
+        &'a self,
         user_id: &str,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
-        Ok(serde_json::json!({
-            "id": user_id,
-            "platform": "telegram",
-            "chat_id": user_id
-        }))
+    ) -> botlib::traits::BoxFutureRefValue<'a> {
+        let chat_id = user_id.to_string();
+        Box::pin(async move {
+            Ok(serde_json::json!({
+                "id": chat_id,
+                "platform": "telegram",
+                "chat_id": chat_id
+            }))
+        })
     }
 }

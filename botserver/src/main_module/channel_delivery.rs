@@ -59,7 +59,7 @@ fn deliver_telegram(state: &Arc<AppState>, response: &BotResponse) -> bool {
     let get_config = crate::main_module::routes::channel_support::make_channel_config_reader(state);
     let message = response.clone();
 
-    // Callers reach `send_message` from a blocking context, so the request runs
+    // Callers reach `send_bot_response` from a blocking context, so the request runs
     // on its own current-thread runtime and never blocks the script.
     std::thread::spawn(move || {
         let runtime = match tokio::runtime::Builder::new_current_thread()
@@ -76,7 +76,7 @@ fn deliver_telegram(state: &Arc<AppState>, response: &BotResponse) -> bool {
         let adapter = bottelegram::TelegramAdapter::new(pool, bot_id, get_config);
         let session_id = message.session_id.clone();
         let sent = runtime
-            .block_on(bottelegram::ChannelAdapter::send_message(&adapter, message));
+            .block_on(bottelegram::ChannelAdapter::send_bot_response(&adapter, message));
 
         match sent {
             Ok(()) => log::info!(

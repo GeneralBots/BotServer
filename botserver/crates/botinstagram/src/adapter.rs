@@ -1,10 +1,10 @@
-use async_trait::async_trait;
 use botlib::models::BotResponse;
 use log::info;
 
 use crate::state::GetConfigFn;
 use crate::types::InstagramProfile;
 
+#[derive(Debug)]
 pub struct InstagramAdapter {
     access_token: String,
     verify_token: String,
@@ -279,9 +279,12 @@ impl InstagramAdapter {
     }
 }
 
-#[async_trait]
-impl crate::ChannelAdapter for InstagramAdapter {
-    fn name(&self) -> &'static str {
+impl botlib::traits::ChannelAdapter for InstagramAdapter {
+    fn channel_type(&self) -> &str {
+        "instagram"
+    }
+
+    fn display_name(&self) -> &'static str {
         "Instagram"
     }
 
@@ -289,10 +292,11 @@ impl crate::ChannelAdapter for InstagramAdapter {
         !self.access_token.is_empty() && !self.page_id.is_empty()
     }
 
-    async fn send_message(
-        &self,
+    fn send_bot_response<'a>(
+        &'a self,
         response: BotResponse,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> botlib::traits::BoxFutureRefUnit<'a> {
+        Box::pin(async move {
         if !self.is_configured() {
             log::error!("Instagram adapter not configured. Please set instagram-access-token and instagram-page-id in the bot configuration database");
             return Err("Instagram not configured".into());
@@ -308,12 +312,14 @@ impl crate::ChannelAdapter for InstagramAdapter {
         );
 
         Ok(())
+        })
     }
 
-    async fn receive_message(
-        &self,
+    fn receive_message<'a>(
+        &'a self,
         payload: serde_json::Value,
-    ) -> Result<Option<String>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> botlib::traits::BoxFutureRefOptionString<'a> {
+        Box::pin(async move {
         if let Some(entry) = payload["entry"].as_array() {
             if let Some(first_entry) = entry.first() {
                 if let Some(messaging) = first_entry["messaging"].as_array() {
@@ -361,18 +367,23 @@ impl crate::ChannelAdapter for InstagramAdapter {
         }
 
         Ok(None)
+        })
     }
 
-    async fn get_user_info(
-        &self,
+    fn get_user_info<'a>(
+        &'a self,
         user_id: &str,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
-        match self.get_user_profile(user_id).await {
-            Ok(profile) => Ok(serde_json::to_value(profile)?),
-            Err(_) => Ok(serde_json::json!({
-                "id": user_id,
-                "platform": "instagram"
-            })),
-        }
+    ) -> botlib::traits::BoxFutureRefValue<'a> {
+        let id = user_id.to_string();
+        Box::pin(async move {
+            match self.get_user_profile(&id).await {
+                Ok(profile) => Ok(serde_json::to_value(profile)
+                    .map_err(|e| format!("profile serialization failed: {e}"))?),
+                Err(_) => Ok(serde_json::json!({
+                    "id": id,
+                    "platform": "instagram"
+                })),
+            }
+        })
     }
 }

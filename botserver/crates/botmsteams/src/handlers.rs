@@ -53,7 +53,7 @@ pub async fn send_message(
         "teams",
     );
 
-    match adapter.send_message(response).await {
+    match adapter.send_bot_response(response).await {
         Ok(_) => (StatusCode::OK, Json(serde_json::json!({"success": true}))),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,

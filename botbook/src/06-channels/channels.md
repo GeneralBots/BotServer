@@ -15,6 +15,36 @@ General Bots supports multiple messaging channels through a unified API. This se
 | Instagram | ✅ Production Ready | `instagram-access-token`, `instagram-page-id` |
 | Microsoft Teams | ✅ Production Ready | `teams-app-id`, `teams-app-password` |
 
+## Adding a Channel
+
+A channel is a crate in `botserver/crates/` that implements **one** contract:
+
+```rust
+// botlib/src/traits/core.rs
+pub trait ChannelAdapter: Send + Sync + Debug { .. }
+```
+
+There is a single entry point, `botlib::traits::ChannelAdapter`. The web and
+voice runtime adapters and the Telegram, Instagram and Teams adapters all
+implement it, so anything holding `Arc<dyn ChannelAdapter>` can drive any
+transport. Per-channel crates re-export the trait
+(`pub use botlib::traits::ChannelAdapter;`) instead of declaring their own.
+
+A new channel therefore:
+
+1. implements `botlib::traits::ChannelAdapter` for its adapter struct;
+2. implements `channel_type` (stable id, e.g. `"matrix"`), `display_name`,
+   `is_configured` and — when the transport can deliver a full bot response —
+   `send_bot_response`;
+3. inherits the defaults for `send_message` (synchronous delivery), the
+   connection-tracking methods and the voice-session methods. The defaults
+   return an explicit "not supported" error instead of pretending to work;
+4. mounts its routes on the `Router` the botserver builds, with the
+   credentials read from Vault under `secret/gbo/{org}/{branch}/{bot}/{channel}`.
+
+Inbound webhooks normalise their payload through `receive_message`; anything
+the channel cannot map to chat text returns `Ok(None)`.
+
 ## WhatsApp Business Integration
 
 The most popular channel for business messaging. Complete integration guide: [WhatsApp Quick Start](./whatsapp-quick-start.md)

@@ -138,7 +138,7 @@ pub async fn route_to_bot(
                         "teams",
                     );
 
-                    if let Err(e) = adapter.send_message(teams_response).await {
+                    if let Err(e) = adapter.send_bot_response(teams_response).await {
                         log::error!("Failed to send Teams response: {}", e);
                     }
 
@@ -164,7 +164,7 @@ pub async fn route_to_bot(
             "teams",
         );
 
-        if let Err(e) = adapter.send_message(error_response).await {
+        if let Err(e) = adapter.send_bot_response(error_response).await {
             log::error!("Failed to send error response: {}", e);
         }
     }

@@ -241,7 +241,7 @@ pub async fn route_to_bot(
                         "telegram",
                     );
 
-                    if let Err(e) = adapter.send_message(tg_response).await {
+                    if let Err(e) = adapter.send_bot_response(tg_response).await {
                         log::error!("Failed to send Telegram response: {}", e);
                     }
 
@@ -267,7 +267,7 @@ pub async fn route_to_bot(
             "telegram",
         );
 
-        if let Err(e) = adapter.send_message(error_response).await {
+        if let Err(e) = adapter.send_bot_response(error_response).await {
             log::error!("Failed to send error response: {}", e);
         }
     }

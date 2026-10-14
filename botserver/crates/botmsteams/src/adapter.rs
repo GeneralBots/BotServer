@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use botlib::models::BotResponse;
 use log::info;
 
@@ -10,6 +9,7 @@ use crate::types::{
 use std::sync::Arc;
 use uuid::Uuid;
 
+#[derive(Debug)]
 pub struct TeamsAdapter {
     app_id: String,
     app_password: String,
@@ -311,9 +311,12 @@ impl TeamsAdapter {
     }
 }
 
-#[async_trait]
-impl crate::ChannelAdapter for TeamsAdapter {
-    fn name(&self) -> &'static str {
+impl botlib::traits::ChannelAdapter for TeamsAdapter {
+    fn channel_type(&self) -> &str {
+        "msteams"
+    }
+
+    fn display_name(&self) -> &'static str {
         "Teams"
     }
 
@@ -321,10 +324,11 @@ impl crate::ChannelAdapter for TeamsAdapter {
         !self.app_id.is_empty() && !self.app_password.is_empty()
     }
 
-    async fn send_message(
-        &self,
+    fn send_bot_response<'a>(
+        &'a self,
         response: BotResponse,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    ) -> botlib::traits::BoxFutureRefUnit<'a> {
+        Box::pin(async move {
         if !self.is_configured() {
             log::error!("Teams adapter not configured. Please set teams-app-id and teams-app-password in the bot configuration database");
             return Err("Teams not configured".into());
@@ -348,19 +352,22 @@ impl crate::ChannelAdapter for TeamsAdapter {
         );
 
         Ok(())
+        })
     }
 
-    async fn receive_message(
-        &self,
+    fn receive_message<'a>(
+        &'a self,
         payload: serde_json::Value,
-    ) -> Result<Option<String>, Box<dyn std::error::Error + Send + Sync>> {
+    ) -> botlib::traits::BoxFutureRefOptionString<'a> {
+        let bot_id = self.bot_id.clone();
+        Box::pin(async move {
         let activity_type = payload["type"].as_str().unwrap_or("");
 
         match activity_type {
             "message" => {
                 if let Some(text) = payload["text"].as_str() {
                     let cleaned_text = text
-                        .replace(&format!("<at>{}</at>", self.bot_id), "")
+                        .replace(&format!("<at>{}</at>", bot_id), "")
                         .trim()
                         .to_string();
                     Ok(Some(cleaned_text))
@@ -387,15 +394,19 @@ impl crate::ChannelAdapter for TeamsAdapter {
             }
             _ => Ok(None),
         }
+        })
     }
 
-    async fn get_user_info(
-        &self,
+    fn get_user_info<'a>(
+        &'a self,
         user_id: &str,
-    ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
-        Ok(serde_json::json!({
-            "id": user_id,
-            "platform": "teams"
-        }))
+    ) -> botlib::traits::BoxFutureRefValue<'a> {
+        let id = user_id.to_string();
+        Box::pin(async move {
+            Ok(serde_json::json!({
+                "id": id,
+                "platform": "teams"
+            }))
+        })
     }
 }
