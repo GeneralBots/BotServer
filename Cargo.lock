@@ -3112,7 +3112,6 @@ version = "6.7.0"
 dependencies = [
  "anyhow",
  "axum",
- "botcore",
  "botsecurity-core",
  "chrono",
  "log",

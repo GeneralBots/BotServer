@@ -1,6 +1,11 @@
 use super::*;
 
-pub fn configure_protection_routes() -> Router<Arc<AppState>> {
+/// Generic over the router state so the crate keeps no dependency on the
+/// application core: the caller owns the `AppState` it attaches (#1501).
+pub fn configure_protection_routes<S>() -> Router<S>
+where
+    S: Clone + Send + Sync + 'static,
+{
     Router::new()
         .route("/api/security/protection/status", get(get_all_status))
         .route("/api/security/fix", post(security_fix_handler))

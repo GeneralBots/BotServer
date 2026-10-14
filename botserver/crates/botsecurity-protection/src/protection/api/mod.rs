@@ -1,5 +1,4 @@
 pub(crate) use axum::{ extract::Path, http::StatusCode, routing::{get, post}, Json, Router, };
-pub(crate) use botcore::AppState;
 pub(crate) use serde::{Deserialize, Serialize};
 pub(crate) use std::str::FromStr;
 pub(crate) use std::sync::Arc;
