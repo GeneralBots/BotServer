@@ -1,13 +1,8 @@
-#[cfg(test)]
-mod tests {
-use super::super::*;
-
 
 #[test]
 pub(super) fn test_memory_stats() {
-    let stats = MemoryStats::current();
-    assert!(stats.rss_bytes > 0 || stats.virtual_bytes > 0);
-}
+let stats = MemoryStats::current();
+assert!(stats.rss_bytes > 0 || stats.virtual_bytes > 0);
 
 #[test]
 pub(super) fn test_format_bytes() {
