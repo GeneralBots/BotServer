@@ -9,6 +9,10 @@ use std::ops::Range;
 
 /// The longest prefix of `s` that is at most `max_bytes` long and ends on a
 /// char boundary.
+///
+/// Returns an empty slice when `max_bytes` is zero, and the whole string when
+/// `s` is already short enough. The returned slice always ends on a char
+/// boundary, so it is safe to pass to any string API that requires one.
 pub fn truncate_at_char_boundary(s: &str, max_bytes: usize) -> &str {
     &s[..char_boundary_at_or_before(s, max_bytes)]
 }
@@ -28,6 +32,10 @@ pub fn truncate_with_suffix(s: &str, max_bytes: usize, suffix: &str) -> String {
 
 /// The nearest char boundary at or before `index`, with `index` clamped to
 /// `s.len()`.
+///
+/// Returns `0` for an empty string or when `index` is zero. Handy when a byte
+/// index came from `.len()`, a budget, or a position computed in a different
+/// representation and you need a safe `&s[..n]`.
 pub fn char_boundary_at_or_before(s: &str, index: usize) -> usize {
     let mut index = index.min(s.len());
     while index > 0 && !s.is_char_boundary(index) {
