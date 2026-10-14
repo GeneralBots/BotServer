@@ -171,14 +171,12 @@ impl WebhookDispatcher {
                 continue;
             }
 
-            let current_event = event.clone();
-            let result = current_event.dispatch(&sub.url);
+            let result = event.dispatch(&sub.url);
 
             if result.is_err() && sub.retry_count > 0 {
                 for attempt in 1..=sub.retry_count {
                     std::thread::sleep(std::time::Duration::from_secs(2u64.pow(attempt)));
-                    let retry_event = event.clone();
-                    let retry_result = retry_event.dispatch(&sub.url);
+                    let retry_result = event.dispatch(&sub.url);
                     if retry_result.is_ok() {
                         results.push((sub.url.clone(), Ok(())));
                         break;

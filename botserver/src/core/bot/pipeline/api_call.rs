@@ -14,17 +14,17 @@ fn extract_deep_links(value: &serde_json::Value) -> Vec<String> {
         match v {
             serde_json::Value::String(s) => {
                 if s.starts_with("app://") {
-                    out.push(s.clone());
+                    out.push(s);
                 }
             }
             serde_json::Value::Array(items) => {
                 for item in items {
-                    stack.push(item.clone());
+                    stack.push(item);
                 }
             }
             serde_json::Value::Object(map) => {
-                for val in map.values() {
-                    stack.push(val.clone());
+                for (_, val) in map {
+                    stack.push(val);
                 }
             }
             _ => {}
