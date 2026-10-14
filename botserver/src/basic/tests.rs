@@ -145,10 +145,9 @@ pub struct RunnerMetrics {
 
 impl RunnerMetrics {
     pub const fn avg_latency_ms(&self) -> u64 {
-        if self.total_requests > 0 {
-            self.total_latency_ms / self.total_requests
-        } else {
-            0
+        match self.total_requests {
+            0 => 0,
+            n => self.total_latency_ms / n,
         }
     }
 

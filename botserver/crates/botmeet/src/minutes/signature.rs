@@ -7,16 +7,11 @@ use sha2::{Sha512, Digest};
 use crate::minutes::types::{MinuteSignature, MinuteStatus, MeetingMinute};
 
 #[derive(Debug, Clone)]
-pub struct DigitalSigner {
-    #[allow(dead_code)]
-    private_key: String,
-    #[allow(dead_code)]
-    certificate: String,
-}
+pub struct DigitalSigner;
 
 impl DigitalSigner {
-    pub fn new(private_key: String, certificate: String) -> Self {
-        Self { private_key, certificate }
+    pub fn new() -> Self {
+        Self
     }
 
     pub fn sign(&self, minute: &MeetingMinute) -> Result<MinuteSignature> {

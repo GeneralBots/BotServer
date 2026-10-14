@@ -72,7 +72,10 @@ fn validate_argument(arg: &str) -> Result<(), CommandGuardError> {
 
 fn normalize_path_compare(p: &std::path::Path) -> String {
     let s = p.to_string_lossy();
-    let s = if s.starts_with("\\\\?\\") { s[4..].to_string() } else { s.to_string() };
+    let s = s
+        .strip_prefix("\\\\?\\")
+        .map(str::to_string)
+        .unwrap_or_else(|| s.to_string());
     let s = if s.starts_with("Z:\\") || s.starts_with("Z:/")
         || s.starts_with("z:\\") || s.starts_with("z:/")
     {

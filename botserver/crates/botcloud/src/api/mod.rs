@@ -25,7 +25,6 @@ struct BranchIdRow {
 
 use crate::{integration, notifier, CalculatorPayload, SaasConfig, SaasService};
 
-
 /// JWT authentication middleware for cloud API routes.
 /// Validates Bearer token on all routes except `/api/cloud/auth/*`.
 async fn cloud_jwt_middleware(
@@ -85,8 +84,6 @@ async fn cloud_jwt_middleware(
         }
     }
 }
-
-/// HMAC-SHA256 sign a message and return the base64url-encoded signature.
 
 // #1370 — this module used to be a single 3646-line file. It is split by
 // responsibility: api_types (JWT + payloads), helpers (validation and user

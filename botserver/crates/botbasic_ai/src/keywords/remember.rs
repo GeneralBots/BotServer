@@ -1,3 +1,7 @@
+use diesel::prelude::*;
+use serde_json::json;
+use std::sync::Arc;
+use uuid::Uuid;
 use botbasic_types::UserSession;
 use botbasic_types::BasicRuntime;
 use chrono::{Duration, Utc};
@@ -321,8 +325,3 @@ mod tests {
         assert!(parse_duration("invalid").is_err());
     }
 }
-
-use diesel::prelude::*;
-use serde_json::json;
-use std::sync::Arc;
-use uuid::Uuid;

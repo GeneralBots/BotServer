@@ -115,10 +115,7 @@ pub(super) async fn list_users(
     let users = match filter {
         Some(f) if f.starts_with("userName eq ") => {
             let query = f.trim_start_matches("userName eq ").trim_matches('"');
-            match auth_service.search_users(query).await {
-                Ok(u) => u,
-                Err(_) => vec![],
-            }
+            auth_service.search_users(query).await.unwrap_or_default()
         }
         _ => {
             match auth_service.list_users(count as i64, (start_index - 1) as i64).await {

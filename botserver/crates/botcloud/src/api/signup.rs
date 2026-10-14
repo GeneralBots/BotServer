@@ -9,7 +9,6 @@ use super::*;
 /// must not skip identity creation in that topology — it did once and left
 /// new organizations with logins that could never succeed. Only passwords to
 /// PUBLIC hosts over plain http are refused.
-
 pub(crate) async fn handle_signup(
     State(service): State<Arc<SaasService>>,
     Json(body): Json<SignupBody>,
@@ -91,7 +90,6 @@ pub(crate) async fn handle_signup(
     let is_custom_plan = matches!(plan_config.price, botbilling::PlanPrice::Custom);
     let is_free_plan = matches!(plan_config.price, botbilling::PlanPrice::Free);
     let trial_days = plan_config.trial_days.unwrap_or(0);
-
 
     // Get a single DB connection for the entire signup transaction (raw SQL tx)
     let mut conn = service.pool().get()

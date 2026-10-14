@@ -124,8 +124,6 @@ pub struct ClaudeClient {
     deployment_name: String,
 }
 
-    /// Streaming implementation using reqwest - mimics Node.js https.request with res.on('data')
-
 #[cfg(test)]
 mod tests {
     use super::*;

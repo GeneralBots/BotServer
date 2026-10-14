@@ -14,20 +14,6 @@ pub struct PackageManager {
     pub components: HashMap<String, ComponentConfig>,
 }
 
-    /// Initialize Vault locally (non-LXC mode) and create .env file
-    ///
-    /// This function:
-    /// 1. Checks if Vault is already initialized (via health endpoint or data dir)
-    /// 2. If initialized but sealed, unseals with existing keys from vault-unseal-keys
-    /// 3. If not initialized, runs `vault operator init` to get root token and unseal keys
-    /// 4. Creates .env file with VAULT_ADDR and VAULT_TOKEN
-    /// 5. Creates vault-unseal-keys file with proper permissions
-    /// 6. Unseals Vault with 3 keys
-
-    /// Seed default credentials into Vault KV2 after initialization
-
-    /// Unseal Vault with 3 keys
-
 use botlib::security::command_guard::SafeCommand;
 use std::collections::HashMap;
 use std::path::PathBuf;

@@ -16,10 +16,6 @@ pub struct YouTubeProvider {
     oauth_base_url: String,
 }
 
-    /// Update video metadata
-
-    /// Get video comments
-
 mod part1;
 mod part2;
 mod part3;

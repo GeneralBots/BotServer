@@ -57,7 +57,7 @@ pub(super) fn parse_plan_suggestions(text: &str) -> Vec<PlanAiSuggestion> {
     let end = text.rfind(']');
     if let (Some(s), Some(e)) = (start, end) {
         if e > s {
-            if let Ok(v) = serde_json::from_slice::<Vec<PlanAiSuggestion>>(text[s..=e].as_bytes()) {
+            if let Ok(v) = serde_json::from_str::<Vec<PlanAiSuggestion>>(&text[s..=e]) {
                 return v;
             }
         }

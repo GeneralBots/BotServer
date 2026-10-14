@@ -82,10 +82,9 @@ pub async fn handle_search_documents(
 ) -> Result<Json<Vec<DocumentMetadata>>, (StatusCode, Json<serde_json::Value>)> {
     let user_id = get_current_user_id();
 
-    let docs = match list_documents_from_drive(&state, &user_id).await {
-        Ok(d) => d,
-        Err(_) => Vec::new(),
-    };
+    let docs = list_documents_from_drive(&state, &user_id)
+        .await
+        .unwrap_or_default();
 
     let filtered = if let Some(q) = query.q {
         let q_lower = q.to_lowercase();

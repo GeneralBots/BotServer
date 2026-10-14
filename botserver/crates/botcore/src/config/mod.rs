@@ -81,8 +81,6 @@ pub struct ConfigManager {
     pool: Arc<DbPool>,
 }
 
-    /// Same as get_config but returns error instead of default on miss.
-
 pub use AppConfig as Config;
 
 mod part1;

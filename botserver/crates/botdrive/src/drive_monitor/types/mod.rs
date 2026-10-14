@@ -21,10 +21,6 @@ struct BranchIdRow {
     id: uuid::Uuid,
 }
 
-    #[cfg(any(feature = "research", feature = "llm"))]
-
-    #[cfg(any(feature = "research", feature = "llm"))]
-
 #[cfg(any(feature = "research", feature = "llm"))]
 struct KbPathParts {
     kb_name: String,

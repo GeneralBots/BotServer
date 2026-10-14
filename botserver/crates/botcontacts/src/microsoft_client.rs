@@ -197,11 +197,7 @@ impl From<MicrosoftError> for crate::sync_types::ExternalSyncError {
 #[derive(Debug, Clone, Deserialize)]
 struct MsContact {
     id: String, given_name: Option<String>, surname: Option<String>,
-    display_name: Option<String>, email_addresses: Option<Vec<MsEmailAddress>>,
+    display_name: Option<String>,
     mobile_phone: Option<String>, business_phones: Option<Vec<String>>,
     company_name: Option<String>, job_title: Option<String>,
 }
-
-#[derive(Debug, Clone, Deserialize)]
-#[allow(dead_code)]
-struct MsEmailAddress { address: String, name: Option<String> }

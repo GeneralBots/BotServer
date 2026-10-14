@@ -2,10 +2,6 @@ use super::*;
 
 /// Builds the flat credential-signed body used by `AuthStyle::BodyField`
 /// providers: every declared parameter present in `params` becomes a
-/// top-level key alongside the credential field.
-
-
-/// Adapter executing one static provider specification.
 pub struct GenericAdapter {
     spec: &'static ProviderSpec,
 }

@@ -281,14 +281,10 @@ impl From<GoogleError> for crate::sync_types::ExternalSyncError {
 #[derive(Debug, Clone, Deserialize)]
 struct GooglePerson {
     resource_name: Option<String>, etag: Option<String>,
-    names: Option<Vec<GoogleName>>, email_addresses: Option<Vec<GoogleEmail>>,
+    email_addresses: Option<Vec<GoogleEmail>>,
     phone_numbers: Option<Vec<GooglePhone>>, organizations: Option<Vec<GoogleOrganization>>,
     biographies: Option<Vec<GoogleBiography>>, photos: Option<Vec<GooglePhoto>>,
 }
-
-#[derive(Debug, Clone, Deserialize)]
-#[allow(dead_code)]
-struct GoogleName { given_name: String, family_name: String, display_name: Option<String>, metadata: Option<GoogleMetadata> }
 
 #[derive(Debug, Clone, Deserialize)]
 struct GoogleEmail { value: String, metadata: Option<GoogleMetadata> }

@@ -256,22 +256,21 @@ const PLATFORM_RESERVED_SUBDOMAINS: &[&str] = &[
     "admin", "mail", "smtp", "imap", "ns1", "ns2",
 ];
 
-/// `GET /api/domains/tls-ask?domain=<host>` — Caddy on-demand TLS decision
-/// endpoint (public, unauthenticated). Caddy's `tls on_demand ask` contract:
-/// HTTP 200 = obtain the certificate, any 4xx/5xx = refuse. This adapter
-/// reuses the platform resolution rules so a freshly published bot gets its
-/// certificate with zero infra change:
-///   - exact `bot_domains` row (custom domain mapped in Domain Manager), or
-///   - `{bot}.{GB_PLATFORM_DOMAIN}` where `{bot}` is an active bot
-///     (platform subdomain mode).
-/// Reserved subdomains (chat., www., docs., …) are NOT allowed so wildcard
-/// DNS entries for platform infrastructure cannot farm certificates.
 #[derive(diesel::QueryableByName)]
 struct SubdomainCount {
     #[diesel(sql_type = diesel::sql_types::BigInt)]
     n: i64,
 }
 
+/// `GET /api/domains/tls-ask?domain=<host>` — Caddy on-demand TLS decision
+/// endpoint (public, unauthenticated). Caddy's `tls on_demand ask` contract:
+/// HTTP 200 = obtain the certificate, any 4xx/5xx = refuse. This adapter
+/// reuses the platform resolution rules so a freshly published bot gets its
+/// certificate with zero infra change: an exact `bot_domains` row (custom
+/// domain mapped in Domain Manager), or a `{bot}.{GB_PLATFORM_DOMAIN}`
+/// subdomain where `{bot}` is an active bot (platform subdomain mode).
+/// Reserved subdomains (chat., www., docs., …) are NOT allowed so wildcard
+/// DNS entries for platform infrastructure cannot farm certificates.
 pub async fn tls_ask_domain(
     State(service): State<Arc<SaasService>>,
     axum::extract::Query(params): axum::extract::Query<std::collections::HashMap<String, String>>,

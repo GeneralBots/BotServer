@@ -19,14 +19,6 @@ pub(crate) use crate::shared::utils::get_stack_path;
 pub(crate) use botlib::security::command_guard::SafeCommand;
 pub(crate) use std::path::PathBuf;
 
-    /// Check system status
-
-    /// Find the directory holding template bots: the cloned templates repo
-    /// (`work/templates`) takes precedence, falling back to the bundled
-    /// `bottemplates/bots` directory shipped with the workspace.
-
-// Standalone functions for backward compatibility
-
 mod lifecycle;
 mod install;
 mod templates;

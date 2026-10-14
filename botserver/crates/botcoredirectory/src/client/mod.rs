@@ -52,9 +52,6 @@ pub struct ZitadelClient {
     password_credentials: Option<(String, String)>,
 }
 
-    /// Rebuilds the API base from validated URL components, dropping any
-    /// userinfo, path or query that could retarget the request (SSRF guard).
-
 #[cfg(test)]
 mod tests {
     use super::*;

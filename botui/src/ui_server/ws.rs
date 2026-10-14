@@ -18,10 +18,6 @@ use crate::shared::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct WsQuery {
-    #[allow(dead_code)]
-    session_id: String,
-    #[allow(dead_code)]
-    user_id: String,
     pub bot_name: Option<String>,
 }
 

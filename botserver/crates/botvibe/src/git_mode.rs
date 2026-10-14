@@ -2,12 +2,11 @@
 //! "git"`).
 //!
 //! In git mode the project's source lives in a real ALM (Forgejo) repository
-//! instead of only the local workspace. Project creation:
-//!   1. creates the repo in Forgejo (`{org}/{repo}` derived from branch id +
-//!      project name, exactly like the deployment router),
-//!   2. initializes the workspace as a git checkout with the token-embedded
-//!      `origin` remote,
-//!   3. commits the seeded workspace and pushes `main`.
+//! instead of only the local workspace. Project creation first creates the
+//! repo in Forgejo (`{org}/{repo}` derived from branch id + project name,
+//! exactly like the deployment router), then initializes the workspace as a
+//! git checkout with the token-embedded `origin` remote, then commits the
+//! seeded workspace and pushes `main`.
 //! Deploy then snapshots the current release into a `release/deploy-<ts>`
 //! branch (per-deploy rollback point) before committing the new state, and
 //! the workspace stays in sync with Forgejo — the VM runs the pushed copy.

@@ -31,9 +31,6 @@ pub struct ProjectService {
     pool: Option<DbPool>,
 }
 
-    /// In-memory only (used where no pool is available, e.g. the AppState
-    /// placeholder). Prefer [`ProjectService::with_pool`] in the router.
-
 mod part1;
 mod part2;
 mod part3;

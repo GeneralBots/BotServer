@@ -106,10 +106,7 @@ async fn drive_config_keys(
         .as_ref()
         .ok_or_else(|| "drive (S3) not available in AppState".to_string())?;
     let live = format!("{branch_prefix}{bot_name}.gbot/");
-    let mut keys = match s3.list_objects(bucket, Some(&live)).await {
-        Ok(objects) => objects,
-        Err(_) => Vec::new(),
-    };
+    let mut keys = s3.list_objects(bucket, Some(&live)).await.unwrap_or_default();
     if keys.is_empty() {
         // The archive pass moved the prefix under `archive/{bot}-{stamp}/`;
         // recovery must read it back from there, otherwise the bot keeps

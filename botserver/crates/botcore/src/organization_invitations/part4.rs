@@ -70,8 +70,6 @@ impl InvitationService {
         .await
         .map_err(|e| format!("Task join error: {e}"))??;
 
-        ();
-
         let invitation = OrganizationInvitation {
             id: invitation_id,
             organization_id: org_id,

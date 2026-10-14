@@ -181,12 +181,12 @@ async fn handle_procurement(State(state): State<Arc<BillingApiState>>, headers: 
     );
     for r in &rows {
         html.push_str(&format!(
-            "<tr><td>{po}</td><td>{vendor}</td><td>{total}</td><td>{status}</td><td>{created}</td></tr>",
-            po = html_escape(&r.po_number),
-            vendor = html_escape(&r.vendor_name),
-            total = format!("${:.2}", r.total_amount),
-            status = html_escape(&r.status),
-            created = r.created_at.format("%Y-%m-%d"),
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
+            html_escape(&r.po_number),
+            html_escape(&r.vendor_name),
+            format!("${:.2}", r.total_amount),
+            html_escape(&r.status),
+            r.created_at.format("%Y-%m-%d"),
         ));
     }
     html.push_str("</tbody></table>");

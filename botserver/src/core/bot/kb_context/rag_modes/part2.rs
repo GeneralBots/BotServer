@@ -24,7 +24,7 @@ pub(super) fn reciprocal_rank_fusion(
     ranked.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
     for (_, ref mut result) in &mut ranked {
-        result.score = result.score.max(0.0).min(1.0);
+        result.score = result.score.clamp(0.0, 1.0);
     }
 
     ranked.into_iter().take(limit).map(|(_, r)| r).collect()

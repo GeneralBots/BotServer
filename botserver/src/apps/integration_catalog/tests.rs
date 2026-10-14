@@ -38,7 +38,7 @@ fn github_and_stripe_flip_llm_available_without_status_drift() {
     let expectations = [("github", Status::Partial), ("stripe", Status::Built)];
     for (id, status) in expectations {
         let Some(provider) = provider_by_id(id) else {
-            assert!(false, "{id} provider is missing");
+            panic!("{id} provider is missing");
             return;
         };
         assert!(
@@ -64,7 +64,7 @@ fn github_and_stripe_registered_actions_match_catalog_exactly() {
     ];
     for (id, registered) in cases {
         let Some(provider) = provider_by_id(id) else {
-            assert!(false, "{id} provider is missing");
+            panic!("{id} provider is missing");
             return;
         };
         let registered_names: HashSet<String> =
@@ -93,7 +93,7 @@ fn github_and_stripe_registered_actions_match_catalog_exactly() {
 fn github_and_stripe_advertise_no_implemented_actions_without_the_registry() {
     for id in ["github", "stripe"] {
         let Some(provider) = provider_by_id(id) else {
-            assert!(false, "{id} provider is missing");
+            panic!("{id} provider is missing");
             return;
         };
         assert!(!provider.llm_available);
@@ -117,7 +117,7 @@ fn expanded_action_names_are_unique() {
 #[test]
 fn aws_auth_and_actions_are_explicit_and_guarded() {
     let Some(aws) = provider_by_id("aws") else {
-        assert!(false, "AWS provider is missing");
+        panic!("AWS provider is missing");
         return;
     };
     assert_eq!(aws.auth.method, AuthMethod::AccessKey);
@@ -188,17 +188,17 @@ fn aws_auth_and_actions_are_explicit_and_guarded() {
 #[test]
 fn llm_action_manifest_omits_secret_auth_metadata() {
     let Some(aws) = provider_by_id("aws") else {
-        assert!(false, "AWS provider is missing");
+        panic!("AWS provider is missing");
         return;
     };
     let Some(actions) = llm_actions("aws") else {
-        assert!(false, "AWS LLM action manifest is missing");
+        panic!("AWS LLM action manifest is missing");
         return;
     };
     let value = match serde_json::to_value(actions) {
         Ok(value) => value,
         Err(error) => {
-            assert!(false, "LLM action manifest serialization failed: {error}");
+            panic!("LLM action manifest serialization failed: {error}");
             return;
         }
     };
@@ -212,7 +212,7 @@ fn llm_action_manifest_omits_secret_auth_metadata() {
     assert!(!encoded.contains("auth"));
 
     let Value::Array(items) = value else {
-        assert!(false, "LLM action manifest must be an array");
+        panic!("LLM action manifest must be an array");
         return;
     };
     let allowed: HashSet<&str> = [
@@ -227,7 +227,7 @@ fn llm_action_manifest_omits_secret_auth_metadata() {
     .collect();
     for item in items {
         let Value::Object(fields) = item else {
-            assert!(false, "LLM action entries must be objects");
+            panic!("LLM action entries must be objects");
             continue;
         };
         assert!(fields.keys().all(|key| allowed.contains(key.as_str())));
@@ -243,7 +243,7 @@ async fn serve_catalog_for_browser() {
     let listener = match tokio::net::TcpListener::bind("127.0.0.1:8080").await {
         Ok(listener) => listener,
         Err(error) => {
-            assert!(false, "browser contract server bind failed: {error}");
+            panic!("browser contract server bind failed: {error}");
             return;
         }
     };

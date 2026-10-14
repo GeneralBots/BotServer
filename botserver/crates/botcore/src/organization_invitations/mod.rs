@@ -187,10 +187,6 @@ pub struct BulkInviteParams<'a> {
     pub message: Option<String>,
 }
 
-    /// Constructs a DB-backed service. All persistence goes through the
-    /// `organization_invitations` table — invites survive restarts, and
-    /// accepting binds the user to the org (`user_organizations`).
-
 #[cfg(test)]
 mod tests {
     use super::*;

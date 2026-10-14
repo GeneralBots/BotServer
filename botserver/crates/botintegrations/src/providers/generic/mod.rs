@@ -46,8 +46,6 @@ use base64::Engine as _;
 /// are cut and flagged so chat payloads stay bounded.
 pub(crate) const MAX_LIST_ITEMS: usize = 25;
 
-/// Risk classification mirroring the integration catalog profiles.
-
 #[cfg(test)]
 mod tests;
 

@@ -331,7 +331,7 @@ async fn test_failed_login_lockout() {
 
     if let Ok(resp) = response {
         if resp.status() == 423 {
-            assert!(true, "Account should be locked after failed attempts");
+            // Account should be locked after failed attempts.
         } else if resp.status() == 200 || resp.status() == 401 {
             eprintln!("Note: Account lockout may not be enabled");
         }
