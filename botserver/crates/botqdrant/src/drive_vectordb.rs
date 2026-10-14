@@ -237,8 +237,17 @@ impl UserDriveVectorDB {
         let content_lower = content.to_lowercase();
         let query_lower = query.to_lowercase();
         if let Some(pos) = content_lower.find(&query_lower) {
-            let start = pos.saturating_sub(max_length / 2);
-            let end = (pos + query.len() + max_length / 2).min(content.len());
+            // `pos` indexes the lowercased copy, so it is only a byte hint for
+            // `content`: both edges are snapped to char boundaries, otherwise a
+            // query match next to an accented character panics (#1508).
+            let start = botlib::text::char_boundary_at_or_before(
+                content,
+                pos.saturating_sub(max_length / 2),
+            );
+            let end = botlib::text::char_boundary_at_or_before(
+                content,
+                (pos + query.len() + max_length / 2).min(content.len()),
+            );
             let snippet = &content[start..end];
             if start > 0 && end < content.len() {
                 format!("...{}...", snippet)
@@ -250,7 +259,10 @@ impl UserDriveVectorDB {
                 snippet.to_string()
             }
         } else if content.len() > max_length {
-            format!("{}...", &content[..max_length])
+            format!(
+                "{}...",
+                botlib::text::truncate_at_char_boundary(content, max_length)
+            )
         } else {
             content.to_string()
         }
@@ -412,5 +424,28 @@ impl FileContentExtractor {
                 | "text/javascript"
                 | "text/x-java"
         )
+    }
+}
+
+#[cfg(test)]
+mod snippet_tests {
+    use super::UserDriveVectorDB;
+
+    /// The window edges come from a match position in the lowercased copy, so
+    /// either edge can land inside an accented character (#1508).
+    #[test]
+    fn snippet_around_a_multibyte_match_snaps_to_char_boundaries() {
+        let content = "relatório café açúcar mascavo";
+        let snippet = UserDriveVectorDB::create_snippet(content, "café", 10);
+        assert!(snippet.contains("café"), "the match must survive: {snippet}");
+        assert!(snippet.starts_with("..."), "{snippet}");
+    }
+
+    /// The no-match branch cut a byte budget straight out of the content.
+    #[test]
+    fn snippet_without_a_match_truncates_on_a_char_boundary() {
+        let content = "relatório de açúcar";
+        let snippet = UserDriveVectorDB::create_snippet(content, "ausente", 6);
+        assert_eq!(snippet, "relat...");
     }
 }

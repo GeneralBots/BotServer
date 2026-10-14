@@ -24,7 +24,10 @@ pub async fn classify_intent(
     State(api): State<Arc<AutoTaskApi>>,
     Json(req): Json<ClassifyIntentRequest>,
 ) -> impl IntoResponse {
-    info!("API classify intent: {}", &req.intent[..req.intent.len().min(50)]);
+    info!(
+        "API classify intent: {}",
+        botlib::text::truncate_at_char_boundary(&req.intent, 50)
+    );
     let bot_id = canonical_bot_id(req.bot_id.clone());
     let effective_bot_id = resolve_effective_bot_id(api.state().db_pool(), bot_id);
     match classifier_for(&api).classify_api(&req.intent, bot_id).await {
@@ -114,7 +117,10 @@ pub async fn compile_intent(
     State(api): State<Arc<AutoTaskApi>>,
     Json(req): Json<CompileIntentRequest>,
 ) -> Json<CompileIntentResponse> {
-    info!("API compile intent: {}", &req.intent[..req.intent.len().min(50)]);
+    info!(
+        "API compile intent: {}",
+        botlib::text::truncate_at_char_boundary(&req.intent, 50)
+    );
     let bot_id = canonical_bot_id(req.bot_id.clone());
     let classification = match classifier_for(&api).classify_api(&req.intent, bot_id).await {
         Ok(c) => c,

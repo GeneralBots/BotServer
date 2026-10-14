@@ -11,7 +11,7 @@ pub(super) async fn persist_shipped_template(
     info!(
         "create-and-execute matched shipped template '{}' for intent: {}",
         template.name,
-        &intent[..intent.len().min(80)]
+        botlib::text::truncate_at_char_boundary(intent, 80)
     );
     let info = match resolve_bot_info(api.state().db_pool(), bot_id) {
         Ok(Some(info)) => info,

@@ -31,7 +31,7 @@ impl IntentCompiler {
         execution_mode: Option<ExecutionMode>,
         priority: Option<TaskPriority>,
     ) -> Result<CompiledIntent, Box<dyn std::error::Error + Send + Sync>> {
-        info!("Compiling intent: {}", &intent[..intent.len().min(100)]);
+        info!("Compiling intent: {}", botlib::text::truncate_at_char_boundary(intent, 100));
         let prompt = self.build_compile_prompt(intent);
         let response = self.call_llm(bot_id, &prompt).await?;
         self.parse_compile_response(&response, intent, execution_mode, priority)

@@ -78,7 +78,7 @@ impl AuthProvider for ApiKeyAuthProvider {
         }
 
         let user = AuthenticatedUser::service("api-client")
-            .with_metadata("api_key_prefix", &api_key[..8.min(api_key.len())]);
+            .with_metadata("api_key_prefix", botlib::text::truncate_at_char_boundary(api_key, 8));
 
         Ok(user)
     }

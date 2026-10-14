@@ -115,7 +115,7 @@ pub async fn create_and_execute_for(
     intent: &str,
     bot_id: Uuid,
 ) -> CreateAndExecuteResponse {
-    info!("API create and execute: {}", &intent[..intent.len().min(50)]);
+    info!("API create and execute: {}", botlib::text::truncate_at_char_boundary(intent, 50));
     let intent = intent.to_string();
     let req = CreateAndExecuteRequest { intent: intent.clone(), bot_id: None };
 

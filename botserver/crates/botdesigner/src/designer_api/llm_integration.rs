@@ -120,7 +120,7 @@ pub async fn handle_designer_modify(
     Json(request): Json<DesignerModifyRequest>,
 ) -> impl IntoResponse {
     let app = &request.app_name;
-    let msg_preview = &request.message[..request.message.len().min(100)];
+    let msg_preview = botlib::text::truncate_at_char_boundary(&request.message, 100);
     log::info!("Designer modify request for app '{app}': {msg_preview}");
 
     let session = match get_designer_session(&state) {
@@ -210,7 +210,7 @@ fn build_designer_prompt(state: &DesignerState, request: &DesignerModifyRequest)
                 let _ = writeln!(
                     info,
                     "\nCurrent page HTML (first 500 chars):\n{}",
-                    &html[..html.len().min(500)]
+                    botlib::text::truncate_at_char_boundary(html, 500)
                 );
             }
             if let Some(ref tables) = ctx.tables {

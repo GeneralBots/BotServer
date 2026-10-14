@@ -237,7 +237,7 @@ fn resolve_cloud_jwt_user(token: &str) -> (String, Vec<String>, bool) {
     if sub.is_empty() {
         return (String::new(), Vec::new(), false);
     }
-    info!("Cloud JWT verified for chat session: sub={}...", &sub[..sub.len().min(24)]);
+    info!("Cloud JWT verified for chat session: sub={}...", botlib::text::truncate_at_char_boundary(sub, 24));
     (sub.to_string(), Vec::new(), true)
 }
 

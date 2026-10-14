@@ -2064,6 +2064,7 @@ version = "6.7.0"
 dependencies = [
  "axum",
  "botcore",
+ "botlib",
  "chrono",
  "diesel",
  "log",

@@ -153,7 +153,10 @@ fn validate_api_key_sync(api_key: &str) -> Result<AuthenticatedUser, AuthError> 
         return Err(AuthError::InvalidApiKey);
     }
 
-    Ok(AuthenticatedUser::service("api-client").with_metadata("api_key_prefix", &api_key[..8]))
+    // The prefix is logged and stored, so it must not split a multi-byte
+    // character: the key is caller-supplied and only length-checked (#1508).
+    Ok(AuthenticatedUser::service("api-client")
+        .with_metadata("api_key_prefix", botlib::text::truncate_at_char_boundary(api_key, 8)))
 }
 
 fn validate_bearer_token_sync(token: &str) -> Result<AuthenticatedUser, AuthError> {
@@ -184,7 +187,7 @@ pub fn validate_session_sync(session_id: &str) -> Result<AuthenticatedUser, Auth
     debug!(
         "Validating session token (length={}): {}...",
         session_id.len(),
-        &session_id[..std::cmp::min(20, session_id.len())]
+        botlib::text::truncate_at_char_boundary(session_id, 20)
     );
 
     // Try to get user data from session cache first
@@ -395,6 +398,32 @@ impl ExtractedAuthData {
             user_id_header,
             bot_id,
         }
+    }
+}
+
+#[cfg(test)]
+mod api_key_prefix_tests {
+    use super::validate_api_key_sync;
+
+    /// The prefix is recorded from a caller-supplied header, so the byte budget
+    /// must not split a character: `&api_key[..8]` aborted the process when the
+    /// eighth byte fell inside one (#1508).
+    #[test]
+    fn api_key_prefix_does_not_split_a_character() {
+        let key = "abcdefgçhijklmnopq";
+        let user = validate_api_key_sync(key).expect("the key is at least 16 bytes");
+        let prefix = user
+            .metadata
+            .get("api_key_prefix")
+            .expect("the prefix is recorded");
+        assert!(key.starts_with(prefix), "{prefix}");
+        assert!(prefix.len() <= 8, "{prefix}");
+    }
+
+    /// A short key is still rejected before any prefix is derived.
+    #[test]
+    fn short_api_key_is_rejected() {
+        assert!(validate_api_key_sync("curta").is_err());
     }
 }
 

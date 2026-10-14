@@ -124,7 +124,7 @@ pub fn materialize_files(
         "Vibe deploy-source {}: {} file(s) materialized from revision {}",
         project.name,
         out.len(),
-        &revision[..revision.len().min(12)]
+        botlib::text::truncate_at_char_boundary(&revision, 12)
     );
     Ok(out)
 }

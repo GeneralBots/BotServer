@@ -70,7 +70,7 @@ pub async fn get_current_user(
         Some(session_token) => {
             info!("get_current_user: looking up session token (len={}, prefix={}...)",
                   session_token.len(),
-                  &session_token[..std::cmp::min(20, session_token.len())]);
+                  botlib::text::truncate_at_char_boundary(session_token, 20));
 
             let cache = SESSION_CACHE.read().await;
             // Clone the entry so the read guard's borrow ends before any write

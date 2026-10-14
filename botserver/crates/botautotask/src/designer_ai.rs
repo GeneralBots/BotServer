@@ -54,7 +54,7 @@ impl DesignerAI {
         intent: &str,
         _session: &UserSession,
     ) -> Result<DesignerAnalysis, Box<dyn std::error::Error + Send + Sync>> {
-        info!("DesignerAI analyzing intent: {}", &intent[..intent.len().min(80)]);
+        info!("DesignerAI analyzing intent: {}", botlib::text::truncate_at_char_boundary(intent, 80));
         let prompt = self.build_analysis_prompt(intent);
         let response = self.call_llm(&prompt).await?;
         self.parse_analysis_response(&response)
@@ -82,7 +82,7 @@ Respond with JSON array of suggestions:
         manifest: &mut TaskManifest,
         feedback: &str,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        info!("DesignerAI refining manifest with feedback: {}", &feedback[..feedback.len().min(50)]);
+        info!("DesignerAI refining manifest with feedback: {}", botlib::text::truncate_at_char_boundary(feedback, 50));
         let _ = (manifest, feedback);
         Ok(())
     }

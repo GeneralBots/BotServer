@@ -25,7 +25,7 @@ impl IntentClassifier {
     pub async fn classify(
         &self, intent: &str, session: &UserSession,
     ) -> Result<ClassifiedIntent, Box<dyn std::error::Error + Send + Sync>> {
-        info!("Classifying intent for session {}: {}", session.id, &intent[..intent.len().min(100)]);
+        info!("Classifying intent for session {}: {}", session.id, botlib::text::truncate_at_char_boundary(intent, 100));
         let classification = self.classify_with_llm(intent, session.bot_id).await?;
         self.store_classification(&classification, session)?;
         Ok(classification)
@@ -36,7 +36,7 @@ impl IntentClassifier {
     pub async fn classify_api(
         &self, intent: &str, bot_id: Uuid,
     ) -> Result<ClassifiedIntent, Box<dyn std::error::Error + Send + Sync>> {
-        info!("API classify intent for bot {bot_id}: {}", &intent[..intent.len().min(100)]);
+        info!("API classify intent for bot {bot_id}: {}", botlib::text::truncate_at_char_boundary(intent, 100));
         let heuristic = Self::classify_heuristic(intent)?;
         if !heuristic.requires_clarification {
             Ok(heuristic)
@@ -67,7 +67,11 @@ impl IntentClassifier {
     pub async fn process_classified_intent_with_task_id(
         &self, classification: &ClassifiedIntent, session: &UserSession, task_id: Option<String>,
     ) -> Result<IntentResult, Box<dyn std::error::Error + Send + Sync>> {
-        info!("Processing {} intent: {}", classification.intent_type, &classification.original_text[..classification.original_text.len().min(50)]);
+        info!(
+            "Processing {} intent: {}",
+            classification.intent_type,
+            botlib::text::truncate_at_char_boundary(&classification.original_text, 50)
+        );
         match classification.intent_type {
             IntentType::AppCreate => self.handle_app_create(classification, session, task_id).await,
             IntentType::Todo => self.handle_todo(classification, session),

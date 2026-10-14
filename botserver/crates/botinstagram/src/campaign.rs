@@ -77,11 +77,14 @@ pub async fn create_campaign(
  let _adapter = InstagramAdapter::with_config(&_get_config, &bot_id);
 
  // Generate image URL (placeholder - in production this would call Stable Diffusion)
- let image_url = format!("https://via.placeholder.com/1080x1080.png?text={}", urlencoding::encode(&req.prompt[..req.prompt.len().min(30)]));
+ let image_url = format!("https://via.placeholder.com/1080x1080.png?text={}", urlencoding::encode(botlib::text::truncate_at_char_boundary(&req.prompt, 30)));
  
  let images = vec![CampaignImage {
  url: image_url.clone(),
- description: format!("Generated image for: {}", &req.prompt[..req.prompt.len().min(60)]),
+ description: format!(
+            "Generated image for: {}",
+            botlib::text::truncate_at_char_boundary(&req.prompt, 60)
+        ),
  }];
 
  // Generate caption with LLM (placeholder)
