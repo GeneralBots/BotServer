@@ -67,8 +67,13 @@ fn entropy_bits_per_char(token: &str) -> f64 {
 }
 
 fn mask_keep_last4(digits: &str) -> String {
-    let len = digits.len();
-    format!("{}{}", "*".repeat(len - 4), &digits[len - 4..])
+    // `DIGIT_RUN_PATTERN` is ASCII-only today, so a byte cut cannot split a
+    // character here. The offsets are still taken on char boundaries and the
+    // mask counts characters, so widening the pattern (a multi-byte digit
+    // range, or `\w+` for wordish tokens) can neither panic nor miscount.
+    let tail_start = botlib::text::char_boundary_at_or_before(digits, digits.len() - 4);
+    let masked = digits[..tail_start].chars().count();
+    format!("{}{}", "*".repeat(masked), &digits[tail_start..])
 }
 
 fn looks_credential_shaped(token: &str) -> bool {
@@ -86,11 +91,19 @@ fn apply_org_rules(input: &str, rules: &[RedactRule]) -> String {
                 for &(prefix_keep, mask_len, suffix_keep) in rules {
                     let min_len = prefix_keep + mask_len + suffix_keep;
                     if token.len() >= min_len && looks_credential_shaped(token) {
+                        // `WORDISH_TOKEN_PATTERN` is ASCII-only today; the cuts
+                        // are char-boundary safe so a widened pattern cannot
+                        // panic on a multi-byte token.
+                        let prefix = botlib::text::truncate_at_char_boundary(token, prefix_keep);
+                        let suffix_start = botlib::text::char_boundary_at_or_before(
+                            token,
+                            token.len() - suffix_keep,
+                        );
                         return format!(
                             "{}{}{}",
-                            &token[..prefix_keep],
+                            prefix,
                             "*".repeat(mask_len),
-                            &token[token.len() - suffix_keep..]
+                            &token[suffix_start..]
                         );
                     }
                 }
@@ -200,6 +213,27 @@ mod tests {
     fn org_rules_ignore_plain_words() {
         let rules: Vec<RedactRule> = vec![(4, 8, 3)];
         assert_eq!(redact("extraordinary", &rules), "extraordinary");
+    }
+
+    /// #1508 — the token pattern is ASCII-only, so non-ASCII text must pass
+    /// through the org rules untouched. This pins the pattern contract: if it
+    /// is ever widened, this test fails and points at the boundary-safe cuts
+    /// below (which exist so that widening cannot panic).
+    #[test]
+    fn org_rules_leave_non_ascii_text_untouched() {
+        let rules: Vec<RedactRule> = vec![(3, 6, 2)];
+        let input = "chave ção1éabc2ée123456789 fim";
+        assert_eq!(redact(input, &rules), input);
+    }
+
+    /// The mask counts characters, not bytes: with a multi-byte digit run the
+    /// kept suffix is the last four characters, not the last `len() - 4` bytes.
+    #[test]
+    fn keep_last4_counts_characters_for_multibyte_runs() {
+        let digits = "١٢٣٤٥٦٧٨٩٠١٢٣٤٥";
+        let masked = mask_keep_last4(digits);
+        assert!(masked.ends_with("٤٥"), "got: {masked}");
+        assert_eq!(masked.chars().filter(|c| *c == '*').count(), 13, "got: {masked}");
     }
 
     #[test]

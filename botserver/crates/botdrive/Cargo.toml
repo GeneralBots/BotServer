@@ -39,6 +39,7 @@ sha2 = { workspace = true }
 hex = { workspace = true }
 base64 = { workspace = true }
 botsecurity-auth = { workspace = true }
+botsecurity-core = { workspace = true }
 botsecurity-crypto = { workspace = true }
 http = { workspace = true }
 url = { workspace = true }

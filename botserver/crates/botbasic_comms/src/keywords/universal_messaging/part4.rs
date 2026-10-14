@@ -123,7 +123,7 @@ pub(super) async fn broadcast_message(
                     results.push(json!({
                         "recipient": recipient_str,
                         "status": "failed",
-                        "error": e.to_string()
+                        "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botbasic_comms::keywords::universal_messaging::part4", None)
                     }));
                 }
             }

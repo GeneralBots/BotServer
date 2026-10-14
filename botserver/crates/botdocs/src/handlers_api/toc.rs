@@ -22,7 +22,7 @@ pub async fn handle_generate_toc(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::toc", None)})),
             ))
         }
     };
@@ -73,7 +73,7 @@ pub async fn handle_generate_toc(
     if let Err(e) = save_document(&state, &user_id, &doc).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::toc", None)})),
         ));
     }
 
@@ -96,7 +96,7 @@ pub async fn handle_update_toc(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::toc", None)})),
             ))
         }
     };

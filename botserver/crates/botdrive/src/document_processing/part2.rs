@@ -17,7 +17,7 @@ pub async fn export_document(
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": format!("Failed to read document: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part2", None) })),
             )
 })?
     ;
@@ -25,7 +25,7 @@ pub async fn export_document(
     let content = String::from_utf8(bytes.to_vec()).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Document is not valid UTF-8: {}", e) })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part2", None) })),
         )
     })?;
 
@@ -72,14 +72,14 @@ pub async fn import_document(
         let response = client.get(url).send().await.map_err(|e| {
             (
                 StatusCode::BAD_REQUEST,
-                Json(serde_json::json!({ "error": format!("Failed to fetch URL: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part2", None) })),
             )
         })?;
 
         response.text().await.map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": format!("Failed to read response: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part2", None) })),
             )
         })?
     } else if let Some(data) = &req.source_data {
@@ -98,7 +98,7 @@ pub async fn import_document(
             let parsed: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
                 (
                     StatusCode::BAD_REQUEST,
-                    Json(serde_json::json!({ "error": format!("Invalid JSON: {}", e) })),
+                    Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part2", None) })),
                 )
             })?;
             serde_json::to_string_pretty(&parsed).unwrap_or(content)
@@ -113,7 +113,7 @@ pub async fn import_document(
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": format!("Failed to save imported document: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part2", None) })),
             )
         })?;
 

@@ -65,11 +65,11 @@ pub async fn create_playlist(
         })),
         Ok(Err(e)) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Database error: {e}") })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botplayer::playlists::part5", None) })),
         )),
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Task join error: {e}") })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botplayer::playlists::part5", None) })),
         )),
     }
 }
@@ -149,11 +149,11 @@ pub async fn get_playlist(
             } else {
                 StatusCode::INTERNAL_SERVER_ERROR
             };
-            Err((status, Json(serde_json::json!({ "error": e }))))
+            Err((status, Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botplayer::playlists::part5", None)}))))
         }
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Join error: {e}") })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botplayer::playlists::part5", None) })),
         )),
     }
 }

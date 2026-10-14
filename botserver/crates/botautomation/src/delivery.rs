@@ -163,7 +163,7 @@ fn record_attempt(
         }),
         Err(e) => json!({
             "channel": channel, "to": mask_destination(to),
-            "status": "failed", "error": format!("join error: {e}"),
+            "status": "failed", "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botautomation::delivery", None),
         }),
     };
     attempts.push(entry);

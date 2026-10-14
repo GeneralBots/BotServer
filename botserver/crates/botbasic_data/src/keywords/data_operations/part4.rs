@@ -54,7 +54,7 @@ pub(super) fn execute_insert(
                 "command": "insert",
                 "table": table,
                 "success": false,
-                "error": e.to_string()
+                "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botbasic_data::keywords::data_operations::part4", None)
             }))
         }
     }

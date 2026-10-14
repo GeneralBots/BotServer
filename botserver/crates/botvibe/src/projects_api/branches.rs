@@ -248,12 +248,12 @@ pub(crate) async fn list_project_branches(
         Ok(None) => {
             return (StatusCode::NOT_FOUND, Json(serde_json::json!({ "success": false, "error": "project not found" })));
         }
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": e }))),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botvibe::projects_api::branches", None)}))),
     };
     let key = workspace_key(&project);
     let cwd = match harness::ensure_workspace(&key) {
         Ok(p) => p,
-        Err(e) => return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "success": false, "error": e }))),
+        Err(e) => return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botvibe::projects_api::branches", None)}))),
     };
     let branches = harness::cmd::run(
         "git",
@@ -320,12 +320,12 @@ pub(crate) async fn switch_project_branch(
         Ok(None) => {
             return (StatusCode::NOT_FOUND, Json(serde_json::json!({ "success": false, "error": "project not found" })));
         }
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": e }))),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botvibe::projects_api::branches", None)}))),
     };
     let key = workspace_key(&project);
     let cwd = match harness::ensure_workspace(&key) {
         Ok(p) => p,
-        Err(e) => return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "success": false, "error": e }))),
+        Err(e) => return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botvibe::projects_api::branches", None)}))),
     };
     let exists = harness::cmd::run(
         "git",
@@ -353,6 +353,6 @@ pub(crate) async fn switch_project_branch(
             StatusCode::BAD_REQUEST,
             Json(serde_json::json!({ "success": false, "error": format!("git checkout failed: {}", out.stderr.trim()) })),
         ),
-        Err(e) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "success": false, "error": e.to_string() }))),
+        Err(e) => (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botvibe::projects_api::branches", None) }))),
     }
 }

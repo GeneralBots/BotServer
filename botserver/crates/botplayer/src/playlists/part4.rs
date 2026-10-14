@@ -40,11 +40,11 @@ pub async fn list_playlists(
         Ok(Ok(rows)) => Ok(Json(rows.into_iter().map(|r| r.into_summary()).collect())),
         Ok(Err(e)) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Database error: {e}") })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botplayer::playlists::part4", None) })),
         )),
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Task error: {e}") })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botplayer::playlists::part4", None) })),
         )),
     }
 }

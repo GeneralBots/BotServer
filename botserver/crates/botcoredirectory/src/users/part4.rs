@@ -18,7 +18,7 @@ pub(super) fn set_mfa_flag(
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse {
-                error: format!("DB error: {e}"),
+                error: botsecurity::error_sanitizer::log_and_sanitize(&e, "botcoredirectory::users::part4", None).message,
                 details: None,
             }),
         )
@@ -38,7 +38,7 @@ pub(super) fn set_mfa_flag(
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse {
-                error: format!("Failed to update 2FA: {e}"),
+                error: botsecurity::error_sanitizer::log_and_sanitize(&e, "botcoredirectory::users::part4", None).message,
                 details: None,
             }),
         )
@@ -104,7 +104,7 @@ pub async fn get_user_sessions(
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse {
-                error: format!("DB error: {e}"),
+                error: botsecurity::error_sanitizer::log_and_sanitize(&e, "botcoredirectory::users::part4", None).message,
                 details: None,
             }),
         )
@@ -131,7 +131,7 @@ pub async fn get_user_sessions(
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse {
-                error: format!("Failed to load sessions: {e}"),
+                error: botsecurity::error_sanitizer::log_and_sanitize(&e, "botcoredirectory::users::part4", None).message,
                 details: None,
             }),
         )

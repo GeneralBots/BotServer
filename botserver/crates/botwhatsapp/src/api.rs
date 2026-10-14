@@ -27,7 +27,7 @@ pub async fn handle_send_message(
                 Err(e) => {
                     return (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(serde_json::json!({"error": e})),
+                        Json(serde_json::json!({"error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botwhatsapp::api", None)})),
                     );
                 }
             }
@@ -46,7 +46,7 @@ pub async fn handle_send_message(
         ),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({"error": e})),
+            Json(serde_json::json!({"error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botwhatsapp::api", None)})),
         ),
     }
 }
@@ -79,7 +79,7 @@ pub async fn handle_sessions(
         Err(e) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": format!("Pool error: {}", e)})),
+                Json(serde_json::json!({"error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botwhatsapp::api", None)})),
             );
         }
     };
@@ -94,7 +94,7 @@ pub async fn handle_sessions(
         ),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({"error": format!("Query error: {}", e)})),
+            Json(serde_json::json!({"error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botwhatsapp::api", None)})),
         ),
     }
 }

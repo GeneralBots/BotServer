@@ -7,6 +7,7 @@ description = "Desktop session proxy — WebSocket-to-TCP relay for remote deskt
 
 [dependencies]
 axum = { workspace = true, features = ["ws", "macros"] }
+botsecurity-core = { workspace = true }
 tokio = { workspace = true, features = ["full"], default-features = true }
 serde = { workspace = true, features = ["derive"], default-features = true }
 serde_json = { workspace = true }

@@ -19,7 +19,7 @@ pub async fn create_user(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
                     error: "Failed to create user".to_string(),
-                    details: Some(e),
+                    details: None,
                 }),
             ));
         }
@@ -147,7 +147,7 @@ pub async fn delete_user(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
                     error: "Failed to delete user".to_string(),
-                    details: Some(e),
+                    details: None,
                 }),
             ))
         }

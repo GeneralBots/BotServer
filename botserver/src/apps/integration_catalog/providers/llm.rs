@@ -158,7 +158,22 @@ pub(super) const PROVIDERS: &[ProviderSeed] = &[
         llm_available: true,
         ..provider(
             "llm7-minimax",
-            "LLM7 · MiniMax M2.7",
+            "LLM7 · MiniMax M2.7 (stable)",
+            Category::Developer,
+            Strategy::Improve,
+            Status::Built,
+            Priority::Must,
+            None,
+            Some("https://api.llm7.io"),
+            &KEYLESS,
+            AI_PLATFORM_ACTIONS,
+        )
+    },
+    ProviderSeed {
+        llm_available: true,
+        ..provider(
+            "llm7-minimax-v2",
+            "LLM7 · MiniMax M2.7 (alt)",
             Category::Developer,
             Strategy::Improve,
             Status::Built,

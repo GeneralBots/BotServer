@@ -47,7 +47,7 @@ macro_rules! save_pres {
             if let Err(e) = save_presentation_to_drive(drive, $user_id, $presentation).await {
                 return Err((
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({ "error": e })),
+                    Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botslides::handlers::slides", None)})),
                 ));
             }
         }

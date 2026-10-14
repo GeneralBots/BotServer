@@ -92,7 +92,7 @@ pub async fn start_session(
                 ),
                 Err(e) => (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({"error": e.to_string()})),
+                    Json(serde_json::json!({"error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botcoresession::session_endpoints", None)})),
                 ),
             }
         }
@@ -122,7 +122,7 @@ pub async fn get_session_history(
                 Ok(history) => (StatusCode::OK, Json(serde_json::json!(history))),
                 Err(e) => (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({"error": e.to_string()})),
+                    Json(serde_json::json!({"error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botcoresession::session_endpoints", None)})),
                 ),
             }
         }

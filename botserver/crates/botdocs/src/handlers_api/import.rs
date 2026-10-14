@@ -75,7 +75,7 @@ pub async fn handle_import_document(
     if let Err(e) = save_document(&state, &user_id, &doc).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::import", None)})),
         ));
     }
 
@@ -113,7 +113,7 @@ pub async fn handle_compare_documents(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::import", None)})),
             ))
         }
     };
@@ -129,7 +129,7 @@ pub async fn handle_compare_documents(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::import", None)})),
             ))
         }
     };

@@ -56,7 +56,7 @@ pub async fn get_user_presence(
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse {
-                error: format!("DB error: {e}"),
+                error: botsecurity::error_sanitizer::log_and_sanitize(&e, "botcoredirectory::users::part3", None).message,
                 details: None,
             }),
         )
@@ -106,7 +106,7 @@ pub async fn get_user_activity(
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse {
-                error: format!("DB error: {e}"),
+                error: botsecurity::error_sanitizer::log_and_sanitize(&e, "botcoredirectory::users::part3", None).message,
                 details: None,
             }),
         )
@@ -131,7 +131,7 @@ pub async fn get_user_activity(
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse {
-                error: format!("Failed to load activity: {e}"),
+                error: botsecurity::error_sanitizer::log_and_sanitize(&e, "botcoredirectory::users::part3", None).message,
                 details: None,
             }),
         )

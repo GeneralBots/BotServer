@@ -40,7 +40,7 @@ pub async fn send_message(
         Ok(_) => (StatusCode::OK, Json(serde_json::json!({"success": true}))),
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({"success": false, "error": e.to_string()})),
+            Json(serde_json::json!({"success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botinstagram::handlers", None)})),
         ),
     }
 }

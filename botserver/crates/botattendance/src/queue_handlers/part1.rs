@@ -143,8 +143,8 @@ pub async fn assign_conversation(
             "success": true, "session_id": request.session_id,
             "attendant_id": request.attendant_id, "assigned_at": Utc::now().to_rfc3339()
         }))),
-        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": e}))),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": format!("{:?}", e)}))),
+        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part1", None)}))),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part1", None)}))),
     }
 }
 pub async fn assign_by_skill(
@@ -234,8 +234,8 @@ pub async fn assign_by_skill(
             "success": true, "session_id": request.session_id,
             "message": "No attendant found with matching skills", "assignment_type": "skill_based"
         }))),
-        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": e}))),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": format!("{:?}", e)}))),
+        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part1", None)}))),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part1", None)}))),
     }
 }
 pub async fn transfer_conversation(
@@ -279,7 +279,7 @@ pub async fn transfer_conversation(
             "from_attendant": request.from_attendant_id, "to_attendant": request.to_attendant_id,
             "transferred_at": Utc::now().to_rfc3339()
         }))),
-        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": e}))),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": format!("{:?}", e)}))),
+        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part1", None)}))),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part1", None)}))),
     }
 }

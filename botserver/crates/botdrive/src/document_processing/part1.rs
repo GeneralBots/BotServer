@@ -28,14 +28,14 @@ let bytes = s3_client
 .map_err(|e| {
 (
 StatusCode::INTERNAL_SERVER_ERROR,
-Json(serde_json::json!({ "error": format!("Failed to read document {}: {}", path, e) })),
+Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part1", None) })),
 )
 })?;
 
 let content = String::from_utf8(bytes).map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": format!("Document is not valid UTF-8: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part1", None) })),
             )
         })?;
 
@@ -54,7 +54,7 @@ let content = String::from_utf8(bytes).map_err(|e| {
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": format!("Failed to write merged document: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part1", None) })),
             )
         })?;
 
@@ -88,14 +88,14 @@ pub async fn convert_document(
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": format!("Failed to read source document: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part1", None) })),
             )
         })?;
 
     let source_content = String::from_utf8(bytes.to_vec()).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Document is not valid UTF-8: {}", e) })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part1", None) })),
         )
     })?;
 
@@ -211,7 +211,7 @@ pub async fn convert_document(
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": format!("Failed to write converted document: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part1", None) })),
             )
         })?;
 
@@ -245,14 +245,14 @@ pub async fn fill_document(
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": format!("Failed to read template: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part1", None) })),
             )
         })?;
 
     let mut template = String::from_utf8(bytes.to_vec()).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Template is not valid UTF-8: {}", e) })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part1", None) })),
         )
     })?;
 
@@ -276,7 +276,7 @@ pub async fn fill_document(
         .map_err(|e| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": format!("Failed to write filled document: {}", e) })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdrive::document_processing::part1", None) })),
             )
         })?;
 

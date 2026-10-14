@@ -79,7 +79,7 @@ async fn start_recording_handler(
         })),
         Err(e) => Json(serde_json::json!({
             "status": "error",
-            "error": format!("Task error: {}", e)
+            "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botmeet::webinar_api::handlers", None)
         })),
     }
 }
@@ -140,7 +140,7 @@ async fn stop_recording_handler(
         })),
         Err(e) => Json(serde_json::json!({
             "status": "error",
-            "error": format!("Task error: {}", e)
+            "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botmeet::webinar_api::handlers", None)
         })),
     }
 }

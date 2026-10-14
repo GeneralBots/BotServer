@@ -261,7 +261,7 @@ pub async fn test_webhook(
         }
         Err(e) => {
             log::error!("Webhook test failed: {}", e);
-            Ok(Json(serde_json::json!({ "success": false, "error": e.to_string() })))
+            Ok(Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::webhooks", None) })))
         }
     }
 }

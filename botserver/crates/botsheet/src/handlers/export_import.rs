@@ -45,7 +45,7 @@ pub async fn handle_export_sheet(
             let xlsx = export_to_xlsx(&sheet).map_err(|e| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({ "error": e })),
+                    Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::export_import", None)})),
                 )
             })?;
             Ok((
@@ -68,7 +68,7 @@ pub async fn handle_export_sheet(
             let ods = export_to_ods(&sheet).map_err(|e| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({ "error": e })),
+                    Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::export_import", None)})),
                 )
             })?;
             Ok((
@@ -87,7 +87,7 @@ pub async fn handle_export_sheet(
             let pdf = export_to_pdf_data(&sheet).map_err(|e| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({ "error": e })),
+                    Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::export_import", None)})),
                 )
             })?;
             let encoded = base64::engine::general_purpose::STANDARD.encode(&pdf);
@@ -141,7 +141,7 @@ pub async fn handle_import_sheet(
     if let Err(e) = save_sheet_to_drive(&state, &user_id, &sheet).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::export_import", None)})),
         ));
     }
 

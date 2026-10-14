@@ -161,7 +161,7 @@ pub async fn get_user_handler(
         Err(e) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": format!("Database connection failed: {}", e)})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botcoredirectory::api", None)})),
             );
         }
     };
@@ -197,7 +197,7 @@ pub async fn list_users_handler(State(state): State<Arc<DirectoryApiState>>) -> 
         Err(e) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": format!("Database connection failed: {}", e)})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botcoredirectory::api", None)})),
             );
         }
     };
@@ -223,7 +223,7 @@ pub async fn list_users_handler(State(state): State<Arc<DirectoryApiState>>) -> 
         }
         Err(e) => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({"error": format!("Failed to list users: {}", e)})),
+            Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botcoredirectory::api", None)})),
         ),
     }
 }

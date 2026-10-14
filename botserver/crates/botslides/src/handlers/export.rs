@@ -55,7 +55,7 @@ pub async fn handle_export_presentation<D: DriveOps>(
             let bytes = crate::pptx::export_to_pptx(&presentation).map_err(|e| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({ "error": e })),
+                    Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botslides::handlers::export", None)})),
                 )
             })?;
             (

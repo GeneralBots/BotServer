@@ -12,6 +12,7 @@ cache = ["dep:redis"]
 
 [dependencies]
 anyhow = { workspace = true }
+botsecurity-core = { workspace = true }
 botsecurity-crypto = { workspace = true }
 botlib = { workspace = true }
 axum = { workspace = true }

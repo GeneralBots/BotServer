@@ -111,7 +111,7 @@ pub async fn handle_save_presentation<D: DriveOps>(
         if let Err(e) = save_presentation_to_drive(drive, &user_id, &presentation).await {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botslides::handlers::presentations", None)})),
             ));
         }
     }
@@ -133,7 +133,7 @@ pub async fn handle_delete_presentation<D: DriveOps>(
         if let Err(e) = delete_presentation_from_drive(drive, &user_id, &req.id).await {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botslides::handlers::presentations", None)})),
             ));
         }
     }

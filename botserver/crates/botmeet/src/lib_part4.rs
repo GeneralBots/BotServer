@@ -32,7 +32,7 @@ pub async fn start_transcription(
             error!("Failed to start transcription for room {room_id}: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botmeet::lib_part4", None)})),
             )
         }
     }
@@ -137,7 +137,7 @@ pub async fn schedule_meeting_handler(
             error!("Failed to schedule meeting: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botmeet::lib_part4", None)})),
             )
         }
     }
@@ -151,7 +151,7 @@ pub async fn dashboard_stats(
             error!("Failed to get dashboard stats: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botmeet::lib_part4", None)})),
             )
         }
     }

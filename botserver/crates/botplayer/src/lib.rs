@@ -186,7 +186,7 @@ async fn stream_file(
         .header(header::ACCEPT_RANGES, "bytes")
         .body(Body::from(bytes))
         .map_err(|e| PlayerError {
-            error: format!("Failed to build response: {e}"),
+            error: botsecurity_core::error_sanitizer::log_and_sanitize(&e, "botplayer::lib", None).message,
             code: "RESPONSE_ERROR".to_string(),
         })?;
 
@@ -217,7 +217,7 @@ async fn get_thumbnail(
         .header(header::CACHE_CONTROL, "public, max-age=3600")
         .body(Body::from(placeholder))
         .map_err(|e| PlayerError {
-            error: format!("Failed to build response: {e}"),
+            error: botsecurity_core::error_sanitizer::log_and_sanitize(&e, "botplayer::lib", None).message,
             code: "RESPONSE_ERROR".to_string(),
         })?;
 

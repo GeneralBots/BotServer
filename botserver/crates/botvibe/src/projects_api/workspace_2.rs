@@ -195,7 +195,7 @@ pub(crate) async fn create_project_pr(
             return (StatusCode::NOT_FOUND, Json(serde_json::json!({ "success": false, "error": "project not found" })));
         }
         Err(e) => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": e })));
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botvibe::projects_api::workspace_2", None)})));
         }
     };
     let result = crate::gitflow::create_pull_request(
@@ -245,12 +245,12 @@ pub(crate) async fn run_project_app(
             return (StatusCode::NOT_FOUND, Json(serde_json::json!({ "success": false, "error": "project not found" })));
         }
         Err(e) => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": e })));
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botvibe::projects_api::workspace_2", None)})));
         }
     };
     let files = match crate::publish::collect_workspace_files(&project) {
         Ok(f) => f,
-        Err(e) => return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "success": false, "error": e }))),
+        Err(e) => return (StatusCode::BAD_REQUEST, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botvibe::projects_api::workspace_2", None)}))),
     };
     // #1271 — a project with an empty workspace must still serve an app when
     // Run is clicked (automatic project creation skips the explicit seeding in
@@ -345,7 +345,7 @@ pub(crate) async fn run_project_app(
     ) {
         Ok(url) => Some(url),
         Err(e) => {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": e })));
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botvibe::projects_api::workspace_2", None)})));
         }
     };
     match lifecycle.run_dev_app(&vm.container_name, &files, port, database_url.as_deref()) {

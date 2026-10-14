@@ -159,7 +159,7 @@ pub async fn handle_connect(
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({
                 "success": false,
-                "error": e.to_string(),
+                "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdesktop::routes::part3", None),
             })),
         ),
     }

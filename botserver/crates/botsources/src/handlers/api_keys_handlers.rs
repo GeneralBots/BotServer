@@ -167,7 +167,7 @@ pub async fn handle_add_api_key(
     let default_bot_id = uuid::Uuid::nil();
 
     if let Err(e) = config_manager.set_config(&default_bot_id, provider, key) {
-        return Json(serde_json::json!({ "error": e.to_string() }));
+        return Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botsources::handlers::api_keys_handlers", None) }));
     }
 
     Json(serde_json::json!({ "success": true }))
@@ -181,7 +181,7 @@ pub async fn handle_delete_api_key(
     let default_bot_id = uuid::Uuid::nil();
 
     if let Err(e) = config_manager.set_config(&default_bot_id, &id, "") {
-        return Json(serde_json::json!({ "error": e.to_string() }));
+        return Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botsources::handlers::api_keys_handlers", None) }));
     }
 
     Json(serde_json::json!({ "success": true }))

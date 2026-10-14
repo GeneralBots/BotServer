@@ -282,7 +282,7 @@ pub async fn handle_unified_login(
     let header_b64 = base64_url_encode(&serde_json::to_vec(&header).unwrap_or_default());
     let payload_b64 = base64_url_encode(&serde_json::to_vec(&payload).unwrap_or_default());
     let sig = jwt_sign_inner(&format!("{}.{}", header_b64, payload_b64), jwt_secret.as_bytes())
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e}))))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "main_module::routes::cloud_sso_handler", None)}))))?;
     let cloud_token = format!("{}.{}.{}", header_b64, payload_b64, sig);
 
     Ok(Json(serde_json::json!({

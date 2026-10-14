@@ -110,7 +110,7 @@ pub async fn list_organizations(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
                     error: "Failed to list organizations".to_string(),
-                    details: Some(e),
+                    details: None,
                 }),
             ))
         }
@@ -150,7 +150,7 @@ pub async fn create_organization(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
                     error: "Failed to create organization".to_string(),
-                    details: Some(e),
+                    details: None,
                 }),
             ))
         }
@@ -183,7 +183,7 @@ pub async fn get_organization(
                 StatusCode::NOT_FOUND,
                 Json(ErrorResponse {
                     error: "Organization not found".to_string(),
-                    details: Some(e),
+                    details: None,
                 }),
             ))
         }

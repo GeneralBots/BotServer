@@ -31,7 +31,7 @@ pub async fn voice_start(
             error!("Failed to start voice session for session {session_id}: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botmeet::lib_part2", None)})),
             )
         }
     }
@@ -57,7 +57,7 @@ pub async fn voice_stop(
             error!("Failed to stop voice session for session {session_id}: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botmeet::lib_part2", None)})),
             )
         }
     }
@@ -81,7 +81,7 @@ pub async fn create_meeting(
             error!("Failed to create meeting room: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botmeet::lib_part2", None)})),
             )
         }
     }
@@ -156,7 +156,7 @@ pub async fn join_room(
             error!("Failed to join room {room_id}: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e.to_string()})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botmeet::lib_part2", None)})),
             )
         }
     }

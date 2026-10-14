@@ -120,10 +120,10 @@ impl AIAssistant {
             "very_negative"
         } else if score < 0 {
             "negative"
-        } else if score >= 1 {
-            "positive"
-        } else {
+        } else if score == 0 {
             "neutral"
+        } else {
+            "positive"
         }
         .to_string()
     }

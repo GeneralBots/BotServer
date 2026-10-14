@@ -42,7 +42,7 @@ impl axum::response::IntoResponse for TasksIntegrationError {
             Self::InvalidInput(_) => StatusCode::BAD_REQUEST,
             Self::DatabaseError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
-        (status, axum::Json(serde_json::json!({ "error": self.to_string() }))).into_response()
+        (status, axum::Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&self, "botcontacts::tasks_service", None) }))).into_response()
     }
 }
 

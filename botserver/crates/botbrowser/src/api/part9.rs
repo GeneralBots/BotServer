@@ -112,7 +112,7 @@ pub(super) async fn handle_agent_ws_stream(
                 if let Err(e) = agent::execute_action(&session_arc, &action.action).await {
                     let _ = socket
                         .send(Message::Text(
-                            serde_json::json!({ "type": "action_error", "error": e.to_string() }).to_string(),
+                            serde_json::json!({ "type": "action_error", "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botbrowser::api::part9", None) }).to_string(),
                         ))
                         .await;
                 }

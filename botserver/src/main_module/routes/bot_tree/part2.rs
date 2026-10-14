@@ -138,7 +138,11 @@ pub async fn handle_bot_config_put(
     if let Err(e) = result {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Update failed: {e}") })),
+            Json(crate::security::error_sanitizer::log_and_sanitize_json(
+                &e,
+                "bot update",
+                None,
+            )),
         )
             .into_response();
     }
@@ -248,7 +252,11 @@ pub async fn handle_bot_create(
     if let Err(e) = result {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Create failed: {e}") })),
+            Json(crate::security::error_sanitizer::log_and_sanitize_json(
+                &e,
+                "bot create",
+                None,
+            )),
         )
             .into_response();
     }

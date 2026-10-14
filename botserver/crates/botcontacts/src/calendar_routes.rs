@@ -22,7 +22,7 @@ impl axum::response::IntoResponse for CalendarIntegrationError {
             CalendarIntegrationError::Unauthorized => StatusCode::UNAUTHORIZED,
             CalendarIntegrationError::InvalidInput(_) => StatusCode::BAD_REQUEST,
         };
-        (status, Json(serde_json::json!({ "error": self.to_string() }))).into_response()
+        (status, Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&self, "botcontacts::calendar_routes", None) }))).into_response()
     }
 }
 

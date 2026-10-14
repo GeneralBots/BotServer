@@ -40,17 +40,14 @@ pub fn find_staged_attachment(user_text: &str) -> Option<StagedAttachment> {
             continue;
         };
         let rest = &user_text[start + marker.len()..];
-        // The producers emit "[kind] path\ncaption" — path is the first token,
-        // caption (if any) is on the next line.
-        let path = rest.split_whitespace().next().unwrap_or("").to_string();
+        // The producers emit "[kind] path caption" — path is the first token,
+        // caption (if any) is everything after the first whitespace.
+        let mut tokens = rest.splitn(2, char::is_whitespace);
+        let path = tokens.next().unwrap_or("").to_string();
         if !path.starts_with("inbox/") {
             continue;
         }
-        let caption = if let Some(after_path) = rest.strip_prefix(&path) {
-            after_path.strip_prefix("\n").unwrap_or("").trim().to_string()
-        } else {
-            String::new()
-        };
+        let caption = tokens.next().unwrap_or("").trim().to_string();
         return Some(StagedAttachment { path, caption });
     }
     None

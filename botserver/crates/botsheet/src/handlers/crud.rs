@@ -107,9 +107,12 @@ pub async fn handle_load_from_drive(
     })?;
 
     let bytes = drive.get_object(&req.bucket, &req.path).await.map_err(|e| {
+        // The drive error names the bucket and object path — log it and answer
+        // with the lookup result only.
+        log::warn!("sheet load: drive read of {}/{} failed: {}", req.bucket, req.path, e);
         (
             StatusCode::NOT_FOUND,
-            Json(serde_json::json!({ "error": format!("File not found: {e}") })),
+            Json(serde_json::json!({ "error": "File not found" })),
         )
     })?;
 
@@ -270,7 +273,7 @@ pub async fn handle_save_sheet(
             if let Err(e) = session.persist_now(&state).await {
                 return Err((
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({ "error": e })),
+                    Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::crud", None)})),
                 ));
             }
             return Ok(Json(SaveResponse {
@@ -287,7 +290,7 @@ pub async fn handle_save_sheet(
         if let Err(e) = save_sheet_to_drive(&state, &user_id, &sheet).await {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::crud", None)})),
             ));
         }
         return Ok(Json(SaveResponse {
@@ -317,7 +320,7 @@ pub async fn handle_save_sheet(
     if let Err(e) = save_sheet_to_drive(&state, &user_id, &sheet).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::crud", None)})),
         ));
     }
 
@@ -338,7 +341,7 @@ pub async fn handle_delete_sheet(
     if let Err(e) = delete_sheet_from_drive(&state, &user_id, &req.id).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::crud", None)})),
         ));
     }
     if let Some(id) = req.id.as_ref() {

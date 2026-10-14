@@ -27,7 +27,7 @@ pub async fn handle_docs_save(
     {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::crud", None)})),
         ));
     }
 
@@ -51,7 +51,7 @@ pub async fn handle_docs_get_by_id(
         )),
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::crud", None)})),
         )),
     }
 }
@@ -120,7 +120,7 @@ pub async fn handle_get_document(
         )),
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::crud", None)})),
         )),
     }
 }
@@ -137,7 +137,7 @@ pub async fn handle_save_document(
     {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::crud", None)})),
         ));
     }
 
@@ -170,7 +170,7 @@ pub async fn handle_delete_document(
     if let Err(e) = delete_document_from_drive(&state, &user_id, &doc_id).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::crud", None)})),
         ));
     }
 
@@ -199,9 +199,12 @@ pub async fn handle_open_from_drive(
     let bytes = match state.drive.get_object(&req.bucket, &req.path).await {
         Ok(b) => b,
         Err(e) => {
+            // The drive error text names the bucket and object path; the client
+            // only needs the lookup result. The detail goes to the log.
+            log::warn!("docs editor: drive read of {}/{} failed: {}", req.bucket, req.path, e);
             return Err((
                 StatusCode::NOT_FOUND,
-                Json(serde_json::json!({ "error": format!("File not found in drive: {e}") })),
+                Json(serde_json::json!({ "error": "File not found in drive" })),
             ))
         }
     };
@@ -225,7 +228,7 @@ pub async fn handle_open_from_drive(
                 log::error!("Failed to convert {} to HTML: {}", req.path, e);
                 return Err((
                     StatusCode::UNPROCESSABLE_ENTITY,
-                    Json(serde_json::json!({ "error": format!("Failed to convert document: {e}") })),
+                    Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::crud", None) })),
                 ));
             }
         },

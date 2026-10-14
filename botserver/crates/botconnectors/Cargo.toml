@@ -10,6 +10,7 @@ repository = "https://github.com/generalbots/generalbots"
 [dependencies]
 axum = { workspace = true }
 botcore = { workspace = true }
+botlib = { workspace = true }
 botcoresecrets = { workspace = true }
 chrono = { workspace = true, features = ["serde", "clock"] }
 diesel = { workspace = true, features = ["postgres", "r2d2", "uuid", "chrono", "serde_json"] }

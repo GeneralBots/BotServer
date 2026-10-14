@@ -10,6 +10,7 @@ repository = "https://github.com/generalbots/generalbots"
 botlib = { workspace = true }
 botsecurity-auth = { workspace = true }
 axum = { workspace = true }
+botsecurity-core = { workspace = true }
 chrono = { workspace = true, features = ["serde", "clock"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

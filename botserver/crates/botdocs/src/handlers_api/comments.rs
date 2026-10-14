@@ -25,7 +25,7 @@ pub async fn handle_add_comment(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::comments", None)})),
             ))
         }
     };
@@ -50,7 +50,7 @@ pub async fn handle_add_comment(
     if let Err(e) = save_document(&state, &user_id, &doc).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::comments", None)})),
         ));
     }
 
@@ -73,7 +73,7 @@ pub async fn handle_reply_comment(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::comments", None)})),
             ))
         }
     };
@@ -99,7 +99,7 @@ pub async fn handle_reply_comment(
     if let Err(e) = save_document(&state, &user_id, &doc).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::comments", None)})),
         ));
     }
 
@@ -122,7 +122,7 @@ pub async fn handle_resolve_comment(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::comments", None)})),
             ))
         }
     };
@@ -141,7 +141,7 @@ pub async fn handle_resolve_comment(
     if let Err(e) = save_document(&state, &user_id, &doc).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::comments", None)})),
         ));
     }
 
@@ -164,7 +164,7 @@ pub async fn handle_delete_comment(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::comments", None)})),
             ))
         }
     };
@@ -177,7 +177,7 @@ pub async fn handle_delete_comment(
     if let Err(e) = save_document(&state, &user_id, &doc).await {
         return Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::comments", None)})),
         ));
     }
 
@@ -201,7 +201,7 @@ pub async fn handle_list_comments(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::comments", None)})),
             ))
         }
     };

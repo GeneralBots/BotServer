@@ -55,7 +55,7 @@ pub async fn handle_update_cell(
             if let Err(e) = crate::state::save_sheet_to_drive(&state, &user_id, &fresh).await {
                 return Err((
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!({ "error": e })),
+                    Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::cell_ops", None)})),
                 ));
             }
             match state.sessions.get_or_load(&state, &user_id, &req.sheet_id).await {
@@ -63,7 +63,7 @@ pub async fn handle_update_cell(
                 Err(e) => {
                     return Err((
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(serde_json::json!({ "error": e })),
+                        Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botsheet::handlers::cell_ops", None)})),
                     ))
                 }
             }

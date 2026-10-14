@@ -45,7 +45,7 @@ pub async fn handle_office365_migration(
             Err((
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                 Json(serde_json::json!({
-                    "error": format!("Migration failed: {}", e)
+                    "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "main_module::routes::org_handlers::part2", None)
                 }))
             ))
         }

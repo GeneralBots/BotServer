@@ -8,6 +8,7 @@ repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
 botlib = { workspace = true }
+botsecurity-core = { workspace = true }
 botsheet-core = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

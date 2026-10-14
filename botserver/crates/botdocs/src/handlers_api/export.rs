@@ -28,7 +28,7 @@ pub async fn handle_export_docx(
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let doc = load_export_document(&state, &query).await?;
     let docx_bytes = html_to_docx_full(&doc.title, &doc.content)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e }))))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::export", None)}))))?;
 
     Ok((
         [(
@@ -45,7 +45,7 @@ pub async fn handle_export_odt(
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let doc = load_export_document(&state, &query).await?;
     let odt_bytes = html_to_odt_zip(&doc.title, &doc.content)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": e }))))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::export", None)}))))?;
 
     Ok((
         [(
@@ -70,7 +70,7 @@ async fn load_export_document(
         )),
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": e })),
+            Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::export", None)})),
         )),
     }
 }
@@ -266,7 +266,7 @@ pub async fn handle_export_md(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::export", None)})),
             ))
         }
     };
@@ -293,7 +293,7 @@ pub async fn handle_export_html(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::export", None)})),
             ))
         }
     };
@@ -336,7 +336,7 @@ pub async fn handle_export_txt(
         Err(e) => {
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({ "error": e })),
+                Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botdocs::export", None)})),
             ))
         }
     };

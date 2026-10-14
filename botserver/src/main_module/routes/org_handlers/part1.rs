@@ -110,7 +110,7 @@ pub async fn handle_delete_organization(
 
     let orgs_data = auth_service.list_organizations().await
         .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
-            "error": format!("Failed to list organizations: {}", e)
+            "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "main_module::routes::org_handlers::part1", None)
         }))))?;
 
     let orgs = orgs_data.as_array().cloned().unwrap_or_default();

@@ -39,8 +39,8 @@ pub async fn create_group(
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
-                    error: format!("Internal error: {}", e),
-                    details: Some(e),
+                    error: botsecurity::error_sanitizer::log_and_sanitize_str(&e, "botcoredirectory::groups::operations::part1", None).message,
+                    details: None,
                 }),
             ))
         }
@@ -97,8 +97,8 @@ pub async fn update_group(
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
-                    error: format!("Internal error: {}", e),
-                    details: Some(e),
+                    error: botsecurity::error_sanitizer::log_and_sanitize_str(&e, "botcoredirectory::groups::operations::part1", None).message,
+                    details: None,
                 }),
             ))
         }
@@ -246,7 +246,7 @@ pub async fn get_group_settings(
                 StatusCode::NOT_FOUND,
                 Json(ErrorResponse {
                     error: "Group not found".to_string(),
-                    details: Some(e),
+                    details: None,
                 }),
             ))
         }

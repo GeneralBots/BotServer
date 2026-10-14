@@ -10,6 +10,7 @@ repository = "https://github.com/generalbots/generalbots"
 async-trait = { workspace = true }
 axum = { workspace = true }
 botlib = { workspace = true }
+botsecurity-core = { workspace = true }
 log = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 serde = { workspace = true, features = ["derive"] }

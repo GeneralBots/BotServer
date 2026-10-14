@@ -23,7 +23,7 @@ fn db_err(e: impl std::fmt::Display) -> (StatusCode, Json<serde_json::Value>) {
     log::error!("Conversation store error: {e}");
     (
         StatusCode::INTERNAL_SERVER_ERROR,
-        Json(serde_json::json!({ "error": format!("Database error: {e}") })),
+        Json(serde_json::json!({ "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botmeet::conversations", None) })),
     )
 }
 

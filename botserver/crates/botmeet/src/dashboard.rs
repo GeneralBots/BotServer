@@ -34,7 +34,7 @@ pub async fn dashboard_stats_htmx(
             error!("Failed to get dashboard stats: {e}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error": e})),
+                Json(serde_json::json!({"error": botsecurity::error_sanitizer::log_and_sanitize_json(&e, "botmeet::dashboard", None)})),
             )
         }
     }

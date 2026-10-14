@@ -33,8 +33,8 @@ pub async fn resolve_conversation(
         Ok(Ok(())) => (StatusCode::OK, Json(serde_json::json!({
             "success": true, "session_id": session_id, "resolved_at": Utc::now().to_rfc3339()
         }))),
-        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": e}))),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": format!("{:?}", e)}))),
+        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part2", None)}))),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part2", None)}))),
     }
 }
 pub async fn get_insights(
@@ -94,8 +94,8 @@ pub async fn get_insights(
     .await;
     match result {
         Ok(Ok(insights)) => (StatusCode::OK, Json(insights)),
-        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e}))),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": format!("Task error: {}", e)}))),
+        Ok(Err(e)) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part2", None)}))),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botattendance::queue_handlers::part2", None)}))),
     }
 }
 pub async fn get_kanban(

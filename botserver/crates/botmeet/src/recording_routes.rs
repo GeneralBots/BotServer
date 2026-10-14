@@ -88,11 +88,11 @@ async fn participant_role(
         Ok(Ok(role)) => Ok(role),
         Ok(Err(e)) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Database error: {e}") })),
+            Json(serde_json::json!({ "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botmeet::recording_routes", None) })),
         )),
         Err(e) => Err((
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(serde_json::json!({ "error": format!("Join error: {e}") })),
+            Json(serde_json::json!({ "error": botsecurity::error_sanitizer::log_and_sanitize_json(&e.to_string(), "botmeet::recording_routes", None) })),
         )),
     }
 }

@@ -198,7 +198,7 @@ pub async fn list_group_invites(
                 StatusCode::NOT_FOUND,
                 Json(ErrorResponse {
                     error: "Group not found".to_string(),
-                    details: Some(e),
+                    details: None,
                 }),
             ))
         }
@@ -266,7 +266,7 @@ pub async fn get_group_members(
                 StatusCode::NOT_FOUND,
                 Json(ErrorResponse {
                     error: "Group not found".to_string(),
-                    details: Some(e),
+                    details: None,
                 }),
             ))
         }

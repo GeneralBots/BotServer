@@ -8,14 +8,15 @@ use super::{llm_actions, provider_by_id, search};
 #[test]
 fn provider_ids_and_names_are_unique() {
     let catalog = search(None, None, None);
-    // 142 includes the ten keyless LLM inference seeds (e5b7d7202), Instagram
-    // (d1e6a5688) and the Telegram/WhatsApp channel adapters (4de54895f), none
-    // of which updated these snapshots when they landed.
-    assert_eq!(catalog.provider_count, 142);
-    assert_eq!(catalog.action_count, 645);
+    // 143 includes the ten keyless LLM inference seeds (e5b7d7202), Instagram
+    // (d1e6a5688), the Telegram/WhatsApp channel adapters (4de54895f), and the
+    // extra keyless LLM inference seed added for the second LLM7 MiniMax endpoint
+    // (2a4c7c73d), none of which updated these snapshots when they landed.
+    assert_eq!(catalog.provider_count, 143);
+    assert_eq!(catalog.action_count, 771);
     assert_eq!(catalog.categories.len(), 8);
-    assert_eq!(catalog.totals.providers, 142);
-    assert_eq!(catalog.totals.actions, 645);
+    assert_eq!(catalog.totals.providers, 143);
+    assert_eq!(catalog.totals.actions, 771);
     // Slices 1-2 (#950): AWS, GitHub and Stripe have live adapters; all of
     // their catalog actions are implemented when the integrations feature
     // compiles the registry in (13 + 9 + 10), and none otherwise. Instagram

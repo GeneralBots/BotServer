@@ -62,7 +62,7 @@ pub async fn list_signatures(
         Ok(c) => c,
         Err(e) => {
             return Json(serde_json::json!({
-                "error": format!("Database connection error: {}", e),
+                "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botemail::handlers::signatures", None),
                 "signatures": []
             })).into_response();
         }
@@ -146,7 +146,7 @@ pub async fn get_signature(
 
     let mut conn = match state.pool.get() {
         Ok(c) => c,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": format!("Database connection error: {}", e) }))).into_response(),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botemail::handlers::signatures", None) }))).into_response(),
     };
 
     let result: Result<EmailSignatureRow, _> = diesel::sql_query(
@@ -175,7 +175,7 @@ pub async fn create_signature(
 
     let mut conn = match state.pool.get() {
         Ok(c) => c,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": format!("Database connection error: {}", e) }))).into_response(),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botemail::handlers::signatures", None) }))).into_response(),
     };
 
     let new_id = Uuid::new_v4();
@@ -200,7 +200,7 @@ pub async fn create_signature(
         Ok(_) => Json(serde_json::json!({ "success": true, "id": new_id, "name": payload.name })).into_response(),
         Err(e) => {
             warn!("Failed to create signature: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": format!("Failed to create signature: {}", e) }))).into_response()
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botemail::handlers::signatures", None) }))).into_response()
         }
     }
 }
@@ -223,7 +223,7 @@ pub async fn update_signature(
 
     let mut conn = match state.pool.get() {
         Ok(c) => c,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": format!("Database connection error: {}", e) }))).into_response(),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botemail::handlers::signatures", None) }))).into_response(),
     };
 
     let mut updates = vec!["updated_at = NOW()".to_string()];
@@ -254,7 +254,7 @@ pub async fn update_signature(
         Ok(_) => (StatusCode::NOT_FOUND, Json(serde_json::json!({ "success": false, "error": "Signature not found" }))).into_response(),
         Err(e) => {
             warn!("Failed to update signature: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": format!("Failed to update signature: {}", e) }))).into_response()
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botemail::handlers::signatures", None) }))).into_response()
         }
     }
 }
@@ -276,7 +276,7 @@ pub async fn delete_signature(
 
     let mut conn = match state.pool.get() {
         Ok(c) => c,
-        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": format!("Database connection error: {}", e) }))).into_response(),
+        Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botemail::handlers::signatures", None) }))).into_response(),
     };
 
     let result = diesel::sql_query("UPDATE email_signatures SET is_active = false, updated_at = NOW() WHERE id = $1 AND user_id = $2")
@@ -288,7 +288,7 @@ pub async fn delete_signature(
         Ok(_) => (StatusCode::NOT_FOUND, Json(serde_json::json!({ "success": false, "error": "Signature not found" }))).into_response(),
         Err(e) => {
             warn!("Failed to delete signature: {}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": format!("Failed to delete signature: {}", e) }))).into_response()
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({ "success": false, "error": botsecurity_core::error_sanitizer::log_and_sanitize_json(&e, "botemail::handlers::signatures", None) }))).into_response()
         }
     }
 }
