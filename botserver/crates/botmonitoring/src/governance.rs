@@ -177,7 +177,7 @@ impl GovernanceService {
                 total_tokens,
             })
             .collect();
-        result.sort_by(|a, b| b.call_count.cmp(&a.call_count));
+        result.sort_by_key(|a| std::cmp::Reverse(a.call_count.clone()));
         result
     }
 }

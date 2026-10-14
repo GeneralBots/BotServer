@@ -253,7 +253,7 @@ fn parse_geography(json: &Option<serde_json::Value>) -> Vec<crate::responses::Ge
         })
         .collect();
 
-    data.sort_by(|a, b| b.views.cmp(&a.views));
+    data.sort_by_key(|a| std::cmp::Reverse(a.views.clone()));
     data.truncate(10);
     data
 }

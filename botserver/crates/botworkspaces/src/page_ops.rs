@@ -68,11 +68,11 @@ pub fn sort_pages_by_title(pages: &mut [PageSummary]) {
 }
 
 pub fn sort_pages_by_updated(pages: &mut [PageSummary]) {
-    pages.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+    pages.sort_by_key(|a| std::cmp::Reverse(a.updated_at.clone()));
 }
 
 pub fn sort_pages_by_created(pages: &mut [PageSummary]) {
-    pages.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+    pages.sort_by_key(|a| std::cmp::Reverse(a.created_at.clone()));
 }
 
 pub fn filter_pages_by_date_range(

@@ -102,7 +102,7 @@ pub async fn handle_chat_history_sessions(
             None => true,
         })
         .collect();
-    filtered.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+    filtered.sort_by_key(|a| std::cmp::Reverse(a.updated_at.clone()));
     filtered.truncate(limit as usize);
 
     let mut out: Vec<HistorySession> = Vec::with_capacity(filtered.len());

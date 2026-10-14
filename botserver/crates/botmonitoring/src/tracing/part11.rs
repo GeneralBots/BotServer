@@ -49,7 +49,7 @@ impl DistributedTracingService {
             }
         }
 
-        traces.sort_by(|a, b| b.start_time.cmp(&a.start_time));
+        traces.sort_by_key(|a| std::cmp::Reverse(a.start_time.clone()));
 
         traces
             .into_iter()

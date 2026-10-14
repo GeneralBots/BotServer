@@ -278,7 +278,7 @@ impl AnalyticsService {
             .into_iter()
             .map(|(intent, count)| IntentCount { intent, count })
             .collect();
-        counts.sort_by(|a, b| b.count.cmp(&a.count));
+        counts.sort_by_key(|a| std::cmp::Reverse(a.count.clone()));
         counts.truncate(limit);
         counts
     }

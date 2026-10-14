@@ -206,7 +206,7 @@ impl GamificationService {
         }
 
         let mut entries: Vec<(Uuid, i32)> = xp_by_user.into_iter().collect();
-        entries.sort_by(|a, b| b.1.cmp(&a.1));
+        entries.sort_by_key(|a| std::cmp::Reverse(a.1.clone()));
 
         let leaderboard: Vec<LeaderboardEntry> = entries
             .into_iter()
