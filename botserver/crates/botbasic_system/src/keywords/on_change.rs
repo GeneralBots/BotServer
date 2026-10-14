@@ -171,6 +171,14 @@ pub fn fetch_folder_changes(
     Ok(events)
 }
 
+use std::sync::Arc;
+use botbasic_types::UserSession;
+use rhai::Engine;
+use uuid::Uuid;
+use botbasic_types::BasicRuntime;
+
+pub fn register_on_change_keywords(_state: Arc<dyn BasicRuntime>, _user: UserSession, _engine: &mut Engine) {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -272,11 +280,3 @@ mod tests {
         assert!(filtered[0].path.ends_with(".pdf"));
     }
 }
-
-use std::sync::Arc;
-use botbasic_types::UserSession;
-use rhai::Engine;
-use uuid::Uuid;
-use botbasic_types::BasicRuntime;
-
-pub fn register_on_change_keywords(_state: Arc<dyn BasicRuntime>, _user: UserSession, _engine: &mut Engine) {}

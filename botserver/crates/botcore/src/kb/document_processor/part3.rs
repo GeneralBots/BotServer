@@ -13,7 +13,7 @@ impl DocumentProcessor {
         .unwrap_or_else(|| s.to_string());
         let s2 = crate::re_cache::cached_re!(r"<[^>]*>")
             .map(|re| re.replace_all(&s1, "").to_string())
-            .unwrap_or_else(|| s1);
+            .unwrap_or(s1);
         let s3 = s2.replace("&nbsp;", " ")
                    .replace("&amp;", "&")
                    .replace("&lt;", "<")

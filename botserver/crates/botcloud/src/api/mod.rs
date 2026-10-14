@@ -45,17 +45,16 @@ async fn cloud_jwt_middleware(
     }
 
     // Public GET endpoints for anonymous product/plan browsing
-    if request.method() == "GET" {
-        if path.starts_with("/api/cloud/store")
+    if request.method() == "GET"
+        && (path.starts_with("/api/cloud/store")
             || path.starts_with("/api/cloud/plans")
             || path.starts_with("/api/cloud/offers")
             || path.starts_with("/api/cloud/llm-providers")
             || path.starts_with("/api/products/")
-            || path.starts_with("/api/catalog/")
+            || path.starts_with("/api/catalog/"))
         {
             return next.run(request).await;
         }
-    }
 
     let auth_header = request
         .headers()

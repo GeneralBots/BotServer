@@ -27,7 +27,7 @@ pub(super) async fn process_invoice_paid(
         .first::<botbilling::api_models::BillingRecurring>(&mut conn)
         .map_err(|_| format!("billing_recurring not found for email {customer_email}"))?;
 
-    let total = recurring.amount.as_ref().map(|t| botbilling::api_models::bd_to_f64(t)).unwrap_or(0.0);
+    let total = recurring.amount.as_ref().map(botbilling::api_models::bd_to_f64).unwrap_or(0.0);
 
     // Generate new invoice for the period
     let new_invoice_id = Uuid::new_v4();
@@ -187,7 +187,7 @@ pub(super) async fn process_invoice_payment_failed(
     ))
     .execute(&mut conn);
 
-    let amount_f64 = recurring.amount.as_ref().map(|a| botbilling::api_models::bd_to_f64(a)).unwrap_or(0.0);
+    let amount_f64 = recurring.amount.as_ref().map(botbilling::api_models::bd_to_f64).unwrap_or(0.0);
     let mut vars = notifier::EmailVars::new(
         &recurring.customer_name,
         recurring.customer_email.as_deref().unwrap_or(""),

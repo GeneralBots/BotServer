@@ -84,7 +84,7 @@ pub(crate) async fn list_services(
 
     let result: Vec<serde_json::Value> = subs.into_iter().map(|(sid, cname, desc, freq, stat, amt, cur, _interval, sdate, cdate)| {
         let plan_label = desc.as_deref().unwrap_or(&cname);
-        let friendly_desc = if stat == "active" && amt == bigdecimal::BigDecimal::from(0) {
+        let friendly_desc = if stat == "active" && amt == 0 {
             "GBO Free Service".to_string()
         } else if stat == "trialing" {
             format!("GBO {} Service (Trial)", plan_label)

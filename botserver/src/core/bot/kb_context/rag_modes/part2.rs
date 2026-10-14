@@ -230,12 +230,12 @@ pub(super) fn extract_entities(query: &str) -> Vec<String> {
 
     for word in query.split_whitespace() {
         let clean = word.trim_matches(|c: char| c.is_ascii_punctuation());
-        if clean.len() >= 3 && clean.chars().next().map_or(false, |c| c.is_uppercase()) {
+        if clean.len() >= 3 && clean.chars().next().is_some_and(|c| c.is_uppercase()) {
             entities.push(clean.to_string());
         }
     }
 
-    let multi_word: Vec<&str> = query.split(|c: char| c == ',' || c == ';' || c == '!')
+    let multi_word: Vec<&str> = query.split([',', ';', '!'])
         .map(|s| s.trim())
         .filter(|s| s.chars().filter(|&c| c == ' ').count() >= 1 && s.len() > 5)
         .collect();

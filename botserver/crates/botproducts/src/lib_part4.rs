@@ -38,7 +38,7 @@ pub async fn adjust_stock(
 
     let movement = InventoryMovement {
     id: Uuid::new_v4(),
-    branch_id: branch_id,
+    branch_id,
     product_id: id,
     quantity: req.quantity,
     movement_type: req.movement_type,
@@ -79,8 +79,8 @@ pub async fn create_service(
     let now = Utc::now();
 
     let service = Service {
-    id: id,
-    branch_id: branch_id,
+    id,
+    branch_id,
     name: req.name,
     sku: String::new(),
     description: req.description,
@@ -274,8 +274,8 @@ pub async fn create_category(
         .unwrap_or(None);
 
     let category = ProductCategory {
-    id: id,
-    branch_id: branch_id,
+    id,
+    branch_id,
     name: req.name,
     slug: req.slug.unwrap_or_default(),
     description: req.description,

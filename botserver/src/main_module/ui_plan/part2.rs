@@ -207,6 +207,6 @@ pub fn strip_plan_json(raw_response: &str) -> String {
     }
     let mut stripped = String::with_capacity(raw_response.len());
     stripped.push_str(raw_response[..obj_start].trim_start_matches(|c: char| c.is_whitespace()));
-    stripped.push_str(raw_response[end..].trim_start_matches(|c: char| c == '\n'));
+    stripped.push_str(raw_response[end..].trim_start_matches('\n'));
     stripped.trim().to_string()
 }

@@ -236,11 +236,10 @@ pub fn check_page_permission(
     if page.permissions.public {
         match required_permission {
             PagePermissionType::View => return true,
-            PagePermissionType::Edit => {
-                if page.permissions.public_edit {
+            PagePermissionType::Edit
+                if page.permissions.public_edit => {
                     return true;
                 }
-            }
             _ => {}
         }
     }

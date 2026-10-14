@@ -185,7 +185,7 @@ pub fn sync_table_schema(
             let sql_type = map_type_to_sql(field, "postgres");
             let column_sql = format!(
                 "ALTER TABLE {} ADD COLUMN IF NOT EXISTS {} {}",
-                &table_name,
+                table_name,
                 sanitize_identifier(&field.name.to_lowercase()),
                 sql_type
             );
@@ -240,7 +240,7 @@ pub fn sync_table_schema(
             info!("Dropping orphaned column: {}.{}", table.name, col.name);
             let drop_sql = format!(
                 "ALTER TABLE {} DROP COLUMN IF EXISTS {}",
-                &table_name,
+                table_name,
                 sanitize_identifier(&col.name)
             );
 
@@ -414,6 +414,6 @@ mod tests {
             is_nullable: true,
         };
         assert_eq!(col.name, "test_col");
-        assert_eq!(col.is_nullable, true);
+        assert!(col.is_nullable);
     }
 }

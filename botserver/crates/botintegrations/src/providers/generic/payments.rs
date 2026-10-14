@@ -23,7 +23,7 @@ const SQUARE_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "square.customers.search",
@@ -104,7 +104,7 @@ const PAYPAL_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "paypal.payments.refund",
@@ -269,7 +269,7 @@ const RAMP_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 

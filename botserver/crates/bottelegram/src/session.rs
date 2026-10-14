@@ -231,8 +231,8 @@ pub async fn route_to_bot(
                 chunk_count += 1;
             }
 
-            if response.is_complete || chunk_count >= 5 {
-                if !accumulated_content.is_empty() {
+            if (response.is_complete || chunk_count >= 5)
+                && !accumulated_content.is_empty() {
                     let tg_response = BotResponse::new(
                         response.bot_id,
                         response.session_id,
@@ -248,7 +248,6 @@ pub async fn route_to_bot(
                     accumulated_content.clear();
                     chunk_count = 0;
                 }
-            }
         }
     });
 

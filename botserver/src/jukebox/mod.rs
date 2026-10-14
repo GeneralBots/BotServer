@@ -19,7 +19,7 @@ fn valid_audio_path(path: &str) -> bool {
         return false;
     }
     if path
-        .split(|character| character == '/' || character == '\\')
+        .split(['/', '\\'])
         .any(|segment| segment == "..")
     {
         return false;

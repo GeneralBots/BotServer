@@ -127,16 +127,13 @@ pub struct SafeCommand {
     stderr_cfg: StdioConfig,
 }
 
+#[derive(Default)]
 enum StdioConfig {
+    #[default]
     Inherit,
     Piped,
 }
 
-impl Default for StdioConfig {
-    fn default() -> Self {
-        Self::Inherit
-    }
-}
 
 impl StdioConfig {
     fn to_stdio(&self) -> std::process::Stdio {

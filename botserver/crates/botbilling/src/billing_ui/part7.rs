@@ -51,7 +51,7 @@ pub(super) async fn handle_quotes(
             let mut html = String::new();
             for (id, number, customer_name, customer_email, status, issue_date, valid_until, total, currency) in quotes {
                 let name = customer_email.or(customer_name).unwrap_or_else(|| "Unknown".to_string());
-                let total_str = format_currency(bd_to_f64(&total.unwrap_or_default()), &currency.as_deref().unwrap_or("USD"));
+                let total_str = format_currency(bd_to_f64(&total.unwrap_or_default()), currency.as_deref().unwrap_or("USD"));
                 let issue_str = issue_date.format("%Y-%m-%d").to_string();
                 let valid_str = valid_until.map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_else(|| "-".to_string());
 
@@ -126,7 +126,7 @@ pub(super) async fn handle_revenue_month(State(state): State<Arc<BillingApiState
             .load(&mut conn)
             .ok()?;
 
-        let sum: f64 = totals.iter().map(|t| t.as_ref().map_or(0.0, |v| bd_to_f64(v))).sum();
+        let sum: f64 = totals.iter().map(|t| t.as_ref().map_or(0.0, bd_to_f64)).sum();
         Some(sum)
     })
     .await
@@ -239,7 +239,7 @@ pub(super) async fn handle_billing_search(
         Some(items) if !items.is_empty() => {
             let mut html = String::new();
             for (id, number, customer, status, total, currency) in items {
-                let total_str = format_currency(bd_to_f64(&total.unwrap_or_default()), &currency.as_deref().unwrap_or("USD"));
+                let total_str = format_currency(bd_to_f64(&total.unwrap_or_default()), currency.as_deref().unwrap_or("USD"));
 
                 html.push_str(&format!(
                     r##"<div class="search-result-item" hx-get="/api/billing/invoices/{id}" hx-target="#invoice-detail"><span class="result-number">{}</span><span class="result-customer">{}</span><span class="result-status">{}</span><span class="result-total">{}</span></div>"##,

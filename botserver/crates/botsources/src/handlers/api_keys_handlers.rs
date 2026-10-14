@@ -21,7 +21,7 @@ pub async fn handle_list_api_keys(State(state): State<Arc<AppState>>) -> impl In
             id: "llm-key".to_string(),
             name: "LLM API Key".to_string(),
             provider: "OpenAI Compatible".to_string(),
-            key_preview: format!("sk-...{}", &llm_key.chars().take(4).collect::<String>()),
+            key_preview: format!("sk-...{}", llm_key.chars().take(4).collect::<String>()),
             created_at: "2024-01-01".to_string(),
             last_used: None,
         });
@@ -33,7 +33,7 @@ pub async fn handle_list_api_keys(State(state): State<Arc<AppState>>) -> impl In
             id: "openai-key".to_string(),
             name: "OpenAI API Key".to_string(),
             provider: "OpenAI".to_string(),
-            key_preview: format!("sk-...{}", &openai_key.chars().take(4).collect::<String>()),
+            key_preview: format!("sk-...{}", openai_key.chars().take(4).collect::<String>()),
             created_at: "2024-01-01".to_string(),
             last_used: None,
         });
@@ -45,7 +45,7 @@ pub async fn handle_list_api_keys(State(state): State<Arc<AppState>>) -> impl In
             id: "anthropic-key".to_string(),
             name: "Anthropic API Key".to_string(),
             provider: "Anthropic (Claude)".to_string(),
-            key_preview: format!("sk-ant-...{}", &anthropic_key.chars().take(4).collect::<String>()),
+            key_preview: format!("sk-ant-...{}", anthropic_key.chars().take(4).collect::<String>()),
             created_at: "2024-01-01".to_string(),
             last_used: None,
         });

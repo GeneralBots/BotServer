@@ -12,7 +12,7 @@ pub fn evaluate_let(expr: &str, worksheet: &Worksheet) -> Option<String> {
         return Some("#ERROR!".to_string());
     }
     let mut bindings: Vec<(String, String)> = Vec::new();
-    for chunk in parts.chunks_exact(2) {
+    for chunk in parts.as_chunks::<2>().0 {
         let name = chunk[0].trim().to_string();
         let val_expr = chunk[1].trim();
         let val = if val_expr.starts_with('=') {

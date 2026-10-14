@@ -83,10 +83,8 @@ pub async fn ensure_git_repo(project: &Project) -> Result<(), String> {
     // the path (`/{org}/{repo}.git`).
     let fallback_path = format!("{org}/{repo}.git");
     let path = forgejo_repo
-        .clone_url
-        .splitn(2, "://")
-        .nth(1)
-        .and_then(|rest| rest.splitn(2, '/').nth(1))
+        .clone_url.split_once("://").map(|x| x.1)
+        .and_then(|rest| rest.split_once('/').map(|x| x.1))
         .unwrap_or(&fallback_path)
         .trim_start_matches('/');
     let internal_url = format!("{}/{path}", alm_base.trim_end_matches('/'));

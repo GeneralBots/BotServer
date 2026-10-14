@@ -137,7 +137,7 @@ impl SitePublish<'_> {
     } else {
         String::new()
     };
-    return Ok(serde_json::json!({
+    Ok(serde_json::json!({
         "published": true,
         "project": project.name,
         "env": site_env_name,
@@ -151,7 +151,7 @@ impl SitePublish<'_> {
         "deployment": deployment,
         "launcher": launch_info,
         "history_key": "deployments",
-    }));
+    }))
     }
 }
 

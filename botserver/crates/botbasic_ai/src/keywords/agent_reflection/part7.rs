@@ -153,7 +153,7 @@ pub fn get_reflection_insights_keyword(
 }
 pub(super) fn set_reflection_enabled(bot_id: Uuid, enabled: bool) -> Result<String, String> {
     let value = if enabled { "true" } else { "false" };
-    write_bot_config_to_vault(&bot_id, "bot-reflection-enabled", &value)
+    write_bot_config_to_vault(&bot_id, "bot-reflection-enabled", value)
         .map_err(|e| format!("Failed to set reflection enabled: {}", e))?;
 
     Ok(format!(

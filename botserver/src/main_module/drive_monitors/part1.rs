@@ -114,7 +114,7 @@ pub(crate) async fn start_drive_monitors(
                                 unhealthy_logged = true;
                             }
                             let now = std::time::Instant::now();
-                            let should_log = last_list_error.map_or(true, |t| now.duration_since(t).as_secs() > 120);
+                            let should_log = last_list_error.is_none_or(|t| now.duration_since(t).as_secs() > 120);
                             if should_log {
                                 warn!("Periodic bucket re-scan failed: {}", e);
                                 last_list_error = Some(now);

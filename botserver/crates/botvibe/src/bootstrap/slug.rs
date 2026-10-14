@@ -3,8 +3,7 @@ use super::*;
 /// Project-name → bot slug (single source; the REST path reuses this).
 pub fn bot_slug(name: &str) -> String {
     name.to_lowercase()
-        .replace(' ', "-")
-        .replace('_', "-")
+        .replace([' ', '_'], "-")
         .chars()
         .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
         .collect()

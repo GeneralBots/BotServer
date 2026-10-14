@@ -302,7 +302,7 @@ async fn test_error_messages_accessible() {
                 let body = resp.text().await.unwrap_or_default();
                 
                 assert!(
-                    body.len() > 0,
+                    !body.is_empty(),
                     "Error responses should provide accessible error messages"
                 );
             }

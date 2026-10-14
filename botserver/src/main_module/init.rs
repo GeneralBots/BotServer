@@ -233,7 +233,7 @@ pub async fn init_database(
             info!("Running database migrations...");
             if let Err(e) = {
     let mut conn = pool.get().map_err(|e| std::io::Error::other(format!("Pool error: {e}")))?;
-    run_diesel_migrations(&mut *conn)
+    run_diesel_migrations(&mut conn)
     } {
                 error!("Failed to run migrations: {}", e);
 

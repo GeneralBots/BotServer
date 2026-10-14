@@ -31,7 +31,7 @@ const MINTLIFY_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "mintlify.docs.search",
@@ -170,7 +170,7 @@ const GRAIN_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "grain.highlights.list",
@@ -227,7 +227,7 @@ const DESCRIPT_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "descript.transcripts.get",
@@ -239,7 +239,7 @@ const DESCRIPT_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 
@@ -288,7 +288,7 @@ const GWSADMIN_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "gwsadmin.users.create",
@@ -312,7 +312,7 @@ const GWSADMIN_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "gwsadmin.groups.list",
@@ -391,7 +391,7 @@ const GCLOUD_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 

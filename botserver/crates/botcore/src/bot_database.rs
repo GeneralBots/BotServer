@@ -356,6 +356,35 @@ pub fn create_bot_database_manager(pool: DbPool, database_url: &str) -> BotDatab
     BotDatabaseManager::new(pool, database_url)
 }
 
+impl std::fmt::Debug for BotDatabaseManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BotDatabaseManager")
+            .field("base_url", &self.base_url)
+            .finish_non_exhaustive()
+    }
+}
+
+impl botlib::traits::BotDatabaseService for BotDatabaseManager {
+    fn get_bot_pool(&self, bot_id: uuid::Uuid) -> Option<crate::shared::utils::DbPool> {
+        self.get_bot_pool(bot_id).ok()
+    }
+
+    fn create_table_in_bot_database(&self, bot_id: uuid::Uuid, sql: &str) -> Result<(), String> {
+        BotDatabaseManager::create_table_in_bot_database(self, bot_id, sql)
+            .map_err(|e| e.to_string())
+    }
+
+    fn sync_all_bot_databases(&self) -> Result<(), String> {
+        self.sync_all_bot_databases().map(|_| ()).map_err(|e| e.to_string())
+    }
+}
+
+use diesel::sql_query;
+use diesel::PgConnection;
+use std::collections::HashMap;
+use uuid::Uuid;
+use crate::shared::utils::DbPool;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -408,32 +437,3 @@ mod tests {
         );
     }
 }
-
-impl std::fmt::Debug for BotDatabaseManager {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("BotDatabaseManager")
-            .field("base_url", &self.base_url)
-            .finish_non_exhaustive()
-    }
-}
-
-impl botlib::traits::BotDatabaseService for BotDatabaseManager {
-    fn get_bot_pool(&self, bot_id: uuid::Uuid) -> Option<crate::shared::utils::DbPool> {
-        self.get_bot_pool(bot_id).ok()
-    }
-
-    fn create_table_in_bot_database(&self, bot_id: uuid::Uuid, sql: &str) -> Result<(), String> {
-        BotDatabaseManager::create_table_in_bot_database(self, bot_id, sql)
-            .map_err(|e| e.to_string())
-    }
-
-    fn sync_all_bot_databases(&self) -> Result<(), String> {
-        self.sync_all_bot_databases().map(|_| ()).map_err(|e| e.to_string())
-    }
-}
-
-use diesel::sql_query;
-use diesel::PgConnection;
-use std::collections::HashMap;
-use uuid::Uuid;
-use crate::shared::utils::DbPool;

@@ -168,7 +168,7 @@ pub async fn list_buckets(
     // shapes from the name would also match a bucket that does not belong to
     // this bot. `None` means no filter, or an unresolvable bot (which matches
     // nothing rather than silently exposing every bucket).
-    let bot_bucket: Option<String> = params.bot.as_deref().map(|bot| {
+    let bot_bucket: Option<String> = params.bot.as_deref().and_then(|bot| {
         match state.conn.get() {
             Ok(mut conn) => {
                 Some(botbasic_core::utils::bot_drive_location_for_name(&mut conn, bot).bucket)
@@ -178,7 +178,7 @@ pub async fn list_buckets(
                 None
             }
         }
-    }).flatten();
+    });
 
     let items: Vec<BucketListItem> = bucket_names
         .into_iter()

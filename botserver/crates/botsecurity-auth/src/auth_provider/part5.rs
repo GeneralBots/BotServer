@@ -82,7 +82,7 @@ pub async fn create_default_registry(
     zitadel_config: Option<ZitadelAuthConfig>,
 ) -> Result<AuthProviderRegistry> {
     let jwt_config = crate::jwt::JwtConfig::default();
-    let jwt_key = crate::jwt::JwtKey::from_secret(&jwt_secret);
+    let jwt_key = crate::jwt::JwtKey::from_secret(jwt_secret);
     let jwt_manager = Arc::new(crate::jwt::JwtManager::new(jwt_config, jwt_key)?);
 
     let mut builder = AuthProviderBuilder::new()

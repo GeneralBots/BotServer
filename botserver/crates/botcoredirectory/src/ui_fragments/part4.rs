@@ -29,7 +29,7 @@ pub async fn create_group(
     .bind::<diesel::sql_types::Text, _>(&name)
     .bind::<diesel::sql_types::Text, _>(&display_name)
     .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(
-        form.get("description").map(|d| d.clone()),
+        form.get("description").cloned(),
     )
     .execute(&mut conn);
 

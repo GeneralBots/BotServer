@@ -146,8 +146,7 @@ async fn a_chain_with_no_credentials_reports_that_not_a_silent_success() {
     let settings = OrgDomainSettings::default();
     let err = register_domain(&sku(), "gb-1.com", &settings)
         .await
-        .err()
-        .expect("no credential means no registration");
+        .expect_err("no credential means no registration");
     assert!(err.contains("no credential"), "{err}");
 }
 
@@ -166,8 +165,7 @@ async fn a_credential_for_a_registrar_that_cannot_sell_the_tld_is_skipped() {
     };
     let err = register_domain(&exotic, "gb-test.museum", &settings)
         .await
-        .err()
-        .expect("porkbun does not sell .museum");
+        .expect_err("porkbun does not sell .museum");
     assert!(err.contains("does not sell"), "{err}");
 }
 
@@ -180,7 +178,6 @@ async fn a_preference_outside_the_chain_is_ignored_rather_than_failing() {
     let settings = OrgDomainSettings::from_config(Some(&config));
     let err = register_domain(&sku(), "gb-test.com", &settings)
         .await
-        .err()
-        .expect("deSEC is not in the chain");
+        .expect_err("deSEC is not in the chain");
     assert!(err.contains("no credential"), "{err}");
 }

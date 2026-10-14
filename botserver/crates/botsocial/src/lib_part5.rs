@@ -18,7 +18,7 @@ pub async fn handle_add_comment(
             parent_comment_id: req.parent_comment_id,
             author_id: user_id,
             content: req.content,
-            mentions: serde_json::to_value(&req.mentions.unwrap_or_default()).unwrap_or_default(),
+            mentions: serde_json::to_value(req.mentions.unwrap_or_default()).unwrap_or_default(),
             reaction_counts: serde_json::json!({}),
             reply_count: 0,
             created_at: now,

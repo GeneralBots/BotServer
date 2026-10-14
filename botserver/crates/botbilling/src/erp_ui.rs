@@ -186,7 +186,7 @@ async fn handle_procurement(State(state): State<Arc<BillingApiState>>, headers: 
             vendor = html_escape(&r.vendor_name),
             total = format!("${:.2}", r.total_amount),
             status = html_escape(&r.status),
-            created = r.created_at.format("%Y-%m-%d").to_string(),
+            created = r.created_at.format("%Y-%m-%d"),
         ));
     }
     html.push_str("</tbody></table>");

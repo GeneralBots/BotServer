@@ -106,7 +106,7 @@ const CONFLUENCE_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 const CONFLUENCE_KEYS: &[&str] = &["confluence.pages.search", "confluence.pages.get"];

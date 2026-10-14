@@ -35,7 +35,7 @@ pub fn pick_evictions(existing: &[(DateTime<Utc>, String)], max: usize) -> Vec<S
         return Vec::new();
     }
     let mut sorted: Vec<&(DateTime<Utc>, String)> = existing.iter().collect();
-    sorted.sort_by(|a, b| a.0.cmp(&b.0));
+    sorted.sort_by_key(|a| a.0);
     let overflow = existing.len() - max;
     sorted.iter().take(overflow).map(|(_, n)| n.clone()).collect()
 }
@@ -120,7 +120,7 @@ pub async fn evict_oldest_if_needed(
     // one slot, so at most `cap - 1` same-kind projects may survive on the
     // branch. (Keeping `cap` here would allow cap+1 rows to exist between
     // eviction and insert.)
-    let keep = cap.saturating_sub(1).max(0);
+    let keep = cap.saturating_sub(1);
     let query = crate::projects::ListProjectsQuery {
         branch_id: Some(branch_id),
         project_type: Some(project_type.to_string()),

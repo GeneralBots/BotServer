@@ -101,7 +101,7 @@ pub async fn handle_ws_connection(ws: WebSocket, session: DesktopSession, sessio
     let (mut tcp_reader, mut tcp_writer) = tcp_stream.into_split();
 
     // Send connected metadata
-    if ws_sink.send(AxumMessage::Text(meta_json.into())).await.is_err() {
+    if ws_sink.send(AxumMessage::Text(meta_json)).await.is_err() {
         warn!("Failed to send connected metadata to client");
     }
 
@@ -188,7 +188,7 @@ pub async fn handle_ws_connection(ws: WebSocket, session: DesktopSession, sessio
     let sm_tcp = session_manager.clone();
     let tcp_to_ws_forward = tokio::spawn(async move {
         while let Some(data) = tcp_to_ws_rx.recv().await {
-            let msg = AxumMessage::Binary(data.clone().into());
+            let msg = AxumMessage::Binary(data.clone());
             if ws_sink.send(msg).await.is_err() {
                 break;
             }

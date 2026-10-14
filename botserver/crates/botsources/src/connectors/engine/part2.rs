@@ -22,7 +22,7 @@ impl ConnectorEngine {
 
         for ep in &config.endpoints {
             let ep_start = std::time::Instant::now();
-            let url = format!("{}{}", base_url.trim_end_matches('/'), &ep.url);
+            let url = format!("{}{}", base_url.trim_end_matches('/'), ep.url);
 
             let ep_result = match client.get(&url).send() {
                 Ok(response) => {

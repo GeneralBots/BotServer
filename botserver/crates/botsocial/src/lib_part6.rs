@@ -20,11 +20,9 @@ pub async fn handle_trending_topics(
 
         let mut counts: std::collections::HashMap<String, i64> = std::collections::HashMap::new();
         for p in &db_posts {
-            for tag in &p.hashtags {
-                if let Some(tag) = tag {
-                    if !tag.is_empty() {
-                        *counts.entry(tag.clone()).or_insert(0) += 1;
-                    }
+            for tag in p.hashtags.iter().flatten() {
+                if !tag.is_empty() {
+                    *counts.entry(tag.clone()).or_insert(0) += 1;
                 }
             }
         }
@@ -64,7 +62,7 @@ pub async fn handle_recent_activity(
             .into_iter()
             .map(|p| {
                 let summary = if p.content.chars().count() > 80 {
-                    format!("{}…", &p.content.chars().take(80).collect::<String>())
+                    format!("{}…", p.content.chars().take(80).collect::<String>())
                 } else {
                     p.content.clone()
                 };

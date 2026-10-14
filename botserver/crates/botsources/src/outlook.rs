@@ -114,7 +114,7 @@ impl OutlookService {
     pub fn is_working_hours(event: &CalendarEvent) -> bool {
         let hour = event.start.format("%H").to_string();
         let h: u32 = hour.parse().unwrap_or(0);
-        h >= 8 && h < 18
+        (8..18).contains(&h)
     }
 
     pub fn count_meetings_in_range(events: &[CalendarEvent], date: NaiveDate) -> u32 {

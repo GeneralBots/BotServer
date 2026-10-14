@@ -44,13 +44,13 @@ pub async fn create_price_list(
         .and_then(|d| chrono::NaiveDate::parse_from_str(&d, "%Y-%m-%d").ok());
 
     let price_list = PriceList {
-    id: id,
-    branch_id: branch_id,
+    id,
+    branch_id,
     name: req.name,
     currency: Some(req.currency.unwrap_or_else(|| "USD".to_string())),
     is_active: Some(true),
-    valid_from: valid_from,
-    valid_until: valid_until,
+    valid_from,
+    valid_until,
     created_at: now,
     updated_at: now,
     description: req.description,

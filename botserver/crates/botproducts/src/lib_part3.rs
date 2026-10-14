@@ -15,8 +15,8 @@ pub async fn create_product(
     let now = Utc::now();
 
     let product = Product {
-    id: id,
-    branch_id: branch_id,
+    id,
+    branch_id,
     name: req.name,
         sku: req.sku.unwrap_or_default(),
     description: req.description,

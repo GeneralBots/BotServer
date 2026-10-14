@@ -104,7 +104,7 @@ pub async fn vault_get(path: &str, key: Option<&str>) -> Result<()> {
                 || k.contains("key")
                 || k.contains("token")
             {
-                format!("{}...", &v.chars().take(4).collect::<String>())
+                format!("{}...", v.chars().take(4).collect::<String>())
             } else {
                 v.clone()
             };

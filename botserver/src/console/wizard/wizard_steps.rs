@@ -257,15 +257,13 @@ impl StartupWizard {
             Print("Select a template for your first bot:"),
         )?;
 
-        let options = vec![
-            ("default", "Basic bot with weather, email, and tools"),
+        let options = [("default", "Basic bot with weather, email, and tools"),
             ("crm", "Customer relationship management"),
             ("edu", "Educational/course management"),
             ("store", "E-commerce bot"),
             ("hr", "Human resources assistant"),
             ("healthcare", "Healthcare appointment scheduling"),
-            ("none", "Start from scratch"),
-        ];
+            ("none", "Start from scratch")];
 
         let templates: Vec<(&str, &str, Option<String>)> = options
             .iter()

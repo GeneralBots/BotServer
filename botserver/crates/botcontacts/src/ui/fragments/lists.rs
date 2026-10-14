@@ -224,7 +224,7 @@ pub async fn handle_crm_contacts(
             title = or_dash(c.job_title.as_deref()),
             email = or_dash(c.email.as_deref()),
             phone = or_dash(c.phone.as_deref()),
-            owner = or_dash(c.owner_id.map(|_| "assigned").as_deref()),
+            owner = or_dash(c.owner_id.map(|_| "assigned")),
             actions = row_actions("contact", c.id),
         ));
     }

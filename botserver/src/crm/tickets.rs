@@ -143,7 +143,7 @@ impl Ticket {
     }
 
     pub fn is_sla_breached(&self) -> bool {
-        self.sla_deadline.map_or(false, |d| Utc::now() > d)
+        self.sla_deadline.is_some_and(|d| Utc::now() > d)
     }
 
     pub fn time_to_sla_breach(&self) -> Option<Duration> {

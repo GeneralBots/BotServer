@@ -27,7 +27,7 @@ pub async fn handle_export_citations<S: ResearchState>(
             }
         };
 
-        diesel::sql_query(&format!(
+        diesel::sql_query(format!(
             "SELECT id, file_path, collection_name, metadata FROM kb_documents WHERE (LOWER(file_path) LIKE $1 OR metadata::text ILIKE $1){} ORDER BY file_path ASC LIMIT 20",
             scope
         ))
@@ -71,7 +71,7 @@ pub async fn handle_sources<S: ResearchState>(
         };
 
         if category.is_empty() || category == "all" {
-            diesel::sql_query(&format!(
+            diesel::sql_query(format!(
                 "SELECT DISTINCT collection_name FROM kb_documents WHERE 1 = 1{} ORDER BY collection_name ASC LIMIT 50",
                 scope
             ))
@@ -79,7 +79,7 @@ pub async fn handle_sources<S: ResearchState>(
             .map(|rows| rows.into_iter().map(|r| r.name).collect())
             .unwrap_or_default()
         } else {
-            diesel::sql_query(&format!(
+            diesel::sql_query(format!(
                 "SELECT DISTINCT collection_name FROM kb_documents WHERE collection_name ILIKE $1{} ORDER BY collection_name ASC LIMIT 50",
                 scope
             ))

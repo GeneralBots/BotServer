@@ -280,7 +280,7 @@ pub async fn get_group_permissions(
         .and_then(|v| v.as_str())
         .and_then(|s| serde_json::from_str::<serde_json::Value>(s).ok())
         .and_then(|group_data| group_data.get("permissions").cloned())
-        .and_then(|p| p.as_array().map(|a| a.clone()))
+        .and_then(|p| p.as_array().cloned())
         .unwrap_or_default();
 
     Ok(Json(serde_json::json!({

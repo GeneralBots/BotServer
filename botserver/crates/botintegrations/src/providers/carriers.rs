@@ -195,7 +195,7 @@ impl ProviderAdapter for CarriersAdapter {
         params: &'a Value,
     ) -> Pin<Box<dyn Future<Output = Result<ActionOutcome, String>> + Send + 'a>> {
         Box::pin(async move {
-            if action_key != &format!("{}.shipments.track", self.slug) {
+            if action_key != format!("{}.shipments.track", self.slug) {
                 return Err(crate::providers::ERR_ACTION_NOT_AVAILABLE.to_string());
             }
             let number = params

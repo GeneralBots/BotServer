@@ -113,8 +113,8 @@ mod tests {
         let abs = LinuxAbstraction;
         let data = abs.default_data_dir();
         let config = abs.default_config_dir();
-        assert!(data.as_os_str().len() > 0);
-        assert!(config.as_os_str().len() > 0);
+        assert!(!data.as_os_str().is_empty());
+        assert!(!config.as_os_str().is_empty());
     }
 
     #[test]

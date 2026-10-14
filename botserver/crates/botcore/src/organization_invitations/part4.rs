@@ -42,7 +42,7 @@ impl InvitationService {
         let expires_at = now + Duration::days(params.expires_in_days);
 
         let pool = self.pool.clone();
-        let conn_result = tokio::task::spawn_blocking(move || {
+        tokio::task::spawn_blocking(move || {
             use diesel::sql_query;
             use diesel::RunQueryDsl;
             let mut conn = pool.get().map_err(|e| format!("DB pool error: {e}"))?;
@@ -70,7 +70,7 @@ impl InvitationService {
         .await
         .map_err(|e| format!("Task join error: {e}"))??;
 
-        let _ = conn_result;
+        ();
 
         let invitation = OrganizationInvitation {
             id: invitation_id,

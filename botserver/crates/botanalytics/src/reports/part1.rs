@@ -207,7 +207,7 @@ pub async fn billing_aging(
 
     let mut rows = String::new();
     for (label, cond) in buckets {
-        let value: Option<bigdecimal::BigDecimal> = diesel::sql_query(&format!(
+        let value: Option<bigdecimal::BigDecimal> = diesel::sql_query(format!(
             "SELECT COALESCE(SUM(amount_due), 0) AS value FROM billing_invoices WHERE branch_id = $1 AND status <> 'paid' AND status <> 'void' AND {cond}"
         ))
         .bind::<diesel::sql_types::Uuid, _>(branch)

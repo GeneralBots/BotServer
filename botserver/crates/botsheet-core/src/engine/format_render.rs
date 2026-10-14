@@ -142,7 +142,7 @@ fn count_run(chars: &mut std::iter::Peekable<std::str::Chars>, set: &[char]) -> 
     let mut count = 1;
     while chars
         .peek()
-        .map_or(false, |c| set.contains(&c.to_ascii_lowercase()))
+        .is_some_and(|c| set.contains(&c.to_ascii_lowercase()))
     {
         count += 1;
         chars.next();

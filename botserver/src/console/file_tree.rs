@@ -178,13 +178,13 @@ impl FileTree {
             }
             files.sort_by(|(a, _), (b, _)| a.cmp(b));
             for (ref name, ref full_path) in files {
-                let icon = if has_extension_ci(&name, "bas")
-                    || has_extension_ci(&name, "ast")
-                    || has_extension_ci(&name, "csv")
-                    || has_extension_ci(&name, "gbkb")
+                let icon = if has_extension_ci(name, "bas")
+                    || has_extension_ci(name, "ast")
+                    || has_extension_ci(name, "csv")
+                    || has_extension_ci(name, "gbkb")
                 {
                     ""
-                } else if has_extension_ci(&name, "json") {
+                } else if has_extension_ci(name, "json") {
                     "🔖"
                 } else {
                     "📄"

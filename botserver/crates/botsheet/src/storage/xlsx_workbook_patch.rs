@@ -145,7 +145,7 @@ fn patch_rels(
     let mut inner = String::new();
     for tag in rel_re.find_iter(&xml) {
         let raw = tag.as_str();
-        let drop = match (first_capture(&id_re, raw), first_capture(&target_re, raw)) {
+        let drop = match (first_capture(id_re, raw), first_capture(target_re, raw)) {
             (Some(id), Some(target)) => {
                 !kept_rids.contains(id.as_str()) && deleted_parts.contains(&part_from_target(&target))
             }
@@ -203,7 +203,7 @@ fn patch_content_types(
     let mut inner = String::new();
     for tag in ov_re.find_iter(&xml) {
         let raw = tag.as_str();
-        let part = first_capture(&part_re, raw).unwrap_or_default();
+        let part = first_capture(part_re, raw).unwrap_or_default();
         if part.contains("/worksheets/sheet") && deleted.contains(&part) && !kept.contains(&part) {
             continue;
         }

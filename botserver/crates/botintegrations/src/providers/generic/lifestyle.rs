@@ -216,7 +216,7 @@ const READWISE_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 
@@ -275,7 +275,7 @@ const RAINDROP_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "raindrop.bookmarks.create",
@@ -299,7 +299,7 @@ const RAINDROP_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 
@@ -356,7 +356,7 @@ const FITBIT_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 

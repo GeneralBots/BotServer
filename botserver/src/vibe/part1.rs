@@ -82,14 +82,11 @@ impl VibeStateImpl {
                 return legacy;
             }
         }
-        let per_bot = match value("llm-model") {
-            Some(model) => Some(LlmConfig {
+        let per_bot = value("llm-model").map(|model| LlmConfig {
                 model,
                 key: value("llm-key").unwrap_or_default(),
                 url: value("llm-url").unwrap_or_default(),
-            }),
-            None => None,
-        };
+            });
         // The per-bot path can resolve a model (Drive config.csv) while its
         // Vault secret lacks the key/url — that must NOT shadow the global
         // secret/gbo/llm (tokenrouter) that the bot chat uses, or every run

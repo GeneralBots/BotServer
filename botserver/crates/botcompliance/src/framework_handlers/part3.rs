@@ -86,7 +86,7 @@ pub async fn handle_export_framework_csv(
             if has_evidence {
                 covered += 1;
             }
-            let title = c.title.replace(',', " ").replace('\n', " ");
+            let title = c.title.replace([',', '\n'], " ");
             let category = c.category.clone().unwrap_or_default().replace(',', " ");
             csv.push_str(&format!(
                 "{},{},{},{},{},{},{}\n",

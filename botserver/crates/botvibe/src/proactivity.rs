@@ -170,3 +170,9 @@ impl ProactivityEngine {
         emitted
     }
 }
+
+impl Default for ProactivityEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}

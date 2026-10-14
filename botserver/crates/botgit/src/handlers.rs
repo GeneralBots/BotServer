@@ -115,7 +115,7 @@ fn resolve_repo(query_repo: Option<&str>) -> String {
         && !repo.contains('\\')
         && repo.len() <= 128
     {
-        let candidate = vibe_workspace_root().join(&repo);
+        let candidate = vibe_workspace_root().join(repo);
         if candidate.join(".git").exists() {
             return candidate.to_string_lossy().into_owned();
         }
@@ -364,12 +364,10 @@ pub async fn git_tree(
         if rel.is_empty() {
             continue;
         }
-        let rest = dir
-            .is_empty()
-            .then(|| rel.clone())
-            .unwrap_or_else(|| {
+        let rest = if dir
+            .is_empty() { rel.clone() } else { {
                 rel.strip_prefix(&format!("{dir}/")).unwrap_or(&rel).to_string()
-            });
+            } };
         if rest.is_empty() {
             continue;
         }

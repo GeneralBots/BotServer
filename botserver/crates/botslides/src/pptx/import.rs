@@ -167,7 +167,7 @@ fn extract_drawing_text(xml: &str) -> String {
         text.push('\n');
         pos = abs_end;
     }
-    unescape_xml(&text.trim_end())
+    unescape_xml(text.trim_end())
 }
 
 fn unescape_xml(text: &str) -> String {

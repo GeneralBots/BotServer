@@ -140,6 +140,12 @@ impl PluginRegistry {
     }
 }
 
+impl Default for PluginRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub type SharedPluginRegistry = Arc<PluginRegistry>;
 
 use std::sync::OnceLock;

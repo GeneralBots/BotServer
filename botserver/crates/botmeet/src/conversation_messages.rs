@@ -77,7 +77,7 @@ fn row_to_response(row: MessageRow, conversation_id: Uuid) -> MessageResponse {
 
 pub async fn get_conversation_messages(pool: &DbPool, conversation_id: Uuid) -> Result<Vec<MessageResponse>> {
     let mut conn = pool.get()?;
-    let rows: Vec<MessageRow> = sql_query(&format!(
+    let rows: Vec<MessageRow> = sql_query(format!(
         "{MESSAGE_SELECT} WHERE m.conversation_id = $1 GROUP BY m.id ORDER BY m.created_at"
     ))
     .bind::<DieselUuid, _>(conversation_id)
@@ -222,7 +222,7 @@ pub async fn pin_message(pool: &DbPool, conversation_id: Uuid, message_id: Uuid)
 pub async fn search_messages(pool: &DbPool, conversation_id: Uuid, params: &SearchMessagesQuery) -> Result<Vec<MessageResponse>> {
     let mut conn = pool.get()?;
     let pattern = format!("%{}%", params.query);
-    let rows: Vec<MessageRow> = sql_query(&format!(
+    let rows: Vec<MessageRow> = sql_query(format!(
         "{MESSAGE_SELECT} WHERE m.conversation_id = $1 AND m.content ILIKE $2 \
          GROUP BY m.id ORDER BY m.created_at LIMIT 100"
     ))
@@ -240,7 +240,7 @@ struct CountRow {
 }
 
 fn load_message(conn: &mut PgConnection, message_id: Uuid, conversation_id: Uuid) -> Result<MessageResponse> {
-    let row: MessageRow = sql_query(&format!(
+    let row: MessageRow = sql_query(format!(
         "{MESSAGE_SELECT} WHERE m.id = $1 AND m.conversation_id = $2 GROUP BY m.id"
     ))
     .bind::<DieselUuid, _>(message_id)

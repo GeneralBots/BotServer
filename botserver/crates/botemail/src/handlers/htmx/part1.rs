@@ -119,7 +119,7 @@ pub async fn list_folders_htmx(
         let count_badge = if **count > 0 { format!(r#"<span style="margin-left: auto; font-size: 0.875rem; color: #64748b;">{}</span>"#, count) } else { String::new() };
         let display: String = folder_name.chars().next().unwrap_or_default().to_uppercase().collect::<String>() + &folder_name[1..];
         use std::fmt::Write;
-        let _ = write!(html, r##"<div class="nav-item {}" hx-get="/api/ui/email/list?folder={}" hx-target="#mail-list" hx-swap="innerHTML"><span>{}</span> {} {}</div>"##, active, folder_name, "", display, count_badge);
+        let _ = write!(html, r##"<div class="nav-item {}" hx-get="/api/ui/email/list?folder={}" hx-target="#mail-list" hx-swap="innerHTML"><span></span> {} {}</div>"##, active, folder_name, display, count_badge);
     }
 
     axum::response::Html(html)
@@ -203,7 +203,7 @@ pub async fn get_email_content_htmx(
     })
     .await
     .map_err(|e| EmailError(format!("Task join error: {e}")))?
-    .map_err(|e| EmailError(e))?;
+    .map_err(EmailError)?;
 
     let html = format!(r##"<div class="mail-content-view"><div id="nudges-banner-{id}" class="nudges-banner" data-email-id="{id}"></div><div class="mail-actions"><button hx-get="/api/ui/email/compose?reply_to={id}" hx-target="#mail-content" hx-swap="innerHTML">Reply</button><button hx-get="/api/ui/email/compose?forward={id}" hx-target="#mail-content" hx-swap="innerHTML">Forward</button><details class="snooze-menu"><summary class="mail-action-btn">Snooze</summary><div class="snooze-presets"><button onclick="snoozeEmail('{id}','later-today')">Later today</button><button onclick="snoozeEmail('{id}','tomorrow')">Tomorrow</button><button onclick="snoozeEmail('{id}','this-weekend')">This weekend</button><button onclick="snoozeEmail('{id}','next-week')">Next week</button></div></details><button hx-delete="/api/ui/email/{id}/delete" hx-target="#mail-list" hx-swap="innerHTML" hx-confirm="Delete this email?">Delete</button></div><h2>{subject}</h2><div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;"><div><div style="font-weight: 600;">{from_name}</div><div class="text-sm text-gray">to: {to}</div></div><div style="margin-left: auto;" class="text-sm text-gray">{date}</div></div><div class="mail-body">{body}</div><div id="smart-reply-{id}" class="smart-reply-chips" data-email-id="{id}"></div></div>"##,
     id = id,

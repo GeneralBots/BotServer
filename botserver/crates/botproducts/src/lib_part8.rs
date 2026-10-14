@@ -170,7 +170,7 @@ pub(super) async fn handle_product_edit_form(
         id = id,
         name = html_escape(&product.name),
         sku = html_escape(&product.sku),
-        desc = html_escape(&product.description.as_deref().unwrap_or("")),
+        desc = html_escape(product.description.as_deref().unwrap_or("")),
         price = price_str,
         cost = cost_str,
         cat_sel_sw = cat_sel("software"),
@@ -190,7 +190,7 @@ pub(super) async fn handle_product_edit_form(
         status_i = active_sel(product.is_active.unwrap_or(false), false),
         tax_rate = tax_rate_str,
         stock = product.stock_quantity.map(|v| v.to_string()).unwrap_or_else(|| "0".to_string()),
-        barcode = html_escape(&product.barcode.as_deref().unwrap_or("")),
+        barcode = html_escape(product.barcode.as_deref().unwrap_or("")),
     ))
 }
 pub(super) async fn handle_products_debug() -> &'static str {

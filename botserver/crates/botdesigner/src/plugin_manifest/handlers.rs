@@ -114,7 +114,7 @@ fn render_functions(functions: &[ExposedFunction]) -> String {
             .collect::<Vec<_>>()
             .join(", ");
 
-        html.push_str(&format!(r##"<div class="func-item">"##));
+        html.push_str(r##"<div class="func-item">"##);
         html.push_str(&format!(
             r##"<span class="func-name">{name}</span>"##,
             name = html_escape(&func.name),

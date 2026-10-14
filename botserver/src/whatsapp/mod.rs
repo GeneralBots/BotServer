@@ -90,7 +90,7 @@ impl ChannelSink for WABufferedSink {
             let full = std::mem::take(&mut *buf);
             if !full.is_empty() {
                 (self.send_msg)(&self.phone, &full, &self.bot_name).await
-                    .map_err(|e| PipelineError::Transport(e))?;
+                    .map_err(PipelineError::Transport)?;
             }
         }
         Ok(())
@@ -103,7 +103,7 @@ impl ChannelSink for WABufferedSink {
         let full = std::mem::take(&mut *buf);
         if !full.is_empty() {
             (self.send_msg)(&self.phone, &full, &self.bot_name).await
-                .map_err(|e| PipelineError::Transport(e))?;
+                .map_err(PipelineError::Transport)?;
         }
         Ok(())
     }

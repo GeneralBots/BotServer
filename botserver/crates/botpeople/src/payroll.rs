@@ -93,3 +93,9 @@ impl PayrollService {
         Ok(text)
     }
 }
+
+impl Default for PayrollService {
+    fn default() -> Self {
+        Self::new()
+    }
+}

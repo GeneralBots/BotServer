@@ -175,7 +175,7 @@ mod tests {
     #[cfg(not(windows))]
     #[test]
     fn test_packages_list() {
-        assert!(PACKAGES.len() > 0);
+        assert!(!PACKAGES.is_empty());
         assert!(PACKAGES.contains(&"lynis"));
         assert!(PACKAGES.contains(&"rkhunter"));
     }

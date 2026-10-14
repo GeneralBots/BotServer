@@ -47,7 +47,7 @@ pub(super) async fn route_vibe_project(
         // too: resolve it by name instead of trusting the LLM, which may route
         // the message to ui_plan automation (app 'designer') instead of the
         // vibe agent.
-        match crate::core::bot::api_catalog::mentioned_project(state, &bot_uuid, &user_text) {
+        match crate::core::bot::api_catalog::mentioned_project(state, &bot_uuid, user_text) {
             Ok(Some((pid, name))) => (Some(pid), name),
             _ => (None, String::new()),
         }
@@ -87,7 +87,7 @@ pub(super) async fn route_vibe_project(
                         bot_uuid.to_string(),
                         session_id.to_string(),
                         user_id.to_string(),
-                        &format!("⏳ {detail} — your change is queued and will run automatically."),
+                        format!("⏳ {detail} — your change is queued and will run automatically."),
                         "web",
                     );
                     let _ = sink.send_bot_response(&resp).await;
@@ -230,7 +230,7 @@ pub(super) async fn route_vibe_project(
                     bot_uuid.to_string(),
                     session_id.to_string(),
                     user_id.to_string(),
-                    &format!("Vibe agent could not start for '{project_name}': {e}"),
+                    format!("Vibe agent could not start for '{project_name}': {e}"),
                     "web",
                 );
                 let _ = sink.send_bot_response(&resp).await;

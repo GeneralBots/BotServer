@@ -21,7 +21,7 @@ pub struct SuiteQueryParams {
 /// Resolve a hostname to a bot name via the botserver domain API.
 async fn resolve_bot_from_host(state: &AppState, host: &str) -> Option<String> {
     let resolve_url = format!("{}/api/domains/resolve?host={}", state.client.base_url(), urlencoding(host));
-    let client = crate::ui_server::tls_policy::backend_http_client(&state.client.base_url().to_string());
+    let client = crate::ui_server::tls_policy::backend_http_client(state.client.base_url());
     match client.get(&resolve_url).send().await {
         Ok(resp) if resp.status().is_success() => {
             if let Ok(data) = resp.json::<serde_json::Value>().await {
@@ -196,7 +196,7 @@ pub async fn index(
             .or_else(|| cookie_token.map(|t| format!("Bearer {}", t)));
 
         let target_url = format!("{}/api/bots/{}/access", state.client.base_url(), bot);
-        let client = crate::ui_server::tls_policy::backend_http_client(&state.client.base_url().to_string());
+        let client = crate::ui_server::tls_policy::backend_http_client(state.client.base_url());
 
         let mut req = client.get(&target_url);
         if let Some(ref auth) = auth_header {
@@ -491,7 +491,7 @@ pub async fn serve_suite_impl(_state: &AppState, bot_name: Option<String>, _head
                         .unwrap_or_else(|_| "http://localhost:5000".to_string());
                     let login_script = format!(
                         r#"<script>window.GB_LOGIN_URL = "{}";</script>"#,
-                        &login_url
+                        login_url
                     );
                     html.insert_str(head_end + base_tag.len(), &login_script);
 
@@ -500,7 +500,7 @@ pub async fn serve_suite_impl(_state: &AppState, bot_name: Option<String>, _head
                         info!("serve_suite: Injecting bot_name '{}' into page with base href='{}'", name, base_href);
                         let bot_script = format!(
                             r#"<script>window.__INITIAL_BOT_NAME__ = "{}";</script>"#,
-                            &name
+                            name
                         );
                         html.insert_str(ins_offset, &bot_script);
                         info!("serve_suite: Successfully injected base tag and bot_name script");

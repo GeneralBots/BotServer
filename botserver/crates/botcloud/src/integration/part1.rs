@@ -10,8 +10,7 @@ use super::*;
 /// `cloud_workspaces` row is created for the same org.
 pub fn slugify(name: &str) -> String {
     name.to_lowercase()
-        .replace(' ', "-")
-        .replace('_', "-")
+        .replace([' ', '_'], "-")
         .chars()
         .filter(|c| c.is_alphanumeric() || *c == '-')
         .collect()

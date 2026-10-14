@@ -16,7 +16,7 @@ pub async fn handle_prompts<S: ResearchState>(
             }
         };
 
-        diesel::sql_query(&format!(
+        diesel::sql_query(format!(
             "SELECT name FROM kb_collections WHERE 1 = 1{} ORDER BY document_count DESC LIMIT 6",
             scope
         ))

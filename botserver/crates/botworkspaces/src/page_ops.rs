@@ -64,7 +64,7 @@ pub fn duplicate_page(
 }
 
 pub fn sort_pages_by_title(pages: &mut [PageSummary]) {
-    pages.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
+    pages.sort_by_key(|a| a.title.to_lowercase());
 }
 
 pub fn sort_pages_by_updated(pages: &mut [PageSummary]) {

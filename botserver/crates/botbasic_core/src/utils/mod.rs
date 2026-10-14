@@ -227,7 +227,7 @@ mod bot_drive_location_tests {
         let tree = loc.bot_tree_prefix("cristo");
         assert_eq!(tree, "cristo.gbai/cristo.gb");
         assert!(
-            !format!("cristo.gbai/cristo-test.gbdrive/a.bas").starts_with(&tree),
+            !"cristo.gbai/cristo-test.gbdrive/a.bas".to_string().starts_with(&tree),
             "sibling bot must stay outside the delete prefix"
         );
         assert!(

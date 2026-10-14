@@ -67,10 +67,11 @@ pub(super) fn seed_crm(conn: &mut diesel::PgConnection, s: &Scopes) -> Result<()
     let bot = s.bot_id;
     let user = s.user_id;
 
-    let account_id;
+    
     let n = count(conn, "SELECT count(*) AS n FROM crm_accounts WHERE org_id::text = $1 AND name = 'Acme Corp'", &[&s.branch_str])?;
-    if n == 0 {
-        let row = sql_query(
+    let account_id = if n == 0 {
+        
+        sql_query(
             "INSERT INTO crm_accounts (id, org_id, bot_id, name, industry, website, phone, created_at, updated_at, branch_id)
              VALUES ($1, $2, $3, 'Acme Corp', 'Technology', 'https://acme.example.com', '+1 555 1000', NOW(), NOW(), $2)
              RETURNING id",
@@ -80,15 +81,14 @@ pub(super) fn seed_crm(conn: &mut diesel::PgConnection, s: &Scopes) -> Result<()
         .bind::<SqlUuid, _>(bot)
         .get_result::<UuidRowNamed>(conn)
         .map(|r| r.id)
-        .map_err(|e| e.to_string())?;
-        account_id = row;
+        .map_err(|e| e.to_string())?
     } else {
-        account_id = sql_query("SELECT id FROM crm_accounts WHERE org_id = $1 AND name = 'Acme Corp' LIMIT 1")
+        sql_query("SELECT id FROM crm_accounts WHERE org_id = $1 AND name = 'Acme Corp' LIMIT 1")
             .bind::<SqlUuid, _>(branch)
             .get_result::<UuidRowNamed>(conn)
             .map(|r| r.id)
-            .map_err(|e| e.to_string())?;
-    }
+            .map_err(|e| e.to_string())?
+    };
 
     let n = count(conn, "SELECT count(*) AS n FROM crm_accounts WHERE org_id::text = $1 AND name = 'Globex Inc'", &[&s.branch_str])?;
     if n == 0 {
@@ -101,10 +101,11 @@ pub(super) fn seed_crm(conn: &mut diesel::PgConnection, s: &Scopes) -> Result<()
             .map_err(|e| e.to_string())?;
     }
 
-    let contact_id;
+    
     let n = count(conn, "SELECT count(*) AS n FROM crm_contacts WHERE org_id::text = $1 AND email = 'john.doe@acme.example.com'", &[&s.branch_str])?;
-    if n == 0 {
-        let row = sql_query(
+    let contact_id = if n == 0 {
+        
+        sql_query(
             "INSERT INTO crm_contacts (id, org_id, bot_id, first_name, last_name, email, phone, company, job_title, source, status, tags, custom_fields, city, state, country, notes, owner_id, created_at, updated_at, branch_id)
              VALUES ($1, $2, $3, 'John', 'Doe', 'john.doe@acme.example.com', '+1 555 1100', 'Acme Corp', 'CTO', 'web', 'active', ARRAY['enterprise','warm'], '{}', 'Austin', 'TX', 'US', 'Primary technical contact', $4, NOW(), NOW(), $2)
              RETURNING id",
@@ -115,15 +116,14 @@ pub(super) fn seed_crm(conn: &mut diesel::PgConnection, s: &Scopes) -> Result<()
         .bind::<Nullable<SqlUuid>, _>(Some(user))
         .get_result::<UuidRowNamed>(conn)
         .map(|r| r.id)
-        .map_err(|e| e.to_string())?;
-        contact_id = row;
+        .map_err(|e| e.to_string())?
     } else {
-        contact_id = sql_query("SELECT id FROM crm_contacts WHERE org_id = $1 AND email = 'john.doe@acme.example.com' LIMIT 1")
+        sql_query("SELECT id FROM crm_contacts WHERE org_id = $1 AND email = 'john.doe@acme.example.com' LIMIT 1")
             .bind::<SqlUuid, _>(branch)
             .get_result::<UuidRowNamed>(conn)
             .map(|r| r.id)
-            .map_err(|e| e.to_string())?;
-    }
+            .map_err(|e| e.to_string())?
+    };
 
     let n = count(conn, "SELECT count(*) AS n FROM crm_contacts WHERE org_id::text = $1 AND email = 'jane.roe@globex.example.com'", &[&s.branch_str])?;
     if n == 0 {

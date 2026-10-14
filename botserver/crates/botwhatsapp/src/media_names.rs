@@ -50,7 +50,7 @@ pub(crate) fn stored_file_name(media: &InboundMedia) -> String {
 /// sanitize to nothing are dropped so the caller falls back to the generated id.
 fn sanitize_file_name(raw: &str) -> Option<String> {
     let base = raw
-        .rsplit(|c| c == '/' || c == '\\')
+        .rsplit(['/', '\\'])
         .next()
         .unwrap_or(raw)
         .trim();

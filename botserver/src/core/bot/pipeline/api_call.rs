@@ -365,7 +365,7 @@ pub(super) async fn handle_api_call(
             log::warn!("api_call '{name}' failed: {e}");
             let resp = botlib::models::BotResponse::new(
                 bot_uuid.to_string(), session_id.to_string(), user_id.to_string(),
-                &format!("Falha ao executar {name}: {e}"), &channel,
+                format!("Falha ao executar {name}: {e}"), &channel,
             );
             let _ = sink.send_bot_response(&resp).await;
             true

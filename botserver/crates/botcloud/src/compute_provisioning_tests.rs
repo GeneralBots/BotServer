@@ -159,8 +159,7 @@ async fn a_chain_with_no_credentials_reports_that_not_a_silent_success() {
     let settings = OrgComputeSettings::default();
     let err = provision_with_fallback(&sku, "US", &settings)
         .await
-        .err()
-        .expect("no credential means no provisioning");
+        .expect_err("no credential means no provisioning");
     assert!(err.contains("no credential"), "{err}");
 }
 
@@ -174,7 +173,6 @@ async fn a_chain_of_uncompiled_providers_names_them() {
     let settings = OrgComputeSettings::from_config(Some(&config));
     let err = provision_with_fallback(&sku, "US", &settings)
         .await
-        .err()
-        .expect("nothing is compiled");
+        .expect_err("nothing is compiled");
     assert!(err.contains("not-a-provider"), "{err}");
 }

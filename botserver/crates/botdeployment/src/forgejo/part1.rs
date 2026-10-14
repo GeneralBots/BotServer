@@ -55,7 +55,7 @@ impl ForgejoClient {
             if status == reqwest::StatusCode::CONFLICT && body.contains("already e") {
                 let existing = self
                     .client
-                    .get(&format!("{}/api/v1/repos/{}/{}", self.base_url, org, name))
+                    .get(format!("{}/api/v1/repos/{}/{}", self.base_url, org, name))
                     .header("Authorization", format!("token {}", self.token))
                     .send()
                     .await
@@ -80,8 +80,8 @@ impl ForgejoClient {
             let org_missing = status == reqwest::StatusCode::NOT_FOUND
                 || (status == reqwest::StatusCode::UNPROCESSABLE_ENTITY
                     && body.contains("does not exist"));
-            if org_missing {
-                if self.ensure_org(org).await.is_ok() {
+            if org_missing
+                && self.ensure_org(org).await.is_ok() {
                     let retry = self
                         .client
                         .post(&url)
@@ -103,7 +103,6 @@ impl ForgejoClient {
                         retry_status, retry_body
                     )));
                 }
-            }
             Err(ForgejoError::ApiError(format!("{}: {}", status, body)))
         }
     }

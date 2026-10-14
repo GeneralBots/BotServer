@@ -74,11 +74,10 @@ pub(super) async fn handle_stream_inner(mut ws: WebSocket, sessions: SessionMap,
             Some(msg) = ws.recv() => {
                 match msg {
                     Ok(Message::Close(_)) | Err(_) => break,
-                    Ok(Message::Text(t)) => {
-                        if t == "ping" {
+                    Ok(Message::Text(t))
+                        if t == "ping" => {
                             let _ = ws.send(Message::Text("pong".into())).await;
                         }
-                    }
                     _ => {}
                 }
             }

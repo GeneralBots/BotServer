@@ -356,14 +356,11 @@ mod tests {
         // Either the binary is present on this machine (then the call ran and
         // failed for a different, legitimate reason) or it is absent and the
         // message must name the project VMs.
-        match outcome {
-            Err(message) => assert!(
-                message.contains("codegraph")
-                    && (message.contains("#1488") || message.contains("failed")),
-                "unhelpful failure message: {message}"
-            ),
-            Ok(_) => {}
-        }
+        if let Err(message) = outcome { assert!(
+            message.contains("codegraph")
+                && (message.contains("#1488") || message.contains("failed")),
+            "unhelpful failure message: {message}"
+        ) }
     }
 
     /// A project id is attacker-influenced, so the workspace resolution must

@@ -65,8 +65,8 @@ async fn serve_login_file(file_path: std::path::PathBuf) -> Response {
             Ok(bytes) => {
                 let mime = mime_guess::from_path(&file_path).first_or_octet_stream();
                 let data = if mime.as_ref() == "text/html" {
-                    let d = inject_script_into_html(&bytes, &injection);
-                    d
+                    
+                    inject_script_into_html(&bytes, &injection)
                 } else {
                     bytes
                 };

@@ -186,7 +186,7 @@ impl IntentClassifier {
 
     pub(super) fn save_basic_file(&self, bot_id: Uuid, path: &str, content: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         self.state.broadcast_task_progress(
-            TaskProgressEvent::new(&bot_id.to_string(), "save_basic_file", "Persisting BASIC to Drive")
+            TaskProgressEvent::new(bot_id.to_string(), "save_basic_file", "Persisting BASIC to Drive")
                 .with_details(path.to_string()),
         );
         let mut conn = self.pool.get().map_err(|e| format!("db pool: {e}"))?;

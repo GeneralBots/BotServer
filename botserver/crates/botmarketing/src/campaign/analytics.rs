@@ -1,4 +1,4 @@
-use crate::campaign::models::{Campaign, CampaignMetrics, ChannelMetrics};
+use crate::campaign::models::{Campaign, CampaignMetrics};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -325,7 +325,7 @@ pub fn merge_campaign_metrics(base: &mut CampaignMetrics, incoming: &CampaignMet
         base.engagement_rate = (base.engagement_rate + incoming.engagement_rate) / 2.0;
     }
     for (ch, m) in &incoming.channel_metrics {
-        let e = base.channel_metrics.entry(ch.clone()).or_insert_with(ChannelMetrics::default);
+        let e = base.channel_metrics.entry(ch.clone()).or_default();
         e.impressions = e.impressions.saturating_add(m.impressions);
         e.clicks = e.clicks.saturating_add(m.clicks);
         e.conversions = e.conversions.saturating_add(m.conversions);

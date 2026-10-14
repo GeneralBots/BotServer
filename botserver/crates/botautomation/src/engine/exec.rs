@@ -184,7 +184,7 @@ fn merge_call(step: &PlanStep, dep_outputs: &HashMap<String, String>) -> StepRes
     }
     Ok((
         serde_json::to_string(&json!({ "merged": merged, "conflicts": conflicts }))
-            .unwrap_or_else(|_| merged),
+            .unwrap_or(merged),
         0,
         0,
     ))

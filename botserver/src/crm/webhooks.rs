@@ -49,7 +49,7 @@ impl WebhookEvent {
             Err(_) => return String::new(),
         };
 
-        let data = format!("{}{}", timestamp.timestamp(), payload.to_string());
+        let data = format!("{}{}", timestamp.timestamp(), payload);
         mac.update(data.as_bytes());
         let result = mac.finalize();
         hex::encode(result.into_bytes())

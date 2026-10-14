@@ -4,10 +4,10 @@ pub(super) fn seed_social(conn: &mut diesel::PgConnection, s: &Scopes) -> Result
     let org = s.org_id;
     let user = s.user_id;
 
-    let community_id;
+    
     let n = count(conn, "SELECT count(*) AS n FROM social_communities WHERE org_id::text = $1 AND slug = 'company-announcements'", &[&s.org_str])?;
-    if n == 0 {
-        community_id = sql_query(
+    let community_id = if n == 0 {
+        sql_query(
             "INSERT INTO social_communities (id, org_id, bot_id, name, slug, description, visibility, join_policy, owner_id, member_count, post_count, is_official, is_featured, settings, created_at, updated_at, branch_id)
              VALUES ($1, $2, $2, 'Company Announcements', 'company-announcements', 'Internal announcements', 'public', 'open', $3, 3, 2, true, false, '{}', NOW(), NOW(), $2) RETURNING id",
         )
@@ -16,14 +16,14 @@ pub(super) fn seed_social(conn: &mut diesel::PgConnection, s: &Scopes) -> Result
         .bind::<SqlUuid, _>(user)
         .get_result::<UuidRowNamed>(conn)
         .map(|r| r.id)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.to_string())?
     } else {
-        community_id = sql_query("SELECT id FROM social_communities WHERE org_id = $1 AND slug = 'company-announcements' LIMIT 1")
+        sql_query("SELECT id FROM social_communities WHERE org_id = $1 AND slug = 'company-announcements' LIMIT 1")
             .bind::<SqlUuid, _>(org)
             .get_result::<UuidRowNamed>(conn)
             .map(|r| r.id)
-            .map_err(|e| e.to_string())?;
-    }
+            .map_err(|e| e.to_string())?
+    };
 
     for content in ["Welcome to the new platform! 🎉", "v1.0 is shipping this quarter"] {
         let n = count(conn, "SELECT count(*) AS n FROM social_posts WHERE org_id::text = $1 AND content = $2", &[&s.org_str, content])?;

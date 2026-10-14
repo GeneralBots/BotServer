@@ -198,7 +198,7 @@ impl ConnectorEngine {
                 if &ep.name != filter { continue; }
             }
 
-            let url = format!("{}{}", base_url.trim_end_matches('/'), &ep.url);
+            let url = format!("{}{}", base_url.trim_end_matches('/'), ep.url);
             let schema = match config.connector_type {
                 ConnectorType::Salesforce => {
                     let describe_url = url.replace("/query?", "/sobjects/")
@@ -260,5 +260,11 @@ impl ConnectorEngine {
         }
 
         Ok(schemas)
+    }
+}
+
+impl Default for ConnectorEngine {
+    fn default() -> Self {
+        Self::new()
     }
 }

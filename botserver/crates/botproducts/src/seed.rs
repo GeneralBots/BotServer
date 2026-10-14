@@ -51,7 +51,7 @@ fn seed_categories(conn: &mut PgConnection, branch_id: Uuid) -> Vec<ProductCateg
     for (name, description, slug, sort_order) in cats {
         let cat = ProductCategory {
     id: Uuid::new_v4(),
-    branch_id: branch_id,
+    branch_id,
     name: name.to_string(),
     slug: slug.to_string(),
     description: Some(description.to_string()),
@@ -60,7 +60,7 @@ fn seed_categories(conn: &mut PgConnection, branch_id: Uuid) -> Vec<ProductCateg
     created_at: chrono::Utc::now(),
     updated_at: chrono::Utc::now(),
     image_url: None,
-    sort_order: sort_order,
+    sort_order,
     is_active: true,
 };
         match diesel::insert_into(product_categories::table)
@@ -93,7 +93,7 @@ fn seed_plan_products(conn: &mut PgConnection, branch_id: Uuid, categories: &[Pr
     for (sku, name, desc, price, cost, unit, attrs) in plans {
         let product = crate::Product {
     id: Uuid::new_v4(),
-    branch_id: branch_id,
+    branch_id,
     name: name.to_string(),
     sku: sku.to_string(),
     description: Some(desc.to_string()),
@@ -148,7 +148,7 @@ fn seed_infra_products(conn: &mut PgConnection, branch_id: Uuid, categories: &[P
         let cat_id = find_category_id(categories, cat_slug);
         let product = crate::Product {
     id: Uuid::new_v4(),
-    branch_id: branch_id,
+    branch_id,
     name: name.to_string(),
     sku: sku.to_string(),
     description: Some(desc.to_string()),
@@ -195,7 +195,7 @@ fn seed_comms_products(conn: &mut PgConnection, branch_id: Uuid, categories: &[P
         let cat_id = find_category_id(categories, cat_slug);
         let product = crate::Product {
     id: Uuid::new_v4(),
-    branch_id: branch_id,
+    branch_id,
     name: name.to_string(),
     sku: sku.to_string(),
     description: Some(desc.to_string()),
@@ -238,7 +238,7 @@ fn seed_llm_products(conn: &mut PgConnection, branch_id: Uuid, categories: &[Pro
         let cat_id = find_category_id(categories, cat_slug);
         let product = crate::Product {
     id: Uuid::new_v4(),
-    branch_id: branch_id,
+    branch_id,
     name: name.to_string(),
     sku: sku.to_string(),
     description: Some(desc.to_string()),

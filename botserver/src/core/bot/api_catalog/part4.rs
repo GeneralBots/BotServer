@@ -265,14 +265,14 @@ pub async fn execute_command(
             crate::core::bot::crm_commands::crm_forecast_command(state, &bot_uuid, periods).await
         }
         "crm.leads.create" => {
-            crate::core::bot::crm_commands::crm_create_lead_command(state, &bot_uuid, &obj).await
+            crate::core::bot::crm_commands::crm_create_lead_command(state, &bot_uuid, obj).await
         }
         "crm.leads.report" => crate::core::bot::crm_commands::crm_pipeline_report_command(state, &bot_uuid).await,
         // #1441 C8 — operate the pipeline from chat: create a deal, move a
         // stage, capture a contact.
-        "crm.deal.create" => crate::core::bot::crm_commands::crm_create_deal_command(state, &bot_uuid, &obj).await,
-        "crm.deal.move-stage" => crate::core::bot::crm_commands::crm_move_deal_stage_command(state, &bot_uuid, &obj).await,
-        "crm.contact.create" => crate::core::bot::crm_commands::crm_create_contact_command(state, &bot_uuid, &obj).await,
+        "crm.deal.create" => crate::core::bot::crm_commands::crm_create_deal_command(state, &bot_uuid, obj).await,
+        "crm.deal.move-stage" => crate::core::bot::crm_commands::crm_move_deal_stage_command(state, &bot_uuid, obj).await,
+        "crm.contact.create" => crate::core::bot::crm_commands::crm_create_contact_command(state, &bot_uuid, obj).await,
         "billing.invoice.list" => list_invoices(state, &bot_uuid).await,
         "products.items.list" => list_products(state, &bot_uuid, str_of("category").as_deref()).await,
         "tickets.list" => list_tickets(state, &bot_uuid).await,

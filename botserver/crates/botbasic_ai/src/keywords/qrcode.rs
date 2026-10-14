@@ -383,6 +383,13 @@ pub fn generate_qr_code_with_logo(
     Ok(output_path.to_string())
 }
 
+use qrcode::QrCode;
+use std::fs::File;
+use std::io::BufWriter;
+use std::path::Path;
+use std::sync::Arc;
+use uuid::Uuid;
+
 #[cfg(test)]
 mod tests {
     use qrcode::QrCode;
@@ -420,10 +427,3 @@ mod tests {
         assert!(result.is_ok());
     }
 }
-
-use qrcode::QrCode;
-use std::fs::File;
-use std::io::BufWriter;
-use std::path::Path;
-use std::sync::Arc;
-use uuid::Uuid;

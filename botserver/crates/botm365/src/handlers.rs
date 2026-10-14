@@ -345,7 +345,7 @@ pub async fn update_sync_settings(headers: HeaderMap, Json(req): Json<serde_json
     let sync_type = req.get("type").and_then(|v| v.as_str()).unwrap_or("").to_string();
     let frequency = req.get("frequency").and_then(|v| v.as_i64()).unwrap_or(15);
     let col = if sync_type == "calendar" { "sync_calendar_min" } else { "sync_onedrive_min" };
-    diesel::sql_query(&format!(
+    diesel::sql_query(format!(
         "UPDATE oauth_microsoft_settings SET {col} = $1, updated_at = NOW() WHERE branch_id = $2"
     ))
     .bind::<diesel::sql_types::BigInt, _>(frequency)

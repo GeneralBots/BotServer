@@ -23,7 +23,7 @@ const SMARTSHEET_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "smartsheet.rows.append",
@@ -102,7 +102,7 @@ const CLICKUP_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 
@@ -281,7 +281,7 @@ const BOX_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "box.files.delete",
@@ -293,7 +293,7 @@ const BOX_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 

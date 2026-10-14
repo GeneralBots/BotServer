@@ -27,7 +27,7 @@ impl VideoEngine {
             .arg("-i")?
             .arg(&clip.source_url)?
             .arg("-vf")?
-            .arg(&format!(
+            .arg(format!(
                 "scale={}:{}:force_original_aspect_ratio=decrease,pad={}:{}:(ow-iw)/2:(oh-ih)/2",
                 target_width, target_height, target_width, target_height
             ))?

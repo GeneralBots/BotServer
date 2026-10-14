@@ -125,8 +125,8 @@ fn get_bot_context(config: &AttendanceConfig) -> Uuid {
     let Ok(mut conn) = config.pool.get() else {
         return Uuid::nil();
     };
-    let branch_id = (config.get_default_bot)(&mut conn);
-    branch_id
+    
+    (config.get_default_bot)(&mut conn)
 }
 
 pub async fn list_webhooks(

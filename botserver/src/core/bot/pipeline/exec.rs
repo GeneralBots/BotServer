@@ -154,7 +154,7 @@ pub async fn process_message_internal(
                             Err(e) => {
                                 log::error!("chat attachment: DB error: {e}");
                                 botbasic_core::utils::resolve_bot_drive_location(
-                                    &bot_name,
+                                    bot_name,
                                     None,
                                     None,
                                 )

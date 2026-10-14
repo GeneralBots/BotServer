@@ -176,7 +176,7 @@ const FB_PAGES_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 const FB_PAGES_KEYS: &[&str] = &[
@@ -216,7 +216,7 @@ const TWITCH_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "twitch.posts.delete",
@@ -228,7 +228,7 @@ const TWITCH_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 const TWITCH_KEYS: &[&str] = &[

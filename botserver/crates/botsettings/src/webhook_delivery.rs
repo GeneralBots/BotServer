@@ -162,7 +162,7 @@ fn mark_delivery(
          attempt = $4, error = $5, next_retry_at = $6, completed_at = $7 WHERE id = $8",
     )
     .bind::<diesel::sql_types::Text, _>(status)
-    .bind::<diesel::sql_types::Nullable<diesel::sql_types::Int4>, _>(response_code.map(|c| i32::from(c)))
+    .bind::<diesel::sql_types::Nullable<diesel::sql_types::Int4>, _>(response_code.map(i32::from))
     .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(response_body)
     .bind::<diesel::sql_types::Int4, _>(attempt)
     .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(error)

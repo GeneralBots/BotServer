@@ -31,7 +31,7 @@ impl LlmProviderOps for BotlibLlmAdapter {
                 Some(p) => p
                     .generate_stream(&prompt, &config, tx, &model, &key, None)
                     .await
-                    .map_err(|e| BoxError::from(e)),
+                    .map_err(BoxError::from),
                 None => Err(BoxError::from(
                     "no LLM provider configured; AutoTask falls back to heuristics".to_string(),
                 )),

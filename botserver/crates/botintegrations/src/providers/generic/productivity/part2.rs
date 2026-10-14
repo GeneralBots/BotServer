@@ -32,7 +32,7 @@ const NOTION_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "notion.pages.create",
@@ -147,7 +147,7 @@ const GOOGLE_DRIVE_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 const GOOGLE_DRIVE_KEYS: &[&str] = &["drive.files.list", "drive.files.get"];
@@ -229,7 +229,7 @@ const GFORMS_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "google_forms.responses.list",

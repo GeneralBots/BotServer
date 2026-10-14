@@ -48,7 +48,7 @@ fn sanitize_db_part(s: &str) -> String {
 /// Branch fragment for database names: the first UUID group is stable and
 /// short (`alm_org` convention), keeping generated names well under 63 chars.
 fn branch_part(branch_id: Uuid) -> String {
-    sanitize_db_part(&branch_id.to_string().split('-').next().unwrap_or("default"))
+    sanitize_db_part(branch_id.to_string().split('-').next().unwrap_or("default"))
 }
 
 /// `true` when `env` denotes the production environment; every other

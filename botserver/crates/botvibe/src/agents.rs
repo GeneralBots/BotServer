@@ -221,6 +221,12 @@ impl AgentRegistry {
     }
 }
 
+impl Default for AgentRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn estimate_tokens(text: &str) -> u64 {
     // ~4 chars per token is a fine billing approximation.
     (text.chars().count() as u64 / 4).max(1)

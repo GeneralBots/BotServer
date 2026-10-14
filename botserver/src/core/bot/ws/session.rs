@@ -94,7 +94,7 @@ pub async fn handle_ws(
 
     let mut start_bas_guard = ws_sender.lock().await;
     let mut start_bas_ran = run_start_bas_on_connect(
-        &state, &mut *start_bas_guard, &mut rx,
+        &state, &mut start_bas_guard, &mut rx,
         bot_uuid, session_id, user_id, &bot_name,
     ).await;
     drop(start_bas_guard);

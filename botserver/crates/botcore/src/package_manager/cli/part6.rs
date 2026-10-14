@@ -82,7 +82,7 @@ pub(super) async fn rotate_all_secrets() -> Result<()> {
         .await?;
     println!(
         "✓ directory: new client_secret = {}...",
-        &directory_secret.chars().take(12).collect::<String>()
+        directory_secret.chars().take(12).collect::<String>()
     );
 
     println!();

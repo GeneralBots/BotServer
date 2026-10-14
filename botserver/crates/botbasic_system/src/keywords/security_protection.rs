@@ -228,6 +228,20 @@ fn parse_tool_name(name: &str) -> Result<ProtectionTool, String> {
         .map_err(|_| format!("Unknown security tool: {name}. Valid tools: lynis, rkhunter, chkrootkit, suricata, lmd, clamav"))
 }
 
+use botsecurity::protection::manager::ProtectionConfig;
+use botcore::shared::state::AppState;
+use std::str::FromStr;
+use std::sync::Arc;
+
+// Stub register function — security_protection provides async helper functions
+// that require Arc<AppState>. Rhai keyword registration is deferred to botserver layer.
+pub fn register_security_keywords(
+    _state: Arc<dyn botbasic_types::BasicRuntime>,
+    _user: botbasic_types::UserSession,
+    _engine: &mut rhai::Engine,
+) {
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -323,18 +337,4 @@ mod tests {
         assert!(json.contains("\"tool\":\"lynis\""));
         assert!(json.contains("\"score\":78"));
     }
-}
-
-use botsecurity::protection::manager::ProtectionConfig;
-use botcore::shared::state::AppState;
-use std::str::FromStr;
-use std::sync::Arc;
-
-// Stub register function — security_protection provides async helper functions
-// that require Arc<AppState>. Rhai keyword registration is deferred to botserver layer.
-pub fn register_security_keywords(
-    _state: Arc<dyn botbasic_types::BasicRuntime>,
-    _user: botbasic_types::UserSession,
-    _engine: &mut rhai::Engine,
-) {
 }

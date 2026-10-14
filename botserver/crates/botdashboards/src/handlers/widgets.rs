@@ -37,7 +37,7 @@ pub async fn handle_add_widget(
             height: req.position.height,
             config: serde_json::to_value(&req.config).unwrap_or_default(),
             data_query: req.data_query.and_then(|q| serde_json::to_value(&q).ok()),
-            style: serde_json::to_value(&req.style.unwrap_or_default()).unwrap_or_default(),
+            style: serde_json::to_value(req.style.unwrap_or_default()).unwrap_or_default(),
             created_at: now,
             updated_at: now,
         };

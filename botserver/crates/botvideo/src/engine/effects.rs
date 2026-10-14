@@ -29,13 +29,13 @@ impl VideoEngine {
         let cmd = crate::safe_command::SafeCommand::new("ffmpeg")?
             .arg("-y")?
             .arg("-ss")?
-            .arg(&format!("{:.3}", seek_time))?
+            .arg(format!("{:.3}", seek_time))?
             .arg("-i")?
             .arg(&clip.source_url)?
             .arg("-vframes")?
             .arg("1")?
             .arg("-vf")?
-            .arg(&format!("scale={}:{}", width, height))?
+            .arg(format!("scale={}:{}", width, height))?
             .arg("-q:v")?
             .arg("2")?
             .arg(&output_path)?;
@@ -232,7 +232,7 @@ impl VideoEngine {
             .arg("-i")?
             .arg(&clip.source_url)?
             .arg("-vf")?
-            .arg(&format!("select='gt(scene,{})',showinfo", threshold))?
+            .arg(format!("select='gt(scene,{})',showinfo", threshold))?
             .arg("-f")?
             .arg("null")?
             .arg("-")?;

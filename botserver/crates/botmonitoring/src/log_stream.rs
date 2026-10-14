@@ -25,7 +25,7 @@ async fn handle_log_socket<S: MonitoringState>(mut socket: WebSocket, state: Arc
         "message": "Monitoring log stream connected",
     });
     if socket
-        .send(Message::Text(welcome.to_string().into()))
+        .send(Message::Text(welcome.to_string()))
         .await
         .is_err()
     {
@@ -55,7 +55,7 @@ async fn handle_log_socket<S: MonitoringState>(mut socket: WebSocket, state: Arc
                                 "value": alert.metric_value,
                             },
                         });
-                        if socket.send(Message::Text(entry.to_string().into())).await.is_err() {
+                        if socket.send(Message::Text(entry.to_string())).await.is_err() {
                             break;
                         }
                     }
@@ -82,7 +82,7 @@ async fn handle_log_socket<S: MonitoringState>(mut socket: WebSocket, state: Arc
                                 "latency_ms": health.average_latency_ms,
                             },
                         });
-                        if socket.send(Message::Text(entry.to_string().into())).await.is_err() {
+                        if socket.send(Message::Text(entry.to_string())).await.is_err() {
                             break;
                         }
                     }
@@ -94,7 +94,7 @@ async fn handle_log_socket<S: MonitoringState>(mut socket: WebSocket, state: Arc
                             "service": "alerts",
                             "message": format!("Alert {alert_id} resolved"),
                         });
-                        if socket.send(Message::Text(entry.to_string().into())).await.is_err() {
+                        if socket.send(Message::Text(entry.to_string())).await.is_err() {
                             break;
                         }
                     }

@@ -96,7 +96,7 @@ pub async fn create_voucher(
     } else { None };
 
     let trial_days = body.trial_days;
-    if trial_days < 1 || trial_days > 180 {
+    if !(1..=180).contains(&trial_days) {
         return Err((StatusCode::BAD_REQUEST, "Trial days must be between 1 and 180".to_string()));
     }
 

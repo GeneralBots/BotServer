@@ -69,12 +69,11 @@ pub fn transform_operations(
                 }
             }
         }
-        (TransformOpType::Delete, TransformOpType::Delete) => {
-            if op1.path == op2.path {
+        (TransformOpType::Delete, TransformOpType::Delete)
+            if op1.path == op2.path => {
                 transformed_op2.op_type = TransformOpType::Replace;
                 transformed_op2.value = None;
             }
-        }
         _ => {}
     }
 

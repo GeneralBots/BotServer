@@ -189,11 +189,9 @@ impl DeploymentRouter {
 /// Keeps the path (`/org/repo.git`) from the original URL.
 fn rewrite_clone_url(base_url: &str, clone_url: &str) -> String {
     // "https://alm.pragmatismo.com.br/org/repo.git" → "org/repo.git"
-    let path = clone_url
-        .splitn(2, "://")
-        .nth(1)                          // "alm.pragmatismo.com.br/org/repo.git"
+    let path = clone_url.split_once("://").map(|x| x.1)                          // "alm.pragmatismo.com.br/org/repo.git"
         .and_then(|rest| {
-            rest.splitn(2, '/').nth(1)   // "org/repo.git"
+            rest.split_once('/').map(|x| x.1)   // "org/repo.git"
         })
         .unwrap_or("")
         .trim_start_matches('/');

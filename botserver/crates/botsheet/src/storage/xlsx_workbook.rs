@@ -176,9 +176,9 @@ fn parse_sheets(workbook_xml: &str) -> Result<Vec<OrigSheet>, String> {
         .map(|tag| {
             let raw = tag.as_str().to_string();
             OrigSheet {
-                name: first_capture(&name_re, &raw).unwrap_or_default(),
-                sheet_id: first_capture(&sid_re, &raw).unwrap_or_default(),
-                rid: first_capture(&rid_re, &raw).unwrap_or_default(),
+                name: first_capture(name_re, &raw).unwrap_or_default(),
+                sheet_id: first_capture(sid_re, &raw).unwrap_or_default(),
+                rid: first_capture(rid_re, &raw).unwrap_or_default(),
                 raw,
             }
         })
@@ -202,13 +202,13 @@ fn parse_worksheet_rels(rels_xml: &str) -> HashMap<String, String> {
     let mut map = HashMap::new();
     for tag in rel_re.find_iter(rels_xml) {
         let raw = tag.as_str();
-        if !first_capture(&type_re, raw)
+        if !first_capture(type_re, raw)
             .unwrap_or_default()
             .ends_with(WORKSHEET_REL_SUFFIX)
         {
             continue;
         }
-        if let (Some(id), Some(target)) = (first_capture(&id_re, raw), first_capture(&target_re, raw))
+        if let (Some(id), Some(target)) = (first_capture(id_re, raw), first_capture(target_re, raw))
         {
             map.insert(id, target);
         }

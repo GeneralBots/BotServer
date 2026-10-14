@@ -8,7 +8,7 @@ async fn test_feature_flags_endpoint() {
     let org_id = "00000000-0000-0000-0000-000000000000";
     
     let response = client
-        .get(&format!("http://localhost:8080/api/features/{}/enabled", org_id))
+        .get(format!("http://localhost:8080/api/features/{}/enabled", org_id))
         .send()
         .await;
     

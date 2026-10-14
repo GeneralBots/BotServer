@@ -295,7 +295,7 @@ pub async fn stream_llm_response(
                     log::warn!("LLM empty response after {} retries, sending fallback", LLM_RETRY_MAX);
                     let err_msg = llm_empty_message();
                     let err_resp = botlib::models::BotResponse::new(
-                        &bot_uuid_s, &session_id_s, &user_id.to_string(),
+                        &bot_uuid_s, &session_id_s, user_id.to_string(),
                         &err_msg, "web",
                     );
                     let _ = sink.send_bot_response(&err_resp).await;
@@ -385,7 +385,7 @@ pub async fn stream_llm_response(
                             log::info!("Greeting guard: tool_call-only response, sending generic greeting");
                             let msg = "Ola! Como posso ajudar voce hoje?";
                             let final_resp = botlib::models::BotResponse::new(
-                                &bot_uuid_s, &session_id_s, &user_id.to_string(), msg, "web",
+                                &bot_uuid_s, &session_id_s, user_id.to_string(), msg, "web",
                             );
                             let _ = sink.send_bot_response(&final_resp).await;
                         }

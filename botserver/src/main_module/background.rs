@@ -105,7 +105,7 @@ pub async fn start_background_services(
 
   // Start DriveMonitor for S3/MinIO file watching and syncing
   #[cfg(feature = "drive")]
-  start_drive_monitors(app_state.clone(), &_pool).await;
+  start_drive_monitors(app_state.clone(), _pool).await;
 
   // Start DriveCompiler to compile .bas files from drive_files table
   #[cfg(feature = "drive")]

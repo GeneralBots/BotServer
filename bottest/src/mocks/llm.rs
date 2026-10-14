@@ -519,7 +519,7 @@ impl MockLLM {
 
     pub fn verify(&self) -> Result<()> {
         let store = self.expectations.lock().unwrap();
-        for (_, exp) in store.iter() {
+        for exp in store.values() {
             exp.verify()?;
         }
         Ok(())

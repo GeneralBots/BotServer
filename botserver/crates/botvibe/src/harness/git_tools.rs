@@ -116,8 +116,8 @@ pub fn git_commit_tool() -> ToolHandler {
             // processes with env_clear(), so git has no user identity and the
             // commit would otherwise fail with "Please tell me who you are".
             let commit_args = vec![
-                format!("-c"), format!("user.name={GIT_USER_NAME}"),
-                format!("-c"), format!("user.email={GIT_USER_EMAIL}"),
+                "-c".to_string(), format!("user.name={GIT_USER_NAME}"),
+                "-c".to_string(), format!("user.email={GIT_USER_EMAIL}"),
                 "commit".to_string(),
                 "-m".to_string(),
                 message.clone(),

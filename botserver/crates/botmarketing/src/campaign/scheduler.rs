@@ -174,7 +174,7 @@ impl CampaignScheduler {
             "weekdays" => matches!(now.weekday(), Weekday::Mon | Weekday::Tue | Weekday::Wed | Weekday::Thu | Weekday::Fri),
             "weekends" => matches!(now.weekday(), Weekday::Sat | Weekday::Sun),
             "monthly" => now.day() == 1,
-            "once" => schedule.start_date.as_ref().map_or(false, |start| {
+            "once" => schedule.start_date.as_ref().is_some_and(|start| {
                 DateTime::parse_from_rfc3339(start)
                     .map(|dt| {
                         let start_utc = dt.with_timezone(&Utc);
@@ -289,9 +289,7 @@ impl CampaignScheduler {
     pub async fn last_execution(&self, campaign_id: &str) -> Option<CampaignExecution> {
         let history = self.executions.read().await;
         history
-            .iter()
-            .filter(|e| e.campaign_id == campaign_id)
-            .last()
+            .iter().rfind(|e| e.campaign_id == campaign_id)
             .cloned()
     }
 

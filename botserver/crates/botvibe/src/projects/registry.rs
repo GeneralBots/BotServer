@@ -69,12 +69,9 @@ impl ProjectRegistry {
 
         // #1372 — reject unknown kinds instead of silently coercing them to
         // `apps` (which provisions a VM on Run).
-        let project_type = match ProjectKind::parse_strict(
+        let project_type = ProjectKind::parse_strict(
             req.project_type.as_deref().unwrap_or("bot"),
-        ) {
-            Ok(kind) => kind,
-            Err(e) => return Err(e),
-        };
+        )?;
         let repository = req.repository.clone().unwrap_or_else(|| req.name.clone());
         let framework = req.framework.clone().unwrap_or_default();
         let custom_domain = req.custom_domain.clone().unwrap_or_default();
@@ -288,10 +285,7 @@ impl ProjectRegistry {
         if let Some(ref pt) = req.project_type {
             // #1372 — same strictness on update: an invalid kind must not
             // flip an existing project onto the VM path.
-            let kind = match ProjectKind::parse_strict(pt) {
-                Ok(kind) => kind,
-                Err(e) => return Err(e),
-            };
+            let kind = ProjectKind::parse_strict(pt)?;
             binds.push(kind.as_str().to_string());
             assignments.push(format!("project_type = ${}", binds.len()));
         }

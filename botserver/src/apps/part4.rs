@@ -97,8 +97,7 @@ pub(super) fn bot_launcher_apps(bearer: Option<&str>) -> Vec<serde_json::Value> 
             let slug = b
                 .name
                 .to_lowercase()
-                .replace(' ', "-")
-                .replace('_', "-")
+                .replace([' ', '_'], "-")
                 .chars()
                 .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
                 .collect::<String>();
@@ -200,8 +199,7 @@ pub(super) fn published_app_launcher_apps(bearer: Option<&str>) -> Vec<serde_jso
             let slug = a
                 .name
                 .to_lowercase()
-                .replace(' ', "-")
-                .replace('_', "-")
+                .replace([' ', '_'], "-")
                 .chars()
                 .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
                 .collect::<String>();

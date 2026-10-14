@@ -275,7 +275,7 @@ async fn check_calendar_conflicts_internal(req: &MeetingResolveRequest) -> Resul
         .build().map_err(|e| e.to_string())?;
 
     let resp = client
-        .post(&format!("{}/api/calendar/conflicts", calendar_api))
+        .post(format!("{}/api/calendar/conflicts", calendar_api))
         .json(&serde_json::json!({
             "calendar_id": req.calendar_id.as_deref().unwrap_or("00000000-0000-0000-0000-000000000000"),
             "start_time": req.proposed_start,

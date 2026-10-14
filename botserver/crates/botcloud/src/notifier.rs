@@ -157,7 +157,7 @@ pub fn notify_payment_success(vars: &EmailVars) {
              General Bots Team",
             vars.customer_name, vars.amount, vars.currency, vars.plan
         );
-        if let Err(e) = try_send_email(&vars.customer_email, &subject, &body) {
+        if let Err(e) = try_send_email(&vars.customer_email, subject, &body) {
             tracing::warn!(target: "saas_notifier", "Failed to send payment success email: {e}");
         }
     }
@@ -182,7 +182,7 @@ pub fn notify_subscription_activated(vars: &EmailVars) {
              General Bots Team",
             vars.customer_name, vars.plan
         );
-        if let Err(e) = try_send_email(&vars.customer_email, &subject, &body) {
+        if let Err(e) = try_send_email(&vars.customer_email, subject, &body) {
             tracing::warn!(target: "saas_notifier", "Failed to send activation email: {e}");
         }
     }
@@ -238,7 +238,7 @@ pub fn notify_payment_failed(vars: &EmailVars) {
              General Bots Team",
             vars.customer_name, vars.amount, vars.currency, vars.invoice_id
         );
-        if let Err(e) = try_send_email(&vars.customer_email, &subject, &body) {
+        if let Err(e) = try_send_email(&vars.customer_email, subject, &body) {
             tracing::warn!(target: "saas_notifier", "Failed to send payment failed email: {e}");
         }
     }
@@ -263,7 +263,7 @@ pub fn notify_subscription_cancelled(vars: &EmailVars) {
              General Bots Team",
             vars.customer_name, vars.plan
         );
-        if let Err(e) = try_send_email(&vars.customer_email, &subject, &body) {
+        if let Err(e) = try_send_email(&vars.customer_email, subject, &body) {
             tracing::warn!(target: "saas_notifier", "Failed to send cancellation email: {e}");
         }
     }
@@ -288,7 +288,7 @@ pub fn notify_grace_period_warning(vars: &EmailVars, days_left: u32) {
              General Bots Team",
             vars.customer_name, days_left
         );
-        if let Err(e) = try_send_email(&vars.customer_email, &subject, &body) {
+        if let Err(e) = try_send_email(&vars.customer_email, subject, &body) {
             tracing::warn!(target: "saas_notifier", "Failed to send grace period warning: {e}");
         }
     }

@@ -43,7 +43,7 @@ pub async fn handle_search<S: ResearchState>(
         let search_pattern = format!("%{}%", query_c.to_lowercase());
 
         if let Some(coll) = collection {
-            diesel::sql_query(&format!(
+            diesel::sql_query(format!(
                 "SELECT id, file_path, collection_name, metadata FROM kb_documents WHERE (LOWER(file_path) LIKE $1 OR metadata::text ILIKE $1) AND collection_name = $2{} ORDER BY file_path ASC LIMIT 20",
                 scope
             ))
@@ -52,7 +52,7 @@ pub async fn handle_search<S: ResearchState>(
             .load::<KbDocumentRow>(&mut db_conn)
             .unwrap_or_default()
         } else {
-            diesel::sql_query(&format!(
+            diesel::sql_query(format!(
                 "SELECT id, file_path, collection_name, metadata FROM kb_documents WHERE LOWER(file_path) LIKE $1 OR metadata::text ILIKE $1{} ORDER BY file_path ASC LIMIT 20",
                 scope
             ))

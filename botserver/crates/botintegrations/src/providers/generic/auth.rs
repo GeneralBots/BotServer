@@ -93,7 +93,7 @@ pub(super) fn auth_headers_and_query(
             }
             headers.push((
                 "authorization",
-                basic_header(first, &second),
+                basic_header(first, second),
             ));
         }
         AuthStyle::QueryPairs { pairs } => {

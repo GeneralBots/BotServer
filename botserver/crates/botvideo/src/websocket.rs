@@ -76,7 +76,7 @@ async fn handle_export_websocket(socket: WebSocket, export_id: Uuid) {
     });
 
     if let Err(e) = sender
-        .send(Message::Text(welcome.to_string().into()))
+        .send(Message::Text(welcome.to_string()))
         .await
     {
         log::error!("Failed to send welcome message: {e}");
@@ -132,7 +132,7 @@ async fn handle_export_websocket(socket: WebSocket, export_id: Uuid) {
                                 "timestamp": chrono::Utc::now().to_rfc3339()
                             });
 
-                            if let Err(e) = sender.send(Message::Text(json.to_string().into())).await {
+                            if let Err(e) = sender.send(Message::Text(json.to_string())).await {
                                 log::error!("Failed to send progress update: {e}");
                                 break;
                             }
@@ -146,7 +146,7 @@ async fn handle_export_websocket(socket: WebSocket, export_id: Uuid) {
                                     "gbdrive_path": event.gbdrive_path
                                 });
 
-                                let _ = sender.send(Message::Text(final_msg.to_string().into())).await;
+                                let _ = sender.send(Message::Text(final_msg.to_string())).await;
                                 break;
                             }
                         }
@@ -167,7 +167,7 @@ async fn handle_export_websocket(socket: WebSocket, export_id: Uuid) {
                     "timestamp": chrono::Utc::now().to_rfc3339()
                 });
 
-                if let Err(e) = sender.send(Message::Text(heartbeat.to_string().into())).await {
+                if let Err(e) = sender.send(Message::Text(heartbeat.to_string())).await {
                     log::error!("Failed to send heartbeat: {e}");
                     break;
                 }

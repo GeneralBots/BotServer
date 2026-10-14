@@ -77,7 +77,7 @@ impl AttendanceService {
             .filter(|a| a.employee_id == employee_id && a.date >= from && a.date <= to)
             .cloned()
             .collect();
-        records.sort_by(|a, b| a.date.cmp(&b.date));
+        records.sort_by_key(|a| a.date);
         Ok(records)
     }
 
@@ -91,5 +91,11 @@ impl AttendanceService {
         let records = self.get_range(employee_id, from, to)?;
         let total: f64 = records.iter().map(|a| a.overtime).sum();
         Ok(total)
+    }
+}
+
+impl Default for AttendanceService {
+    fn default() -> Self {
+        Self::new()
     }
 }

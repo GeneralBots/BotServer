@@ -98,10 +98,10 @@ pub fn derived_commands() -> Vec<DerivedCommand> {
         if !ep.path.starts_with("/api/") {
             continue;
         }
-        let Some(app) = app_for_endpoint(&ep.path) else {
+        let Some(app) = app_for_endpoint(ep.path) else {
             continue;
         };
-        let name = command_name_for(&app, ep.method, &ep.path);
+        let name = command_name_for(&app, ep.method, ep.path);
         // Skip admin-only endpoints for the shared surface; admin-only is
         // enforced at execution time via rbac_api_permissions regardless.
         if command_by_name(&name).is_some() {
@@ -111,7 +111,7 @@ pub fn derived_commands() -> Vec<DerivedCommand> {
             name,
             method: ep.method,
             path: ep.path.to_string(),
-            summary: short_summary(&app, ep.method, &ep.path),
+            summary: short_summary(&app, ep.method, ep.path),
         });
     }
     // Stable ordering by name.

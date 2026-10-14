@@ -297,6 +297,27 @@ impl BotResponse {
     }
 }
 
+impl Default for BotResponse {
+    fn default() -> Self {
+        Self {
+            bot_id: String::new(),
+            user_id: String::new(),
+            session_id: String::new(),
+            channel: String::new(),
+            content: String::new(),
+            message_type: MessageType::BOT_RESPONSE,
+            stream_token: None,
+            is_complete: true,
+            suggestions: Vec::new(),
+            switchers: Vec::new(),
+            context_name: None,
+            context_length: 0,
+            context_max_length: 0,
+            reasoning: String::new(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod mention_tests {
     use super::*;
@@ -359,26 +380,5 @@ mod mention_tests {
         assert_eq!(parsed.mentions[0].kind, "integration");
         assert_eq!(parsed.mentions[0].id, "");
         assert!(parsed.mentions[0].label.is_none());
-    }
-}
-
-impl Default for BotResponse {
-    fn default() -> Self {
-        Self {
-            bot_id: String::new(),
-            user_id: String::new(),
-            session_id: String::new(),
-            channel: String::new(),
-            content: String::new(),
-            message_type: MessageType::BOT_RESPONSE,
-            stream_token: None,
-            is_complete: true,
-            suggestions: Vec::new(),
-            switchers: Vec::new(),
-            context_name: None,
-            context_length: 0,
-            context_max_length: 0,
-            reasoning: String::new(),
-        }
     }
 }

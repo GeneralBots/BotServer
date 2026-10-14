@@ -261,3 +261,9 @@ impl GamificationService {
         awarded
     }
 }
+
+impl Default for GamificationService {
+    fn default() -> Self {
+        Self::new()
+    }
+}

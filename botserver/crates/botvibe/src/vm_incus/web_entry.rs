@@ -24,7 +24,7 @@ pub(crate) struct WebEntry {
     pub(crate) needs_static_fallback: bool,
 }
 
-pub(crate) fn python_entry_of<'a>(path: &'a str) -> Option<&'a str> {
+pub(crate) fn python_entry_of(path: &str) -> Option<&str> {
     let name = path.rsplit('/').next().unwrap_or(path);
     match name {
         "app.py" | "server.py" | "main.py" | "api.py" | "run.py" => Some(name),

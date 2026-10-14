@@ -206,3 +206,9 @@ impl BrowserDriver {
         }
     }
 }
+
+impl Default for BrowserDriver {
+    fn default() -> Self {
+        Self::new()
+    }
+}

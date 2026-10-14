@@ -64,7 +64,7 @@ pub(crate) fn ensure_python_service_for(
             15,
         );
         let _ = proxy_exec(
-            &["rm".to_string(), "-f".to_string(), format!("{env_file}")],
+            &["rm".to_string(), "-f".to_string(), env_file.to_string()],
             15,
         );
         let pushed_env = crate::harness::cmd::run(

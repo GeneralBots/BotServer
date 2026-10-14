@@ -109,7 +109,7 @@ fn validate_form(form_data: &Map) -> bool {
         return false;
     }
 
-    for (_key, value) in form_data.iter() {
+    for value in form_data.values() {
         if value.is_unit() {
             debug!("Form validation failed: null field");
             return false;

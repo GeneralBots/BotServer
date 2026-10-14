@@ -175,7 +175,7 @@ pub(super) async fn process_checkout_completed(
             .map_err(|e| format!("invoice not found: {e}"))?
     };
 
-    let total = invoice.total.as_ref().map(|t| botbilling::api_models::bd_to_f64(t)).unwrap_or(0.0);
+    let total = invoice.total.as_ref().map(botbilling::api_models::bd_to_f64).unwrap_or(0.0);
     let plan_label = metadata.get("plan").cloned().unwrap_or_else(|| "unknown".to_string());
 
     // 2. CRM: mark deal as won

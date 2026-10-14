@@ -156,6 +156,12 @@ impl BrowserMemory {
     }
 }
 
+impl Default for BrowserMemory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 fn split_citations(raw: &str) -> (String, Vec<String>) {
     if let Some(idx) = raw.find("CITED:") {
         let answer = raw[..idx].trim().to_string();

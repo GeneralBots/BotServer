@@ -134,10 +134,8 @@ mod tests {
 
     #[test]
     fn form_bodies_are_url_encoded_pairs() {
-        let fields = vec![
-            ("name".to_string(), "Acme & Co".to_string()),
-            ("email".to_string(), "a=b@example.com".to_string()),
-        ];
+        let fields = [("name".to_string(), "Acme & Co".to_string()),
+            ("email".to_string(), "a=b@example.com".to_string())];
         let body = fields
             .iter()
             .map(|(name, value)| {

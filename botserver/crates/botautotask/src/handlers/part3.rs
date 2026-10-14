@@ -126,11 +126,11 @@ pub async fn create_and_execute_for(
         return persist_shipped_template(api, bot_id, &req.intent, template).await.0;
     }
 
-    let classification = match classifier_for(&api).classify_api(&req.intent, bot_id).await {
+    let classification = match classifier_for(api).classify_api(&req.intent, bot_id).await {
         Ok(c) => c,
         Err(e) => return error_create(&req.intent, &*e).0,
     };
-    let compiled = match compiler_for(&api)
+    let compiled = match compiler_for(api)
         .compile_from_classification(bot_id, &classification, None, None)
         .await
     {

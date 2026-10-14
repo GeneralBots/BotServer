@@ -65,7 +65,7 @@ pub(super) async fn build_and_stream(
 
     if !is_switcher_replay {
         let mut sm = state.session_manager.lock().await;
-        let _ = sm.save_message(session_id, user_id, 1, &user_text, 1);
+        let _ = sm.save_message(session_id, user_id, 1, user_text, 1);
     }
 
     if let Some(arr) = messages_val.as_array_mut() {

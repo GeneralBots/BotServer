@@ -141,7 +141,7 @@ impl ScriptService {
         ast_content: &str,
     ) -> Result<String, String> {
         std::fs::write("/tmp/execute_script_debug.txt", format!(
-            "ast_content len={}\nfirst 200: {}\n", ast_content.len(), &ast_content.chars().take(200).collect::<String>()
+            "ast_content len={}\nfirst 200: {}\n", ast_content.len(), ast_content.chars().take(200).collect::<String>()
         )).ok();
         let ast_owned = ast_content.to_string();
         let bot_id = user.bot_id;

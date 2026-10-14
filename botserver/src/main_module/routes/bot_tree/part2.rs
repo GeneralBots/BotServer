@@ -180,7 +180,7 @@ pub async fn handle_bot_config_put(
         ("embedding-key", form.get("embedding_key").cloned()),
         ("botmodels-api-key", form.get("botmodels_api_key").cloned()),
     ];
-    platform_credentials.retain(|(_, v)| v.as_deref().map(str::trim).unwrap_or("").len() > 0);
+    platform_credentials.retain(|(_, v)| !v.as_deref().map(str::trim).unwrap_or("").is_empty());
     for (key, value) in platform_credentials {
         if let Err(e) =
             config_manager.set_config_with_branch(&bot_id, key, value.as_deref().unwrap_or_default(), None)

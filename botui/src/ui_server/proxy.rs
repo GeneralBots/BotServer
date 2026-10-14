@@ -58,7 +58,7 @@ pub async fn proxy_api(
     let target_url = format!("{}{path}{query}", state.client.base_url());
     debug!("Proxying {method} {path} to {target_url} (app: {app_context:?})");
 
-    let client = crate::ui_server::tls_policy::backend_http_client(&state.client.base_url().to_string());
+    let client = crate::ui_server::tls_policy::backend_http_client(state.client.base_url());
     let mut proxy_req = client.request(method.clone(), &target_url);
 
     if let Some(host) = headers.get("host").and_then(|value| value.to_str().ok()) {

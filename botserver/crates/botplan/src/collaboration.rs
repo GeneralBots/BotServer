@@ -253,7 +253,7 @@ async fn handle_plan_connection(
                 continue;
             }
             if let Ok(json) = serde_json::to_string(&msg) {
-                if sender.send(axum::extract::ws::Message::Text(json.into())).await.is_err() {
+                if sender.send(axum::extract::ws::Message::Text(json)).await.is_err() {
                     break;
                 }
             }

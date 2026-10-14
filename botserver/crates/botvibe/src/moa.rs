@@ -222,3 +222,9 @@ impl MoaEngine {
         Ok(run)
     }
 }
+
+impl Default for MoaEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}

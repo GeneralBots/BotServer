@@ -286,6 +286,59 @@ pub fn file_set_title() -> ToolHandler {
     })
 }
 
+/// `file/list` — list entries under a workspace path.
+pub fn file_list() -> ToolHandler {
+    Arc::new(move |args: serde_json::Value, _state: &dyn VibeState| {
+        let args = args.clone();
+        Box::pin(async move {
+            let project = str_arg(&args, "project");
+            let path = str_arg(&args, "path");
+            match list_rel(&project, &path, 0) {
+                Ok(mut entries) => {
+                    entries.sort();
+                    ok(
+                        json!({"project": project, "path": path, "count": entries.len(), "entries": entries}),
+                    )
+                }
+                Err(e) => err(e),
+            }
+        })
+    })
+}
+
+/// `file/delete` — delete a workspace file.
+pub fn file_delete() -> ToolHandler {
+    Arc::new(move |args: serde_json::Value, _state: &dyn VibeState| {
+        let args = args.clone();
+        Box::pin(async move {
+            let project = str_arg(&args, "project");
+            let path = str_arg(&args, "path");
+            match crate::harness::resolve_workspace_path(&project, &path) {
+                Ok(p) => match std::fs::remove_file(&p) {
+                    Ok(()) => ok(json!({"project": project, "path": path, "deleted": true})),
+                    Err(e) => err(format!("delete {}: {}", path, e)),
+                },
+                Err(e) => err(e),
+            }
+        })
+    })
+}
+
+/// `file/exists` — probe a workspace path.
+pub fn file_exists() -> ToolHandler {
+    Arc::new(move |args: serde_json::Value, _state: &dyn VibeState| {
+        let args = args.clone();
+        Box::pin(async move {
+            let project = str_arg(&args, "project");
+            let path = str_arg(&args, "path");
+            match crate::harness::resolve_workspace_path(&project, &path) {
+                Ok(p) => ok(json!({"exists": p.exists(), "is_dir": p.is_dir()})),
+                Err(e) => err(e),
+            }
+        })
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
@@ -353,57 +406,4 @@ mod tests {
             "/index.js"
         );
     }
-}
-
-/// `file/list` — list entries under a workspace path.
-pub fn file_list() -> ToolHandler {
-    Arc::new(move |args: serde_json::Value, _state: &dyn VibeState| {
-        let args = args.clone();
-        Box::pin(async move {
-            let project = str_arg(&args, "project");
-            let path = str_arg(&args, "path");
-            match list_rel(&project, &path, 0) {
-                Ok(mut entries) => {
-                    entries.sort();
-                    ok(
-                        json!({"project": project, "path": path, "count": entries.len(), "entries": entries}),
-                    )
-                }
-                Err(e) => err(e),
-            }
-        })
-    })
-}
-
-/// `file/delete` — delete a workspace file.
-pub fn file_delete() -> ToolHandler {
-    Arc::new(move |args: serde_json::Value, _state: &dyn VibeState| {
-        let args = args.clone();
-        Box::pin(async move {
-            let project = str_arg(&args, "project");
-            let path = str_arg(&args, "path");
-            match crate::harness::resolve_workspace_path(&project, &path) {
-                Ok(p) => match std::fs::remove_file(&p) {
-                    Ok(()) => ok(json!({"project": project, "path": path, "deleted": true})),
-                    Err(e) => err(format!("delete {}: {}", path, e)),
-                },
-                Err(e) => err(e),
-            }
-        })
-    })
-}
-
-/// `file/exists` — probe a workspace path.
-pub fn file_exists() -> ToolHandler {
-    Arc::new(move |args: serde_json::Value, _state: &dyn VibeState| {
-        let args = args.clone();
-        Box::pin(async move {
-            let project = str_arg(&args, "project");
-            let path = str_arg(&args, "path");
-            match crate::harness::resolve_workspace_path(&project, &path) {
-                Ok(p) => ok(json!({"exists": p.exists(), "is_dir": p.is_dir()})),
-                Err(e) => err(e),
-            }
-        })
-    })
 }

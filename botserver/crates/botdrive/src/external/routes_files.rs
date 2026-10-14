@@ -111,7 +111,7 @@ pub async fn download_file(
     let provider = parse_provider(&provider)?;
     let branch_id = caller_branch(&state, &user)?;
     let http = engine::http_client()
-        .map_err(|e| err(StatusCode::INTERNAL_SERVER_ERROR, &format!("{e}")))?;
+        .map_err(|e| err(StatusCode::INTERNAL_SERVER_ERROR, &e.to_string()))?;
     let (row, access_token) = {
         let mut conn = db::conn(&state.conn)
             .map_err(|e| err(StatusCode::INTERNAL_SERVER_ERROR, &format!("database unavailable: {e}")))?;

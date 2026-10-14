@@ -54,7 +54,7 @@ pub(crate) async fn handle_checkout(
 
     let customer_email = body.email.clone();
     let customer_name = body.organization_name.clone()
-        .unwrap_or_else(|| format!("{} Customer", &payload.plan));
+        .unwrap_or_else(|| format!("{} Customer", payload.plan));
 
     let total_cents = (payload.total * 100.0) as u64;
     let total_value = total_cents as f64;
@@ -243,7 +243,7 @@ pub(crate) async fn checkout_success(
                 .map_err(|_| (StatusCode::NOT_FOUND, "Invoice not found".to_string()))?
         };
 
-        let total = invoice.total.as_ref().map(|t| botbilling::api_models::bd_to_f64(t)).unwrap_or(0.0);
+        let total = invoice.total.as_ref().map(botbilling::api_models::bd_to_f64).unwrap_or(0.0);
 
         // 1. CRM: marca deal como ganho
         let deal_name = format!("Assinatura - {}", invoice.customer_name.as_deref().unwrap_or(""));

@@ -147,7 +147,7 @@ const MASTODON_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 const MASTODON_KEYS: &[&str] = &[
@@ -191,7 +191,7 @@ const X_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "x.posts.search",
@@ -215,7 +215,7 @@ const X_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 const X_KEYS: &[&str] = &[
@@ -268,7 +268,7 @@ const PINTEREST_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Low,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "pinterest.posts.delete",
@@ -280,7 +280,7 @@ const PINTEREST_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 const PINTEREST_KEYS: &[&str] = &[

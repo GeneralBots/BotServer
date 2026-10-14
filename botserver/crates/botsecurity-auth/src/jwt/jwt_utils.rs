@@ -33,6 +33,12 @@ impl JwkSet {
     }
 }
 
+impl Default for JwkSet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TokenIntrospectionResponse {
     pub active: bool,

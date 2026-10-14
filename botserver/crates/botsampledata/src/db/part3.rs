@@ -4,10 +4,10 @@ pub(super) fn seed_calendar(conn: &mut diesel::PgConnection, s: &Scopes) -> Resu
     let org = s.org_id;
     let user = s.user_id;
 
-    let cal_id;
+    
     let n = count(conn, "SELECT count(*) AS n FROM calendars WHERE org_id::text = $1 AND owner_id::text = $2", &[&s.org_str, &s.user_str])?;
-    if n == 0 {
-        cal_id = sql_query(
+    let cal_id = if n == 0 {
+        sql_query(
             "INSERT INTO calendars (id, org_id, bot_id, owner_id, name, description, color, timezone, is_primary, is_visible, is_shared, created_at, branch_id)
              VALUES ($1, $2, $2, $3, 'Work', 'Primary work calendar', '#3b82f6', 'UTC', true, true, false, NOW(), $2) RETURNING id",
         )
@@ -16,15 +16,15 @@ pub(super) fn seed_calendar(conn: &mut diesel::PgConnection, s: &Scopes) -> Resu
         .bind::<SqlUuid, _>(user)
         .get_result::<UuidRowNamed>(conn)
         .map(|r| r.id)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.to_string())?
     } else {
-        cal_id = sql_query("SELECT id FROM calendars WHERE org_id = $1 AND owner_id = $2 LIMIT 1")
+        sql_query("SELECT id FROM calendars WHERE org_id = $1 AND owner_id = $2 LIMIT 1")
             .bind::<SqlUuid, _>(org)
             .bind::<SqlUuid, _>(user)
             .get_result::<UuidRowNamed>(conn)
             .map(|r| r.id)
-            .map_err(|e| e.to_string())?;
-    }
+            .map_err(|e| e.to_string())?
+    };
 
     let events: &[&str] = &["Sprint Planning", "Product Review"];
     for title in events {
@@ -142,10 +142,10 @@ pub(super) fn seed_goals(conn: &mut diesel::PgConnection, s: &Scopes) -> Result<
     let org = s.org_id;
     let user = s.user_id;
 
-    let obj_id;
+    
     let n = count(conn, "SELECT count(*) AS n FROM okr_objectives WHERE org_id::text = $1 AND title = 'Ship v1.0'", &[&s.org_str])?;
-    if n == 0 {
-        obj_id = sql_query(
+    let obj_id = if n == 0 {
+        sql_query(
             "INSERT INTO okr_objectives (id, org_id, bot_id, owner_id, title, description, period, period_start, period_end, status, progress, visibility, tags, created_at, updated_at, branch_id)
              VALUES ($1, $2, $2, $3, 'Ship v1.0', 'Deliver the v1 platform', 'Q3-2026', '2026-07-01', '2026-09-30', 'active', 45, 'team', ARRAY['v1','launch'], NOW(), NOW(), $2) RETURNING id",
         )
@@ -154,14 +154,14 @@ pub(super) fn seed_goals(conn: &mut diesel::PgConnection, s: &Scopes) -> Result<
         .bind::<SqlUuid, _>(user)
         .get_result::<UuidRowNamed>(conn)
         .map(|r| r.id)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.to_string())?
     } else {
-        obj_id = sql_query("SELECT id FROM okr_objectives WHERE org_id = $1 AND title = 'Ship v1.0' LIMIT 1")
+        sql_query("SELECT id FROM okr_objectives WHERE org_id = $1 AND title = 'Ship v1.0' LIMIT 1")
             .bind::<SqlUuid, _>(org)
             .get_result::<UuidRowNamed>(conn)
             .map(|r| r.id)
-            .map_err(|e| e.to_string())?;
-    }
+            .map_err(|e| e.to_string())?
+    };
 
     for (title, current) in [("Complete all 12 milestones", 5), ("Reach 95% test coverage", 72)] {
         let n = count(conn, "SELECT count(*) AS n FROM okr_key_results WHERE org_id::text = $1 AND objective_id::text = $2 AND title = $3", &[&s.org_str, &obj_id.to_string(), title])?;
@@ -188,10 +188,10 @@ pub(super) fn seed_workspaces(conn: &mut diesel::PgConnection, s: &Scopes) -> Re
     let branch = s.branch_id;
     let user = s.user_id;
 
-    let ws_id;
+    
     let n = count(conn, "SELECT count(*) AS n FROM aiworkspaces WHERE branch_id::text = $1 AND name = 'Product Workspace'", &[&s.branch_str])?;
-    if n == 0 {
-        ws_id = sql_query(
+    let ws_id = if n == 0 {
+        sql_query(
             "INSERT INTO aiworkspaces (id, org_id, bot_id, name, description, icon_type, icon_value, settings, created_by, created_at, updated_at, branch_id)
              VALUES ($1, $2, $3, 'Product Workspace', 'Shared product documentation', 'emoji', '🚀', '{}', $4, NOW(), NOW(), $5) RETURNING id",
         )
@@ -202,14 +202,14 @@ pub(super) fn seed_workspaces(conn: &mut diesel::PgConnection, s: &Scopes) -> Re
         .bind::<SqlUuid, _>(branch)
         .get_result::<UuidRowNamed>(conn)
         .map(|r| r.id)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| e.to_string())?
     } else {
-        ws_id = sql_query("SELECT id FROM aiworkspaces WHERE branch_id = $1 AND name = 'Product Workspace' LIMIT 1")
+        sql_query("SELECT id FROM aiworkspaces WHERE branch_id = $1 AND name = 'Product Workspace' LIMIT 1")
             .bind::<SqlUuid, _>(branch)
             .get_result::<UuidRowNamed>(conn)
             .map(|r| r.id)
-            .map_err(|e| e.to_string())?;
-    }
+            .map_err(|e| e.to_string())?
+    };
 
     for (title, icon) in [("Home", "🏠"), ("Roadmap", "🗺️")] {
         let n = count(conn, "SELECT count(*) AS n FROM aiworkspace_pages WHERE workspace_id::text = $1 AND title = $2", &[&ws_id.to_string(), title])?;

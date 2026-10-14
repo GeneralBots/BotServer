@@ -127,7 +127,7 @@ pub async fn run_axum_server(
             Ok(manager) => Arc::new(manager),
             Err(e) => {
                 log::error!("Failed to create CSRF manager: {e}");
-                return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("CSRF init failed: {e}")));
+                return Err(std::io::Error::other(format!("CSRF init failed: {e}")));
             }
         }
     };

@@ -261,3 +261,9 @@ impl DistributedTracingService {
         })
     }
 }
+
+impl Default for DistributedTracingService {
+    fn default() -> Self {
+        Self::new()
+    }
+}

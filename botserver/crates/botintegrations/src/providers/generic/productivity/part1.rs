@@ -191,7 +191,7 @@ const TRELLO_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 const TRELLO_KEYS: &[&str] = &[
@@ -274,7 +274,7 @@ pub const TODOIST_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::Medium,
-        params: &resource_id(),
+        params: resource_id(),
     },
     ActionSpec {
         key: "todoist.tasks.delete",
@@ -286,7 +286,7 @@ pub const TODOIST_ACTIONS: &[ActionSpec] = &[
         body_param: None,
         body_wrapper: None,
         risk: Risk::High,
-        params: &resource_id(),
+        params: resource_id(),
     },
 ];
 pub const TODOIST_KEYS: &[&str] = &[

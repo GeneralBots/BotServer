@@ -41,10 +41,7 @@ impl DocHistory {
 
     pub fn undo(&mut self) -> Option<Document> {
         let previous = self.undo.pop_back()?;
-        let restored = std::mem::replace(
-            &mut self.current,
-            Some(previous.clone()),
-        );
+        let restored = self.current.replace(previous.clone());
         if let Some(current) = restored {
             if self.redo.len() == DOC_HISTORY_CAP {
                 self.redo.pop_front();
@@ -56,7 +53,7 @@ impl DocHistory {
 
     pub fn redo(&mut self) -> Option<Document> {
         let next = self.redo.pop_back()?;
-        let restored = std::mem::replace(&mut self.current, Some(next.clone()));
+        let restored = self.current.replace(next.clone());
         if let Some(current) = restored {
             if self.undo.len() == DOC_HISTORY_CAP {
                 self.undo.pop_front();

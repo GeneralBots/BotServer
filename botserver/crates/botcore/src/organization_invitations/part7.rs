@@ -73,13 +73,13 @@ pub(super) async fn create_invitation(
         .and_then(|v| v.to_str().ok())
         .and_then(|s| Uuid::parse_str(s).ok())
         .or_else(|| {
-            botsecurity_core::tenant::user_id_from_claims(&headers).and_then(|sub| {
+            botsecurity_core::tenant::user_id_from_claims(&headers).map(|sub| {
                 match Uuid::parse_str(&sub) {
-                    Ok(u) => Some(u),
-                    Err(_) => Some(Uuid::new_v5(
+                    Ok(u) => u,
+                    Err(_) => Uuid::new_v5(
                         &Uuid::NAMESPACE_DNS,
                         format!("zitadel:{sub}").as_bytes(),
-                    )),
+                    ),
                 }
             })
         })
@@ -140,13 +140,13 @@ pub(super) async fn bulk_invite(
         .and_then(|v| v.to_str().ok())
         .and_then(|s| Uuid::parse_str(s).ok())
         .or_else(|| {
-            botsecurity_core::tenant::user_id_from_claims(&headers).and_then(|sub| {
+            botsecurity_core::tenant::user_id_from_claims(&headers).map(|sub| {
                 match Uuid::parse_str(&sub) {
-                    Ok(u) => Some(u),
-                    Err(_) => Some(Uuid::new_v5(
+                    Ok(u) => u,
+                    Err(_) => Uuid::new_v5(
                         &Uuid::NAMESPACE_DNS,
                         format!("zitadel:{sub}").as_bytes(),
-                    )),
+                    ),
                 }
             })
         })
@@ -239,13 +239,13 @@ pub(super) async fn accept_invitation(
         .and_then(|v| v.to_str().ok())
         .and_then(|s| Uuid::parse_str(s).ok())
         .or_else(|| {
-            botsecurity_core::tenant::user_id_from_claims(&headers).and_then(|sub| {
+            botsecurity_core::tenant::user_id_from_claims(&headers).map(|sub| {
                 match Uuid::parse_str(&sub) {
-                    Ok(u) => Some(u),
-                    Err(_) => Some(Uuid::new_v5(
+                    Ok(u) => u,
+                    Err(_) => Uuid::new_v5(
                         &Uuid::NAMESPACE_DNS,
                         format!("zitadel:{sub}").as_bytes(),
-                    )),
+                    ),
                 }
             })
         })

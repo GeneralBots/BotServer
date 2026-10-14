@@ -67,7 +67,7 @@ impl BasicCompiler {
         log::trace!(
             "Converting SAVE for table: '{}' (original: '{}')",
             table_name,
-            &parts[0]
+            parts[0]
         );
 
         let column_names = self.get_table_columns_for_save(table_name, bot_id)?;

@@ -32,11 +32,11 @@ pub(super) async fn rotate_secret(component: &str) -> Result<()> {
             println!();
             println!(
                 "Old password: {}...",
-                &old_password.chars().take(4).collect::<String>()
+                old_password.chars().take(4).collect::<String>()
             );
             println!(
                 "New password: {}...",
-                &new_password.chars().take(4).collect::<String>()
+                new_password.chars().take(4).collect::<String>()
             );
 
             print!("Save to Vault? [y/N]: ");
@@ -74,7 +74,7 @@ pub(super) async fn rotate_secret(component: &str) -> Result<()> {
             println!("New access key: {}", new_accesskey);
             println!(
                 "New secret key: {}...",
-                &new_secret.chars().take(8).collect::<String>()
+                new_secret.chars().take(8).collect::<String>()
             );
 
             print!("Save to Vault? [y/N]: ");
@@ -101,7 +101,7 @@ pub(super) async fn rotate_secret(component: &str) -> Result<()> {
             println!();
             println!(
                 "New password: {}...",
-                &new_password.chars().take(4).collect::<String>()
+                new_password.chars().take(4).collect::<String>()
             );
 
             print!("Save to Vault? [y/N]: ");
@@ -127,7 +127,7 @@ pub(super) async fn rotate_secret(component: &str) -> Result<()> {
             println!();
             println!(
                 "New password: {}...",
-                &new_password.chars().take(4).collect::<String>()
+                new_password.chars().take(4).collect::<String>()
             );
 
             print!("Save to Vault? [y/N]: ");
@@ -151,7 +151,7 @@ pub(super) async fn rotate_secret(component: &str) -> Result<()> {
             println!();
             println!(
                 "New master key: {}...",
-                &new_key.chars().take(8).collect::<String>()
+                new_key.chars().take(8).collect::<String>()
             );
 
             print!("Are you ABSOLUTELY sure? Type 'ROTATE' to confirm: ");
@@ -177,7 +177,7 @@ pub(super) async fn rotate_secret(component: &str) -> Result<()> {
             println!();
             println!(
                 "New client secret: {}...",
-                &new_secret.chars().take(8).collect::<String>()
+                new_secret.chars().take(8).collect::<String>()
             );
 
             print!("Save to Vault? [y/N]: ");
@@ -216,8 +216,8 @@ pub(super) async fn rotate_secret(component: &str) -> Result<()> {
                 .find(|line| line.starts_with("JWT_SECRET="))
                 .unwrap_or("JWT_SECRET=(not set)");
 
-            println!("Current: {}", &current_jwt.chars().take(40).collect::<String>());
-            println!("New: {}... (64 chars)", &new_secret.chars().take(8).collect::<String>());
+            println!("Current: {}", current_jwt.chars().take(40).collect::<String>());
+            println!("New: {}... (64 chars)", new_secret.chars().take(8).collect::<String>());
             println!();
 
             // Backup .env

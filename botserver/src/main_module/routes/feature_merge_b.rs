@@ -130,12 +130,11 @@ pub(super) async fn merge_part_b(
                     let start = Instant::now();
                     let healthy = url
                         .and_then(|u| crate::monitoring::host_port_from_url(&u, 8081))
-                        .map(|(host, port)| {
+                        .and_then(|(host, port)| {
                             use std::net::{SocketAddr, TcpStream};
                             let addr: SocketAddr = format!("{host}:{port}").parse().ok()?;
                             Some(TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(750)).is_ok())
                         })
-                        .flatten()
                         .unwrap_or(false);
                     let latency = start.elapsed().as_secs_f64() * 1000.0;
                     deps.push(crate::monitoring::DependencyStatus {

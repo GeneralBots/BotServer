@@ -79,7 +79,7 @@ pub fn required_intrajornada_minutes(shift_minutes: i64) -> i64 {
 /// True if a time-of-day falls inside the night shift window
 /// (22:00 – 05:00, art. 73 CLT).
 pub fn is_night_shift_hour(hour: u32) -> bool {
-    hour >= 22 || hour < 5
+    !(5..22).contains(&hour)
 }
 
 /// Computes the night shift add-on minutes for a shift that crossed

@@ -199,6 +199,7 @@ pub enum BlockType {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Default)]
 pub enum BlockContent {
     Text { text: RichText },
     Media { url: String, caption: Option<String> },
@@ -209,14 +210,10 @@ pub enum BlockContent {
     Toggle { title: RichText, expanded: bool },
     Checklist { items: Vec<ChecklistItem> },
     GbComponent { component_type: String, config: serde_json::Value },
+    #[default]
     Empty,
 }
 
-impl Default for BlockContent {
-    fn default() -> Self {
-        Self::Empty
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RichText {

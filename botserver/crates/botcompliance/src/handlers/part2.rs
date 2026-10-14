@@ -63,7 +63,7 @@ pub async fn handle_create_audit_log(
         let now = Utc::now();
         let branch_id = BRANCH_ID_PLACEHOLDER;
 
-        let metadata = serde_json::to_value(&req.metadata.unwrap_or_default()).unwrap_or(serde_json::json!({}));
+        let metadata = serde_json::to_value(req.metadata.unwrap_or_default()).unwrap_or(serde_json::json!({}));
 
         let db_log = DbAuditLog {
             id: Uuid::new_v4(),

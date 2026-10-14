@@ -48,9 +48,9 @@ pub async fn run_tool_exec(
                 "A ação '{tool_name}' não está disponível para esta conversa."
             );
             let resp = botlib::models::BotResponse::new(
-                &bot_uuid.to_string(),
-                &session_id.to_string(),
-                &user_id.to_string(),
+                bot_uuid.to_string(),
+                session_id.to_string(),
+                user_id.to_string(),
                 &message,
                 channel,
             );
@@ -86,9 +86,9 @@ pub async fn run_tool_exec(
                 "Não consegui executar '{tool_name_clone}'. Tente novamente em instantes."
             );
             let resp = botlib::models::BotResponse::new(
-                &bot_uuid.to_string(),
-                &session_id.to_string(),
-                &user_id.to_string(),
+                bot_uuid.to_string(),
+                session_id.to_string(),
+                user_id.to_string(),
                 &message,
                 channel,
             );
@@ -224,8 +224,8 @@ pub async fn run_llm_tool_call(
             log::info!("All tool args are placeholder - asking user for real data instead of executing");
             let msg = "Para agendar o servico, preciso de algumas informacoes. Por favor, me diga os dados solicitados um de cada vez.".to_string();
             let resp = botlib::models::BotResponse::new(
-                &bot_uuid.to_string(), &session_id.to_string(),
-                &user_id.to_string(), &msg, sink.channel_type(),
+                bot_uuid.to_string(), session_id.to_string(),
+                user_id.to_string(), &msg, sink.channel_type(),
             );
             let _ = sink.send_bot_response(&resp).await;
             return;
@@ -300,9 +300,9 @@ pub async fn run_llm_tool_call(
                 "Não consegui executar '{tool_name}': essa ação não está disponível para mim agora."
             );
             let resp = botlib::models::BotResponse::new(
-                &bot_uuid.to_string(),
-                &session_id.to_string(),
-                &user_id.to_string(),
+                bot_uuid.to_string(),
+                session_id.to_string(),
+                user_id.to_string(),
                 &message,
                 sink.channel_type(),
             );
@@ -358,14 +358,14 @@ pub async fn run_llm_tool_call(
                         injected_param_names.insert(key.clone());
                         match value {
                             serde_json::Value::String(s) => {
-                                let clean_val = if is_placeholder_value(&s) { String::new() } else { s.clone() };
-                                let _ = svc.set_variable(&key, &clean_val);
+                                let clean_val = if is_placeholder_value(s) { String::new() } else { s.clone() };
+                                let _ = svc.set_variable(key, &clean_val);
                             }
                             serde_json::Value::Number(n) => {
-                                let _ = svc.set_variable(&key, &n.to_string());
+                                let _ = svc.set_variable(key, &n.to_string());
                             }
                             serde_json::Value::Bool(b) => {
-                                let _ = svc.set_variable(&key, if *b { "true" } else { "false" });
+                                let _ = svc.set_variable(key, if *b { "true" } else { "false" });
                             }
                             _ => {}
                         }
@@ -400,9 +400,9 @@ pub async fn run_llm_tool_call(
                     "Não consegui executar '{tool_name_err}'. Tente novamente em instantes."
                 );
                 let resp = botlib::models::BotResponse::new(
-                    &bot_uuid.to_string(),
-                    &session_id.to_string(),
-                    &user_id.to_string(),
+                    bot_uuid.to_string(),
+                    session_id.to_string(),
+                    user_id.to_string(),
                     &message,
                     sink.channel_type(),
                 );

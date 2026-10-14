@@ -164,7 +164,7 @@ pub(crate) fn make_telegram_router(app_state: &Arc<AppState>) -> Router<()> {
                 let state = app_state.clone();
                 tokio::spawn(async move {
                     let sink = crate::core::bot::pipeline::MpscChannelSink(tx);
-                    let _ = crate::core::bot::pipeline::run_pipeline_for_channel(
+                    crate::core::bot::pipeline::run_pipeline_for_channel(
                         &state, &msg, &sink,
                     ).await.map_err(|e| e.to_string())?;
                     Ok(())
@@ -184,7 +184,7 @@ pub(crate) fn make_instagram_router(app_state: &Arc<AppState>) -> Router<()> {
                 let state = app_state.clone();
                 tokio::spawn(async move {
                     let sink = crate::core::bot::pipeline::MpscChannelSink(tx);
-                    let _ = crate::core::bot::pipeline::run_pipeline_for_channel(
+                    crate::core::bot::pipeline::run_pipeline_for_channel(
                         &state, &msg, &sink,
                     ).await.map_err(|e| e.to_string())?;
                     Ok(())
@@ -209,7 +209,7 @@ pub(crate) fn make_msteams_router(app_state: &Arc<AppState>) -> Router<()> {
                 let state = app_state.clone();
                 tokio::spawn(async move {
                     let sink = crate::core::bot::pipeline::MpscChannelSink(tx);
-                    let _ = crate::core::bot::pipeline::run_pipeline_for_channel(
+                    crate::core::bot::pipeline::run_pipeline_for_channel(
                         &state, &msg, &sink,
                     ).await.map_err(|e| e.to_string())?;
                     Ok(())

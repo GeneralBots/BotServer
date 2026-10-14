@@ -190,8 +190,8 @@ pub(super) async fn handle_invoices(
             let mut html = String::new();
             for (id, number, customer_name, customer_email, status, issue_date, due_date, total, amount_due, currency) in invoices {
                 let name = customer_email.or(customer_name).unwrap_or_else(|| "Unknown".to_string());
-                let total_str = format_currency(bd_to_f64(&total.unwrap_or_default()), &currency.as_deref().unwrap_or("USD"));
-                let due_str = format_currency(bd_to_f64(&amount_due), &currency.as_deref().unwrap_or("USD"));
+                let total_str = format_currency(bd_to_f64(&total.unwrap_or_default()), currency.as_deref().unwrap_or("USD"));
+                let due_str = format_currency(bd_to_f64(&amount_due), currency.as_deref().unwrap_or("USD"));
                 let issue_str = issue_date.format("%Y-%m-%d").to_string();
                 let due_date_str = due_date.map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_else(|| "-".to_string());
 

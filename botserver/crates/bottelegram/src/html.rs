@@ -52,8 +52,7 @@ pub fn sanitize_for_html(input: &str) -> String {
                     let (is_close, raw_name) = match tag_body.strip_prefix('/') {
                         Some(rest) => (
                             true,
-                            rest.trim()
-                                .split_whitespace()
+                            rest.split_whitespace()
                                 .next()
                                 .unwrap_or("")
                                 .to_lowercase(),

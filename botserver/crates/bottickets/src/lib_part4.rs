@@ -57,7 +57,7 @@ pub async fn list_activities(
         });
     }
 
-    activities.sort_by(|a, b| a.created_at.cmp(&b.created_at));
+    activities.sort_by_key(|a| a.created_at);
     Ok(Json(activities))
 }
 pub async fn add_activity(

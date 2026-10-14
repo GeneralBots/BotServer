@@ -232,7 +232,7 @@ pub async fn export_table_csv(
         csv.push('\n');
     }
 
-    Ok(axum::response::Response::builder()
+    axum::response::Response::builder()
         .status(StatusCode::OK)
         .header("Content-Type", "text/csv")
         .header(
@@ -240,7 +240,7 @@ pub async fn export_table_csv(
             format!("attachment; filename=\"{safe_name}.csv\""),
         )
         .body(axum::body::Body::from(csv))
-        .map_err(|e| internal_error(&format!("Export failed: {e}")))?)
+        .map_err(|e| internal_error(&format!("Export failed: {e}")))
 }
 pub(super) fn csv_escape(value: &serde_json::Value) -> String {
     let text = match value {

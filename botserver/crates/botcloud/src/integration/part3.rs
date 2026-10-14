@@ -108,7 +108,7 @@ pub fn create_bot_bucket(
                 // Rename internal directories from original name to bot_slug
                 let template_name = template_path
                     .split('/')
-                    .last()
+                    .next_back()
                     .and_then(|s| s.strip_suffix(".gbai"))
                     .unwrap_or("default");
                 for ext in &["gbdialog", "gbot", "gbkb"] {

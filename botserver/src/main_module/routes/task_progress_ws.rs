@@ -61,11 +61,10 @@ async fn task_progress_ws_loop(
             incoming = receiver.next() => {
                 match incoming {
                     Some(Ok(Message::Text(text))) => {
-                        if text == "ping" {
-                            if sender.send(Message::Text("pong".into())).await.is_err() {
+                        if text == "ping"
+                            && sender.send(Message::Text("pong".into())).await.is_err() {
                                 break;
                             }
-                        }
                     }
                     Some(Ok(Message::Close(_))) | None => break,
                     Some(Err(e)) => {

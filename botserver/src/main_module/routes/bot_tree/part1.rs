@@ -2,8 +2,7 @@ use super::*;
 
 pub(super) fn slugify_bot_name(name: &str) -> String {
     name.to_lowercase()
-        .replace(' ', "-")
-        .replace('_', "-")
+        .replace([' ', '_'], "-")
         .chars()
         .filter(|c| c.is_alphanumeric() || *c == '-')
         .collect()

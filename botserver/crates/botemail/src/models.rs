@@ -260,9 +260,9 @@ fn decode_jwt_payload(segment: &str) -> Option<Vec<u8>> {
     let mut buf: u32 = 0;
     let mut bits: u32 = 0;
     for &b in input.as_bytes() {
-        let v = match TABLE.iter().position(|&x| x == b) {
-            Some(i) => i as u32,
-            None => return None,
+        let v = {
+            let i = TABLE.iter().position(|&x| x == b)?;
+            i as u32
         };
         buf = (buf << 6) | v;
         bits += 6;

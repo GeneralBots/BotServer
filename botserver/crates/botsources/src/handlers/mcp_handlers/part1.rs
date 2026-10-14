@@ -234,7 +234,7 @@ pub(super) fn set_mcp_server_enabled(work_path: &str, bot_id: &str, name: &str, 
             continue;
         }
 
-        let columns = parse_csv_columns(&trimmed);
+        let columns = parse_csv_columns(trimmed);
         let server_name = columns.first().map(|s| s.trim().trim_matches('"')).unwrap_or("");
 
         if server_name == name {

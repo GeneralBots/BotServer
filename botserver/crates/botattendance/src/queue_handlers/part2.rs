@@ -107,8 +107,8 @@ pub async fn get_kanban(
     tokio::task::spawn_blocking(move || {
         let mut conn = pool.get().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("DB error: {e}")))?;
         let resolved_bot_id = query.bot_id.unwrap_or_else(|| {
-            let branch_id = get_default_bot(&mut conn);
-            branch_id
+            
+            get_default_bot(&mut conn)
         });
         let sessions: Vec<UserSession> = user_sessions::table
             .filter(user_sessions::bot_id.eq(resolved_bot_id))
@@ -168,5 +168,5 @@ pub async fn get_kanban(
     })
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Task error: {e}")))?
-    .map(|board| Json(board))
+    .map(Json)
 }

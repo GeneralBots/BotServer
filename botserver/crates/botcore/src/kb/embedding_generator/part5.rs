@@ -29,7 +29,7 @@ impl KbEmbeddingGenerator {
                   self.config_read().embedding_url.clone(), request_size);
 
             let mut request_builder = self.client
-                .post(&self.config_read().embedding_url.clone())
+                .post(self.config_read().embedding_url.clone())
                 .json(&cf_request);
 
             // Add Authorization header if API key is provided
@@ -64,7 +64,7 @@ impl KbEmbeddingGenerator {
                       self.config_read().embedding_url.clone(), request_size);
 
                 let mut request_builder = self.client
-                    .post(&self.config_read().embedding_url.clone())
+                    .post(self.config_read().embedding_url.clone())
                     .json(&hf_request);
 
                 // Add Authorization header if API key is provided
@@ -141,7 +141,7 @@ impl KbEmbeddingGenerator {
 
             // Build request
             let mut request_builder = self.client
-                .post(&self.config_read().embedding_url.clone())
+                .post(self.config_read().embedding_url.clone())
                 .json(&request);
 
             // Add Authorization header if API key is provided (for Scaleway, OpenAI, etc.)

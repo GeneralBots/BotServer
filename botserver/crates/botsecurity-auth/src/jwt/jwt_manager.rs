@@ -345,7 +345,6 @@ impl botlib::traits::JwtService for JwtManager {
             .map_err(|e| format!("validate_access_token: {e}"))?;
         serde_json::to_value(&claims)
             .map_err(|e| format!("serialize claims: {e}"))
-            .map(|v| v)
     }
 
     fn generate_access_token(&self, user_id: uuid::Uuid, claims: serde_json::Value) -> Result<String, String> {

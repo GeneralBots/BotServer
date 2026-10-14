@@ -92,7 +92,7 @@ pub async fn handle_create_data_source(
 
 fn host_port_from_url(url: &str, default_port: u16) -> Option<(String, u16)> {
     let rest = url.split("://").nth(1)?;
-    let authority = rest.split(|c| c == '/' || c == '?').next()?;
+    let authority = rest.split(['/', '?']).next()?;
     let authority = authority.rsplit('@').next()?;
     match authority.rsplit_once(':') {
         Some((host, port)) => Some((host.to_string(), port.parse().unwrap_or(default_port))),

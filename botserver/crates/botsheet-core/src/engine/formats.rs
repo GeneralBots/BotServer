@@ -118,7 +118,7 @@ pub fn parse_format(code: &str) -> NumberFormat {
     let upper = code.to_ascii_uppercase();
     if upper.contains("E+") || upper.contains("E-") {
         fmt.scientific = true;
-        let mantissa = code.split(|c| c == 'E' || c == 'e').next().unwrap_or("0");
+        let mantissa = code.split(['E', 'e']).next().unwrap_or("0");
         fmt.min_decimal_digits = mantissa
             .split_once('.')
             .map(|(_, frac)| {

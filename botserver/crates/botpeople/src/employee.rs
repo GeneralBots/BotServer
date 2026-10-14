@@ -180,6 +180,12 @@ impl EmployeeService {
     }
 }
 
+impl Default for EmployeeService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct EmployeeHierarchyNode {
     pub employee: Employee,

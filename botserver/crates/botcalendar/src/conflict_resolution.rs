@@ -70,9 +70,9 @@ pub fn parse_ics(ics_data: &str) -> Result<Vec<IcsEvent>, String> {
                 .unwrap_or_else(|| "Untitled Event".to_string());
 
             let start_time = event.property_value("DTSTART")
-                .and_then(|s| parse_ical_dt(s));
+                .and_then(parse_ical_dt);
             let end_time = event.property_value("DTEND")
-                .and_then(|s| parse_ical_dt(s));
+                .and_then(parse_ical_dt);
 
             let (start, end) = match (start_time, end_time) {
                 (Some(s), Some(e)) => (s, e),
@@ -167,7 +167,7 @@ pub async fn resolve_conflicts(
         }
     }
 
-    free_slots.sort_by(|a, b| a.start.cmp(&b.start));
+    free_slots.sort_by_key(|a| a.start);
 
     let llm_suggestion = if conflicts.is_empty() {
         None

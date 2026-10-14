@@ -311,6 +311,9 @@ impl DirectorySetup {
     }
 }
 
+use std::path::PathBuf;
+use reqwest::Client;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -334,6 +337,3 @@ mod tests {
         assert!(json.contains("test_secret"));
     }
 }
-
-use std::path::PathBuf;
-use reqwest::Client;

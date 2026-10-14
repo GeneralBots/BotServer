@@ -307,3 +307,9 @@ impl PlannerExecutor {
         }
     }
 }
+
+impl Default for PlannerExecutor {
+    fn default() -> Self {
+        Self::new()
+    }
+}

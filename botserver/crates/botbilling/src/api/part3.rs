@@ -88,7 +88,7 @@ pub async fn get_billing_stats(
 
     for inv in &invoices {
         if inv.status.as_deref() == Some("paid") {
-            total_revenue += inv.total.as_ref().map_or(0.0, |t| bd_to_f64(t));
+            total_revenue += inv.total.as_ref().map_or(0.0, bd_to_f64);
         }
         if inv.status.as_deref() != Some("paid") && inv.status.as_deref() != Some("voided") {
             pending_amount += bd_to_f64(&inv.amount_due);
@@ -114,7 +114,7 @@ pub async fn get_billing_stats(
     let revenue_this_month: f64 = invoices
         .iter()
         .filter(|i| i.status.as_deref() == Some("paid") && i.paid_at.map(|d| d.date_naive().month() == today.month() && d.date_naive().year() == today.year()).unwrap_or(false))
-        .map(|i| i.total.as_ref().map_or(0.0, |t| bd_to_f64(t)))
+        .map(|i| i.total.as_ref().map_or(0.0, bd_to_f64))
         .sum();
 
     let stats = BillingStats {

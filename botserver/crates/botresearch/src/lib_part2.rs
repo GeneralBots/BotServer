@@ -22,7 +22,7 @@ pub async fn handle_source_counts<S: ResearchState>(
             }
         };
 
-        let total: i64 = diesel::sql_query(&format!(
+        let total: i64 = diesel::sql_query(format!(
             "SELECT COUNT(*) AS n FROM kb_documents WHERE 1 = 1{}",
             scope
         ))
@@ -59,7 +59,7 @@ pub async fn handle_list_collections<S: ResearchState>(
             }
         };
 
-        let result: Result<Vec<CollectionRow>, _> = diesel::sql_query(&format!(
+        let result: Result<Vec<CollectionRow>, _> = diesel::sql_query(format!(
             "SELECT id, name, folder_path, document_count::bigint AS document_count FROM kb_collections WHERE 1 = 1{} ORDER BY name ASC",
             scope
         ))

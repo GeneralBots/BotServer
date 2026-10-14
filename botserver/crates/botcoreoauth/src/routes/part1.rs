@@ -244,11 +244,7 @@ pub(super) async fn get_bot_config(state: &OAuthState_) -> HashMap<String, Strin
         _ => return HashMap::new(),
     };
 
-    if let Some(vault_configs) = read_bot_config_from_vault(&active_bot_id) {
-        vault_configs
-    } else {
-        HashMap::new()
-    }
+    read_bot_config_from_vault(&active_bot_id).unwrap_or_default()
 }
 pub(super) fn read_bot_config_from_vault(bot_id: &Uuid) -> Option<HashMap<String, String>> {
     use botcoresecrets::manager::SecretsManager;
