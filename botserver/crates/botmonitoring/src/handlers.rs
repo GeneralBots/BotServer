@@ -1,11 +1,10 @@
 use super::{
     check_llm, check_minio, check_postgres, check_redis, HealthStatus, MonitoringState,
-    MonitoringUrls,
 };
 use axum::{extract::State, response::Html};
 use std::sync::Arc;
 
-pub(super) async fn dashboard<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn dashboard<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     #[cfg(feature = "monitoring")]
     let (cpu_usage, total_memory, used_memory, memory_percent, uptime_str) = {
         use sysinfo::System;
@@ -81,7 +80,7 @@ pub(super) async fn dashboard<S: MonitoringState, U: MonitoringUrls>(State(state
     ))
 }
 
-pub(super) async fn services<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn services<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     let services = vec![
         ("PostgreSQL", check_postgres(), "Database"),
         ("Redis", check_redis(), "Cache"),
@@ -139,7 +138,7 @@ pub(super) async fn services<S: MonitoringState, U: MonitoringUrls>(_state: Stat
     ))
 }
 
-pub(super) async fn resources<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn resources<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     #[cfg(feature = "monitoring")]
     let (disk_rows, net_rows) = {
         use sysinfo::{Disks, Networks, System};
@@ -242,7 +241,7 @@ pub(super) async fn resources<S: MonitoringState, U: MonitoringUrls>(_state: Sta
     ))
 }
 
-pub(super) async fn logs<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn logs<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     Html(
         r##"<div class="logs-view">
   <div class="section-header">
@@ -273,7 +272,7 @@ pub(super) async fn logs<S: MonitoringState, U: MonitoringUrls>(_state: State<Ar
     )
 }
 
-pub(super) async fn llm_metrics<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn llm_metrics<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     Html(
         r##"<div class="llm-metrics-view">
   <div class="section-header">
@@ -325,7 +324,7 @@ pub(super) async fn llm_metrics<S: MonitoringState, U: MonitoringUrls>(_state: S
     )
 }
 
-pub(super) async fn health<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn health<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let collector = state.metrics_collector();
     let health = collector.get_health().await;
     let db_ok = state.is_db_healthy();

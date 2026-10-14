@@ -1,16 +1,17 @@
 use super::{
-    check_llm, check_minio, check_postgres, check_redis, MonitoringState, MonitoringUrls,
+    check_llm, check_minio, check_postgres, check_redis, MonitoringState,
+
 };
 use axum::{extract::State, response::Html};
 use chrono::Local;
 use std::sync::Arc;
 
-pub(super) async fn timestamp<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn timestamp<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     let now = Local::now();
     Html(format!("Last updated: {}", now.format("%H:%M:%S")))
 }
 
-pub(super) async fn bots<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn bots<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let active_sessions = state.active_session_count();
 
     Html(format!(
@@ -23,7 +24,7 @@ pub(super) async fn bots<S: MonitoringState, U: MonitoringUrls>(State(state): St
     ))
 }
 
-pub(super) async fn services_status<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn services_status<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     let services = vec![
         ("postgresql", check_postgres()),
         ("redis", check_redis()),
@@ -47,7 +48,7 @@ pub(super) async fn services_status<S: MonitoringState, U: MonitoringUrls>(_stat
     Html(status_updates)
 }
 
-pub(super) async fn resources_bars<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn resources_bars<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     #[cfg(feature = "monitoring")]
     let (cpu_usage, memory_percent) = {
         use sysinfo::System;
@@ -81,7 +82,7 @@ pub(super) async fn resources_bars<S: MonitoringState, U: MonitoringUrls>(_state
     ))
 }
 
-pub(super) async fn activity_latest<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn activity_latest<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let active = state.active_session_count();
     let collector = state.metrics_collector();
     let health = collector.get_health().await;
@@ -92,12 +93,12 @@ pub(super) async fn activity_latest<S: MonitoringState, U: MonitoringUrls>(State
     ))
 }
 
-pub(super) async fn metric_sessions<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn metric_sessions<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let active_sessions = state.active_session_count();
     Html(active_sessions.to_string())
 }
 
-pub(super) async fn metric_messages<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn metric_messages<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let collector = state.metrics_collector();
     let count = collector
         .get_metrics()
@@ -109,13 +110,13 @@ pub(super) async fn metric_messages<S: MonitoringState, U: MonitoringUrls>(State
     Html(count.to_string())
 }
 
-pub(super) async fn metric_response_time<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn metric_response_time<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let collector = state.metrics_collector();
     let health = collector.get_health().await;
     Html(format!("{:.0} ms", health.average_latency_ms))
 }
 
-pub(super) async fn trend_sessions<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn trend_sessions<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let active = state.active_session_count();
     let collector = state.metrics_collector();
     let previous = collector
@@ -143,7 +144,7 @@ pub(super) async fn trend_sessions<S: MonitoringState, U: MonitoringUrls>(State(
     }
 }
 
-pub(super) async fn rate_messages<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn rate_messages<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let collector = state.metrics_collector();
     let now = chrono::Utc::now();
     let cutoff = now - chrono::Duration::minutes(60);
@@ -159,7 +160,7 @@ pub(super) async fn rate_messages<S: MonitoringState, U: MonitoringUrls>(State(s
     Html(format!("{recent}/hr"))
 }
 
-pub(super) async fn sessions_panel<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn sessions_panel<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let active_sessions = state.active_session_count();
 
     let sessions_list = if active_sessions > 0 {
@@ -181,7 +182,7 @@ pub(super) async fn sessions_panel<S: MonitoringState, U: MonitoringUrls>(State(
     ))
 }
 
-pub(super) async fn messages_panel<S: MonitoringState, U: MonitoringUrls>(State(state): State<Arc<S>>) -> Html<String> {
+pub(super) async fn messages_panel<S: MonitoringState>(State(state): State<Arc<S>>) -> Html<String> {
     let collector = state.metrics_collector();
     let messages = collector
         .get_metrics()

@@ -1,8 +1,8 @@
-use super::{MonitoringState, MonitoringUrls};
+use super::MonitoringState;
 use axum::{extract::State, response::Html};
 use std::sync::Arc;
 
-pub(super) async fn quick_cpu<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn quick_cpu<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     #[cfg(feature = "monitoring")]
     let cpu_usage = {
         let mut sys = sysinfo::System::new_all();
@@ -19,7 +19,7 @@ pub(super) async fn quick_cpu<S: MonitoringState, U: MonitoringUrls>(_state: Sta
     ))
 }
 
-pub(super) async fn quick_memory<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn quick_memory<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     #[cfg(feature = "monitoring")]
     let memory_percent = {
         let mut sys = sysinfo::System::new_all();
@@ -38,7 +38,7 @@ pub(super) async fn quick_memory<S: MonitoringState, U: MonitoringUrls>(_state: 
     ))
 }
 
-pub(super) async fn quick_disk<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn quick_disk<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     #[cfg(feature = "monitoring")]
     let disk_percent = {
         let disks = sysinfo::Disks::new_with_refreshed_list();
@@ -57,7 +57,7 @@ pub(super) async fn quick_disk<S: MonitoringState, U: MonitoringUrls>(_state: St
     ))
 }
 
-pub(super) async fn quick_network<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn quick_network<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     #[cfg(feature = "monitoring")]
     let (rx, tx) = {
         let networks = sysinfo::Networks::new_with_refreshed_list();
@@ -81,7 +81,7 @@ pub(super) async fn quick_network<S: MonitoringState, U: MonitoringUrls>(_state:
     ))
 }
 
-pub(super) async fn quick_requests<S: MonitoringState, U: MonitoringUrls>(_state: State<Arc<S>>) -> Html<String> {
+pub(super) async fn quick_requests<S: MonitoringState>(_state: State<Arc<S>>) -> Html<String> {
     Html(
         r##"<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
   <span class="stat-label">Requests</span>
