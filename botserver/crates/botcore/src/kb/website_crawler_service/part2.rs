@@ -226,7 +226,10 @@ impl WebsiteCrawlerService {
         bot_id: uuid::Uuid,
         conn: &mut diesel::PgConnection,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let website_regex = regex::Regex::new(r#"(?i)(?:USE\s+WEBSITE\s+"([^"]+)"(?:\s+REFRESH\s+"([^"]+)")?)|(?:USE_WEBSITE\s*\(\s*"([^"]+)"\s*(?:,\s*"([^"]+)"\s*)?\))"#)?;
+        let website_regex = crate::re_cache::cached_re!(
+            r#"(?i)(?:USE\s+WEBSITE\s+"([^"]+)"(?:\s+REFRESH\s+"([^"]+)")?)|(?:USE_WEBSITE\s*\(\s*"([^"]+)"\s*(?:,\s*"([^"]+)"\s*)?\))"#
+        )
+        .ok_or("invalid USE WEBSITE regex")?;
 
         for entry in std::fs::read_dir(dir)? {
             let entry = entry?;

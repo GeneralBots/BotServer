@@ -12,7 +12,9 @@ impl CodeScanner {
     pub(super) fn build_patterns() -> Result<Vec<ScanPattern>, Box<dyn std::error::Error + Send + Sync>> {
         Ok(vec![
             ScanPattern {
-                regex: Regex::new(r#"(?i)password\s*=\s*["'][^"']+["']"#)?,
+                regex: crate::re_cache::cached_re!(r#"(?i)password\s*=\s*["'][^"']+["']"#)
+                    .cloned()
+                    .ok_or("invalid password pattern")?,
                 issue_type: IssueType::PasswordInConfig,
                 severity: IssueSeverity::Critical,
                 title: "Hardcoded Password".to_string(),
@@ -21,7 +23,11 @@ impl CodeScanner {
                 category: "Security".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r#"(?i)(api[_-]?key|apikey|secret[_-]?key|client[_-]?secret)\s*=\s*["'][^"']{8,}["']"#)?,
+                regex: crate::re_cache::cached_re!(
+                    r#"(?i)(api[_-]?key|apikey|secret[_-]?key|client[_-]?secret)\s*=\s*["'][^"']{8,}["']"#
+                )
+                .cloned()
+                .ok_or("invalid api key pattern")?,
                 issue_type: IssueType::HardcodedSecret,
                 severity: IssueSeverity::Critical,
                 title: "Hardcoded API Key/Secret".to_string(),
@@ -30,7 +36,11 @@ impl CodeScanner {
                 category: "Security".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r#"(?i)token\s*=\s*["'][a-zA-Z0-9_\-]{20,}["']"#)?,
+                regex: crate::re_cache::cached_re!(
+                    r#"(?i)token\s*=\s*["'][a-zA-Z0-9_\-]{20,}["']"#
+                )
+                .cloned()
+                .ok_or("invalid token pattern")?,
                 issue_type: IssueType::HardcodedSecret,
                 severity: IssueSeverity::High,
                 title: "Hardcoded Token".to_string(),
@@ -39,7 +49,9 @@ impl CodeScanner {
                 category: "Security".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r"(?i)IF\s+.*\binput\b")?,
+                regex: crate::re_cache::cached_re!(r"(?i)IF\s+.*\binput\b")
+                    .cloned()
+                    .ok_or("invalid IF input pattern")?,
                 issue_type: IssueType::DeprecatedIfInput,
                 severity: IssueSeverity::Medium,
                 title: "Deprecated IF...input Pattern".to_string(),
@@ -48,7 +60,11 @@ impl CodeScanner {
                 category: "Code Quality".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r"(?i)\b(GET_BOT_MEMORY|SET_BOT_MEMORY|GET_USER_MEMORY|SET_USER_MEMORY|USE_KB|USE_TOOL|SEND_MAIL|CREATE_TASK)\b")?,
+                regex: crate::re_cache::cached_re!(
+                    r"(?i)\b(GET_BOT_MEMORY|SET_BOT_MEMORY|GET_USER_MEMORY|SET_USER_MEMORY|USE_KB|USE_TOOL|SEND_MAIL|CREATE_TASK)\b"
+                )
+                .cloned()
+                .ok_or("invalid keyword pattern")?,
                 issue_type: IssueType::UnderscoreInKeyword,
                 severity: IssueSeverity::Low,
                 title: "Underscore in Keyword".to_string(),
@@ -57,7 +73,9 @@ impl CodeScanner {
                 category: "Naming Convention".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r"(?i)POST\s+TO\s+INSTAGRAM\s+\w+\s*,\s*\w+")?,
+                regex: crate::re_cache::cached_re!(r"(?i)POST\s+TO\s+INSTAGRAM\s+\w+\s*,\s*\w+")
+                    .cloned()
+                    .ok_or("invalid instagram pattern")?,
                 issue_type: IssueType::InsecurePattern,
                 severity: IssueSeverity::High,
                 title: "Instagram Credentials in Code".to_string(),
@@ -66,7 +84,11 @@ impl CodeScanner {
                 category: "Security".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r"(?i)(SELECT|INSERT|UPDATE|DELETE)\s+.*(FROM|INTO|SET)\s+")?,
+                regex: crate::re_cache::cached_re!(
+                    r"(?i)(SELECT|INSERT|UPDATE|DELETE)\s+.*(FROM|INTO|SET)\s+"
+                )
+                .cloned()
+                .ok_or("invalid SQL pattern")?,
                 issue_type: IssueType::FragileCode,
                 severity: IssueSeverity::Medium,
                 title: "Raw SQL Query".to_string(),
@@ -75,7 +97,9 @@ impl CodeScanner {
                 category: "Security".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r"(?i)\bEVAL\s*\(")?,
+                regex: crate::re_cache::cached_re!(r"(?i)\bEVAL\s*\(")
+                    .cloned()
+                    .ok_or("invalid EVAL pattern")?,
                 issue_type: IssueType::FragileCode,
                 severity: IssueSeverity::High,
                 title: "Dynamic Code Execution".to_string(),
@@ -84,7 +108,11 @@ impl CodeScanner {
                 category: "Security".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r#"(?i)(password|secret|key|token)\s*=\s*["'][A-Za-z0-9+/=]{40,}["']"#)?,
+                regex: crate::re_cache::cached_re!(
+                    r#"(?i)(password|secret|key|token)\s*=\s*["'][A-Za-z0-9+/=]{40,}["']"#
+                )
+                .cloned()
+                .ok_or("invalid encoded secret pattern")?,
                 issue_type: IssueType::HardcodedSecret,
                 severity: IssueSeverity::High,
                 title: "Potential Encoded Secret".to_string(),
@@ -93,7 +121,9 @@ impl CodeScanner {
                 category: "Security".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r"(?i)(AKIA[0-9A-Z]{16})")?,
+                regex: crate::re_cache::cached_re!(r"(?i)(AKIA[0-9A-Z]{16})")
+                    .cloned()
+                    .ok_or("invalid AWS key pattern")?,
                 issue_type: IssueType::HardcodedSecret,
                 severity: IssueSeverity::Critical,
                 title: "AWS Access Key".to_string(),
@@ -102,7 +132,9 @@ impl CodeScanner {
                 category: "Security".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r"-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----")?,
+                regex: crate::re_cache::cached_re!(r"-----BEGIN\s+(RSA\s+)?PRIVATE\s+KEY-----")
+                    .cloned()
+                    .ok_or("invalid private key pattern")?,
                 issue_type: IssueType::HardcodedSecret,
                 severity: IssueSeverity::Critical,
                 title: "Private Key in Code".to_string(),
@@ -111,7 +143,11 @@ impl CodeScanner {
                 category: "Security".to_string(),
             },
             ScanPattern {
-                regex: Regex::new(r"(?i)(postgres|mysql|mongodb|redis)://[^:]+:[^@]+@")?,
+                regex: crate::re_cache::cached_re!(
+                    r"(?i)(postgres|mysql|mongodb|redis)://[^:]+:[^@]+@"
+                )
+                .cloned()
+                .ok_or("invalid connection string pattern")?,
                 issue_type: IssueType::HardcodedSecret,
                 severity: IssueSeverity::Critical,
                 title: "Database Credentials in Connection String".to_string(),
@@ -273,11 +309,11 @@ impl CodeScanner {
     pub(super) fn redact_sensitive(line: &str) -> String {
         let mut result = line.to_string();
 
-        if let Ok(secret_pattern) = Regex::new(r#"(["'])[^"']{8,}(["'])"#) {
+        if let Some(secret_pattern) = crate::re_cache::cached_re!(r#"(["'])[^"']{8,}(["'])"#) {
             result = secret_pattern.replace_all(&result, "$1***REDACTED***$2").to_string();
         }
 
-        if let Ok(aws_pattern) = Regex::new(r"AKIA[0-9A-Z]{16}") {
+        if let Some(aws_pattern) = crate::re_cache::cached_re!(r"AKIA[0-9A-Z]{16}") {
             result = aws_pattern.replace_all(&result, "AKIA***REDACTED***").to_string();
         }
 

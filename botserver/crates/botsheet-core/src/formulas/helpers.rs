@@ -1,7 +1,6 @@
 //! Value formatting, argument splitting and criteria matching.
 
 use crate::types::Worksheet;
-use regex::Regex;
 
 use super::refs::parse_cell_ref;
 
@@ -113,7 +112,7 @@ pub fn matches_criteria(value: &str, criteria: &str) -> bool {
         return value.eq_ignore_ascii_case(rest);
     } else if criteria.contains('*') || criteria.contains('?') {
         let pattern = criteria.replace('*', ".*").replace('?', ".");
-        if let Ok(re) = Regex::new(&format!("^{}$", pattern)) {
+        if let Some(re) = crate::re_cache::dynamic(&format!("^{}$", pattern)) {
             return re.is_match(value);
         }
     }

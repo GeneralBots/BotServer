@@ -17,6 +17,8 @@ pub mod utils_format;
 pub mod utils_ooxml;
 pub mod utils_pdf;
 
+mod re_cache;
+
 use axum::{routing::get, Router};
 use state::DocState;
 use std::sync::Arc;

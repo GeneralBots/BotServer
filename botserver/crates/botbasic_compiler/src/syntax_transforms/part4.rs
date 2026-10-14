@@ -86,10 +86,9 @@ pub fn convert_multiword_keywords(script: &str) -> String {
         // which Rhai rejects ("Expecting ';'" on the loop variable).
         // Rewriting to the Rhai-native `for var in (expr) { … }` makes the
         // dialect unambiguous at both compile and execution time.
-        if let Some(caps) = Regex::new(
-            r#"(?i)^\s*FOR[_\s]+EACH\s+([A-Za-z_]\w*)\s+IN\s+(.+?)\s*;?\s*$"#,
+        if let Some(caps) = crate::re_cache::cached_re!(
+            r#"(?i)^\s*FOR[_\s]+EACH\s+([A-Za-z_]\w*)\s+IN\s+(.+?)\s*;?\s*$"#
         )
-        .ok()
         .and_then(|re| re.captures(line))
         {
             let var = caps.get(1).map_or("", |m| m.as_str());
@@ -99,9 +98,9 @@ pub fn convert_multiword_keywords(script: &str) -> String {
             continue;
         }
         if !foreach_stack.is_empty() {
-            if let Some(caps) = Regex::new(r#"(?i)^\s*NEXT(?:\s+([A-Za-z_]\w*))?\s*;?\s*$"#)
-                .ok()
-                .and_then(|re| re.captures(line))
+            if let Some(caps) =
+                crate::re_cache::cached_re!(r#"(?i)^\s*NEXT(?:\s+([A-Za-z_]\w*))?\s*;?\s*$"#)
+                    .and_then(|re| re.captures(line))
             {
                 let named = caps.get(1).map(|m| m.as_str().to_lowercase());
                 let matches_top = match &named {
@@ -121,10 +120,9 @@ pub fn convert_multiword_keywords(script: &str) -> String {
         // to a no-op call. It needs its own rewrite because the generic table
         // derives the callee name from the pattern text, which breaks on a
         // pattern that embeds a capture group.
-        if let Some(caps) = Regex::new(
-            r#"(?i)^\s*ON\s+EVENT\s+("[^"]*"|[A-Za-z_]\w*)\s*;?\s*$"#,
+        if let Some(caps) = crate::re_cache::cached_re!(
+            r#"(?i)^\s*ON\s+EVENT\s+("[^"]*"|[A-Za-z_]\w*)\s*;?\s*$"#
         )
-        .ok()
         .and_then(|re| re.captures(line))
         {
             let event = unquote(caps.get(1).map_or("", |m| m.as_str()));
@@ -136,10 +134,9 @@ pub fn convert_multiword_keywords(script: &str) -> String {
         // comma-based parameter parser below cannot split on the WITH keyword.
         // Like ON ERROR, the CREATE FILE custom syntax is overridden at runtime
         // by the later-registered CREATE SITE syntax (same first token).
-        if let Some(caps) = Regex::new(
-            r#"(?i)^\s*(.*?)\bCREATE\s+FILE\s+(.+?)\s+WITH\s+(.+?)\s*;?$"#,
+        if let Some(caps) = crate::re_cache::cached_re!(
+            r#"(?i)^\s*(.*?)\bCREATE\s+FILE\s+(.+?)\s+WITH\s+(.+?)\s*;?$"#
         )
-        .ok()
         .and_then(|re| re.captures(line))
         {
             // Regex groups: 1 = text before the keyword, 2 = path (may be an
@@ -178,8 +175,7 @@ pub fn convert_multiword_keywords(script: &str) -> String {
         // lookahead support, so the GET-family protection (GET FROM/HTTP/
         // QUEUE/SHAREPOINT/metrics …) is checked in code below, not in the
         // pattern; protected lines fall through to the generic loop.
-        if let Some(caps) = Regex::new(r#"(?i)^(\s*)(.*?)\bGET\s+(.+?)\s*;?$"#)
-            .ok()
+        if let Some(caps) = crate::re_cache::cached_re!(r#"(?i)^(\s*)(.*?)\bGET\s+(.+?)\s*;?$"#)
             .and_then(|re| re.captures(line))
         {
             let arg = caps.get(3).map_or("", |m| m.as_str().trim());
@@ -220,7 +216,7 @@ pub fn convert_multiword_keywords(script: &str) -> String {
                 )
             };
 
-            if let Ok(re) = Regex::new(&regex_str) {
+            if let Some(re) = crate::re_cache::dynamic(&regex_str) {
                 if let Some(caps) = re.captures(line) {
                     if let Some(prefix_match) = caps.get(2) {
                         let indent = caps.get(1).map_or("", |m| m.as_str());

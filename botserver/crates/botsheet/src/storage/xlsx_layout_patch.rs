@@ -50,7 +50,7 @@ fn patch_cols(xml: &str, ws: &Worksheet) -> String {
     }
     cols.push_str("</cols>");
 
-    if let Ok(re) = regex::Regex::new(r"(?s)<cols\b[^>]*>.*?</cols>") {
+    if let Some(re) = crate::re_cache::cached_re!(r"(?s)<cols\b[^>]*>.*?</cols>") {
         if re.is_match(xml) {
             return re.replace(xml, cols.as_str()).to_string();
         }
@@ -91,7 +91,7 @@ fn patch_row(xml: &str, row: u32, height: Option<u32>, hidden: bool) -> String {
     let pattern = format!(
         r#"<row\b[^>]*\br="{row1}"[^>]*>|<row\b[^>]*\br="{row1}"[^>]*/>"#
     );
-    let Ok(re) = regex::Regex::new(&pattern) else {
+    let Some(re) = crate::re_cache::dynamic(&pattern) else {
         return xml.to_string();
     };
     let Some(m) = re.find(xml) else {
@@ -131,7 +131,7 @@ fn rewrite_row_open(open: &str, height: Option<u32>, hidden: bool) -> String {
 /// Removes an attribute (e.g. `ht="30"`) from an opening tag.
 fn strip_attr(tag: &str, name: &str) -> String {
     let pattern = format!(r#"\s{name}="[^"]*""#);
-    let Ok(re) = regex::Regex::new(&pattern) else {
+    let Some(re) = crate::re_cache::dynamic(&pattern) else {
         return tag.to_string();
     };
     re.replace_all(tag, "").to_string()
@@ -161,7 +161,7 @@ fn patch_merges(xml: &str, ws: &Worksheet) -> String {
     }
     block.push_str("</mergeCells>");
 
-    if let Ok(re) = regex::Regex::new(r"(?s)<mergeCells\b[^>]*>.*?</mergeCells>") {
+    if let Some(re) = crate::re_cache::cached_re!(r"(?s)<mergeCells\b[^>]*>.*?</mergeCells>") {
         if re.is_match(xml) {
             return re.replace(xml, block.as_str()).to_string();
         }
@@ -206,12 +206,12 @@ fn patch_frozen(xml: &str, ws: &Worksheet) -> String {
         r#" topLeftCell="{top_left}" activePane="{active_pane}" state="frozen"/>"#
     ));
 
-    if let Ok(re) = regex::Regex::new(r#"<pane\b[^>]*/>"#) {
+    if let Some(re) = crate::re_cache::cached_re!(r#"<pane\b[^>]*/>"#) {
         if re.is_match(xml) {
             return re.replace(xml, pane.as_str()).to_string();
         }
     }
-    if let Ok(re) = regex::Regex::new(r#"<sheetView\b[^>]*>"#) {
+    if let Some(re) = crate::re_cache::cached_re!(r#"<sheetView\b[^>]*>"#) {
         if let Some(m) = re.find(xml) {
             let insert = m.end();
             let mut out = String::with_capacity(xml.len() + pane.len());

@@ -50,8 +50,8 @@ impl DlpManager {
         pattern: &str,
         data_type: SensitiveDataType,
     ) -> Result<()> {
-        let regex =
-            Regex::new(pattern).map_err(|e| anyhow!("Invalid regex pattern: {e}"))?;
+        let regex = crate::re_cache::dynamic(pattern)
+            .ok_or_else(|| anyhow!("Invalid regex pattern"))?;
 
         let mut patterns = self.custom_patterns.write().await;
         patterns.push((name.to_string(), regex, data_type));

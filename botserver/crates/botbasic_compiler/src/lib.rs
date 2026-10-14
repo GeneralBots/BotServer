@@ -41,3 +41,5 @@ pub struct BasicCompiler {
 mod lib_part1;
 mod lib_part2;
 mod lib_part3;
+
+mod re_cache;

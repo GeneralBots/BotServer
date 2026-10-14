@@ -166,10 +166,10 @@ fn preserve_only_bindings(
 // === Parsing ===
 
 fn parse_sheets(workbook_xml: &str) -> Result<Vec<OrigSheet>, String> {
-    let sheet_re = regex::Regex::new(r#"<sheet\b[^>]*/?>"#).map_err(|e| format!("sheet regex: {e}"))?;
-    let name_re = regex::Regex::new(r#"name="([^"]*)""#).map_err(|e| format!("name regex: {e}"))?;
-    let sid_re = regex::Regex::new(r#"sheetId="([^"]*)""#).map_err(|e| format!("sid regex: {e}"))?;
-    let rid_re = regex::Regex::new(r#"r:id="([^"]*)""#).map_err(|e| format!("rid regex: {e}"))?;
+    let sheet_re = crate::re_cache::cached_re!(r#"<sheet\b[^>]*/?>"#).ok_or_else(|| "sheet regex".to_string())?;
+    let name_re = crate::re_cache::cached_re!(r#"name="([^"]*)""#).ok_or_else(|| "name regex".to_string())?;
+    let sid_re = crate::re_cache::cached_re!(r#"sheetId="([^"]*)""#).ok_or_else(|| "sid regex".to_string())?;
+    let rid_re = crate::re_cache::cached_re!(r#"r:id="([^"]*)""#).ok_or_else(|| "rid regex".to_string())?;
 
     Ok(sheet_re
         .find_iter(workbook_xml)
@@ -186,16 +186,16 @@ fn parse_sheets(workbook_xml: &str) -> Result<Vec<OrigSheet>, String> {
 }
 
 fn parse_worksheet_rels(rels_xml: &str) -> HashMap<String, String> {
-    let Ok(rel_re) = regex::Regex::new(r#"<Relationship\b[^>]*/?>"#) else {
+    let Some(rel_re) = crate::re_cache::cached_re!(r#"<Relationship\b[^>]*/?>"#) else {
         return HashMap::new();
     };
-    let Ok(id_re) = regex::Regex::new(r#"Id="([^"]*)""#) else {
+    let Some(id_re) = crate::re_cache::cached_re!(r#"Id="([^"]*)""#) else {
         return HashMap::new();
     };
-    let Ok(type_re) = regex::Regex::new(r#"Type="([^"]*)""#) else {
+    let Some(type_re) = crate::re_cache::cached_re!(r#"Type="([^"]*)""#) else {
         return HashMap::new();
     };
-    let Ok(target_re) = regex::Regex::new(r#"Target="([^"]*)""#) else {
+    let Some(target_re) = crate::re_cache::cached_re!(r#"Target="([^"]*)""#) else {
         return HashMap::new();
     };
 
@@ -281,7 +281,7 @@ pub(crate) fn part_from_target(target: &str) -> String {
 }
 
 fn max_sheet_number(entries: &[(String, Vec<u8>)]) -> u64 {
-    let Ok(re) = regex::Regex::new(r"^xl/worksheets/sheet(\d+)\.xml$") else {
+    let Some(re) = crate::re_cache::cached_re!(r"^xl/worksheets/sheet(\d+)\.xml$") else {
         return 0;
     };
     entries
@@ -293,7 +293,7 @@ fn max_sheet_number(entries: &[(String, Vec<u8>)]) -> u64 {
 }
 
 fn max_rid_number(rels_xml: &str) -> u64 {
-    let Ok(re) = regex::Regex::new(r#"Id="rId(\d+)""#) else {
+    let Some(re) = crate::re_cache::cached_re!(r#"Id="rId(\d+)""#) else {
         return 0;
     };
     re.captures_iter(rels_xml)

@@ -53,7 +53,7 @@ fn patch_sheets_block(
     };
     let xml = String::from_utf8_lossy(&entries[index].1).to_string();
     let block_re =
-        regex::Regex::new(r"(?s)<sheets\b[^>]*>.*?</sheets>").map_err(|e| format!("sheets regex: {e}"))?;
+        crate::re_cache::cached_re!(r"(?s)<sheets\b[^>]*>.*?</sheets>").ok_or_else(|| "sheets regex".to_string())?;
     let Some(m) = block_re.find(&xml) else {
         return Ok(());
     };
@@ -87,7 +87,7 @@ fn patch_sheets_block(
 }
 
 fn rename_tag(raw: &str, name: &str) -> String {
-    let Ok(name_re) = regex::Regex::new(r#"name="[^"]*""#) else {
+    let Some(name_re) = crate::re_cache::cached_re!(r#"name="[^"]*""#) else {
         return raw.to_string();
     };
     name_re
@@ -110,7 +110,7 @@ fn patch_sheet_tag(raw: &str, name: &str, state: Option<&str>) -> String {
 
 /// Removes a `state="..."` attribute so it can be re-applied cleanly.
 fn strip_state(tag: &str) -> String {
-    let Ok(re) = regex::Regex::new(r#"\sstate="[^"]*""#) else {
+    let Some(re) = crate::re_cache::cached_re!(r#"\sstate="[^"]*""#) else {
         return tag.to_string();
     };
     re.replace_all(tag, "").to_string()
@@ -137,10 +137,10 @@ fn patch_rels(
     let deleted_parts: HashSet<String> = deleted_targets.iter().cloned().collect();
 
     let rel_re =
-        regex::Regex::new(r#"<Relationship\b[^>]*/?>"#).map_err(|e| format!("rel regex: {e}"))?;
-    let id_re = regex::Regex::new(r#"Id="([^"]*)""#).map_err(|e| format!("id regex: {e}"))?;
+        crate::re_cache::cached_re!(r#"<Relationship\b[^>]*/?>"#).ok_or_else(|| "rel regex".to_string())?;
+    let id_re = crate::re_cache::cached_re!(r#"Id="([^"]*)""#).ok_or_else(|| "id regex".to_string())?;
     let target_re =
-        regex::Regex::new(r#"Target="([^"]*)""#).map_err(|e| format!("target regex: {e}"))?;
+        crate::re_cache::cached_re!(r#"Target="([^"]*)""#).ok_or_else(|| "target regex".to_string())?;
 
     let mut inner = String::new();
     for tag in rel_re.find_iter(&xml) {
@@ -164,8 +164,8 @@ fn patch_rels(
         ));
     }
 
-    let block_re = regex::Regex::new(r"(?s)<Relationships\b[^>]*>.*?</Relationships>")
-        .map_err(|e| format!("rels block regex: {e}"))?;
+    let block_re = crate::re_cache::cached_re!(r"(?s)<Relationships\b[^>]*>.*?</Relationships>")
+        .ok_or_else(|| "rels block regex".to_string())?;
     let Some(m) = block_re.find(&xml) else {
         return Ok(());
     };
@@ -196,9 +196,9 @@ fn patch_content_types(
         .map(|b| format!("/{}", b.target))
         .collect();
 
-    let ov_re = regex::Regex::new(r#"<Override\b[^>]*/?>"#).map_err(|e| format!("override regex: {e}"))?;
+    let ov_re = crate::re_cache::cached_re!(r#"<Override\b[^>]*/?>"#).ok_or_else(|| "override regex".to_string())?;
     let part_re =
-        regex::Regex::new(r#"PartName="([^"]*)""#).map_err(|e| format!("partname regex: {e}"))?;
+        crate::re_cache::cached_re!(r#"PartName="([^"]*)""#).ok_or_else(|| "partname regex".to_string())?;
 
     let mut inner = String::new();
     for tag in ov_re.find_iter(&xml) {
@@ -216,8 +216,8 @@ fn patch_content_types(
         ));
     }
 
-    let block_re = regex::Regex::new(r"(?s)<Types\b[^>]*>.*?</Types>")
-        .map_err(|e| format!("types block regex: {e}"))?;
+    let block_re = crate::re_cache::cached_re!(r"(?s)<Types\b[^>]*>.*?</Types>")
+        .ok_or_else(|| "types block regex".to_string())?;
     let Some(m) = block_re.find(&xml) else {
         return Ok(());
     };

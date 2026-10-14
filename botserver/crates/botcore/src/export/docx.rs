@@ -298,13 +298,20 @@ impl DocxDocument {
 
 pub fn from_html(html: &str) -> Result<DocxDocument, String> {
     let mut doc = DocxDocument::new();
-    let re_heading = regex::Regex::new(r"<h([1-6])[^>]*>(.*?)</h[1-6]>").map_err(|e| e.to_string())?;
-    let re_para = regex::Regex::new(r"<p[^>]*>(.*?)</p>").map_err(|e| e.to_string())?;
-    let re_table = regex::Regex::new(r"<table[^>]*>(.*?)</table>").map_err(|e| e.to_string())?;
-    let re_tr = regex::Regex::new(r"<tr[^>]*>(.*?)</tr>").map_err(|e| e.to_string())?;
-    let re_th = regex::Regex::new(r"<th[^>]*>(.*?)</th>").map_err(|e| e.to_string())?;
-    let re_td = regex::Regex::new(r"<td[^>]*>(.*?)</td>").map_err(|e| e.to_string())?;
-    let re_tag = regex::Regex::new(r"<[^>]+>").map_err(|e| e.to_string())?;
+    let re_heading = crate::re_cache::cached_re!(r"<h([1-6])[^>]*>(.*?)</h[1-6]>")
+        .ok_or_else(|| "invalid heading regex".to_string())?;
+    let re_para = crate::re_cache::cached_re!(r"<p[^>]*>(.*?)</p>")
+        .ok_or_else(|| "invalid paragraph regex".to_string())?;
+    let re_table = crate::re_cache::cached_re!(r"<table[^>]*>(.*?)</table>")
+        .ok_or_else(|| "invalid table regex".to_string())?;
+    let re_tr = crate::re_cache::cached_re!(r"<tr[^>]*>(.*?)</tr>")
+        .ok_or_else(|| "invalid row regex".to_string())?;
+    let re_th = crate::re_cache::cached_re!(r"<th[^>]*>(.*?)</th>")
+        .ok_or_else(|| "invalid header cell regex".to_string())?;
+    let re_td = crate::re_cache::cached_re!(r"<td[^>]*>(.*?)</td>")
+        .ok_or_else(|| "invalid cell regex".to_string())?;
+    let re_tag = crate::re_cache::cached_re!(r"<[^>]+>")
+        .ok_or_else(|| "invalid tag regex".to_string())?;
 
     if let Some(tbl) = re_table.find(html) {
         let tbl_html = tbl.as_str();

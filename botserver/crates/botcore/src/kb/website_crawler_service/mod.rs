@@ -51,7 +51,6 @@ use crate::kb::embedding_generator::EmbeddingConfig;
 use crate::shared::state::AppState;
 use crate::shared::utils::DbPool;
 use diesel::prelude::*;
-use regex;
 use std::collections::HashSet;
 use std::sync::Arc;
 use uuid::Uuid;

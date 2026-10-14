@@ -3,6 +3,8 @@ pub mod utils;
 pub mod config;
 pub mod security_utils;
 
+mod re_cache;
+
 pub use keywords::register_core_keywords;
 pub use utils::{to_array, json_value_to_dynamic, dynamic_to_json, convert_date_to_iso_format, get_work_path, get_content_type, get_default_bot, parse_filter};
 pub use config::ApiUrls;

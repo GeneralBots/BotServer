@@ -23,7 +23,7 @@ pub fn rename_sheet_references(entries: &mut [(String, Vec<u8>)], renames: &[(St
 }
 
 fn rewrite_formula_bodies(xml: &[u8], renames: &[(String, String)]) -> String {
-    let Ok(f_re) = regex::Regex::new(r"(?s)(<f\b[^>]*>)(.*?)(</f>)") else {
+    let Some(f_re) = crate::re_cache::cached_re!(r"(?s)(<f\b[^>]*>)(.*?)(</f>)") else {
         return String::from_utf8_lossy(xml).to_string();
     };
     let text = String::from_utf8_lossy(xml);
@@ -40,7 +40,7 @@ fn rewrite_formula_bodies(xml: &[u8], renames: &[(String, String)]) -> String {
 }
 
 fn rewrite_defined_name_bodies(xml: &[u8], renames: &[(String, String)]) -> String {
-    let Ok(dn_re) = regex::Regex::new(r"(?s)(<definedName\b[^>]*>)(.*?)(</definedName>)") else {
+    let Some(dn_re) = crate::re_cache::cached_re!(r"(?s)(<definedName\b[^>]*>)(.*?)(</definedName>)") else {
         return String::from_utf8_lossy(xml).to_string();
     };
     let text = String::from_utf8_lossy(xml);
@@ -70,7 +70,7 @@ fn rewrite_one(text: &str, old: &str, new: &str) -> String {
     // Match `Old!` (or `'Old name'!`) only when not preceded by an identifier
     // character, so `MySheet1!` is not rewritten by a `Sheet1` rename.
     let pattern = format!(r"(^|[^A-Za-z0-9_.]){}!", regex::escape(&old_ref));
-    let Ok(re) = regex::Regex::new(&pattern) else {
+    let Some(re) = crate::re_cache::dynamic(&pattern) else {
         return text.to_string();
     };
     re.replace_all(text, |caps: &regex::Captures| {

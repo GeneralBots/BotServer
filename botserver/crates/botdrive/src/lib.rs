@@ -1,4 +1,7 @@
 pub mod bot_scripts;
+
+#[cfg(feature = "sheet")]
+mod re_cache;
 pub mod document_processing;
 pub mod drive_files;
 pub mod external;

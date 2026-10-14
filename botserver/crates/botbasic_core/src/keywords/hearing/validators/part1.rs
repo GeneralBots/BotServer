@@ -1,4 +1,5 @@
 use super::*;
+use crate::re_cache::cached_re;
 
 #[must_use]
 pub fn validate_input(input: &str, input_type: &InputType) -> ValidationResult {
@@ -35,7 +36,7 @@ pub fn validate_input(input: &str, input_type: &InputType) -> ValidationResult {
     }
 }
 pub(super) fn validate_email(input: &str) -> ValidationResult {
-    let Some(email_regex) = Regex::new(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$").ok() else {
+    let Some(email_regex) = cached_re!(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$") else {
         return ValidationResult::invalid("internal validation error".to_string());
     };
 
@@ -87,7 +88,7 @@ pub(super) fn validate_date(input: &str) -> ValidationResult {
     ValidationResult::invalid(InputType::Date.error_message())
 }
 pub(super) fn validate_name(input: &str) -> ValidationResult {
-    let Some(name_regex) = Regex::new(r"^[\p{L}\s\-']+$").ok() else {
+    let Some(name_regex) = cached_re!(r"^[\p{L}\s\-']+$") else {
         return ValidationResult::invalid("internal validation error".to_string());
     };
 
@@ -183,7 +184,7 @@ pub(super) fn validate_boolean(input: &str) -> ValidationResult {
     }
 }
 pub(super) fn validate_hour(input: &str) -> ValidationResult {
-    let Some(time_24_regex) = Regex::new(r"^([01]?\d|2[0-3]):([0-5]\d)$").ok() else {
+    let Some(time_24_regex) = cached_re!(r"^([01]?\d|2[0-3]):([0-5]\d)$") else {
         return ValidationResult::invalid("internal validation error".to_string());
     };
     if let Some(caps) = time_24_regex.captures(input) {
@@ -195,9 +196,10 @@ pub(super) fn validate_hour(input: &str) -> ValidationResult {
         );
     }
 
-    if let Some(caps) = Regex::new(
-        r"^(1[0-2]|0?[1-9]):([0-5]\d)\s*(AM|PM|am|pm|a\.m\.|p\.m\.)$",
-    ).ok().and_then(|re| re.captures(input)) {
+    if let Some(caps) =
+        cached_re!(r"^(1[0-2]|0?[1-9]):([0-5]\d)\s*(AM|PM|am|pm|a\.m\.|p\.m\.)$")
+            .and_then(|re| re.captures(input))
+    {
         let mut hour: u32 = caps[1].parse().unwrap_or_default();
         let minute: u32 = caps[2].parse().unwrap_or_default();
         let period = caps[3].to_uppercase();

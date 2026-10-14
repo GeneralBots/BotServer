@@ -51,8 +51,8 @@ impl PromptSecurityManager {
 
         let mut compiled = Vec::new();
         for (pattern, injection_type) in patterns {
-            let regex = Regex::new(pattern)
-                .map_err(|e| anyhow!("Invalid injection pattern: {e}"))?;
+            let regex = crate::re_cache::dynamic(pattern)
+                .ok_or_else(|| anyhow!("Invalid injection pattern"))?;
             compiled.push((regex, injection_type));
         }
 
@@ -73,8 +73,8 @@ impl PromptSecurityManager {
 
         let mut compiled = Vec::new();
         for pattern in patterns {
-            let regex = Regex::new(pattern)
-                .map_err(|e| anyhow!("Invalid jailbreak pattern: {e}"))?;
+            let regex = crate::re_cache::dynamic(pattern)
+                .ok_or_else(|| anyhow!("Invalid jailbreak pattern"))?;
             compiled.push(regex);
         }
 
@@ -94,8 +94,8 @@ impl PromptSecurityManager {
 
         let mut compiled = Vec::new();
         for pattern in patterns {
-            let regex = Regex::new(pattern)
-                .map_err(|e| anyhow!("Invalid sensitive pattern: {e}"))?;
+            let regex = crate::re_cache::dynamic(pattern)
+                .ok_or_else(|| anyhow!("Invalid sensitive pattern"))?;
             compiled.push(regex);
         }
 

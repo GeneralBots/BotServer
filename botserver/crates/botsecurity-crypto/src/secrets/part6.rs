@@ -82,23 +82,39 @@ pub(super) fn zeroize_bytes(v: &mut Vec<u8>) {
     v.clear();
 }
 pub fn redact_sensitive_data(text: &str) -> String {
-    let patterns = [
-        (r"password[=:]\s*\S+", "password=[REDACTED]"),
-        (r"api[_-]?key[=:]\s*\S+", "api_key=[REDACTED]"),
-        (r"token[=:]\s*\S+", "token=[REDACTED]"),
-        (r"secret[=:]\s*\S+", "secret=[REDACTED]"),
-        (r"Bearer\s+\S+", "Bearer [REDACTED]"),
-        (r"Basic\s+\S+", "Basic [REDACTED]"),
-    ];
-
     let mut result = text.to_string();
-    for (pattern, replacement) in patterns {
-        if let Ok(re) = regex::Regex::new(&format!("(?i){}", pattern)) {
-            result = re.replace_all(&result, replacement).to_string();
-        }
+    for (re, replacement) in masking_rules() {
+        result = re.replace_all(&result, *replacement).to_string();
     }
     result
 }
+
+/// The masking rules, compiled once per process instead of once per call
+/// (#1493). A pattern that fails to compile (impossible for the literals
+/// below) is logged and dropped rather than aborting the server (#1368).
+fn masking_rules() -> &'static [(regex::Regex, &'static str)] {
+    static RULES: std::sync::OnceLock<Vec<(regex::Regex, &'static str)>> =
+        std::sync::OnceLock::new();
+
+    const PATTERNS: [(&str, &str); 6] = [
+        (r"(?i)password[=:]\s*\S+", "password=[REDACTED]"),
+        (r"(?i)api[_-]?key[=:]\s*\S+", "api_key=[REDACTED]"),
+        (r"(?i)token[=:]\s*\S+", "token=[REDACTED]"),
+        (r"(?i)secret[=:]\s*\S+", "secret=[REDACTED]"),
+        (r"(?i)Bearer\s+\S+", "Bearer [REDACTED]"),
+        (r"(?i)Basic\s+\S+", "Basic [REDACTED]"),
+    ];
+
+    RULES.get_or_init(|| {
+        PATTERNS
+            .iter()
+            .filter_map(|(pattern, replacement)| {
+                crate::re_cache::cached_re!(pattern).map(|re| (re.clone(), *replacement))
+            })
+            .collect()
+    })
+}
+
 pub fn is_sensitive_key(key: &str) -> bool {
     let lower = key.to_lowercase();
     let sensitive_keywords = [

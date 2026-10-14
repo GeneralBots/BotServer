@@ -71,3 +71,5 @@ pub fn set_session_cache_lookup(lookup: SessionCacheLookupFn) {
 pub fn lookup_session_cache(session_id: &str) -> Option<SessionCacheEntry> {
     SESSION_CACHE_LOOKUP.get().and_then(|f| f(session_id))
 }
+
+mod re_cache;

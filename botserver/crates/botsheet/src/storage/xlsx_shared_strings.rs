@@ -26,9 +26,9 @@ impl SharedStrings {
         let mut index_of = HashMap::new();
         let mut unique = 0usize;
         if let Some(xml) = xml {
-            let si_re = regex::Regex::new(r"(?s)<si>(.*?)</si>");
-            let t_re = regex::Regex::new(r"(?s)<t(?: [^>]*)?>(.*?)</t>");
-            if let (Ok(si_re), Ok(t_re)) = (si_re, t_re) {
+            let si_re = crate::re_cache::cached_re!(r"(?s)<si>(.*?)</si>");
+            let t_re = crate::re_cache::cached_re!(r"(?s)<t(?: [^>]*)?>(.*?)</t>");
+            if let (Some(si_re), Some(t_re)) = (si_re, t_re) {
                 for si in si_re.captures_iter(xml) {
                     let mut text = String::new();
                     if let Some(body) = si.get(1) {
@@ -99,7 +99,7 @@ pub(crate) fn rewrite_shared_strings(
 /// opening `<sst` tag when it is absent.
 fn bump_int_attr(xml: &str, attr: &str, value: usize) -> String {
     let pattern = format!(r#"\b{attr}="(\d+)""#);
-    let Ok(re) = regex::Regex::new(&pattern) else {
+    let Some(re) = crate::re_cache::dynamic(&pattern) else {
         return xml.to_string();
     };
     if re.is_match(xml) {
@@ -117,7 +117,7 @@ fn bump_int_attr(xml: &str, attr: &str, value: usize) -> String {
 /// `count`, whose base is read from the original document).
 fn bump_int_attr_add(xml: &str, attr: &str, delta: usize) -> String {
     let pattern = format!(r#"\b{attr}="(\d+)""#);
-    let Ok(re) = regex::Regex::new(&pattern) else {
+    let Some(re) = crate::re_cache::dynamic(&pattern) else {
         return xml.to_string();
     };
     if re.is_match(xml) {

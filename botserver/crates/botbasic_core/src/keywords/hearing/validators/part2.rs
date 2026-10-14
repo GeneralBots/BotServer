@@ -1,4 +1,5 @@
 use super::*;
+use crate::re_cache::cached_re;
 
 pub(super) fn validate_zipcode(input: &str) -> ValidationResult {
     let cleaned: String = input
@@ -26,7 +27,7 @@ pub(super) fn validate_zipcode(input: &str) -> ValidationResult {
         );
     }
 
-    let Some(uk_regex) = Regex::new(r"^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$").ok() else {
+    let Some(uk_regex) = cached_re!(r"^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$") else {
         return ValidationResult::invalid("internal validation error".to_string());
     };
     if uk_regex.is_match(&cleaned.to_uppercase()) {
@@ -181,7 +182,7 @@ pub(super) fn validate_url(input: &str) -> ValidationResult {
         input.to_string()
     };
 
-    let Some(url_regex) = Regex::new(r"^https?://[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)+(/[-a-zA-Z0-9()@:%_\+.~#?&/=]*)?$").ok() else {
+    let Some(url_regex) = cached_re!(r"^https?://[a-zA-Z0-9][-a-zA-Z0-9]*(\.[a-zA-Z0-9][-a-zA-Z0-9]*)+(/[-a-zA-Z0-9()@:%_\+.~#?&/=]*)?$") else {
         return ValidationResult::invalid("internal validation error".to_string());
     };
 
@@ -226,7 +227,7 @@ pub(super) fn validate_color(input: &str) -> ValidationResult {
         }
     }
 
-    let Some(hex_regex) = Regex::new(r"^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").ok() else {
+    let Some(hex_regex) = cached_re!(r"^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$") else {
         return ValidationResult::invalid("internal validation error".to_string());
     };
     if let Some(caps) = hex_regex.captures(&lower) {
@@ -244,9 +245,9 @@ pub(super) fn validate_color(input: &str) -> ValidationResult {
         return ValidationResult::valid(format!("#{}", full_hex));
     }
 
-    if let Some(caps) = Regex::new(
-        r"^rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$",
-    ).ok().and_then(|re| re.captures(&lower)) {
+    if let Some(caps) = cached_re!(r"^rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$")
+        .and_then(|re| re.captures(&lower))
+    {
         let r: u8 = caps[1].parse().unwrap_or(0);
         let g: u8 = caps[2].parse().unwrap_or(0);
         let b: u8 = caps[3].parse().unwrap_or(0);

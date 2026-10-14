@@ -1,5 +1,4 @@
 pub(crate) use super::types::{InputType, ValidationResult};
-pub(crate) use regex::Regex;
 pub(crate) use uuid::Uuid;
 
 mod part1;

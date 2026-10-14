@@ -30,8 +30,8 @@ impl PromptSecurityManager {
     }
 
     pub async fn add_custom_pattern(&self, pattern: &str, description: &str) -> Result<()> {
-        let regex = Regex::new(pattern)
-            .map_err(|e| anyhow!("Invalid regex pattern: {e}"))?;
+        let regex = crate::re_cache::dynamic(pattern)
+            .ok_or_else(|| anyhow!("Invalid regex pattern"))?;
 
         let mut patterns = self.custom_patterns.write().await;
         patterns.push((regex, description.to_string()));

@@ -7,6 +7,7 @@ use tokio::fs;
 use uuid::Uuid;
 
 use crate::qdrant_native::QdrantClient;
+use crate::re_cache::cached_re;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileDocument {
@@ -366,8 +367,8 @@ impl FileContentExtractor {
             }
             "text/xml" | "application/xml" | "text/html" => {
                 let content = fs::read_to_string(file_path).await?;
-                let tag_regex =
-                    regex::Regex::new(r"<[^>]+>").map_err(|e| anyhow::anyhow!("Invalid regex: {}", e))?;
+                let tag_regex = cached_re!(r"<[^>]+>")
+                    .ok_or_else(|| anyhow::anyhow!("Invalid tag regex"))?;
                 Ok(tag_regex.replace_all(&content, " ").to_string().trim().to_string())
             }
             _ => {
@@ -386,8 +387,8 @@ impl FileContentExtractor {
             if let Ok(mut document) = archive.by_name("word/document.xml") {
                 let mut xml_content = String::new();
                 std::io::Read::read_to_string(&mut document, &mut xml_content)?;
-                let text_regex = regex::Regex::new(r"<w:t[^>]*>([^<]*)</w:t>")
-                    .map_err(|e| anyhow::anyhow!("Invalid regex: {}", e))?;
+                let text_regex = cached_re!(r"<w:t[^>]*>([^<]*)</w:t>")
+                    .ok_or_else(|| anyhow::anyhow!("Invalid docx text regex"))?;
                 content = text_regex
                     .captures_iter(&xml_content)
                     .filter_map(|c| c.get(1).map(|m| m.as_str()))

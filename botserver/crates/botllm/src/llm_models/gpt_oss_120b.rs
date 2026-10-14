@@ -75,7 +75,7 @@ fn strip_think_tags(content: &str) -> String {
     }
 
     // Fallback: try regex extraction
-    if let Ok(re) = regex::Regex::new(r"<thinking>(.*?)</thinking>") {
+    if let Some(re) = crate::re_cache::cached_re!(r"<thinking>(.*?)</thinking>") {
         let mut extracted = String::new();
         for cap in re.captures_iter(content) {
             if let Some(m) = cap.get(1) {

@@ -240,20 +240,17 @@ fn strip_remote_resources(text: &str) -> String {
     static STRIPPED: OnceLock<AtomicBool> = OnceLock::new();
 
     // <script src="http…">…</script> (self-closing or paired)
-    let script = regex::Regex::new(
-        r#"(?is)<script\b[^>]*\ssrc\s*=\s*["']https?://[^"']*["'][^>]*>.*?</script>"#,
-    )
-    .ok();
+    let script = crate::re_cache::cached_re!(
+        r#"(?is)<script\b[^>]*\ssrc\s*=\s*["']https?://[^"']*["'][^>]*>.*?</script>"#
+    );
     // <link href="http…" …> and <link rel=… href="http…" …>
-    let link = regex::Regex::new(
-        r#"(?is)<link\b[^>]*\shref\s*=\s*["']https?://[^"']*["'][^>]*/?>"#,
-    )
-    .ok();
+    let link = crate::re_cache::cached_re!(
+        r#"(?is)<link\b[^>]*\shref\s*=\s*["']https?://[^"']*["'][^>]*/?>"#
+    );
     // CSS @import url(http…);
-    let css_import = regex::Regex::new(
-        r#"(?i)@import\s+url\(\s*["']?https?://[^)]*\)?\s*;?"#,
-    )
-    .ok();
+    let css_import = crate::re_cache::cached_re!(
+        r#"(?i)@import\s+url\(\s*["']?https?://[^)]*\)?\s*;?"#
+    );
 
     let mut out = text.to_string();
     if let Some(re) = script.as_ref() {

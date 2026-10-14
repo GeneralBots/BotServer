@@ -1,4 +1,5 @@
 use super::utils_format::{html_escape, strip_html};
+use crate::re_cache::cached_re;
 
 pub fn html_to_markdown(html: &str) -> String {
     let mut md = html.to_string();
@@ -111,22 +112,22 @@ fn process_markdown_line(line: &str) -> String {
 fn process_inline_formatting(text: &str) -> String {
     let mut result = text.to_string();
 
-    let bold_re = regex::Regex::new(r"\*\*(.+?)\*\*").ok();
+    let bold_re = cached_re!(r"\*\*(.+?)\*\*");
     if let Some(re) = bold_re {
         result = re.replace_all(&result, "<strong>$1</strong>").to_string();
     }
 
-    let italic_re = regex::Regex::new(r"\*(.+?)\*").ok();
+    let italic_re = cached_re!(r"\*(.+?)\*");
     if let Some(re) = italic_re {
         result = re.replace_all(&result, "<em>$1</em>").to_string();
     }
 
-    let code_re = regex::Regex::new(r"`(.+?)`").ok();
+    let code_re = cached_re!(r"`(.+?)`");
     if let Some(re) = code_re {
         result = re.replace_all(&result, "<code>$1</code>").to_string();
     }
 
-    let link_re = regex::Regex::new(r"\[(.+?)\]\((.+?)\)").ok();
+    let link_re = cached_re!(r"\[(.+?)\]\((.+?)\)");
     if let Some(re) = link_re {
         result = re
             .replace_all(&result, r#"<a href="$2">$1</a>"#)

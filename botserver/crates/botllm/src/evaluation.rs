@@ -214,7 +214,7 @@ fn try_parse_from_text(raw: &str, criterion: &EvaluationCriterion) -> Option<u64
     let label = criterion.label();
     // Look for "Accuracy: 85" or "Accuracy:85" patterns
     let pattern = format!(r"{}:\s*(\d{{1,3}})", regex::escape(label));
-    let re = regex::Regex::new(&pattern).ok()?;
+    let re = crate::re_cache::dynamic(&pattern)?;
     let cap = re.captures(raw)?;
     cap.get(1)?.as_str().parse::<u64>().ok().map(|v| v.min(100))
 }

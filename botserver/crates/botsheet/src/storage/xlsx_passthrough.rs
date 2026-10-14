@@ -268,7 +268,7 @@ fn xml_unescape(s: &str) -> String {
 /// Returns the original cell element unchanged when its `<f>` body matches the
 /// model's formula (so shared/array attributes and the cached value survive).
 fn reuse_formula_cell(original: &str, formula: &str) -> Option<String> {
-    let f_re = regex::Regex::new(r"(?s)<f\b[^>]*>(.*?)</f>").ok()?;
+    let f_re = crate::re_cache::cached_re!(r"(?s)<f\b[^>]*>(.*?)</f>")?;
     let caps = f_re.captures(original)?;
     let old_body = caps.get(1).map(|m| m.as_str()).unwrap_or("");
     let expected = formula.strip_prefix('=').unwrap_or(formula);
@@ -284,7 +284,7 @@ fn reuse_formula_cell(original: &str, formula: &str) -> Option<String> {
 fn extract_style_attr(cell_xml: &str) -> Option<String> {
     let open_end = cell_xml.find('>').unwrap_or(cell_xml.len());
     let open = &cell_xml[..open_end];
-    let re = regex::Regex::new(r#"\bs="([^"]*)""#).ok()?;
+    let re = crate::re_cache::cached_re!(r#"\bs="([^"]*)""#)?;
     re.captures(open).map(|c| format!(r#"s="{}""#, &c[1]))
 }
 
@@ -300,7 +300,7 @@ fn replace_or_insert_cell(
     let pattern = format!(
         r#"(?s)<c\b[^>]*\br="{esc}"[^>]*?/>|<c\b[^>]*\br="{esc}"[^>]*>.*?</c>"#
     );
-    let re = regex::Regex::new(&pattern).map_err(|e| format!("cell regex: {e}"))?;
+    let re = crate::re_cache::dynamic(&pattern).ok_or_else(|| "cell regex".to_string())?;
 
     if let Some(m) = re.find(xml) {
         let style_attr = extract_style_attr(m.as_str());
@@ -315,7 +315,7 @@ fn replace_or_insert_cell(
     // No existing cell: insert into the matching row, else create the row.
     let replacement = build_cell_xml(reference, cell, None, shared, None);
     let row_pattern = format!(r#"<row\b[^>]*\br="{row}"[^>]*>"#);
-    let re_row = regex::Regex::new(&row_pattern).map_err(|e| format!("row regex: {e}"))?;
+    let re_row = crate::re_cache::dynamic(&row_pattern).ok_or_else(|| "row regex".to_string())?;
     if let Some(row_open) = re_row.find(xml) {
         if let Some(close) = xml[row_open.end()..].find("</row>") {
             let close_pos = row_open.end() + close;

@@ -1,4 +1,3 @@
-use regex::Regex;
 use std::collections::HashMap;
 use std::io::Read;
 
@@ -66,16 +65,16 @@ pub fn extract_cell_format_codes(bytes: &[u8]) -> Result<HashMap<u32, HashMap<St
     let mut fmt_id_to_code = builtin_format_codes();
 
     // <numFmt numFmtId="164" formatCode="$#,##0.00"/>
-    let re_nf = Regex::new(r#"numFmtId="(\d+)"\s+formatCode="([^"]*)""#)
-        .map_err(|e| format!("Regex error: {e}"))?;
+    let re_nf = crate::re_cache::cached_re!(r#"numFmtId="(\d+)"\s+formatCode="([^"]*)""#)
+        .ok_or_else(|| "Regex error".to_string())?;
     for cap in re_nf.captures_iter(&styles_content) {
         if let Ok(id) = cap[1].parse::<u32>() {
             fmt_id_to_code.insert(id, cap[2].to_string());
         }
     }
     // <numFmt formatCode="$#,##0.00" numFmtId="164"/>
-    let re_nf_rev = Regex::new(r#"formatCode="([^"]*)"\s+numFmtId="(\d+)""#)
-        .map_err(|e| format!("Regex error: {e}"))?;
+    let re_nf_rev = crate::re_cache::cached_re!(r#"formatCode="([^"]*)"\s+numFmtId="(\d+)""#)
+        .ok_or_else(|| "Regex error".to_string())?;
     for cap in re_nf_rev.captures_iter(&styles_content) {
         if let Ok(id) = cap[2].parse::<u32>() {
             fmt_id_to_code.insert(id, cap[1].to_string());
@@ -92,8 +91,8 @@ pub fn extract_cell_format_codes(bytes: &[u8]) -> Result<HashMap<u32, HashMap<St
             let xfs_section = &styles_content[xfs_pos..xfs_end];
 
             let mut pos = 0usize;
-            let re_nfid = Regex::new(r#"numFmtId="(\d+)""#)
-                .map_err(|e| format!("Regex error: {e}"))?;
+            let re_nfid = crate::re_cache::cached_re!(r#"numFmtId="(\d+)""#)
+                .ok_or_else(|| "Regex error".to_string())?;
 
             while let Some(xf_start) = xfs_section[pos..].find("<xf") {
                 let tag_begin = pos + xf_start;
@@ -119,8 +118,8 @@ pub fn extract_cell_format_codes(bytes: &[u8]) -> Result<HashMap<u32, HashMap<St
     let mut result: HashMap<u32, HashMap<String, String>> = HashMap::new();
 
     // Collect worksheet XML paths in order
-    let sheet_name_re = Regex::new(r#"xl/worksheets/sheet(\d+)\.xml$"#)
-        .map_err(|e| format!("Regex error: {e}"))?;
+    let sheet_name_re = crate::re_cache::cached_re!(r#"xl/worksheets/sheet(\d+)\.xml$"#)
+        .ok_or_else(|| "Regex error".to_string())?;
     let mut sheet_files: Vec<(u32, String)> = Vec::new();
     for i in 0..archive.len() {
         let name = archive.name_for_index(i).unwrap_or("").to_string();
@@ -134,11 +133,11 @@ pub fn extract_cell_format_codes(bytes: &[u8]) -> Result<HashMap<u32, HashMap<St
     }
     sheet_files.sort_by_key(|(num, _)| *num);
 
-    let re_cell = Regex::new(r#"<c\s+[^>]*r="([A-Z]+)(\d+)"[^>]*>"#)
-        .map_err(|e| format!("Regex error: {e}"))?;
+    let re_cell = crate::re_cache::cached_re!(r#"<c\s+[^>]*r="([A-Z]+)(\d+)"[^>]*>"#)
+        .ok_or_else(|| "Regex error".to_string())?;
     // The s attribute may be at any position within the <c> tag
-    let re_s_attr = Regex::new(r#"s="(\d+)""#)
-        .map_err(|e| format!("Regex error: {e}"))?;
+    let re_s_attr = crate::re_cache::cached_re!(r#"s="(\d+)""#)
+        .ok_or_else(|| "Regex error".to_string())?;
 
     for (_sheet_num, sheet_path) in &sheet_files {
         let _ = _sheet_num;

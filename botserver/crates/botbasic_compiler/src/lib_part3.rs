@@ -12,7 +12,6 @@ impl BasicCompiler {
         use diesel::QueryDsl;
         use diesel::RunQueryDsl;
         use log::trace;
-        use regex::Regex;
 
         let bot_uuid = bot_id;
         let mut result = String::new();
@@ -50,8 +49,10 @@ impl BasicCompiler {
             .ok();
         }
 
-        let website_regex =
-            Regex::new(r#"(?i)USE\s+WEBSITE\s+"([^"]+)"(?:\s+REFRESH\s+"([^"]+)")?"#)?;
+        let website_regex = crate::re_cache::cached_re!(
+            r#"(?i)USE\s+WEBSITE\s+"([^"]+)"(?:\s+REFRESH\s+"([^"]+)")?"#
+        )
+        .ok_or("invalid USE WEBSITE regex")?;
 
         for line in source.lines() {
             let trimmed = line.trim();
@@ -160,10 +161,11 @@ impl BasicCompiler {
 
             // Support: ON UPDATE OF "table" (uses current script as param)
             // Support: ON UPDATE OF "table" DO CALL "script" (uses DO CALL script as param)
-            let on_update_base = r#"(?i)^ON\s+UPDATE\s+OF\s+"([^"]+)"\s*$"#;
-            let on_update_do_call = r#"(?i)^ON\s+UPDATE\s+OF\s+"([^"]+)"\s+DO\s+CALL\s+"([^"]+)"\s*$"#;
-            let do_call_re = Regex::new(on_update_do_call).ok();
-            let base_re = Regex::new(on_update_base).ok();
+            let do_call_re = crate::re_cache::cached_re!(
+                r#"(?i)^ON\s+UPDATE\s+OF\s+"([^"]+)"\s+DO\s+CALL\s+"([^"]+)"\s*$"#
+            );
+            let base_re =
+                crate::re_cache::cached_re!(r#"(?i)^ON\s+UPDATE\s+OF\s+"([^"]+)"\s*$"#);
 
             if do_call_re.as_ref().is_some_and(|re| re.is_match(&normalized)) {
                 found_directives.insert(basic_errors::Directive::OnUpdateOf);

@@ -22,107 +22,145 @@ impl DlpManager {
 
         patterns.insert(
             SensitiveDataType::Email,
-            vec![Regex::new(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")?],
+            vec![crate::re_cache::cached_re_owned!(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
+                .ok_or_else(|| anyhow!("invalid detection pattern"))?],
         );
 
         patterns.insert(
             SensitiveDataType::PhoneNumber,
             vec![
-                Regex::new(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b")?,
-                Regex::new(r"\b\+\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}\b")?,
-                Regex::new(r"\(\d{3}\)\s*\d{3}[-.\s]?\d{4}")?,
+                crate::re_cache::cached_re_owned!(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"\b\+\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"\(\d{3}\)\s*\d{3}[-.\s]?\d{4}")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
             ],
         );
 
         patterns.insert(
             SensitiveDataType::CreditCard,
             vec![
-                Regex::new(r"\b4\d{3}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b")?,
-                Regex::new(r"\b5[1-5]\d{2}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b")?,
-                Regex::new(r"\b3[47]\d{2}[-\s]?\d{6}[-\s]?\d{5}\b")?,
-                Regex::new(r"\b6(?:011|5\d{2})[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b")?,
+                crate::re_cache::cached_re_owned!(r"\b4\d{3}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"\b5[1-5]\d{2}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"\b3[47]\d{2}[-\s]?\d{6}[-\s]?\d{5}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"\b6(?:011|5\d{2})[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
             ],
         );
 
         patterns.insert(
             SensitiveDataType::Ssn,
             vec![
-                Regex::new(r"\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b")?,
-                Regex::new(r"(?i)\bssn[:\s]*\d{3}[-\s]?\d{2}[-\s]?\d{4}\b")?,
+                crate::re_cache::cached_re_owned!(r"\b\d{3}[-\s]?\d{2}[-\s]?\d{4}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"(?i)\bssn[:\s]*\d{3}[-\s]?\d{2}[-\s]?\d{4}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
             ],
         );
 
         patterns.insert(
             SensitiveDataType::IpAddress,
             vec![
-                Regex::new(r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b")?,
-                Regex::new(r"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b")?,
+                crate::re_cache::cached_re_owned!(r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
             ],
         );
 
         patterns.insert(
             SensitiveDataType::ApiKey,
             vec![
-                Regex::new(r#"(?i)(?:api[_-]?key|apikey)["\s:=]+["']?([a-zA-Z0-9_\-]{20,})["']?"#)?,
-                Regex::new(r#"(?i)(?:secret|token)[_\-]?key[:\s=]+['\"]?([a-zA-Z0-9_\-]{16,})['\"]?"#)?,
+                crate::re_cache::cached_re_owned!(
+                    r#"(?i)(?:api[_-]?key|apikey)["\s:=]+["']?([a-zA-Z0-9_\-]{20,})["']?"#
+                )
+                .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(
+                    r#"(?i)(?:secret|token)[_\-]?key[:\s=]+['\"]?([a-zA-Z0-9_\-]{16,})['\"]?"#
+                )
+                .ok_or_else(|| anyhow!("invalid detection pattern"))?,
             ],
         );
 
         patterns.insert(
             SensitiveDataType::Password,
             vec![
-                Regex::new(r#"(?i)password["\s:=]+["']?([^\s"']{8,})["']?"#)?,
-                Regex::new(r#"(?i)(?:passwd|pwd)[:\s=]+['\"]?([^\s'\"]{8,})['\"]?"#)?,
+                crate::re_cache::cached_re_owned!(
+                    r#"(?i)password["\s:=]+["']?([^\s"']{8,})["']?"#
+                )
+                .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(
+                    r#"(?i)(?:passwd|pwd)[:\s=]+['\"]?([^\s'\"]{8,})['\"]?"#
+                )
+                .ok_or_else(|| anyhow!("invalid detection pattern"))?,
             ],
         );
 
         patterns.insert(
             SensitiveDataType::AwsAccessKey,
-            vec![Regex::new(r"\b(?:AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}\b")?],
+            vec![crate::re_cache::cached_re_owned!(r"\b(?:AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}\b")
+                .ok_or_else(|| anyhow!("invalid detection pattern"))?],
         );
 
         patterns.insert(
             SensitiveDataType::AwsSecretKey,
-            vec![Regex::new(r#"(?i)aws[_\-]?secret[_\-]?(?:access[_\-]?)?key[:\s=]+['\"]?([a-zA-Z0-9/+=]{40})['\"]?"#)?],
+            vec![crate::re_cache::cached_re_owned!(
+                r#"(?i)aws[_\-]?secret[_\-]?(?:access[_\-]?)?key[:\s=]+['\"]?([a-zA-Z0-9/+=]{40})['\"]?"#
+            )
+            .ok_or_else(|| anyhow!("invalid detection pattern"))?],
         );
 
         patterns.insert(
             SensitiveDataType::PrivateKey,
             vec![
-                Regex::new(r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----")?,
-                Regex::new(r"-----BEGIN PGP PRIVATE KEY BLOCK-----")?,
+                crate::re_cache::cached_re_owned!(r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"-----BEGIN PGP PRIVATE KEY BLOCK-----")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
             ],
         );
 
         patterns.insert(
             SensitiveDataType::JwtToken,
-            vec![Regex::new(r"\beyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*\b")?],
+            vec![crate::re_cache::cached_re_owned!(r"\beyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*\b")
+                .ok_or_else(|| anyhow!("invalid detection pattern"))?],
         );
 
         patterns.insert(
             SensitiveDataType::BankAccount,
             vec![
-                Regex::new(r#"(?i)(?:account|acct)[_\-\s]?(?:number|no|#)?[:\s]*\d{8,17}"#)?,
-                Regex::new(r#"(?i)(?:routing|aba)[_\-\s]?(?:number|no|#)?[:\s]*\d{9}"#)?,
-                Regex::new(r"\b[A-Z]{2}\d{2}[A-Z0-9]{4}\d{7}(?:[A-Z0-9]?){0,16}\b")?,
+                crate::re_cache::cached_re_owned!(r#"(?i)(?:account|acct)[_\-\s]?(?:number|no|#)?[:\s]*\d{8,17}"#)
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r#"(?i)(?:routing|aba)[_\-\s]?(?:number|no|#)?[:\s]*\d{9}"#)
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"\b[A-Z]{2}\d{2}[A-Z0-9]{4}\d{7}(?:[A-Z0-9]?){0,16}\b")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
             ],
         );
 
         patterns.insert(
             SensitiveDataType::PassportNumber,
-            vec![Regex::new(r"(?i)passport[_\-\s]?(?:number|no|#)?[:\s]*[A-Z0-9]{6,9}")?],
+            vec![crate::re_cache::cached_re_owned!(r"(?i)passport[_\-\s]?(?:number|no|#)?[:\s]*[A-Z0-9]{6,9}")
+                .ok_or_else(|| anyhow!("invalid detection pattern"))?],
         );
 
         patterns.insert(
             SensitiveDataType::DriversLicense,
-            vec![Regex::new(r"(?i)(?:driver'?s?|dl)[_\-\s]?(?:license|lic)[_\-\s]?(?:number|no|#)?[:\s]*[A-Z0-9]{5,15}")?],
+            vec![crate::re_cache::cached_re_owned!(r"(?i)(?:driver'?s?|dl)[_\-\s]?(?:license|lic)[_\-\s]?(?:number|no|#)?[:\s]*[A-Z0-9]{5,15}")
+                .ok_or_else(|| anyhow!("invalid detection pattern"))?],
         );
 
         patterns.insert(
             SensitiveDataType::HealthId,
             vec![
-                Regex::new(r"(?i)(?:medicare|medicaid)[_\-\s]?(?:id|number|no|#)?[:\s]*[A-Z0-9]{10,12}")?,
-                Regex::new(r"(?i)(?:health|medical)[_\-\s]?(?:id|record)[_\-\s]?(?:number|no|#)?[:\s]*[A-Z0-9]{8,15}")?,
+                crate::re_cache::cached_re_owned!(r"(?i)(?:medicare|medicaid)[_\-\s]?(?:id|number|no|#)?[:\s]*[A-Z0-9]{10,12}")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
+                crate::re_cache::cached_re_owned!(r"(?i)(?:health|medical)[_\-\s]?(?:id|record)[_\-\s]?(?:number|no|#)?[:\s]*[A-Z0-9]{8,15}")
+                    .ok_or_else(|| anyhow!("invalid detection pattern"))?,
             ],
         );
 

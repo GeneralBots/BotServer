@@ -8,14 +8,20 @@ pub fn from_html(html: &str) -> Result<PptxDocument, String> {
     let mut doc = PptxDocument::new();
     let _current_slide: Option<Slide> = None;
 
-    let re_h1 = regex::Regex::new(r"<h1[^>]*>(.*?)</h1>").map_err(|e| e.to_string())?;
-    let re_h2 = regex::Regex::new(r"<h2[^>]*>(.*?)</h2>").map_err(|e| e.to_string())?;
-    let re_p = regex::Regex::new(r"<p[^>]*>(.*?)</p>").map_err(|e| e.to_string())?;
-    let re_hr = regex::Regex::new(r"<hr[^>]*/?>").map_err(|e| e.to_string())?;
-    let re_img = regex::Regex::new(r#"<img[^>]*src=["']([^"']+)["'][^>]*>"#)
-        .map_err(|e| e.to_string())?;
-    let re_tag = regex::Regex::new(r"<[^>]+>").map_err(|e| e.to_string())?;
-    let re_br = regex::Regex::new(r"<br\s*/?>").map_err(|e| e.to_string())?;
+    let re_h1 = crate::re_cache::cached_re!(r"<h1[^>]*>(.*?)</h1>")
+        .ok_or_else(|| "invalid h1 regex".to_string())?;
+    let re_h2 = crate::re_cache::cached_re!(r"<h2[^>]*>(.*?)</h2>")
+        .ok_or_else(|| "invalid h2 regex".to_string())?;
+    let re_p = crate::re_cache::cached_re!(r"<p[^>]*>(.*?)</p>")
+        .ok_or_else(|| "invalid paragraph regex".to_string())?;
+    let re_hr = crate::re_cache::cached_re!(r"<hr[^>]*/?>")
+        .ok_or_else(|| "invalid horizontal rule regex".to_string())?;
+    let re_img = crate::re_cache::cached_re!(r#"<img[^>]*src=["']([^"']+)["'][^>]*>"#)
+        .ok_or_else(|| "invalid image regex".to_string())?;
+    let re_tag = crate::re_cache::cached_re!(r"<[^>]+>")
+        .ok_or_else(|| "invalid tag regex".to_string())?;
+    let re_br = crate::re_cache::cached_re!(r"<br\s*/?>")
+        .ok_or_else(|| "invalid line break regex".to_string())?;
 
     let mut parts: Vec<&str> = re_hr.split(html).collect();
     if parts.is_empty() {

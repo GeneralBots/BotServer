@@ -150,7 +150,7 @@ pub fn convert_keywords_to_lowercase(script: &str) -> String {
         let mut processed_line = line.to_string();
         for keyword in &rhai_builtins {
             let pattern = format!(r"\b{}\b", regex::escape(keyword));
-            if let Ok(re) = Regex::new(&pattern) {
+            if let Some(re) = crate::re_cache::dynamic(&pattern) {
                 processed_line = re.replace_all(&processed_line, keyword.to_lowercase()).to_string();
             }
         }
@@ -166,9 +166,8 @@ pub fn convert_keywords_to_lowercase(script: &str) -> String {
 /// ("Variable not found: TODAY"). Old ASTs heal on load because the
 /// execution-time self-heal runs this same transform.
 pub(super) fn rewrite_bare_datetime_tokens(line: &str) -> String {
-    let re = match Regex::new(r"\b(TODAY|NOW)\b") {
-        Ok(r) => r,
-        Err(_) => return line.to_string(),
+    let Some(re) = crate::re_cache::cached_re!(r"\b(TODAY|NOW)\b") else {
+        return line.to_string();
     };
     // Append the token and normalize what follows: bare `TODAY` gains `()`;
     // an existing `TODAY()` is copied through unchanged. A trailing `\b`
@@ -211,7 +210,7 @@ pub(super) fn rewrite_bare_datetime_tokens(line: &str) -> String {
                 in_string = false;
             }
         } else if ch == '"' {
-            rewrite_plain(&re, &plain, &mut out);
+            rewrite_plain(re, &plain, &mut out);
             plain.clear();
             out.push(ch);
             in_string = true;
@@ -219,6 +218,6 @@ pub(super) fn rewrite_bare_datetime_tokens(line: &str) -> String {
             plain.push(ch);
         }
     }
-    rewrite_plain(&re, &plain, &mut out);
+    rewrite_plain(re, &plain, &mut out);
     out
 }

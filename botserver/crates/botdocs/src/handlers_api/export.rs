@@ -1,3 +1,4 @@
+use crate::re_cache::cached_re;
 use crate::state::DocState;
 use crate::storage::{get_current_user_id, load_document_from_drive};
 use crate::storage_core::{parse_html_to_paragraphs, ParagraphData, strip_html};
@@ -206,10 +207,10 @@ fn split_html_blocks(html: &str) -> Vec<HtmlBlock> {
 
 fn parse_table_html(table: &str) -> Vec<Vec<String>> {
     let mut rows = Vec::new();
-    let Some(tr_re) = regex::Regex::new(r"<tr[^>]*>(.*?)</tr>").ok() else {
+    let Some(tr_re) = cached_re!(r"<tr[^>]*>(.*?)</tr>") else {
         return rows;
     };
-    let Some(cell_re) = regex::Regex::new(r"<t[dh][^>]*>(.*?)</t[dh]>").ok() else {
+    let Some(cell_re) = cached_re!(r"<t[dh][^>]*>(.*?)</t[dh]>") else {
         return rows;
     };
 

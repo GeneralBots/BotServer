@@ -10,3 +10,5 @@ pub use drive_vectordb::{FileDocument, FileContentExtractor, UserDriveVectorDB};
 
 #[cfg(feature = "mail")]
 pub use vectordb_indexer::{UserEmailVectorDB, EmailDocument, EmailSearchQuery, EmailSearchResult};
+
+mod re_cache;

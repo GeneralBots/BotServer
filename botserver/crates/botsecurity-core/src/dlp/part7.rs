@@ -47,7 +47,7 @@ impl DlpPolicy {
                     }
                 }
                 DlpException::Pattern(pattern) => {
-                    if let Ok(re) = Regex::new(pattern) {
+                    if let Some(re) = crate::re_cache::dynamic(pattern) {
                         if re.is_match(content) {
                             return true;
                         }

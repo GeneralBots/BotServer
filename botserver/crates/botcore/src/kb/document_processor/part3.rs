@@ -4,20 +4,14 @@ impl DocumentProcessor {
     #[cfg(feature = "kb-extraction")]
     pub(super) fn strip_html_tags(s: &str) -> String {
         // #1368 — constant patterns are valid by construction; on the
-        // impossible parse error, skip the step instead of panicking.
-        fn compile(pattern: &str) -> Option<regex::Regex> {
-            match regex::Regex::new(pattern) {
-                Ok(re) => Some(re),
-                Err(e) => {
-                    log::error!("strip_html_tags pattern invalid ({pattern}): {e}");
-                    None
-                }
-            }
-        }
-        let s1 = compile(r"(?is)<(style)[^>]*>.*?</style>|<(script)[^>]*>.*?</script>")
-            .map(|re| re.replace_all(s, "").to_string())
-            .unwrap_or_else(|| s.to_string());
-        let s2 = compile(r"<[^>]*>")
+        // impossible parse error, skip the step instead of panicking. Each
+        // pattern is compiled once per process (#1493).
+        let s1 = crate::re_cache::cached_re!(
+            r"(?is)<(style)[^>]*>.*?</style>|<(script)[^>]*>.*?</script>"
+        )
+        .map(|re| re.replace_all(s, "").to_string())
+        .unwrap_or_else(|| s.to_string());
+        let s2 = crate::re_cache::cached_re!(r"<[^>]*>")
             .map(|re| re.replace_all(&s1, "").to_string())
             .unwrap_or_else(|| s1);
         let s3 = s2.replace("&nbsp;", " ")
@@ -25,7 +19,7 @@ impl DocumentProcessor {
                    .replace("&lt;", "<")
                    .replace("&gt;", ">")
                    .replace("&quot;", "\"");
-        compile(r"\s+")
+        crate::re_cache::cached_re!(r"\s+")
             .map(|re| re.replace_all(&s3, " ").to_string())
             .unwrap_or(s3)
             .trim()

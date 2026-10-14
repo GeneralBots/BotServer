@@ -150,13 +150,13 @@ impl QueryOptimizer {
         let mut result = query.to_lowercase();
 
         let patterns = [
-            (r"'[^']*'", "'?'"),
-            (r"\d+", "?"),
-            (r"\s+", " "),
+            (crate::re_cache::cached_re!(r"'[^']*'"), "'?'"),
+            (crate::re_cache::cached_re!(r"\d+"), "?"),
+            (crate::re_cache::cached_re!(r"\s+"), " "),
         ];
 
-        for (pattern, replacement) in patterns {
-            if let Ok(re) = regex::Regex::new(pattern) {
+        for (re, replacement) in patterns {
+            if let Some(re) = re {
                 result = re.replace_all(&result, replacement).to_string();
             }
         }

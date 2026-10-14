@@ -117,3 +117,5 @@ pub use browser_driver::{BrowserDriver, BrowserDriverRef, DriverRun, TaskContrac
 pub use browser_driver_api::browser_driver_router;
 pub use proactivity::{ProactivityEngine, ProactivityRef, SuggestionCard, TriggerDef};
 pub use proactivity_api::proactivity_router;
+
+mod re_cache;

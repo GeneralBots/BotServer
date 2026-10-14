@@ -145,8 +145,10 @@ pub async fn sop_logging_middleware(
     response
 }
 pub(super) fn sanitize_path(path: &str) -> String {
-    let uuid_pattern = regex::Regex::new(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").ok();
-    let numeric_pattern = regex::Regex::new(r"/\d+").ok();
+    let uuid_pattern = crate::re_cache::cached_re!(
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+    );
+    let numeric_pattern = crate::re_cache::cached_re!(r"/\d+");
 
     let mut sanitized = path.to_string();
 
