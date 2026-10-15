@@ -13,5 +13,5 @@ uuid = { workspace = true, features = ["v4", "serde"], default-features = true }
 diesel = { workspace = true, features = ["postgres", "r2d2", "uuid", "serde_json", "chrono", "numeric"] }
 axum = { workspace = true, features = ["macros"] }
 log = { workspace = true }
-rust_decimal = { workspace = true, features = ["serde-with-str"] }
+rust_decimal = { workspace = true, features = ["serde-with-str", "db-diesel2-postgres"] }
 botsecurity-core = { workspace = true }
