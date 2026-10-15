@@ -9,10 +9,10 @@ use uuid::Uuid;
 pub(crate) fn init_llm_provider(
     config_manager: &ConfigManager,
     default_bot_id: &str,
-    dynamic_llm_provider: Arc<crate::llm::DynamicLLMProvider>,
+    dynamic_llm_provider: Arc<crate::llm::dynamic_provider::DynamicLLMProvider>,
     pool: &botcore::shared::utils::DbPool,
     redis_client: Option<Arc<redis::Client>>,
-) -> Arc<dyn crate::llm::LLMProvider> {
+) -> Arc<dyn crate::llm::traits::LLMProvider> {
     use crate::llm::cache::{CacheConfig, CachedLLMProvider, EmbeddingService, LocalEmbeddingService};
 
     if let Some(ref cache) = redis_client {
@@ -66,13 +66,13 @@ pub(crate) fn init_llm_provider(
         };
 
         Arc::new(CachedLLMProvider::with_db_pool(
-            dynamic_llm_provider.clone() as Arc<dyn crate::llm::LLMProvider>,
+            dynamic_llm_provider.clone() as Arc<dyn crate::llm::traits::LLMProvider>,
             cache.clone(),
             cache_config,
             embedding_service,
             pool.clone(),
         ))
     } else {
-        dynamic_llm_provider.clone() as Arc<dyn crate::llm::LLMProvider>
+        dynamic_llm_provider.clone() as Arc<dyn crate::llm::traits::LLMProvider>
     }
 }

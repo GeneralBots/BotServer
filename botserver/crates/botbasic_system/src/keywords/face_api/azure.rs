@@ -2,7 +2,7 @@
 //!
 //! This module contains Azure-specific response types and conversions.
 
-use botmodelsbridge::{BoundingBox, DetectedFace, EmotionScores, FaceAttributes, FaceLandmarks, Gender, GlassesType, Point2D};
+use botmodelsbridge::face_api::{BoundingBox, DetectedFace, EmotionScores, FaceAttributes, FaceLandmarks, Gender, GlassesType, Point2D};
 
 // ============================================================================
 // Azure API Response Types

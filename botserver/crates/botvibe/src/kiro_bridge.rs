@@ -44,7 +44,7 @@ pub async fn call_kiro(
         let api_key = api_key.to_string();
         let tools = tools.to_vec();
         tokio::spawn(async move {
-            use botllm::LLMProvider;
+            use botllm::traits::LLMProvider;
             client
                 .generate_stream(&prompt, &config, tx, &model, &api_key, Some(&tools))
                 .await

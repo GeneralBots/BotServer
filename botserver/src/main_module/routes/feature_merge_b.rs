@@ -172,10 +172,10 @@ pub(super) async fn merge_part_b(
     }
 
     #[cfg(feature = "scripting")]
-    { *sub_router = sub_router.clone().merge(crate::basic::keywords::configure_app_server_routes().with_state(app_state.clone())); }
+    { *sub_router = sub_router.clone().merge(crate::basic::keywords::app_server::configure_app_server_routes().with_state(app_state.clone())); }
 
     #[cfg(feature = "people")]
-    { *sub_router = sub_router.clone().merge(crate::basic::keywords::configure_db_routes().with_state(app_state.clone())); }
+    { *sub_router = sub_router.clone().merge(crate::basic::keywords::db_api::configure_db_routes().with_state(app_state.clone())); }
 
     #[cfg(feature = "vibe")]
     { *sub_router = sub_router.clone().merge(crate::vibe::configure_vibe_routes(app_state).await); }

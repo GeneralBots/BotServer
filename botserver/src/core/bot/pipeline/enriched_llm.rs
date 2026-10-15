@@ -112,8 +112,8 @@ pub(super) fn resolve_bot_llm_provider(
             .unwrap_or_else(|| "<unparseable>".to_string());
         log::info!("BOT {bot_uuid} LLM CONFIG: host=[{llm_host}] key_len=[{}] model=[{llm_model}] provider=[{llm_provider}]", llm_key.len());
         if !llm_url.is_empty() {
-            let explicit = if llm_provider.is_empty() { None } else { crate::llm::llm_provider_type_from_name(&llm_provider) };
-            let provider = crate::llm::create_llm_provider_from_url(
+            let explicit = if llm_provider.is_empty() { None } else { crate::llm::provider_factory::llm_provider_type_from_name(&llm_provider) };
+            let provider = crate::llm::provider_factory::create_llm_provider_from_url(
                 &llm_url,
                 if llm_model.is_empty() { None } else { Some(llm_model.clone()) },
                 None, explicit,

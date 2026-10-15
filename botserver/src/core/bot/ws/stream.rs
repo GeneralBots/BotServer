@@ -49,7 +49,7 @@ pub async fn process_llm_response(
         if let Ok(val) = std::env::var("LLM_KEY") { if !val.is_empty() { llm_key = val; } }
         if let Ok(val) = std::env::var("LLM_MODEL") { if !val.is_empty() { llm_model = val; } }
         if !llm_url.is_empty() {
-            let provider = crate::llm::create_llm_provider_from_url(&llm_url, if llm_model.is_empty() { None } else { Some(llm_model.clone()) }, None, None);
+            let provider = crate::llm::provider_factory::create_llm_provider_from_url(&llm_url, if llm_model.is_empty() { None } else { Some(llm_model.clone()) }, None, None);
             Some((Arc::new(crate::llm::BotlibLLMProviderWrapper::new(provider, llm_model.clone(), llm_key.clone())) as Arc<dyn botlib::traits::LLMProvider>, llm_key, llm_model))
         } else {
             None

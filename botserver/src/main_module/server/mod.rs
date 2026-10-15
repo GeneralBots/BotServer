@@ -16,7 +16,7 @@ pub(crate) use crate::security::rate_limiter::{
 };
 pub(crate) use crate::security::request_id::request_id_middleware;
 pub(crate) use botcore::shared::state::AppState;
-pub(crate) use botlib::SystemLimits;
+pub(crate) use botlib::limits::SystemLimits;
 pub(crate) use super::routes::{security_setup, api_setup, sub_router};
 
 mod part1;

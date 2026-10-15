@@ -3,7 +3,7 @@
 //! This module contains all type definitions for the Face API keywords including
 //! image sources, face sources, detection options, and attribute types.
 
-use botmodelsbridge::DetectedFace;
+use botmodelsbridge::face_api::DetectedFace;
 use serde::{Deserialize, Serialize};
 
 // ============================================================================

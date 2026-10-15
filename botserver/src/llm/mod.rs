@@ -3,7 +3,7 @@ pub use botllm::*;
 
 
 pub struct BotlibLLMProviderWrapper {
-    pub inner: Arc<dyn crate::llm::LLMProvider>,
+    pub inner: Arc<dyn crate::llm::traits::LLMProvider>,
     pub model: String,
     pub key: String,
 }
@@ -15,7 +15,7 @@ impl std::fmt::Debug for BotlibLLMProviderWrapper {
 }
 
 impl BotlibLLMProviderWrapper {
-    pub fn new(inner: Arc<dyn crate::llm::LLMProvider>, model: String, key: String) -> Self {
+    pub fn new(inner: Arc<dyn crate::llm::traits::LLMProvider>, model: String, key: String) -> Self {
         Self { inner, model, key }
     }
 }

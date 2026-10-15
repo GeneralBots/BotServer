@@ -83,7 +83,7 @@ pub trait AutoTaskState: Send + Sync {
     );
     fn emit_task_started(&self, task_id: &str, message: &str, total_steps: u8);
     fn emit_task_error(&self, task_id: &str, step: &str, error: &str);
-    fn task_manifests(&self) -> &Arc<RwLock<HashMap<String, crate::TaskManifest>>>;
+    fn task_manifests(&self) -> &Arc<RwLock<HashMap<String, crate::task_manifest::TaskManifest>>>;
     fn task_progress_broadcast(&self) -> Option<&broadcast::Sender<TaskProgressEvent>>;
     /// Git source facade (reform #1501/#1505). `None` keeps the legacy Drive
     /// write path for bots that are not git-owned.

@@ -38,7 +38,7 @@ pub(super) async fn create_llm_for_bot(bot_id: Uuid, db_pool: &DbPool) -> Option
     // Empty default: let create_llm_provider_from_url derive the endpoint from
     // the URL (a forced /v1/chat/completions breaks full chat-completions URLs).
     let endpoint_path = cfg.get_config(&bot_id, "llm-endpoint-path", Some("")).unwrap_or_default();
-    let provider = crate::llm::create_llm_provider_from_url(
+    let provider = crate::llm::provider_factory::create_llm_provider_from_url(
         &llm_url,
         if llm_model.is_empty() { None } else { Some(llm_model.clone()) },
         Some(endpoint_path),

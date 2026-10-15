@@ -8,7 +8,7 @@
 //! 5. Call LLM provider
 //! 6. Stream response back
 
-use crate::{LLMProvider, OpenAIClient};
+use crate::{openai_client::OpenAIClient, traits::LLMProvider};
 use log::{info, trace};
 use serde_json::Value;
 use std::sync::Arc;

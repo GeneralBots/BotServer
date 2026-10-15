@@ -1,7 +1,7 @@
 //! Provider catalog for the OpenAI-compatible LLM tier (issue #1467).
 //!
 //! Every host below speaks the OpenAI chat-completions wire shape, so a single
-//! [`crate::OpenAIClient`] serves them all. Before this module they were
+//! [`crate::openai_client::OpenAIClient`] serves them all. Before this module they were
 //! reachable only by accident: `LLMProviderType` had no variant for them, the
 //! rate limiter recognised exactly two hostnames, and the output-token ceiling
 //! was an inline `if base_url.contains("groq")` check. This table makes the tier
@@ -23,7 +23,7 @@
 //!   They are a request-shaping default, not a hard model limit; a host that
 //!   raises its cap needs a new row, not a code change.
 //!
-//! [`RateLimits::unlimited`]: crate::RateLimits::unlimited
+//! [`RateLimits::unlimited`]: crate::rate_limiter::RateLimits::unlimited
 
 use crate::rate_limiter::RateLimits;
 
@@ -97,7 +97,7 @@ impl LLMProviderType {
     }
 
     /// True when the backend speaks the OpenAI chat-completions shape and can be
-    /// served by [`crate::OpenAIClient`]. The native clients exist for the
+    /// served by [`crate::openai_client::OpenAIClient`]. The native clients exist for the
     /// providers whose wire format differs.
     #[must_use]
     pub const fn is_openai_compatible(self) -> bool {

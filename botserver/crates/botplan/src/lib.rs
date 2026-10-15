@@ -8,7 +8,8 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use botllm::{create_llm_provider, LLMProviderType};
+use botllm::provider_catalog::LLMProviderType;
+use botllm::provider_factory::create_llm_provider;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};

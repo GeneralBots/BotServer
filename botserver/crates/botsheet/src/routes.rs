@@ -2,25 +2,45 @@ use crate::collaboration::{
 handle_get_collaborators, handle_get_mentions, handle_get_presence, handle_get_selections,
 handle_get_typing, handle_sheet_websocket,
 };
-use crate::handlers::{
-    handle_add_comment, handle_add_external_link, handle_add_note, handle_array_formula,
-    handle_clear_filter, handle_conditional_format, handle_create_chart, handle_create_named_range,
-    handle_batch_evaluate_ai, handle_data_validation, handle_delete_array_formula,
-    handle_delete_chart, handle_delete_comment, handle_delete_named_range, handle_delete_sheet,
-    handle_evaluate_ai_prompt, handle_evaluate_formula,
-    handle_export_named_ranges_csv, handle_export_sheet,
-    handle_filter_data, handle_format_cells, handle_freeze_panes, handle_get_range,
-    handle_paste, handle_resize,
-    handle_get_sheet_by_id, handle_sheet_ops, handle_import_named_ranges_csv, handle_import_sheet,
-    handle_list_comments, handle_list_external_links, handle_list_named_ranges, handle_list_sheets,
-    handle_load_from_drive, handle_load_sheet, handle_lock_cells, handle_merge_cells,
-    handle_new_sheet, handle_pivot, handle_protect_sheet, handle_refresh_external_link,
-    handle_remove_external_link, handle_reply_comment, handle_resolve_comment, handle_save_sheet,
-    handle_search_sheets, handle_share_sheet, handle_sheet_ai, handle_sort_range,
-    handle_unmerge_cells, handle_unprotect_sheet, handle_update_cell, handle_update_named_range,
-    handle_validate_cell, handle_worksheet_meta,
-    handle_table_create, handle_table_delete, handle_table_list,
+use crate::handlers::advanced::{
+    handle_add_external_link, handle_list_external_links, handle_lock_cells,
+    handle_protect_sheet, handle_refresh_external_link, handle_remove_external_link,
+    handle_unprotect_sheet,
 };
+use crate::handlers::advanced_ranges::{
+    handle_array_formula, handle_create_named_range, handle_delete_array_formula,
+    handle_delete_named_range, handle_list_named_ranges, handle_update_named_range,
+};
+use crate::handlers::ai::{handle_batch_evaluate_ai, handle_evaluate_ai_prompt, handle_sheet_ai};
+use crate::handlers::cell_ops::{
+    handle_evaluate_formula, handle_format_cells, handle_update_cell,
+};
+use crate::handlers::cell_structure::{
+    handle_freeze_panes, handle_get_range, handle_merge_cells, handle_unmerge_cells,
+    handle_worksheet_meta,
+};
+use crate::handlers::comments::{
+    handle_add_comment, handle_delete_comment, handle_list_comments, handle_reply_comment,
+    handle_resolve_comment,
+};
+use crate::handlers::crud::{
+    handle_delete_sheet, handle_get_sheet_by_id, handle_list_sheets, handle_load_from_drive,
+    handle_load_sheet, handle_new_sheet, handle_save_sheet, handle_search_sheets,
+    handle_share_sheet, handle_sheet_ops,
+};
+use crate::handlers::data_ops::{
+    handle_clear_filter, handle_conditional_format, handle_create_chart, handle_delete_chart,
+    handle_filter_data, handle_sort_range,
+};
+use crate::handlers::export_import::{handle_export_sheet, handle_import_sheet};
+use crate::handlers::grid_ops::{
+    handle_paste, handle_resize, handle_table_create, handle_table_delete, handle_table_list,
+};
+use crate::handlers::named_ranges_csv::{
+    handle_export_named_ranges_csv, handle_import_named_ranges_csv,
+};
+use crate::handlers::pivot::handle_pivot;
+use crate::handlers::validation::{handle_add_note, handle_data_validation, handle_validate_cell};
 use crate::handlers::worksheets::{
 add_worksheet, delete_worksheet, rename_worksheet, switch_worksheet,
 };

@@ -6,7 +6,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use botlib::{
+use botlib::limits::{
     format_limit_error_response, LimitExceeded, RateLimiter as BotlibRateLimiter, SystemLimits,
 };
 use governor::{

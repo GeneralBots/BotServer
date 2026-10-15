@@ -25,7 +25,7 @@ pub type BoxFutureRefValue<'a> =
 
 /// The single LLM provider contract (#1498).
 ///
-/// `botllm::LLMProvider` is a re-export of this trait, so the nine provider
+/// `botllm::traits::LLMProvider` is a re-export of this trait, so the nine provider
 /// implementations (OpenAI, Claude, Bedrock, Vertex, GLM, Kimi, Kiro and the
 /// dynamic/cache wrappers) and the handful of callers that hold an
 /// `Arc<dyn LLMProvider>` all speak the same trait — a provider fix can no

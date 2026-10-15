@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use crate::evaluation::{
     EvaluationCriterion, EvaluationGate, EvaluationResult, Evaluator,
 };
-use crate::LLMProvider;
+use crate::traits::LLMProvider;
 
 /// Configuration for the CI regression gate runner.
 #[derive(Debug, Clone, Serialize, Deserialize)]

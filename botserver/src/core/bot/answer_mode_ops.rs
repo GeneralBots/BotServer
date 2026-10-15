@@ -260,7 +260,7 @@ async fn call_llm_for_text(
     let llm_model = cfg.get_config(&bot_uuid, "llm-model", Some("")).unwrap_or_default();
 
     let provider: Arc<dyn botlib::traits::LLMProvider> = if !llm_url.is_empty() {
-        let inner = crate::llm::create_llm_provider_from_url(
+        let inner = crate::llm::provider_factory::create_llm_provider_from_url(
             &llm_url,
             if llm_model.is_empty() { None } else { Some(llm_model.clone()) },
             None, None,

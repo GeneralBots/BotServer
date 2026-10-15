@@ -25,7 +25,7 @@ pub fn get_content_type(path: &str) -> &'static str {
         _ => "application/octet-stream",
     }
 }
-pub fn generate_create_table_sql(table: &crate::TableDefinition, driver: &str) -> String {
+pub fn generate_create_table_sql(table: &crate::task_manifest::TableDefinition, driver: &str) -> String {
     if driver != "postgres" {
         return String::new();
     }

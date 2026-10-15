@@ -3,7 +3,7 @@ pub(crate) use botcore::shared::state::AppState;
 pub(crate) use anyhow::Result;
 pub(crate) use async_trait::async_trait;
 pub(crate) use axum::extract::ws::{Message, WebSocket};
-pub(crate) use botlib::MessageType;
+pub(crate) use botlib::message_types::MessageType;
 pub(crate) use futures::{SinkExt, StreamExt};
 pub(crate) use log::{info, trace, warn};
 pub(crate) use serde::{Deserialize, Serialize};

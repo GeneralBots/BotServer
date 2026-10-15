@@ -10,7 +10,7 @@ use crate::openai_client::OpenAIClient;
 use crate::provider_catalog::LLMProviderType;
 
 use crate::retry;
-use crate::LLMProvider;
+use crate::traits::LLMProvider;
 
 #[async_trait]
 impl LLMProvider for OpenAIClient {

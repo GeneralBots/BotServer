@@ -19,7 +19,7 @@ pub fn build_api(app_state: &Arc<AppState>) -> Arc<AutoTaskApi> {
     struct AutoTaskStateImpl {
         pool: Arc<diesel::r2d2::Pool<diesel::r2d2::ConnectionManager<diesel::PgConnection>>>,
         bucket_name: String,
-        manifests: Arc<RwLock<HashMap<String, botautotask::TaskManifest>>>,
+        manifests: Arc<RwLock<HashMap<String, botautotask::task_manifest::TaskManifest>>>,
         drive_ops: Option<Arc<dyn botautotask::types::DriveOps>>,
         /// Reform #1505 — writes generated sources into the bot's git
         /// repository (the canonical `.gbdialog`) instead of Drive.
@@ -58,7 +58,7 @@ pub fn build_api(app_state: &Arc<AppState>) -> Arc<AutoTaskApi> {
         fn emit_activity(&self, _task_id: &str, _step: &str, _message: &str, _current: u8, _total: u8, _activity: botautotask::types::AgentActivity) {}
         fn emit_task_started(&self, _task_id: &str, _message: &str, _total_steps: u8) {}
         fn emit_task_error(&self, _task_id: &str, _step: &str, _error: &str) {}
-        fn task_manifests(&self) -> &Arc<RwLock<HashMap<String, botautotask::TaskManifest>>> {
+        fn task_manifests(&self) -> &Arc<RwLock<HashMap<String, botautotask::task_manifest::TaskManifest>>> {
             &self.manifests
         }
         fn task_progress_broadcast(&self) -> Option<&tokio::sync::broadcast::Sender<botautotask::types::TaskProgressEvent>> {

@@ -4,7 +4,7 @@ use log::{info, warn};
 use serde_json::Value;
 use tokio::sync::mpsc;
 
-use crate::LLMProvider;
+use crate::traits::LLMProvider;
 
 #[derive(Debug)]
 pub struct BedrockClient {

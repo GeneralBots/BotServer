@@ -12,8 +12,8 @@ use botautotask::intent_classifier::{ClassifiedIntent, IntentClassifier};
 use serde_json::{json, Value};
 
 /// Intent-type → execution steps mapping used by the heuristic plan builder.
-fn steps_for(intent_type: botautotask::IntentType, name: &str) -> Vec<Value> {
-    use botautotask::IntentType;
+fn steps_for(intent_type: botautotask::intent_classifier::IntentType, name: &str) -> Vec<Value> {
+    use botautotask::intent_classifier::IntentType;
     let base = |id: u32, label: &str, minutes: i32, approval: bool| json!({
         "id": format!("{id}"),
         "order": id,
@@ -78,7 +78,7 @@ fn plan_for_intent(intent: &str) -> Result<Value, String> {
         .unwrap_or_else(|| "autotask_plan".to_string());
     let requires_approval = !matches!(
         classification.intent_type,
-        botautotask::IntentType::Unknown
+        botautotask::intent_classifier::IntentType::Unknown
     );
     Ok(json!({
         "intent_type": classification.intent_type.to_string(),
@@ -234,7 +234,7 @@ mod tests {
 
     #[test]
     fn steps_cover_all_intent_types() {
-        use botautotask::IntentType;
+        use botautotask::intent_classifier::IntentType;
         for ty in [
             IntentType::AppCreate,
             IntentType::Todo,

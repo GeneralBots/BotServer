@@ -7,7 +7,7 @@ pub(crate) use crate::execution::script_for;
 pub(crate) use crate::intent_classifier::{ClassifiedEntities, IntentClassifier, IntentType};
 pub(crate) use crate::intent_compiler::IntentCompiler;
 pub(crate) use crate::templates::match_shipped_template;
-pub(crate) use crate::ClassifiedIntent;
+pub(crate) use crate::intent_classifier::ClassifiedIntent;
 pub(crate) use crate::types::{BotInfo, DbPool};
 pub(crate) use axum::{ extract::{Path, Query, State}, response::IntoResponse, Json, };
 pub(crate) use diesel::prelude::*;

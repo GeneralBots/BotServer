@@ -1,6 +1,6 @@
 pub(crate) use botbasic_types::UserSession;
 pub(crate) use botbasic_types::BasicRuntime;
-pub(crate) use botlib::MAX_LOOP_ITERATIONS;
+pub(crate) use botlib::limits::MAX_LOOP_ITERATIONS;
 pub(crate) use diesel::prelude::*;
 pub(crate) use log::trace;
 pub(crate) use rhai::{Dynamic, Engine};

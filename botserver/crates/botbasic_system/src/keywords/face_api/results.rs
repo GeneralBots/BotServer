@@ -2,7 +2,7 @@
 //!
 //! This module contains all result types returned by Face API operations.
 
-use botmodelsbridge::{DetectedFace, FaceAttributes};
+use botmodelsbridge::face_api::{DetectedFace, FaceAttributes};
 use serde::{Deserialize, Serialize};
 
 // ============================================================================

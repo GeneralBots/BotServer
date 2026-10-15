@@ -9,9 +9,12 @@ use std::sync::Arc;
 
 use crate::provider_catalog::LLMProviderType;
 use crate::provider_resolve::provider_type_from_name;
-use crate::{
-    AzureGPT5Client, BedrockClient, ClaudeClient, GLMClient, LLMProvider, KiroClient, OpenAIClient,
-};
+use crate::bedrock::BedrockClient;
+use crate::claude::ClaudeClient;
+use crate::glm::GLMClient;
+use crate::kiro::KiroClient;
+use crate::openai_client::{AzureGPT5Client, OpenAIClient};
+use crate::traits::LLMProvider;
 
 /// Builds the client for an explicit backend identity.
 ///

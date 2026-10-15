@@ -148,7 +148,7 @@ pub async fn create_app_state(
         .unwrap_or_default();
 
     #[cfg(feature = "llm")]
-    let base_llm_provider = crate::llm::create_llm_provider_from_url(
+    let base_llm_provider = crate::llm::provider_factory::create_llm_provider_from_url(
         &llm_url,
         if llm_model.is_empty() {
             None
@@ -160,7 +160,7 @@ pub async fn create_app_state(
     );
 
     #[cfg(feature = "llm")]
-    let dynamic_llm_provider = Arc::new(crate::llm::DynamicLLMProvider::new(base_llm_provider));
+    let dynamic_llm_provider = Arc::new(crate::llm::dynamic_provider::DynamicLLMProvider::new(base_llm_provider));
 
     #[cfg(feature = "llm")]
     {

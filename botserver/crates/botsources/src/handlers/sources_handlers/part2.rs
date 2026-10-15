@@ -14,7 +14,7 @@ pub async fn handle_models(State(state): State<Arc<AppState>>) -> impl IntoRespo
         .get_config(&default_bot_id, "llm-url", None)
         .unwrap_or_default();
 
-    // Known provider families the runtime can drive (see botllm::LLMProviderType).
+    // Known provider families the runtime can drive (see botllm::provider_catalog::LLMProviderType).
     // `match_url` is a lowercase substring tested against the configured llm-url;
     // an empty string means the provider is never auto-detected from URL.
     let catalog: Vec<(&str, &str, &str, &str)> = vec![

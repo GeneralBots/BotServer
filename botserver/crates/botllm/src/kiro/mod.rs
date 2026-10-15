@@ -15,7 +15,7 @@
 //! - `INSUFFICIENT_MODEL_CAPACITY` errors are retryable with backoff
 
 pub(crate) use crate::llm_models::{get_handler, ModelHandler};
-pub(crate) use crate::LLMProvider;
+pub(crate) use crate::traits::LLMProvider;
 pub(crate) use async_trait::async_trait;
 pub(crate) use log::{error, warn};
 pub(crate) use serde_json::{json, Value};

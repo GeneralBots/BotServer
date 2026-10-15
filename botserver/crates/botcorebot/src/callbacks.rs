@@ -68,12 +68,12 @@ pub trait SuggestionProvider: Send + Sync {
         &self,
         bot_id: &str,
         session_id: &str,
-    ) -> Vec<botlib::Suggestion>;
+    ) -> Vec<botlib::models::Suggestion>;
     fn get_switchers(
         &self,
         bot_id: &str,
         session_id: &str,
-    ) -> Vec<botlib::Switcher>;
+    ) -> Vec<botlib::models::Switcher>;
     fn resolve_active_switchers(
         &self,
         bot_id: &str,

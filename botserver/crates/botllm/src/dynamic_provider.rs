@@ -7,7 +7,10 @@ use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock};
 
-use crate::{create_llm_provider_from_url, LLMProvider, LLMProviderType};
+use crate::{
+    provider_catalog::LLMProviderType, provider_factory::create_llm_provider_from_url,
+    traits::LLMProvider,
+};
 
 pub struct DynamicLLMProvider {
     inner: RwLock<Arc<dyn LLMProvider>>,

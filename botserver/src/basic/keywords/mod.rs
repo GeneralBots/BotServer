@@ -156,26 +156,6 @@ pub mod set_answer_mode;
 pub mod invoke_action;
 pub mod vibe_agent;
 
-// ===== CONVENIENCE RE-EXPORTS =====
-pub use app_server::configure_app_server_routes;
-#[cfg(feature = "people")]
-pub use db_api::configure_db_routes;
-#[cfg(feature = "automation")]
-pub use mcp_client::{McpClient, McpRequest, McpResponse, McpServer, McpTool};
-#[cfg(feature = "security")]
-pub use security_protection::{
-    security_get_report, security_hardening_score, security_install_tool, security_run_scan,
-    security_service_is_running, security_start_service, security_stop_service,
-    security_tool_is_installed, security_tool_status, security_update_definitions,
-    SecurityScanResult, SecurityToolResult,
-};
-#[cfg(feature = "automation")]
-pub use mcp_directory::{McpDirectoryScanResult, McpDirectoryScanner, McpServerConfig};
-pub use table_access::{
-    check_field_write_access, check_table_access, filter_fields_by_role, load_table_access_info,
-    AccessType, TableAccessInfo, UserRoles,
-};
-
 pub fn get_all_keywords() -> Vec<String> {
     vec![
         "ADD BOT".to_string(),

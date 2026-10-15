@@ -44,7 +44,7 @@ struct JwtClaims {
     exp: u64,
 }
 
-use crate::LLMProvider;
+use crate::traits::LLMProvider;
 use serde_json::Value;
 use tokio::sync::mpsc;
 use async_trait::async_trait;

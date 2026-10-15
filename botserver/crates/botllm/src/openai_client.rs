@@ -11,7 +11,7 @@ use crate::{
     rate_limiter::ApiRateLimiter,
     provider_catalog::LLMProviderType,
     provider_resolve::{rate_limits_for_url, profiles_for_url, max_output_tokens_for_type},
-    LLMProvider,
+    traits::LLMProvider,
 };
 
 pub struct OpenAIClient {

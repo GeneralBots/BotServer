@@ -323,7 +323,7 @@ let llm_url = if llm_url.is_empty() && llm_server_enabled {
         );
         log_jemalloc_stats();
 
-        let _llm_provider1 = Arc::new(crate::OpenAIClient::new(
+        let _llm_provider1 = Arc::new(crate::openai_client::OpenAIClient::new(
             llm_model.clone(),
             Some(llm_url.clone()),
             None,

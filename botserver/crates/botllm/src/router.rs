@@ -4,12 +4,14 @@
 //! The global routing table is built once from [`crate::profiles::load_profiles`].
 //! Each profile receives its own breaker (threshold 5, open 60 seconds) and a
 //! concurrency semaphore. Request execution reuses the existing chat-completions
-//! request path, namely the [`crate::LLMProvider::generate`] implementations
-//! constructed by [`crate::create_llm_provider_from_url`].
+//! request path, namely the [`crate::traits::LLMProvider::generate`] implementations
+//! constructed by [`crate::provider_factory::create_llm_provider_from_url`].
 
 use crate::breaker::Breaker;
 use crate::profiles::{load_profiles, LlmProfile};
-use crate::{create_llm_provider_from_url, LLMProvider, OpenAIClient};
+use crate::{
+    openai_client::OpenAIClient, provider_factory::create_llm_provider_from_url, traits::LLMProvider,
+};
 use log::{info, warn};
 use serde_json::Value;
 use std::sync::atomic::{AtomicUsize, Ordering};
