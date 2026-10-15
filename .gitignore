@@ -3,7 +3,6 @@ node_modules/
 *.log
 botserver-stack/
 botserver-installers/
-botschema/
 prompts/
 !botserver/crates/botvibe/prompts/
 .vault-token-*
