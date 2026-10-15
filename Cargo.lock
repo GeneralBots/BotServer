@@ -1348,6 +1348,7 @@ dependencies = [
  "botbasic_types",
  "botcore",
  "botcoresecrets",
+ "botinventory",
  "botkyc",
  "botlib",
  "botllm",

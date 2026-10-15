@@ -1,8 +1,9 @@
 use botbasic_types::BasicRuntime;
+use botinventory::InventoryRequest;
 use botbasic_types::UserSession;
 use log::trace;
 use rhai::{Dynamic, Engine};
-use serde_json::{json, Value};
+
 use std::sync::Arc;
 
 /// Inventory and POS BASIC keywords for issue #620.
@@ -40,17 +41,9 @@ fn register_create_product(
                 let name = context.eval_expression_tree(&inputs[0])?.to_string();
                 let sku = context.eval_expression_tree(&inputs[1])?.to_string();
                 let price_expr = context.eval_expression_tree(&inputs[2])?.to_string();
-                let price: f64 = price_expr.parse().unwrap_or(0.0);
-                trace!("CREATE PRODUCT: {name} sku={sku} price={price}");
-                let result = json!({
-                    "kind": "product",
-                    "action": "create",
-                    "name": name,
-                    "sku": sku,
-                    "price": price,
-                    "is_active": true,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                trace!("CREATE PRODUCT: {name} sku={sku} price={price_expr}");
+                let request = InventoryRequest::create_product(&name, &sku, &price_expr);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -76,18 +69,10 @@ fn register_add_variation(
                 let sku = context.eval_expression_tree(&inputs[1])?.to_string();
                 let name = context.eval_expression_tree(&inputs[2])?.to_string();
                 let price_expr = context.eval_expression_tree(&inputs[3])?.to_string();
-                let price: f64 = price_expr.parse().unwrap_or(0.0);
                 trace!("ADD VARIATION: {name} sku={sku} to {product_id}");
-                let result = json!({
-                    "kind": "product_variation",
-                    "action": "create",
-                    "product_id": product_id,
-                    "sku": sku,
-                    "name": name,
-                    "price": price,
-                    "is_active": true,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                let request =
+                    InventoryRequest::add_variation(&product_id, &sku, &name, &price_expr);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -110,16 +95,9 @@ fn register_set_stock(
                 let product_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 let branch_id = context.eval_expression_tree(&inputs[1])?.to_string();
                 let qty_expr = context.eval_expression_tree(&inputs[2])?.to_string();
-                let qty: f64 = qty_expr.parse().unwrap_or(0.0);
-                trace!("SET STOCK: product={product_id} branch={branch_id} qty={qty}");
-                let result = json!({
-                    "kind": "product_stock",
-                    "action": "upsert",
-                    "product_id": product_id,
-                    "branch_id": branch_id,
-                    "quantity": qty,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                trace!("SET STOCK: product={product_id} branch={branch_id} qty={qty_expr}");
+                let request = InventoryRequest::set_stock(&product_id, &branch_id, &qty_expr);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -145,17 +123,14 @@ fn register_transfer_stock(
                 let from_branch = context.eval_expression_tree(&inputs[1])?.to_string();
                 let to_branch = context.eval_expression_tree(&inputs[2])?.to_string();
                 let qty_expr = context.eval_expression_tree(&inputs[3])?.to_string();
-                let qty: f64 = qty_expr.parse().unwrap_or(0.0);
-                trace!("TRANSFER STOCK: {product_id} {from_branch}->{to_branch} qty={qty}");
-                let result = json!({
-                    "kind": "inventory_movement",
-                    "movement_type": "transfer",
-                    "product_id": product_id,
-                    "from_branch_id": from_branch,
-                    "to_branch_id": to_branch,
-                    "quantity": qty,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                trace!("TRANSFER STOCK: {product_id} {from_branch}->{to_branch} qty={qty_expr}");
+                let request = InventoryRequest::transfer_stock(
+                    &product_id,
+                    &from_branch,
+                    &to_branch,
+                    &qty_expr,
+                );
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -177,11 +152,8 @@ fn register_get_stock(
             move |context, inputs| {
                 let product_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 trace!("GET STOCK: {product_id}");
-                let result = json!({
-                    "kind": "stock_query",
-                    "product_id": product_id,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                let request = InventoryRequest::get_stock(&product_id);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -204,16 +176,9 @@ fn register_set_price(
                 let product_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 let price_list = context.eval_expression_tree(&inputs[1])?.to_string();
                 let price_expr = context.eval_expression_tree(&inputs[2])?.to_string();
-                let price: f64 = price_expr.parse().unwrap_or(0.0);
-                trace!("SET PRICE: {product_id} list={price_list} price={price}");
-                let result = json!({
-                    "kind": "product_price",
-                    "action": "upsert",
-                    "product_id": product_id,
-                    "price_list_name": price_list,
-                    "price": price,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                trace!("SET PRICE: {product_id} list={price_list} price={price_expr}");
+                let request = InventoryRequest::set_price(&product_id, &price_list, &price_expr);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -235,16 +200,9 @@ fn register_open_pos_session(
             move |context, inputs| {
                 let branch_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 let opening_expr = context.eval_expression_tree(&inputs[1])?.to_string();
-                let opening: f64 = opening_expr.parse().unwrap_or(0.0);
-                trace!("OPEN POS SESSION: branch={branch_id} opening={opening}");
-                let result = json!({
-                    "kind": "pos_session",
-                    "action": "open",
-                    "branch_id": branch_id,
-                    "opening_amount": opening,
-                    "status": "open",
-                });
-                Ok(serde_json_to_dynamic(&result))
+                trace!("OPEN POS SESSION: branch={branch_id} opening={opening_expr}");
+                let request = InventoryRequest::open_pos_session(&branch_id, &opening_expr);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -267,15 +225,9 @@ fn register_add_to_cart(
                 let session_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 let product_id = context.eval_expression_tree(&inputs[1])?.to_string();
                 let qty_expr = context.eval_expression_tree(&inputs[2])?.to_string();
-                let qty: f64 = qty_expr.parse().unwrap_or(1.0);
-                trace!("ADD TO CART: session={session_id} product={product_id} qty={qty}");
-                let result = json!({
-                    "kind": "cart_item",
-                    "session_id": session_id,
-                    "product_id": product_id,
-                    "quantity": qty,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                trace!("ADD TO CART: session={session_id} product={product_id} qty={qty_expr}");
+                let request = InventoryRequest::add_to_cart(&session_id, &product_id, &qty_expr);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -298,13 +250,8 @@ fn register_checkout(
                 let session_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 let payment_method = context.eval_expression_tree(&inputs[1])?.to_string();
                 trace!("CHECKOUT: session={session_id} payment={payment_method}");
-                let result = json!({
-                    "kind": "pos_sale",
-                    "action": "create",
-                    "session_id": session_id,
-                    "payment_method": payment_method,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                let request = InventoryRequest::checkout(&session_id, &payment_method);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -312,6 +259,12 @@ fn register_checkout(
     }
 }
 
-fn serde_json_to_dynamic(v: &Value) -> Dynamic {
-    Dynamic::from(v.to_string())
+fn serde_json_to_dynamic<T: serde::Serialize>(value: &T) -> Dynamic {
+    match serde_json::to_value(value) {
+        Ok(json) => Dynamic::from(json.to_string()),
+        Err(e) => {
+            log::error!("inventory request serialization failed: {e}");
+            Dynamic::UNIT
+        }
+    }
 }
