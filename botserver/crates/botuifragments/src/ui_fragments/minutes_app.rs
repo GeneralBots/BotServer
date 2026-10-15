@@ -43,7 +43,16 @@ async fn upcoming() -> Result<Html<String>, (StatusCode, String)> {
                         .and_then(|v| v.as_array())
                         .map(|a| a.iter().filter_map(|p| p.get("name").and_then(|n| n.as_str()).map(String::from)).collect())
                         .unwrap_or_default();
-                    Some(render_meeting_card(&id, &title, &date, &time, dur, &loc, &status, &parts))
+                    Some(render_meeting_card(&MeetingCard {
+                        id: &id,
+                        title: &title,
+                        date: &date,
+                        time: &time,
+                        duration_minutes: dur,
+                        location: &loc,
+                        status: &status,
+                        participants: &parts,
+                    }))
                 }).collect::<String>();
                 Ok(Html(format!(
                     r##"<div class="min-upcoming" hx-get="/suite/minutes/fragments/upcoming" hx-trigger="every 60s" hx-swap="outerHTML">
@@ -70,7 +79,30 @@ fn render_meetings_empty() -> String {
 </div>"##.to_string()
 }
 
-fn render_meeting_card(id: &str, title: &str, date: &str, time: &str, dur: u64, loc: &str, status: &str, parts: &[String]) -> String {
+/// One meeting as the minutes dashboard renders it.
+#[derive(Clone, Copy)]
+struct MeetingCard<'a> {
+    id: &'a str,
+    title: &'a str,
+    date: &'a str,
+    time: &'a str,
+    duration_minutes: u64,
+    location: &'a str,
+    status: &'a str,
+    participants: &'a [String],
+}
+
+fn render_meeting_card(card: &MeetingCard<'_>) -> String {
+    let MeetingCard {
+        id,
+        title,
+        date,
+        time,
+        duration_minutes: dur,
+        location: loc,
+        status,
+        participants: parts,
+    } = *card;
     let participants = if parts.is_empty() {
         String::new()
     } else {

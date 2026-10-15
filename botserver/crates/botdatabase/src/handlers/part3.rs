@@ -235,16 +235,16 @@ pub async fn get_table_data(
             rows.into_iter().map(|r| vec![r.c1, r.c2, r.c3]).collect()
         }
         _ => {
-            return execute_via_postgres(
+            return execute_via_postgres(TableQuery {
                 state,
-                &bot_id,
-                &query,
+                bot_id: &bot_id,
+                query: &query,
                 page,
                 page_size,
-                count_result.count,
+                total_rows: count_result.count,
                 pk_column,
                 col_names,
-            )
+            })
             .await;
         }
     };

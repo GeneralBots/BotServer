@@ -6,15 +6,11 @@ impl WhiteboardExportService {
         pixels: &mut [u8],
         width: u32,
         height: u32,
-        x: i32,
-        y: i32,
-        w: i32,
-        h: i32,
-        r: u8,
-        g: u8,
-        b: u8,
-        a: u8,
+        area: CanvasRect,
+        color: Rgba,
     ) {
+        let CanvasRect { x, y, w, h } = area;
+        let Rgba { r, g, b, a } = color;
         let cx = x + w / 2;
         let cy = y + h / 2;
         let rx = w / 2;
@@ -48,15 +44,13 @@ impl WhiteboardExportService {
         pixels: &mut [u8],
         width: u32,
         height: u32,
-        x0: i32,
-        y0: i32,
-        x1: i32,
-        y1: i32,
-        r: u8,
-        g: u8,
-        b: u8,
-        a: u8,
+        from: CanvasPoint,
+        to: CanvasPoint,
+        color: Rgba,
     ) {
+        let CanvasPoint { x: x0, y: y0 } = from;
+        let CanvasPoint { x: x1, y: y1 } = to;
+        let Rgba { r, g, b, a } = color;
         let dx = (x1 - x0).abs();
         let dy = -(y1 - y0).abs();
         let sx = if x0 < x1 { 1 } else { -1 };

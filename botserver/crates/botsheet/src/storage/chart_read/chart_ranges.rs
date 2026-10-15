@@ -98,10 +98,8 @@ fn parse_range_bounds(range: &str) -> Option<(u32, u32, u32, u32)> {
 }
 
 fn parse_number(cell: &CellData) -> Option<f64> {
-    if let Some(typed) = &cell.typed {
-        if let botsheet_core::engine::value::CellValue::Number(n) = typed {
-            return Some(*n);
-        }
+    if let Some(botsheet_core::engine::value::CellValue::Number(n)) = &cell.typed {
+        return Some(*n);
     }
     cell.value
         .as_deref()

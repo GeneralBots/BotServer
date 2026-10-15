@@ -188,14 +188,14 @@ pub(crate) fn provider_config(slug: &str) -> Option<OAuthProviderConfig> {
         basic_client_auth,
     })
 }
-pub(super) fn signing_key() -> Result<String, Response> {
+pub(super) fn signing_key() -> Result<String, ResponseError> {
     let token = botcoresecrets::internal_api_token();
     if token.trim().is_empty() {
         return Err(error_response(StatusCode::SERVICE_UNAVAILABLE, IntegrationError::Validation("oauth signing key is not configured".to_string())));
     }
     Ok(token)
 }
-pub(super) fn sign(payload: &str, key: &str) -> Result<String, Response> {
+pub(super) fn sign(payload: &str, key: &str) -> Result<String, ResponseError> {
     // HMAC-SHA256 accepts a key of any length, so a construction failure means
     // the crypto backend is unusable; surface it instead of panicking.
     let mut mac = Hmac::<Sha256>::new_from_slice(key.as_bytes()).map_err(|e| {
@@ -208,10 +208,10 @@ pub(super) fn sign(payload: &str, key: &str) -> Result<String, Response> {
     mac.update(payload.as_bytes());
     Ok(base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes()))
 }
-pub(super) fn error_response(status: StatusCode, error: IntegrationError) -> Response {
-    (status, Json(json!({ "detail": error.to_string() }))).into_response()
+pub(super) fn error_response(status: StatusCode, error: IntegrationError) -> ResponseError {
+    ResponseError::new((status, Json(json!({ "detail": error.to_string() }))).into_response())
 }
-pub(super) fn parse_uuid(value: &str) -> Result<Uuid, Response> {
+pub(super) fn parse_uuid(value: &str) -> Result<Uuid, ResponseError> {
     Uuid::parse_str(value)
         .map_err(|_| error_response(StatusCode::BAD_REQUEST, IntegrationError::Validation("bot_id must be a UUID".to_string())))
 }

@@ -360,11 +360,9 @@ mod tests {
         assert!(!is_calculator_project(""));
     }
 
-    #[test]
-    fn seed_seeds_calculator_and_never_clobbers() {
-        let _guard = crate::harness::WORKSPACE_ENV_LOCK
-            .lock()
-            .expect("workspace env lock");
+    #[tokio::test]
+    async fn seed_seeds_calculator_and_never_clobbers() {
+        let _guard = crate::harness::WORKSPACE_ENV_LOCK.lock().await;
         let previous = std::env::var_os("VIBE_WORKSPACE_ROOT");
         let tmp =
             std::env::temp_dir().join(format!("vibe-templates-test-{}", uuid::Uuid::new_v4()));
@@ -399,11 +397,9 @@ mod tests {
         crate::harness::restore_workspace_root(previous);
     }
 
-    #[test]
-    fn seed_starter_for_non_calculator() {
-        let _guard = crate::harness::WORKSPACE_ENV_LOCK
-            .lock()
-            .expect("workspace env lock");
+    #[tokio::test]
+    async fn seed_starter_for_non_calculator() {
+        let _guard = crate::harness::WORKSPACE_ENV_LOCK.lock().await;
         let previous = std::env::var_os("VIBE_WORKSPACE_ROOT");
         let tmp =
             std::env::temp_dir().join(format!("vibe-templates-test-{}", uuid::Uuid::new_v4()));

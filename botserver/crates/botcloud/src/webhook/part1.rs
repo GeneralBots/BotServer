@@ -194,17 +194,17 @@ pub(super) async fn process_checkout_completed(
 
     // 4. Subscription: create or update billing_recurring
     let email_ref = invoice.customer_email.clone().unwrap_or_default();
-    let _ = integration::create_billing_subscription(
-        service.pool(),
-        invoice.branch_id,
-        invoice.customer_name.as_deref().unwrap_or(""),
-        &email_ref,
-        &plan_label,
+    let _ = integration::create_billing_subscription(integration::NewSubscription {
+        pool: service.pool(),
+        branch_id: invoice.branch_id,
+        customer_name: invoice.customer_name.as_deref().unwrap_or(""),
+        customer_email: &email_ref,
+        plan: &plan_label,
         total,
-        invoice.currency.as_deref().unwrap_or(""),
+        currency: invoice.currency.as_deref().unwrap_or(""),
         invoice_id,
-        "monthly",
-    )
+        period: "monthly",
+    })
     .map_err(|e| tracing::warn!("Subscription creation failed: {e}"));
 
     // --- Notifications ---

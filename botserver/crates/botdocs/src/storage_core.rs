@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -7,8 +8,10 @@ use crate::state::DocState;
 use crate::storage_docx::convert_docx_to_html;
 use crate::types::Document;
 
-static DOCUMENT_CACHE: once_cell::sync::Lazy<RwLock<HashMap<String, (Vec<u8>, DateTime<Utc>)>>> =
-    once_cell::sync::Lazy::new(|| RwLock::new(HashMap::new()));
+/// Document id → (bytes, last modification time) of the in-memory cache.
+type DocumentCache = Lazy<RwLock<HashMap<String, (Vec<u8>, DateTime<Utc>)>>>;
+
+static DOCUMENT_CACHE: DocumentCache = Lazy::new(|| RwLock::new(HashMap::new()));
 
 const CACHE_TTL_SECS: i64 = 3600;
 

@@ -95,17 +95,19 @@ pub async fn create_activity(
 
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "activity",
-        Some(id),
-        "create",
-        None,
-        Some(serde_json::json!({
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "activity",
+            entity_id: Some(id),
+            action: "create",
+            before: None,
+            after: Some(serde_json::json!({
             "activity_type": activity.activity_type,
             "subject": activity.subject,
         })),
-        None,
+            detail: None,
+        },
     );
     Ok(Json(activity))
 }

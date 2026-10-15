@@ -259,7 +259,7 @@ impl MetricsCollector {
     pub async fn get_recent_alerts(&self, limit: usize) -> Vec<Alert> {
         let alerts = self.alerts.read().await;
         let mut all_alerts: Vec<_> = alerts.values().cloned().collect();
-        all_alerts.sort_by_key(|a| std::cmp::Reverse(a.started_at.clone()));
+        all_alerts.sort_by_key(|a| std::cmp::Reverse(a.started_at));
         all_alerts.truncate(limit);
         all_alerts
     }

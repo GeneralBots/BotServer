@@ -1,11 +1,8 @@
 use std::sync::Arc;
 
 use base64::Engine;
-use botcore::shared::state::AppState;
-use uuid::Uuid;
 
-use super::sink::ChannelSink;
-use super::types::PipelineResult;
+use super::types::{PipelineResult, SessionIdentity};
 
 pub type PipelineFn = std::sync::Arc<
     dyn Fn(
@@ -18,16 +15,19 @@ pub type PipelineFn = std::sync::Arc<
 >;
 
 pub async fn process_message_internal(
-    sink: &dyn ChannelSink,
+    identity: &SessionIdentity<'_>,
     rx: &mut tokio::sync::mpsc::Receiver<botlib::models::BotResponse>,
-    state: &Arc<AppState>,
-    session_id: Uuid,
-    user_id: Uuid,
-    bot_uuid: Uuid,
-    bot_name: &str,
     start_bas_ran: &mut bool,
     text: &str,
 ) -> PipelineResult<()> {
+    let SessionIdentity {
+        sink,
+        state,
+        bot_uuid,
+        session_id,
+        user_id,
+        bot_name,
+    } = *identity;
     let parsed: serde_json::Value = serde_json::from_str(text).unwrap_or_default();
 
     // Agent-mode switcher control frame (issue #1167). Consumed before the
@@ -211,17 +211,7 @@ pub async fn process_message_internal(
         };
 
         if !tool_name.is_empty() {
-            super::tool_exec::run_tool_exec(
-                state,
-                bot_uuid,
-                session_id,
-                user_id,
-                bot_name,
-                &tool_name,
-                sink.channel_type(),
-                sink,
-            )
-            .await;
+            super::tool_exec::run_tool_exec(identity, &tool_name).await;
         }
         return Ok(());
     }
@@ -399,8 +389,10 @@ pub async fn process_message_internal(
     if tokio::time::timeout(
         std::time::Duration::from_secs(300),
         super::enriched_llm::build_and_stream(
-            state, sink, rx, bot_uuid, session_id, user_id, bot_name,
-            &messages, &user_text,
+            identity,
+            rx,
+            &messages,
+            &user_text,
             #[cfg(feature = "integrations")]
             &mentions,
             is_switcher_replay,

@@ -93,16 +93,29 @@ pub(super) fn execute_save(
         "rows_affected": result
     }))
 }
-pub(super) fn fire_table_triggers(
-    conn: &mut diesel::PgConnection,
-    state: &Arc<dyn BasicRuntime>,
-    user: &botbasic_types::UserSession,
-    table: &str,
-    trigger_kind_val: i32,
-    record_id: Option<String>,
-    old_status: Option<String>,
-    new_status: Option<String>,
-) {
+/// The table change a trigger fires for.
+pub(super) struct TableTrigger<'a> {
+    pub conn: &'a mut diesel::PgConnection,
+    pub state: &'a Arc<dyn BasicRuntime>,
+    pub user: &'a botbasic_types::UserSession,
+    pub table: &'a str,
+    pub trigger_kind_val: i32,
+    pub record_id: Option<String>,
+    pub old_status: Option<String>,
+    pub new_status: Option<String>,
+}
+
+pub(super) fn fire_table_triggers(trigger: TableTrigger<'_>) {
+    let TableTrigger {
+        conn,
+        state,
+        user,
+        table,
+        trigger_kind_val,
+        record_id,
+        old_status,
+        new_status,
+    } = trigger;
     // Use main database connection to query system_automations (metadata)
     let mut meta_conn = match state.db_pool().get() {
         Ok(c) => c,

@@ -1,3 +1,4 @@
+use super::ui_panels::ConsolePalette;
 use super::XtreeUI;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
@@ -9,13 +10,24 @@ use ratatui::{
 
 impl XtreeUI {
     pub(super) fn render(&mut self, f: &mut Frame, cursor_blink: bool) {
-        let bg = Color::Rgb(0, 30, 100);
-        let border_focused = Color::Rgb(85, 255, 255);
-        let border_dim = Color::Rgb(170, 170, 170);
-        let text = Color::Rgb(255, 255, 255);
-        let highlight = Color::Rgb(0, 170, 170);
-        let header_bg_color = Color::Rgb(170, 170, 170);
-        let header_text_color = Color::Rgb(0, 0, 0);
+        let palette = ConsolePalette {
+            bg: Color::Rgb(0, 30, 100),
+            text: Color::Rgb(255, 255, 255),
+            border_focused: Color::Rgb(85, 255, 255),
+            border_dim: Color::Rgb(170, 170, 170),
+            highlight: Color::Rgb(0, 170, 170),
+            header_bg_color: Color::Rgb(170, 170, 170),
+            header_text_color: Color::Rgb(0, 0, 0),
+        };
+        let ConsolePalette {
+            bg,
+            border_focused,
+            border_dim,
+            text,
+            header_bg_color,
+            header_text_color,
+            ..
+        } = palette;
         if self.app_state.is_none() {
             self.render_loading(
                 f,
@@ -46,17 +58,7 @@ impl XtreeUI {
             ])
             .split(main_chunks[1]);
 
-        self.render_file_tree(
-            f,
-            content_chunks[0],
-            bg,
-            text,
-            border_focused,
-            border_dim,
-            highlight,
-            header_bg_color,
-            header_text_color,
-        );
+        self.render_file_tree(f, content_chunks[0], palette);
 
         if self.editor.is_some() {
             if let Some(editor) = &mut self.editor {
@@ -89,56 +91,16 @@ impl XtreeUI {
                     .wrap(Wrap { trim: false });
                 f.render_widget(paragraph, area);
             }
-            self.render_chat(
-                f,
-                content_chunks[2],
-                bg,
-                text,
-                border_focused,
-                border_dim,
-                highlight,
-                header_bg_color,
-                header_text_color,
-            );
+            self.render_chat(f, content_chunks[2], palette);
         } else {
             let right_chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
                 .split(content_chunks[1]);
-            self.render_status(
-                f,
-                right_chunks[0],
-                bg,
-                text,
-                border_focused,
-                border_dim,
-                highlight,
-                header_bg_color,
-                header_text_color,
-            );
-            self.render_status(
-                f,
-                content_chunks[2],
-                bg,
-                text,
-                border_focused,
-                border_dim,
-                highlight,
-                header_bg_color,
-                header_text_color,
-            );
+            self.render_status(f, right_chunks[0], palette);
+            self.render_status(f, content_chunks[2], palette);
         }
-        self.render_logs(
-            f,
-            main_chunks[2],
-            bg,
-            text,
-            border_focused,
-            border_dim,
-            highlight,
-            header_bg_color,
-            header_text_color,
-        );
+        self.render_logs(f, main_chunks[2], palette);
     }
 
     fn render_header(

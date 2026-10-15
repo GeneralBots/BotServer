@@ -28,10 +28,7 @@ impl LlmProviderOps for BotlibLlmAdapter {
         let key = key.to_string();
         Box::pin(async move {
             match provider {
-                Some(p) => p
-                    .generate_stream(&prompt, &config, tx, &model, &key, None)
-                    .await
-                    .map_err(BoxError::from),
+                Some(p) => p.generate_stream(&prompt, &config, tx, &model, &key, None).await,
                 None => Err(BoxError::from(
                     "no LLM provider configured; AutoTask falls back to heuristics".to_string(),
                 )),

@@ -5,19 +5,36 @@ use uuid::Uuid;
 
 use botcore::shared::state::AppState;
 
+/// One administrative action to record.
+///
+/// The fields are named because several are the same shape (`actor_id` and
+/// `target_id` are both a `Uuid`, `target_type` and `details` both optional
+/// text), so positional arguments at the call sites were easy to transpose.
+pub struct AuditEvent<'a> {
+    pub state: &'a Arc<AppState>,
+    pub event_type: &'a str,
+    pub actor_id: Uuid,
+    pub action: &'a str,
+    pub target_type: Option<&'a str>,
+    pub target_id: Option<Uuid>,
+    pub success: bool,
+    pub details: Option<&'a str>,
+}
+
 /// Writes one durable audit event to the `audit_log` table. Every RBAC and
 /// settings mutation should call this so administrative actions leave a
 /// persistent, queryable compliance trail.
-pub fn record_audit_event(
-    state: &Arc<AppState>,
-    event_type: &str,
-    actor_id: Uuid,
-    action: &str,
-    target_type: Option<&str>,
-    target_id: Option<Uuid>,
-    success: bool,
-    details: Option<&str>,
-) {
+pub fn record_audit_event(event: AuditEvent<'_>) {
+    let AuditEvent {
+        state,
+        event_type,
+        actor_id,
+        action,
+        target_type,
+        target_id,
+        success,
+        details,
+    } = event;
     let Some(mut conn) = state.conn.get().ok() else {
         log::warn!("audit: DB unavailable, event dropped ({action})");
         return;

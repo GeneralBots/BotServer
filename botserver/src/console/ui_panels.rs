@@ -8,19 +8,32 @@ use ratatui::{
     Frame,
 };
 
+/// The colors every console panel renders with.
+///
+/// The set travels as one value so a panel signature receives the palette
+/// instead of seven separate colors.
+#[derive(Clone, Copy)]
+pub(super) struct ConsolePalette {
+    pub(super) bg: Color,
+    pub(super) text: Color,
+    pub(super) border_focused: Color,
+    pub(super) border_dim: Color,
+    pub(super) highlight: Color,
+    pub(super) header_bg_color: Color,
+    pub(super) header_text_color: Color,
+}
+
 impl XtreeUI {
-    pub(super) fn render_file_tree(
-        &self,
-        f: &mut Frame,
-        area: Rect,
-        bg: Color,
-        text: Color,
-        border_focused: Color,
-        border_dim: Color,
-        highlight: Color,
-        header_bg_color: Color,
-        header_text_color: Color,
-    ) {
+    pub(super) fn render_file_tree(&self, f: &mut Frame, area: Rect, palette: ConsolePalette) {
+        let ConsolePalette {
+            bg,
+            text,
+            border_focused,
+            border_dim,
+            highlight,
+            header_bg_color,
+            header_text_color,
+        } = palette;
         if let Some(file_tree) = &self.file_tree {
             let items = file_tree.render_items();
             let selected = file_tree.selected_index();
@@ -64,18 +77,16 @@ impl XtreeUI {
         }
     }
 
-    pub(super) fn render_status(
-        &mut self,
-        f: &mut Frame,
-        area: Rect,
-        bg: Color,
-        text: Color,
-        border_focused: Color,
-        border_dim: Color,
-        _highlight: Color,
-        header_bg_color: Color,
-        header_text_color: Color,
-    ) {
+    pub(super) fn render_status(&mut self, f: &mut Frame, area: Rect, palette: ConsolePalette) {
+        let ConsolePalette {
+            bg,
+            text,
+            border_focused,
+            border_dim,
+            header_bg_color,
+            header_text_color,
+            ..
+        } = palette;
         let selected_bot_opt = self
             .file_tree
             .as_ref()
@@ -114,18 +125,16 @@ impl XtreeUI {
         f.render_widget(paragraph, area);
     }
 
-    pub(super) fn render_chat(
-        &self,
-        f: &mut Frame,
-        area: Rect,
-        bg: Color,
-        text: Color,
-        border_focused: Color,
-        border_dim: Color,
-        _highlight: Color,
-        header_bg_color: Color,
-        header_text_color: Color,
-    ) {
+    pub(super) fn render_chat(&self, f: &mut Frame, area: Rect, palette: ConsolePalette) {
+        let ConsolePalette {
+            bg,
+            text,
+            border_focused,
+            border_dim,
+            header_bg_color,
+            header_text_color,
+            ..
+        } = palette;
         if let Some(chat_panel) = &self.chat_panel {
             let is_active = self.active_panel == ActivePanel::Chat;
             let border_color = if is_active {
@@ -163,18 +172,16 @@ impl XtreeUI {
         }
     }
 
-    pub(super) fn render_logs(
-        &self,
-        f: &mut Frame,
-        area: Rect,
-        bg: Color,
-        text: Color,
-        border_focused: Color,
-        border_dim: Color,
-        _highlight: Color,
-        header_bg_color: Color,
-        header_text_color: Color,
-    ) {
+    pub(super) fn render_logs(&self, f: &mut Frame, area: Rect, palette: ConsolePalette) {
+        let ConsolePalette {
+            bg,
+            text,
+            border_focused,
+            border_dim,
+            header_bg_color,
+            header_text_color,
+            ..
+        } = palette;
         let visible_lines = area.height.saturating_sub(2) as usize;
 
         let (log_lines, can_scroll_up, can_scroll_down, logs_count, auto_scroll) = {

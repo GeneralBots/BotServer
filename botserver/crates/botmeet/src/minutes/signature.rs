@@ -9,6 +9,12 @@ use crate::minutes::types::{MinuteSignature, MinuteStatus, MeetingMinute};
 #[derive(Debug, Clone)]
 pub struct DigitalSigner;
 
+impl Default for DigitalSigner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DigitalSigner {
     pub fn new() -> Self {
         Self

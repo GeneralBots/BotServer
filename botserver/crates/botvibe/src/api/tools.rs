@@ -121,16 +121,30 @@ pub struct VibeSecurityDeps {
     pub skills: Arc<crate::skills::SkillStore>,
 }
 
-pub fn router(
-    state: Arc<dyn VibeState>,
-    prompt_manager: Arc<VibePromptManager>,
-    tool_executor: Arc<VibeToolExecutor>,
-    telemetry: Arc<VibeTelemetry>,
-    security: VibeSecurityDeps,
-    pool: crate::types::DbPool,
-    project_registry: ProjectRegistryRef,
-    project_rbac: crate::rbac::ProjectRbac,
-) -> axum::Router {
+/// Everything the Vibe API router is wired with, grouped so the router keeps a
+/// short signature.
+pub struct VibeApiDeps {
+    pub state: Arc<dyn VibeState>,
+    pub prompt_manager: Arc<VibePromptManager>,
+    pub tool_executor: Arc<VibeToolExecutor>,
+    pub telemetry: Arc<VibeTelemetry>,
+    pub security: VibeSecurityDeps,
+    pub pool: crate::types::DbPool,
+    pub project_registry: ProjectRegistryRef,
+    pub project_rbac: crate::rbac::ProjectRbac,
+}
+
+pub fn router(deps: VibeApiDeps) -> axum::Router {
+    let VibeApiDeps {
+        state,
+        prompt_manager,
+        tool_executor,
+        telemetry,
+        security,
+        pool,
+        project_registry,
+        project_rbac,
+    } = deps;
     let api = Arc::new(VibeApiInner {
         state,
         prompt_manager,

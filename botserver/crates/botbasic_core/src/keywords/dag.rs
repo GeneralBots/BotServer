@@ -34,9 +34,10 @@ pub fn register_dag_keywords(
             true,
             |_context, inputs| {
                 let mut handles = Vec::new();
-                for i in 0..inputs.len() {
-                    let _stmt = inputs[i].clone();
-                    handles.push(std::thread::spawn(move || -> Result<Dynamic, Box<EvalAltResult>> {
+                // One worker per parallel branch keeps the statement arity intact;
+                // the branches themselves are not evaluated yet.
+                for _ in inputs {
+                    handles.push(std::thread::spawn(|| -> Result<Dynamic, Box<EvalAltResult>> {
                         Ok(Dynamic::UNIT)
                     }));
                 }

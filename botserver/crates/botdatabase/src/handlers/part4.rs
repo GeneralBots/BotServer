@@ -81,16 +81,31 @@ pub(super) fn execute_via_postgres_sync(
         Err(e) => Err(e),
     }
 }
+/// The paged read to run against the bot's own database.
+pub(super) struct TableQuery<'a> {
+    pub state: Arc<AppState>,
+    pub bot_id: &'a uuid::Uuid,
+    pub query: &'a str,
+    pub page: i64,
+    pub page_size: i64,
+    pub total_rows: i64,
+    pub pk_column: Option<String>,
+    pub col_names: Vec<String>,
+}
+
 pub(super) async fn execute_via_postgres(
-    state: Arc<AppState>,
-    bot_id: &uuid::Uuid,
-    query: &str,
-    page: i64,
-    page_size: i64,
-    total_rows: i64,
-    pk_column: Option<String>,
-    col_names: Vec<String>,
+    request: TableQuery<'_>,
 ) -> Result<Json<TableDataResponse>, (StatusCode, Json<serde_json::Value>)> {
+    let TableQuery {
+        state,
+        bot_id,
+        query,
+        page,
+        page_size,
+        total_rows,
+        pk_column,
+        col_names,
+    } = request;
     let db_url = get_bot_database_url(&state, *bot_id).await?;
     let query = query.to_string();
 

@@ -277,9 +277,7 @@ mod tests {
 
     #[tokio::test]
     async fn falls_back_to_template_without_llm() {
-        let _guard = crate::harness::WORKSPACE_ENV_LOCK
-            .lock()
-            .expect("workspace env lock");
+        let _guard = crate::harness::WORKSPACE_ENV_LOCK.lock().await;
         let previous = std::env::var_os("VIBE_WORKSPACE_ROOT");
         let tmp =
             std::env::temp_dir().join(format!("vibe-scaffold-test-{}", uuid::Uuid::new_v4()));

@@ -1,12 +1,10 @@
-use std::sync::Arc;
 use std::time::Duration;
 
-use botcore::shared::state::AppState;
 use uuid::Uuid;
 
 use super::sink::ChannelSink;
 use super::api_call::handle_api_call;
-use super::types::PipelineResult;
+use super::types::{LlmTarget, PipelineResult, SessionIdentity};
 
 
 
@@ -64,16 +62,19 @@ fn llm_empty_message() -> String {
 }
 
 pub async fn stream_llm_response(
-    sink: &dyn ChannelSink,
+    identity: &SessionIdentity<'_>,
     rx: &mut tokio::sync::mpsc::Receiver<botlib::models::BotResponse>,
-    state: &Arc<AppState>,
-    bot_uuid: Uuid,
-    session_id: Uuid,
-    user_id: Uuid,
-    bot_name: &str,
     messages: &serde_json::Value,
     user_text: &str,
 ) -> PipelineResult<()> {
+    let SessionIdentity {
+        sink,
+        state,
+        bot_uuid,
+        session_id,
+        user_id,
+        bot_name,
+    } = *identity;
     let bot_llm_provider = super::enriched_llm::resolve_bot_llm_provider(state, bot_uuid);
 
     if super::enriched_llm::respond_in_answer_mode(
@@ -241,10 +242,13 @@ pub async fn stream_llm_response(
                 let has_api_call = crate::core::bot::api_catalog::is_api_call_trigger(&full_response);
                 log::info!("LLM RESPONSE end: {} bytes total, {} bytes content_buffer, has_tool_call={}, has_ui_plan={}, has_api_call={}", full_response.len(), content_buffer.len(), has_tool_call, has_ui_plan, has_api_call);
 
+                let llm_target = LlmTarget {
+                    provider: Some(&llm),
+                    model: llm_model,
+                    key: llm_key,
+                };
                 if has_api_call && handle_api_call(
-                    sink, state, Some(&llm), llm_model, llm_key,
-                    bot_uuid, session_id, user_id, bot_name,
-                    &full_response, user_text, rx,
+                    identity, &llm_target, &full_response, user_text, rx,
                 ).await {
                     {
                         let mut sm = state.session_manager.lock().await;
@@ -402,14 +406,12 @@ pub async fn stream_llm_response(
                             log::info!("Executing {} parallel tool calls", call_chunks.len());
                             for call_chunk in call_chunks {
                                 super::tool_exec::run_llm_tool_call(
-                                    sink, state, bot_uuid, session_id, user_id, bot_name,
-                                    call_chunk, rx, user_text,
+                                    identity, rx, call_chunk, user_text,
                                 ).await;
                             }
                         } else {
                             super::tool_exec::run_llm_tool_call(
-                                sink, state, bot_uuid, session_id, user_id, bot_name,
-                                &full_response, rx, user_text,
+                                identity, rx, &full_response, user_text,
                             ).await;
                         }
                     }

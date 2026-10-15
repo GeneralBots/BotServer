@@ -6,6 +6,18 @@ use crate::responses::*;
 use tracing::info;
 use uuid::Uuid;
 
+/// The transcription and caption style one caption pass renders.
+#[derive(Debug, Clone, Copy)]
+pub struct CaptionRequest<'a> {
+    pub project_id: Uuid,
+    pub transcription: &'a TranscriptionResponse,
+    pub style: &'a str,
+    pub max_chars: i32,
+    pub font_size: i32,
+    pub color: &'a str,
+    pub with_background: bool,
+}
+
 impl VideoEngine {
     pub async fn generate_preview_frame(
         &self,
@@ -113,14 +125,16 @@ impl VideoEngine {
 
     pub async fn generate_captions_from_transcription(
         &self,
-        project_id: Uuid,
-        transcription: &TranscriptionResponse,
-        _style: &str,
-        _max_chars: i32,
-        font_size: i32,
-        color: &str,
-        with_background: bool,
+        request: CaptionRequest<'_>,
     ) -> Result<Vec<VideoLayer>, diesel::result::Error> {
+        let CaptionRequest {
+            project_id,
+            transcription,
+            font_size,
+            color,
+            with_background,
+            ..
+        } = request;
         let mut layers = Vec::new();
         let bg_color = if with_background {
             Some("rgba(0,0,0,0.7)")

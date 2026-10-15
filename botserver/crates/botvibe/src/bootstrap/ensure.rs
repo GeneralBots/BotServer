@@ -56,16 +56,16 @@ pub(crate) fn ensure_bot_rows_conn(
             let id = Uuid::new_v4();
             let database_name =
                 crate::project_db::project_database_name(bot.branch_id, &bot.name, "production");
-            insert_bot_row(
+            insert_bot_row(NewBotRow {
                 conn,
                 id,
-                &bot.name,
-                &prod_slug,
-                desc,
-                bot.org_id,
-                bot.branch_id,
-                &database_name,
-            )?;
+                name: &bot.name,
+                slug: &prod_slug,
+                description: desc,
+                org_id: bot.org_id,
+                branch_id: bot.branch_id,
+                database_name: &database_name,
+            })?;
             log::info!(
                 "vibe bootstrap: created PROD bot {prod_slug} (branch {})",
                 bot.branch_id
@@ -78,16 +78,16 @@ pub(crate) fn ensure_bot_rows_conn(
         let id = Uuid::new_v4();
         let database_name =
             crate::project_db::project_database_name(bot.branch_id, &bot.name, "test");
-        insert_bot_row(
+        insert_bot_row(NewBotRow {
             conn,
             id,
-            &format!("{}-test", bot.name),
-            &test_slug,
-            &format!("Vibe TEST bot for {}", bot.name),
-            bot.org_id,
-            bot.branch_id,
-            &database_name,
-        )?;
+            name: &format!("{}-test", bot.name),
+            slug: &test_slug,
+            description: &format!("Vibe TEST bot for {}", bot.name),
+            org_id: bot.org_id,
+            branch_id: bot.branch_id,
+            database_name: &database_name,
+        })?;
         log::info!(
             "vibe bootstrap: created TEST bot {test_slug} (branch {})",
             bot.branch_id

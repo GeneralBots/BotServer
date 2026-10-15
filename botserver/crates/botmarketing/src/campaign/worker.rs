@@ -70,14 +70,23 @@ impl CampaignWorker {
     }
 
     async fn run_pass(&self) -> Result<(), String> {
+        /// Selected `marketing_campaigns` columns of a campaign due for a pass.
+        type ActiveCampaignRow = (
+            Uuid,
+            String,
+            Option<chrono::DateTime<Utc>>,
+            Option<i32>,
+            Option<bool>,
+            Option<bool>,
+        );
+
         let mut conn = self
             .state
             .conn
             .get()
             .map_err(|e| format!("DB pool error: {e}"))?;
 
-        let active: Vec<(Uuid, String, Option<chrono::DateTime<Utc>>, Option<i32>, Option<bool>, Option<bool>)> =
-            marketing_campaigns::table
+        let active: Vec<ActiveCampaignRow> = marketing_campaigns::table
                 .filter(
                     marketing_campaigns::status
                         .eq(Some("scheduled".to_string()))

@@ -10,17 +10,31 @@ use crate::core::bot::ws::handler::validate_bot_name;
 use crate::core::bot::ws::handler::verify_path_within_workdir;
 use crate::core::bot::ws::message::load_bot_styles_css;
 
+/// One LLM turn of a web-socket session.
+pub struct LlmTurn<'a> {
+    pub state: &'a Arc<AppState>,
+    pub bot_uuid: Uuid,
+    pub session_id: Uuid,
+    pub user_id: Uuid,
+    pub bot_name: &'a str,
+    pub messages: &'a serde_json::Value,
+    pub user_text: &'a str,
+}
+
 pub async fn process_llm_response(
     ws_sender: &mut futures_util::stream::SplitSink<WebSocket, Message>,
     rx: &mut mpsc::Receiver<botlib::models::BotResponse>,
-    state: &Arc<AppState>,
-    bot_uuid: Uuid,
-    session_id: Uuid,
-    user_id: Uuid,
-    bot_name: &str,
-    messages: &serde_json::Value,
-    user_text: &str,
+    turn: &LlmTurn<'_>,
 ) {
+    let LlmTurn {
+        state,
+        bot_uuid,
+        session_id,
+        user_id,
+        bot_name,
+        messages,
+        user_text,
+    } = *turn;
     let (stream_tx, mut stream_rx) = mpsc::channel::<String>(100);
     let mut full_response = String::new();
 

@@ -210,7 +210,7 @@ pub async fn list_documents_from_drive(
         }
     }
 
-    documents.sort_by_key(|a| std::cmp::Reverse(a.updated_at.clone()));
+    documents.sort_by_key(|a| std::cmp::Reverse(a.updated_at));
     Ok(documents)
 }
 

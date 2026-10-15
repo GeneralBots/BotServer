@@ -11,7 +11,7 @@ pub async fn start(
     Path((bot_id, provider)): Path<(String, String)>,
     headers: axum::http::HeaderMap,
     Query(query): Query<StartQuery>,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     // These two are connected centrally (Drive -> External) and their actions
     // read that shared connection. A per-bot credential here would be a second
     // token store for the same account, silently out of sync with the one the

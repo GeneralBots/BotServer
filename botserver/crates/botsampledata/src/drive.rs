@@ -17,9 +17,12 @@ use diesel::sql_types::Text;/// Name, branch slug and org slug of the default bo
 /// land in the bot's own `{bot}.gbai` bucket or in the shared `{slug}.gborg`
 /// workspace, and the branch names the `{branch}.gbai/` workspace inside that
 /// bucket — so neither can be built from the bot name alone.
+/// Bot name with its branch and org slugs.
+type DefaultBotSlugs = (String, Option<String>, Option<String>);
+
 fn resolve_default_bot(
     conn: &mut diesel::PgConnection,
-) -> Result<Option<(String, Option<String>, Option<String>)>, String> {
+) -> Result<Option<DefaultBotSlugs>, String> {
     #[derive(diesel::QueryableByName)]
     struct BotRow {
         #[diesel(sql_type = Text)]

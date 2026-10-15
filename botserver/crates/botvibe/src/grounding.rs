@@ -189,8 +189,10 @@ mod tests {
     use std::collections::HashMap;
 
     fn sample_run() -> VibeRun {
-        let mut config = VibeRunConfig::default();
-        config.use_case = VibeUseCase::CustomerSupport;
+        let config = VibeRunConfig {
+            use_case: VibeUseCase::CustomerSupport,
+            ..Default::default()
+        };
         VibeRun::new(Uuid::nil(), Uuid::nil(), Uuid::nil(), "help customer with refund".into(), config)
     }
 

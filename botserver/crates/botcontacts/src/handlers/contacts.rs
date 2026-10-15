@@ -48,14 +48,16 @@ pub async fn create_contact(
         if let Some(found) = existing {
             audit::record(
                 &state,
-                &headers,
-                branch_id,
-                "contact",
-                Some(found.id),
-                "create_deduplicated",
-                None,
-                Some(serde_json::json!({ "email": found.email })),
-                None,
+                audit::AuditRecord {
+                    headers: &headers,
+                    branch_id,
+                    entity: "contact",
+                    entity_id: Some(found.id),
+                    action: "create_deduplicated",
+                    before: None,
+                    after: Some(serde_json::json!({ "email": found.email })),
+                    detail: None,
+                },
             );
             return Ok(Json(found));
         }
@@ -102,14 +104,16 @@ pub async fn create_contact(
 
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "contact",
-        Some(id),
-        "create",
-        None,
-        Some(serde_json::to_value(&contact).unwrap_or(serde_json::Value::Null)),
-        None,
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "contact",
+            entity_id: Some(id),
+            action: "create",
+            before: None,
+            after: Some(serde_json::to_value(&contact).unwrap_or(serde_json::Value::Null)),
+            detail: None,
+        },
     );
 
     Ok(Json(contact))
@@ -251,14 +255,16 @@ pub async fn update_contact(
 
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "contact",
-        Some(id),
-        "update",
-        Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
-        Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
-        None,
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "contact",
+            entity_id: Some(id),
+            action: "update",
+            before: Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
+            after: Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
+            detail: None,
+        },
     );
 
     Ok(Json(after))
@@ -297,14 +303,16 @@ pub async fn delete_contact(
     if let Some(row) = before {
         audit::record(
             &state,
-            &headers,
-            branch_id,
-            "contact",
-            Some(id),
-            "delete",
-            Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
-            None,
-            None,
+            audit::AuditRecord {
+                headers: &headers,
+                branch_id,
+                entity: "contact",
+                entity_id: Some(id),
+                action: "delete",
+                before: Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
+                after: None,
+                detail: None,
+            },
         );
     }
     Ok(StatusCode::NO_CONTENT)

@@ -59,17 +59,32 @@ fn key_digit_value(character: char) -> u32 {
 ///
 /// Layout, one digit per position: cUF (2) + AAMM (4) + CNPJ (14) + mod (2) +
 /// série (3) + nNF (9) + tpEmis (1) + cNF (8) + cDV (1).
-pub fn build_access_key(
-    state: &str,
-    issue_year: u16,
-    issue_month: u8,
-    cnpj: &str,
-    model: &str,
-    series: &str,
-    number: u32,
-    emission_kind: &str,
-    code: u32,
-) -> Result<String, TaxError> {
+/// Inputs of the 44-digit NF-e access key.
+#[derive(Clone, Copy)]
+pub struct AccessKeyInput<'a> {
+    pub state: &'a str,
+    pub issue_year: u16,
+    pub issue_month: u8,
+    pub cnpj: &'a str,
+    pub model: &'a str,
+    pub series: &'a str,
+    pub number: u32,
+    pub emission_kind: &'a str,
+    pub code: u32,
+}
+
+pub fn build_access_key(input: &AccessKeyInput<'_>) -> Result<String, TaxError> {
+    let AccessKeyInput {
+        state,
+        issue_year,
+        issue_month,
+        cnpj,
+        model,
+        series,
+        number,
+        emission_kind,
+        code,
+    } = *input;
     let cnpj_digits = cnpj.chars().filter(|c| c.is_ascii_digit()).collect::<String>();
     if cnpj_digits.len() != 14 {
         return Err(TaxError::InvalidCnpj(cnpj.to_string()));
@@ -208,7 +223,18 @@ mod tests {
 
     #[test]
     fn access_key_is_44_digits() {
-        let key = build_access_key("35", 2026, 6, "11222333000181", "55", "1", 1, "1", 0).expect("key");
+        let key = build_access_key(&AccessKeyInput {
+            state: "35",
+            issue_year: 2026,
+            issue_month: 6,
+            cnpj: "11222333000181",
+            model: "55",
+            series: "1",
+            number: 1,
+            emission_kind: "1",
+            code: 0,
+        })
+        .expect("key");
         assert_eq!(key.len(), 44);
         assert!(is_valid_nfe_access_key(&key));
     }

@@ -315,9 +315,13 @@ pub fn convert_multiword_keywords(script: &str) -> String {
             let is_control = trimmed_line.starts_with("IF ") || trimmed_line.starts_with("ELSE") || trimmed_line.starts_with("END ") || trimmed_line.starts_with("NEXT") || trimmed_line.starts_with("LOOP") || trimmed_line.starts_with("FOR ") || trimmed_line.starts_with("WHILE") || trimmed_line.starts_with("SWITCH") || trimmed_line.starts_with("CASE") || trimmed_line.starts_with("DEFAULT") || trimmed_line.starts_with("DO") || trimmed_line.starts_with("UNTIL") || trimmed_line.starts_with("WEND");
             if is_comment || trimmed_line.is_empty() {
                 // skip comment/blank lines entirely — Rhai doesn't understand ' as comment
-            } else if is_decl || is_control {
-                result.push_str(line);
-            } else if trimmed_line.ends_with(';') || trimmed_line.ends_with('{') || (trimmed_line.ends_with('}') && !trimmed_line.contains("#{")) || trimmed_line.ends_with(':') {
+            } else if is_decl
+                || is_control
+                || trimmed_line.ends_with(';')
+                || trimmed_line.ends_with('{')
+                || (trimmed_line.ends_with('}') && !trimmed_line.contains("#{"))
+                || trimmed_line.ends_with(':')
+            {
                 result.push_str(line);
             } else {
                 result.push_str(line);

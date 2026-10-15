@@ -129,6 +129,32 @@ pub struct Point {
     pub y: f64,
 }
 
+/// A pixel coordinate on the exported canvas. Distinct from [`Point`], which
+/// carries the floating-point coordinates of stored shape data.
+#[derive(Debug, Clone, Copy)]
+pub(super) struct CanvasPoint {
+    pub(super) x: i32,
+    pub(super) y: i32,
+}
+
+/// The pixel rectangle a shape occupies on the exported canvas.
+#[derive(Debug, Clone, Copy)]
+pub(super) struct CanvasRect {
+    pub(super) x: i32,
+    pub(super) y: i32,
+    pub(super) w: i32,
+    pub(super) h: i32,
+}
+
+/// The RGBA bytes a canvas pixel is blended with.
+#[derive(Debug, Clone, Copy)]
+pub(super) struct Rgba {
+    pub(super) r: u8,
+    pub(super) g: u8,
+    pub(super) b: u8,
+    pub(super) a: u8,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WhiteboardData {
     pub id: Uuid,

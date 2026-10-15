@@ -72,16 +72,16 @@ pub async fn assign_role_to_user(
 
     match result {
         Ok(Ok(ur)) => {
-            crate::audit_log::record_audit_event(
-                &state,
-                "rbac",
-                Uuid::nil(),
-                "role.assign",
-                Some("user"),
-                Some(user_id),
-                true,
-                Some(&format!("Assigned role {role_id} to user {user_id}")),
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "rbac",
+                actor_id: Uuid::nil(),
+                action: "role.assign",
+                target_type: Some("user"),
+                target_id: Some(user_id),
+                success: true,
+                details: Some(&format!("Assigned role {role_id} to user {user_id}")),
+            });
             (StatusCode::CREATED, Json(ur)).into_response()
         }
         Ok(Err(e)) => {
@@ -114,16 +114,16 @@ pub async fn remove_role_from_user(
 
     match result {
         Ok(Ok(())) => {
-            crate::audit_log::record_audit_event(
-                &state,
-                "rbac",
-                Uuid::nil(),
-                "role.revoke",
-                Some("user"),
-                Some(user_id),
-                true,
-                Some(&format!("Revoked role {role_id} from user {user_id}")),
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "rbac",
+                actor_id: Uuid::nil(),
+                action: "role.revoke",
+                target_type: Some("user"),
+                target_id: Some(user_id),
+                success: true,
+                details: Some(&format!("Revoked role {role_id} from user {user_id}")),
+            });
             StatusCode::NO_CONTENT.into_response()
         }
         Ok(Err(e)) => {
@@ -186,16 +186,16 @@ pub async fn add_user_to_group(
 
     match result {
         Ok(Ok(ug)) => {
-            crate::audit_log::record_audit_event(
-                &state,
-                "rbac",
-                Uuid::nil(),
-                "group.add_user",
-                Some("group"),
-                Some(group_id),
-                true,
-                Some(&format!("Added user {user_id} to group {group_id}")),
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "rbac",
+                actor_id: Uuid::nil(),
+                action: "group.add_user",
+                target_type: Some("group"),
+                target_id: Some(group_id),
+                success: true,
+                details: Some(&format!("Added user {user_id} to group {group_id}")),
+            });
             (StatusCode::CREATED, Json(ug)).into_response()
         }
         Ok(Err(e)) => {
@@ -228,16 +228,16 @@ pub async fn remove_user_from_group(
 
     match result {
         Ok(Ok(())) => {
-            crate::audit_log::record_audit_event(
-                &state,
-                "rbac",
-                Uuid::nil(),
-                "group.remove_user",
-                Some("group"),
-                Some(group_id),
-                true,
-                Some(&format!("Removed user {user_id} from group {group_id}")),
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "rbac",
+                actor_id: Uuid::nil(),
+                action: "group.remove_user",
+                target_type: Some("group"),
+                target_id: Some(group_id),
+                success: true,
+                details: Some(&format!("Removed user {user_id} from group {group_id}")),
+            });
             StatusCode::NO_CONTENT.into_response()
         }
         Ok(Err(e)) => {

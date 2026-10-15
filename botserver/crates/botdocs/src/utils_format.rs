@@ -114,8 +114,6 @@ pub fn sanitize_filename(name: &str) -> String {
         .map(|c| {
             if c.is_alphanumeric() || c == '-' || c == '_' || c == '.' {
                 c
-            } else if c == ' ' {
-                '_'
             } else {
                 '_'
             }

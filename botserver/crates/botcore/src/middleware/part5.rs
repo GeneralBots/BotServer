@@ -13,11 +13,9 @@ pub fn require_role_middleware(
                 .unwrap_or_else(AuthenticatedUser::anonymous);
 
             if !user.has_role(required_role) {
-                return Err(ForbiddenResponse::new(&format!(
-                    "Required role: {}",
-                    required_role
-                ))
-                .into_response());
+                return Err(ResponseError::new(
+                    ForbiddenResponse::new(&format!("Required role: {required_role}")).into_response(),
+                ));
             }
 
             Ok(next.run(request).await)
@@ -28,11 +26,13 @@ pub fn require_role_middleware(
 pub async fn require_organization_middleware(
     request: Request<Body>,
     next: Next,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     let has_org = request.extensions().get::<OrganizationContext>().is_some();
 
     if !has_org {
-        return Err(BadRequestResponse::new("Organization context required").into_response());
+        return Err(ResponseError::new(
+            BadRequestResponse::new("Organization context required").into_response(),
+        ));
     }
 
     Ok(next.run(request).await)
@@ -41,7 +41,7 @@ pub async fn require_organization_middleware(
 pub async fn require_org_admin_middleware(
     request: Request<Body>,
     next: Next,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     let context = request.extensions().get::<RequestContext>().cloned();
 
     let is_admin = context
@@ -50,7 +50,9 @@ pub async fn require_org_admin_middleware(
         .unwrap_or(false);
 
     if !is_admin {
-        return Err(ForbiddenResponse::new("Organization admin access required").into_response());
+        return Err(ResponseError::new(
+            ForbiddenResponse::new("Organization admin access required").into_response(),
+        ));
     }
 
     Ok(next.run(request).await)

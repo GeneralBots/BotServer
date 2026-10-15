@@ -2,16 +2,29 @@ use super::*;
 
 /// Insert a `bots` row. `ON CONFLICT (slug) DO NOTHING` keeps another
 /// branch's bot untouchable.
-pub(super) fn insert_bot_row(
-    conn: &mut PgConnection,
-    id: Uuid,
-    name: &str,
-    slug: &str,
-    description: &str,
-    org_id: Uuid,
-    branch_id: Uuid,
-    database_name: &str,
-) -> Result<(), String> {
+/// The `bots` row to create.
+pub(super) struct NewBotRow<'a> {
+    pub conn: &'a mut PgConnection,
+    pub id: Uuid,
+    pub name: &'a str,
+    pub slug: &'a str,
+    pub description: &'a str,
+    pub org_id: Uuid,
+    pub branch_id: Uuid,
+    pub database_name: &'a str,
+}
+
+pub(super) fn insert_bot_row(row: NewBotRow<'_>) -> Result<(), String> {
+    let NewBotRow {
+        conn,
+        id,
+        name,
+        slug,
+        description,
+        org_id,
+        branch_id,
+        database_name,
+    } = row;
     diesel::sql_query(
         "INSERT INTO bots (id, name, slug, description, org_id, branch_id, \
              database_name, llm_provider, llm_config, context_provider, context_config, \

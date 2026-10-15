@@ -82,21 +82,24 @@ pub fn markdown_to_html(md: &str) -> String {
 fn process_markdown_line(line: &str) -> String {
     let mut result = line.to_string();
 
-    if line.starts_with("# ") {
-        return format!("<h1>{}</h1>", &line[2..]);
-    } else if line.starts_with("## ") {
-        return format!("<h2>{}</h2>", &line[3..]);
-    } else if line.starts_with("### ") {
-        return format!("<h3>{}</h3>", &line[4..]);
-    } else if line.starts_with("#### ") {
-        return format!("<h4>{}</h4>", &line[5..]);
-    } else if line.starts_with("##### ") {
-        return format!("<h5>{}</h5>", &line[6..]);
-    } else if line.starts_with("###### ") {
-        return format!("<h6>{}</h6>", &line[7..]);
-    } else if line.starts_with("> ") {
-        return format!("<blockquote>{}</blockquote>", &line[2..]);
-    } else if line == "---" || line == "***" || line == "___" {
+    // Ordered longest-first so `### ` never matches the `# ` rule.
+    const HEADINGS: [(&str, &str); 6] = [
+        ("###### ", "h6"),
+        ("##### ", "h5"),
+        ("#### ", "h4"),
+        ("### ", "h3"),
+        ("## ", "h2"),
+        ("# ", "h1"),
+    ];
+    for (prefix, tag) in HEADINGS {
+        if let Some(text) = line.strip_prefix(prefix) {
+            return format!("<{tag}>{text}</{tag}>");
+        }
+    }
+    if let Some(text) = line.strip_prefix("> ") {
+        return format!("<blockquote>{text}</blockquote>");
+    }
+    if line == "---" || line == "***" || line == "___" {
         return "<hr>".to_string();
     }
 

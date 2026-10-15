@@ -1,5 +1,16 @@
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Duration, Utc};
+
+/// A permission to record on the access review ledger.
+pub struct PermissionGrant {
+    pub user_id: Uuid,
+    pub resource_id: String,
+    pub resource_type: ResourceType,
+    pub access_level: AccessLevel,
+    pub granted_by: Uuid,
+    pub justification: String,
+    pub expires_in: Option<Duration>,
+}
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -102,16 +113,16 @@ impl AccessReviewService {
         }
     }
 
-    pub fn grant_permission(
-        &mut self,
-        user_id: Uuid,
-        resource_id: String,
-        resource_type: ResourceType,
-        access_level: AccessLevel,
-        granted_by: Uuid,
-        justification: String,
-        expires_in: Option<Duration>,
-    ) -> Result<AccessPermission> {
+    pub fn grant_permission(&mut self, grant: PermissionGrant) -> Result<AccessPermission> {
+        let PermissionGrant {
+            user_id,
+            resource_id,
+            resource_type,
+            access_level,
+            granted_by,
+            justification,
+            expires_in,
+        } = grant;
         let permission = AccessPermission {
             id: Uuid::new_v4(),
             user_id,

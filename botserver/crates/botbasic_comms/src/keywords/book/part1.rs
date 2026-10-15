@@ -1,5 +1,16 @@
 use super::*;
 
+/// Selected `calendar_events` columns in select order.
+type CalendarEventRow = (
+    Uuid,
+    String,
+    Option<String>,
+    DateTime<Utc>,
+    DateTime<Utc>,
+    Option<String>,
+    String,
+);
+
 impl CalendarEngine {
     #[must_use]
     pub fn new(db: botcore::shared::utils::DbPool) -> Self {
@@ -85,7 +96,7 @@ impl CalendarEngine {
 
         // Find events that overlap with the given time range
         // Overlap condition: event.start < query.end AND event.end > query.start
-        let rows: Vec<(Uuid, String, Option<String>, DateTime<Utc>, DateTime<Utc>, Option<String>, String)> = calendar_events::table
+        let rows: Vec<CalendarEventRow> = calendar_events::table
             .filter(calendar_events::start_time.lt(end))
             .filter(calendar_events::end_time.gt(start))
             .filter(calendar_events::status.ne("cancelled"))
@@ -137,7 +148,7 @@ impl CalendarEngine {
         let mut conn = self.db.get()?;
 
         // Get all events within the time range
-        let rows: Vec<(Uuid, String, Option<String>, DateTime<Utc>, DateTime<Utc>, Option<String>, String)> = calendar_events::table
+        let rows: Vec<CalendarEventRow> = calendar_events::table
             .filter(calendar_events::start_time.ge(start))
             .filter(calendar_events::start_time.le(end))
             .filter(calendar_events::status.ne("cancelled"))

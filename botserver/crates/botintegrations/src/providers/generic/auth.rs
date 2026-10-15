@@ -47,10 +47,13 @@ pub(super) fn resolve_origin(spec: &ProviderSpec, credentials: &Value) -> Result
     }
 }
 
+/// Header and query pairs a provider's auth style contributes to a request.
+pub(super) type AuthHeaders = (Vec<(&'static str, String)>, Vec<(String, String)>);
+
 pub(super) fn auth_headers_and_query(
     spec: &ProviderSpec,
     credentials: &Value,
-) -> Result<(Vec<(&'static str, String)>, Vec<(String, String)>), String> {
+) -> Result<AuthHeaders, String> {
     let mut headers = Vec::new();
     let mut query = Vec::new();
     match &spec.auth {

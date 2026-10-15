@@ -232,7 +232,7 @@ pub async fn request_context_middleware(mut request: Request<Body>, next: Next) 
 pub async fn require_authentication_middleware(
     request: Request<Body>,
     next: Next,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     let user = request
         .extensions()
         .get::<AuthenticatedUser>()
@@ -240,7 +240,9 @@ pub async fn require_authentication_middleware(
         .unwrap_or_else(AuthenticatedUser::anonymous);
 
     if !user.is_authenticated() {
-        return Err(UnauthorizedResponse::new("Authentication required").into_response());
+        return Err(ResponseError::new(
+            UnauthorizedResponse::new("Authentication required").into_response(),
+        ));
     }
 
     Ok(next.run(request).await)

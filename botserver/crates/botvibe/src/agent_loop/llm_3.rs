@@ -2,6 +2,18 @@
 
 use super::*;
 
+/// The provider call `call_llm_nonstream` issues: endpoint, credentials, model
+/// and the composed conversation, grouped so the signature stays short.
+pub(crate) struct LlmRequest<'a> {
+    api_url: &'a str,
+    api_key: &'a str,
+    model: &'a str,
+    system: &'a str,
+    prompt: &'a str,
+    tools: &'a [serde_json::Value],
+    tool_choice: &'a str,
+}
+
 impl AgentLoop {
     /// vibe33 #813 — retries the LLM call with short backoff so transient
     /// provider failures do not kill the whole run. Deterministic client
@@ -208,15 +220,15 @@ impl AgentLoop {
                 // calling still works instead of failing the run.
                 warn!("LLM streaming read failed ({e}); retrying non-streaming");
                 return self
-                    .call_llm_nonstream(
-                        &api_url,
-                        &api_key,
-                        &model,
-                        &system,
-                        &prompt,
-                        &tools,
+                    .call_llm_nonstream(LlmRequest {
+                        api_url: &api_url,
+                        api_key: &api_key,
+                        model: &model,
+                        system: &system,
+                        prompt: &prompt,
+                        tools: &tools,
                         tool_choice,
-                    )
+                    })
                     .await;
             }
         };
@@ -229,15 +241,15 @@ impl AgentLoop {
                 // non-streaming so a complete arguments document is returned
                 // instead of silently writing an empty/corrupt file.
                 warn!("LLM streaming truncated tool-call arguments ({e}); retrying non-streaming");
-                self.call_llm_nonstream(
-                    &api_url,
-                    &api_key,
-                    &model,
-                    &system,
-                    &prompt,
-                    &tools,
+                self.call_llm_nonstream(LlmRequest {
+                    api_url: &api_url,
+                    api_key: &api_key,
+                    model: &model,
+                    system: &system,
+                    prompt: &prompt,
+                    tools: &tools,
                     tool_choice,
-                )
+                })
                 .await
             }
             Err(e) if e.contains("empty content") => {
@@ -248,15 +260,15 @@ impl AgentLoop {
                 // instead of the loop burning an empty-parse round or
                 // accepting the turn as final.
                 warn!("LLM stream completed empty ({e}); retrying non-streaming");
-                self.call_llm_nonstream(
-                    &api_url,
-                    &api_key,
-                    &model,
-                    &system,
-                    &prompt,
-                    &tools,
+                self.call_llm_nonstream(LlmRequest {
+                    api_url: &api_url,
+                    api_key: &api_key,
+                    model: &model,
+                    system: &system,
+                    prompt: &prompt,
+                    tools: &tools,
                     tool_choice,
-                )
+                })
                 .await
             }
             Err(e) => Err(e),
@@ -268,14 +280,17 @@ impl AgentLoop {
     /// an SSE stream — more robust against truncated/decoded bodies.
     pub(crate) async fn call_llm_nonstream(
         &self,
-        api_url: &str,
-        api_key: &str,
-        model: &str,
-        system: &str,
-        prompt: &str,
-        tools: &[serde_json::Value],
-        tool_choice: &str,
+        request: LlmRequest<'_>,
     ) -> Result<(String, Option<LlmUsage>), String> {
+        let LlmRequest {
+            api_url,
+            api_key,
+            model,
+            system,
+            prompt,
+            tools,
+            tool_choice,
+        } = request;
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(LLM_REQUEST_TIMEOUT_SECS))
             .user_agent(LLM_USER_AGENT)

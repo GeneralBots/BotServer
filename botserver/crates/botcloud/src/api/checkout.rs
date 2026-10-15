@@ -269,17 +269,18 @@ pub(crate) async fn checkout_success(
             .cloned()
             .unwrap_or_else(|| "unknown".to_string());
 
-        let _ = integration::create_billing_subscription(
-            service.pool(),
-            invoice.branch_id,
-            invoice.customer_name.as_deref().unwrap_or(""),
-            invoice.customer_email.as_deref().unwrap_or(""),
-            &plan_label,
+        let _ = integration::create_billing_subscription(integration::NewSubscription {
+            pool: service.pool(),
+            branch_id: invoice.branch_id,
+            customer_name: invoice.customer_name.as_deref().unwrap_or(""),
+            customer_email: invoice.customer_email.as_deref().unwrap_or(""),
+            plan: &plan_label,
             total,
-            invoice.currency.as_deref().unwrap_or(""),
+            currency: invoice.currency.as_deref().unwrap_or(""),
             invoice_id,
-            "monthly",
-        ).map_err(|e| tracing::warn!("Subscription creation failed: {e}"));
+            period: "monthly",
+        })
+        .map_err(|e| tracing::warn!("Subscription creation failed: {e}"));
 
         // --- Post-payment notifications ---
         let mut vars = notifier::EmailVars::new(

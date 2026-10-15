@@ -1,8 +1,4 @@
-use std::sync::Arc;
-use botcore::shared::state::AppState;
-use uuid::Uuid;
-
-use super::sink::ChannelSink;
+use super::types::{LlmTarget, SessionIdentity};
 
 /// Collects every `app://...` deep-link string present anywhere in a command
 /// result so the final answer can surface the most relevant one even when the
@@ -166,19 +162,21 @@ fn strip_api_call_block(text: &str) -> String {
 /// in the LLM reply. Returns true when the call was handled (even on error),
 /// so the caller skips the regular rendering path.
 pub(super) async fn handle_api_call(
-    sink: &dyn ChannelSink,
-    state: &Arc<AppState>,
-    llm: Option<&Arc<dyn botlib::traits::LLMProvider>>,
-    model: &str,
-    key: &str,
-    bot_uuid: Uuid,
-    session_id: Uuid,
-    user_id: Uuid,
-    bot_name: &str,
+    identity: &SessionIdentity<'_>,
+    target: &LlmTarget<'_>,
     full_response: &str,
     user_text: &str,
     rx: &mut tokio::sync::mpsc::Receiver<botlib::models::BotResponse>,
 ) -> bool {
+    let SessionIdentity {
+        sink,
+        state,
+        bot_uuid,
+        session_id,
+        user_id,
+        bot_name,
+    } = *identity;
+    let LlmTarget { provider: llm, model, key } = *target;
     use crate::core::bot::api_catalog;
     let payload = match extract_api_call_payload(full_response) {
         Some(p) => p,
@@ -208,10 +206,7 @@ pub(super) async fn handle_api_call(
         let synthetic = format!(
             "{{\"__tool_call__\": true, \"name\": \"{name}\", \"arguments\": {args_escaped}}}"
         );
-        super::tool_exec::run_llm_tool_call(
-            sink, state, bot_uuid, session_id, user_id, bot_name,
-            &synthetic, rx, user_text,
-        ).await;
+        super::tool_exec::run_llm_tool_call(identity, rx, &synthetic, user_text).await;
         return true;
     }
 

@@ -138,6 +138,12 @@ impl PluginRegistry {
         let plugins = self.plugins.read().await;
         plugins.len()
     }
+
+    /// Returns `true` when no plugin manifest is registered.
+    pub async fn is_empty(&self) -> bool {
+        let plugins = self.plugins.read().await;
+        plugins.is_empty()
+    }
 }
 
 impl Default for PluginRegistry {

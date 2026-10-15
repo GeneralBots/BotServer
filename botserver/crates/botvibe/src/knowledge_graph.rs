@@ -318,7 +318,7 @@ pub(crate) async fn get_knowledge_graph(
     }
     // #1446 — newest first by created_at (a lexical run_id sort is
     // meaningless for UUID v4), then cap so the canvas stays readable.
-    runs.sort_by_key(|a| std::cmp::Reverse(a.created_at.clone()));
+    runs.sort_by_key(|a| std::cmp::Reverse(a.created_at));
     let limit = query.limit.unwrap_or(20).min(100);
     if runs.len() > limit {
         runs.truncate(limit);

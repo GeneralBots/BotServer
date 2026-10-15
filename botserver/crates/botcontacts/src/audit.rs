@@ -23,20 +23,34 @@ pub fn actor_from_headers(headers: &HeaderMap) -> Option<String> {
     email_from_jwt(headers).or_else(|| email_from_session(headers))
 }
 
+/// Everything one audit row records, grouped so the writer keeps a short
+/// argument list: the request headers the actor is resolved from, the scope,
+/// the affected entity, the action, and optional before/after snapshots.
+pub struct AuditRecord<'a> {
+    pub headers: &'a HeaderMap,
+    pub branch_id: uuid::Uuid,
+    pub entity: &'a str,
+    pub entity_id: Option<uuid::Uuid>,
+    pub action: &'a str,
+    pub before: Option<serde_json::Value>,
+    pub after: Option<serde_json::Value>,
+    pub detail: Option<serde_json::Value>,
+}
+
 /// Inserts one audit row. Errors are logged, never propagated — the calling
 /// handler has usually already committed the business change, and losing the
 /// response to an audit failure would hide the real outcome from the user.
-pub fn record(
-    state: &Arc<CrateState>,
-    headers: &HeaderMap,
-    branch_id: uuid::Uuid,
-    entity: &str,
-    entity_id: Option<uuid::Uuid>,
-    action: &str,
-    before: Option<serde_json::Value>,
-    after: Option<serde_json::Value>,
-    detail: Option<serde_json::Value>,
-) {
+pub fn record(state: &Arc<CrateState>, entry: AuditRecord<'_>) {
+    let AuditRecord {
+        headers,
+        branch_id,
+        entity,
+        entity_id,
+        action,
+        before,
+        after,
+        detail,
+    } = entry;
     let Ok(mut conn) = state.db_pool.get() else {
         log::warn!("[crm-audit] pool unavailable; audit row for {entity}/{action} dropped");
         return;

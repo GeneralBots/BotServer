@@ -219,16 +219,18 @@ pub async fn create_stage(
         .map_err(diesel_err)?;
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "pipeline_stage",
-        Some(row.id),
-        "stage_create",
-        None,
-        Some(serde_json::json!({
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "pipeline_stage",
+            entity_id: Some(row.id),
+            action: "stage_create",
+            before: None,
+            after: Some(serde_json::json!({
             "name": row.name, "stage_order": row.stage_order, "probability": row.probability
         })),
-        None,
+            detail: None,
+        },
     );
     Ok(Json(row))
 }
@@ -270,18 +272,20 @@ pub async fn update_stage(
         .map_err(|_| (StatusCode::NOT_FOUND, "Stage not found".to_string()))?;
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "pipeline_stage",
-        Some(id),
-        "stage_update",
-        Some(serde_json::json!({
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "pipeline_stage",
+            entity_id: Some(id),
+            action: "stage_update",
+            before: Some(serde_json::json!({
             "name": before.name, "stage_order": before.stage_order, "probability": before.probability
         })),
-        Some(serde_json::json!({
+            after: Some(serde_json::json!({
             "name": after.name, "stage_order": after.stage_order, "probability": after.probability
         })),
-        None,
+            detail: None,
+        },
     );
     Ok(Json(after))
 }
@@ -325,16 +329,18 @@ pub async fn delete_stage(
     .map_err(diesel_err)?;
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "pipeline_stage",
-        Some(id),
-        "stage_delete",
-        Some(serde_json::json!({
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "pipeline_stage",
+            entity_id: Some(id),
+            action: "stage_delete",
+            before: Some(serde_json::json!({
             "name": stage.name, "stage_order": stage.stage_order, "probability": stage.probability
         })),
-        None,
-        None,
+            after: None,
+            detail: None,
+        },
     );
     Ok(StatusCode::NO_CONTENT)
 }

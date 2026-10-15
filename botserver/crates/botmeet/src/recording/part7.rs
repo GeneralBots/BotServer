@@ -1,5 +1,19 @@
 use super::*;
 
+/// Selected `meeting_recordings` columns in select order.
+type RecordingRow = (
+    Uuid,
+    Uuid,
+    String,
+    Option<String>,
+    Option<i64>,
+    Option<i32>,
+    String,
+    DateTime<Utc>,
+    Option<DateTime<Utc>>,
+    Option<DateTime<Utc>>,
+);
+
 impl RecordingService {
     pub(super) fn format_as_srt(
         &self,
@@ -60,7 +74,7 @@ impl RecordingService {
         tokio::task::spawn_blocking(move || {
             let mut conn = pool.get().map_err(|e| RecordingError::DatabaseError(e.to_string()))?;
 
-            let row: (Uuid, Uuid, String, Option<String>, Option<i64>, Option<i32>, String, DateTime<Utc>, Option<DateTime<Utc>>, Option<DateTime<Utc>>) = meeting_recordings::table
+            let row: RecordingRow = meeting_recordings::table
                 .filter(meeting_recordings::id.eq(recording_id))
                 .select((
                     meeting_recordings::id,
@@ -139,7 +153,7 @@ impl RecordingService {
         tokio::task::spawn_blocking(move || {
             let mut conn = pool.get().map_err(|e| RecordingError::DatabaseError(e.to_string()))?;
 
-            let rows: Vec<(Uuid, Uuid, String, Option<String>, Option<i64>, Option<i32>, String, DateTime<Utc>, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> = meeting_recordings::table
+            let rows: Vec<RecordingRow> = meeting_recordings::table
                 .filter(meeting_recordings::room_id.eq(room_id))
                 .filter(meeting_recordings::status.ne("deleted"))
                 .order(meeting_recordings::started_at.desc())

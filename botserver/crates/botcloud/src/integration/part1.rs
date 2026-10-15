@@ -216,17 +216,31 @@ pub(super) fn get_or_create_gl_account(
     Ok(id)
 }
 /// Creates a recurring subscription record (`billing_recurring`) for the bot.
-pub fn create_billing_subscription(
-    pool: &DbPool,
-    branch_id: Uuid,
-    customer_name: &str,
-    customer_email: &str,
-    plan: &str,
-    total: f64,
-    currency: &str,
-    invoice_id: Uuid,
-    period: &str,
-) -> Result<Uuid, String> {
+/// The recurring subscription to record for a paid invoice.
+pub struct NewSubscription<'a> {
+    pub pool: &'a DbPool,
+    pub branch_id: Uuid,
+    pub customer_name: &'a str,
+    pub customer_email: &'a str,
+    pub plan: &'a str,
+    pub total: f64,
+    pub currency: &'a str,
+    pub invoice_id: Uuid,
+    pub period: &'a str,
+}
+
+pub fn create_billing_subscription(subscription: NewSubscription<'_>) -> Result<Uuid, String> {
+    let NewSubscription {
+        pool,
+        branch_id,
+        customer_name,
+        customer_email,
+        plan,
+        total,
+        currency,
+        invoice_id,
+        period,
+    } = subscription;
     let mut conn = pool.get().map_err(|e| format!("DB pool: {e}"))?;
     let id = Uuid::new_v4();
     let now = Utc::now();

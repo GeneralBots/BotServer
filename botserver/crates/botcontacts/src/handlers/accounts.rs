@@ -61,14 +61,16 @@ pub async fn create_account(
     if let Some(existing) = find_by_name(&mut conn, branch_id, name).await {
         audit::record(
             &state,
-            &headers,
-            branch_id,
-            "account",
-            Some(existing.id),
-            "create_deduplicated",
-            None,
-            Some(serde_json::json!({ "name": existing.name })),
-            None,
+            audit::AuditRecord {
+                headers: &headers,
+                branch_id,
+                entity: "account",
+                entity_id: Some(existing.id),
+                action: "create_deduplicated",
+                before: None,
+                after: Some(serde_json::json!({ "name": existing.name })),
+                detail: None,
+            },
         );
         return Ok(Json(existing));
     }
@@ -108,14 +110,16 @@ pub async fn create_account(
 
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "account",
-        Some(id),
-        "create",
-        None,
-        Some(serde_json::to_value(&account).unwrap_or(serde_json::Value::Null)),
-        None,
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "account",
+            entity_id: Some(id),
+            action: "create",
+            before: None,
+            after: Some(serde_json::to_value(&account).unwrap_or(serde_json::Value::Null)),
+            detail: None,
+        },
     );
     Ok(Json(account))
 }
@@ -245,14 +249,16 @@ pub async fn update_account(
 
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "account",
-        Some(id),
-        "update",
-        Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
-        Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
-        None,
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "account",
+            entity_id: Some(id),
+            action: "update",
+            before: Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
+            after: Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
+            detail: None,
+        },
     );
     Ok(Json(after))
 }
@@ -301,14 +307,16 @@ pub async fn delete_account(
     if let Some(row) = before {
         audit::record(
             &state,
-            &headers,
-            branch_id,
-            "account",
-            Some(id),
-            "delete",
-            Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
-            None,
-            None,
+            audit::AuditRecord {
+                headers: &headers,
+                branch_id,
+                entity: "account",
+                entity_id: Some(id),
+                action: "delete",
+                before: Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
+                after: None,
+                detail: None,
+            },
         );
     }
     Ok(StatusCode::NO_CONTENT)

@@ -157,14 +157,16 @@ pub async fn create_task_handler(
     };
     let t = tasks::create_task(
         svc.pool(),
-        user_id,
-        body.org_id,
-        body.bot_id,
-        body.goal,
-        body.domains,
-        body.budget_steps.unwrap_or(60),
-        body.policy,
-        task_kind,
+        tasks::NewTaskRequest {
+            user_id,
+            org_id: body.org_id,
+            bot_id: body.bot_id,
+            goal: body.goal,
+            domains: body.domains,
+            budget_steps: body.budget_steps.unwrap_or(60),
+            policy_cfg: body.policy,
+            task_kind,
+        },
     )
     .map_err(|e| api_error("create task", &e))?;
     Ok(Json(serde_json::to_value(&t).unwrap_or_else(|_| serde_json::json!({}))))

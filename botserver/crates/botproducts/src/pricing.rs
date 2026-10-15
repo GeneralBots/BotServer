@@ -99,7 +99,7 @@ impl PricingEngine {
         quantity: i32,
         now: DateTime<Utc>,
     ) -> PriceQuote {
-        let list_price = self.base_price(product, rules, quantity, now);
+        let list_price = self.base_price(product, rules, quantity);
         let promotion_price = self.apply_promotions(list_price, product, promotions, quantity, now);
         let final_price = promotion_price.max(product.cost_cents);
         let discount = list_price - final_price;
@@ -116,13 +116,7 @@ impl PricingEngine {
         }
     }
 
-    fn base_price(
-        &self,
-        product: &Product,
-        rules: &[PriceRule],
-        quantity: i32,
-        now: DateTime<Utc>,
-    ) -> i64 {
+    fn base_price(&self, product: &Product, rules: &[PriceRule], quantity: i32) -> i64 {
         let mut candidates: Vec<i64> = vec![product.price_cents];
         for rule in rules.iter().filter(|r| r.active) {
             if let Some(pid) = rule.product_id {
@@ -161,8 +155,11 @@ impl PricingEngine {
             };
             candidates.push(price);
         }
-        candidates.into_iter().min().unwrap_or(product.price_cents).max(0)
-            * if now.timestamp() > 0 { 1 } else { 1 }
+        candidates
+            .into_iter()
+            .min()
+            .unwrap_or(product.price_cents)
+            .max(0)
     }
 
     fn apply_promotions(

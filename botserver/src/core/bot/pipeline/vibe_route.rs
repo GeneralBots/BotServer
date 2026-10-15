@@ -122,9 +122,6 @@ pub(super) async fn route_vibe_project(
                     let state = state.clone();
                     let run_id = run_id.to_string();
                     let project_name = project_name.clone();
-                    let bot_uuid = bot_uuid;
-                    let session_id = session_id;
-                    let user_id = user_id;
                     tokio::spawn(async move {
                         // #vibe-verbose — narrate progress milestones into the
                         // open Chat window while the run executes. The user

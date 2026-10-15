@@ -336,11 +336,9 @@ mod tests {
     /// The CLI ships in `apps`-kind project VMs (#1488), so on any host without
     /// it the tool must say so. A bare ENOENT would read as a missing binary
     /// and send an agent looking for an install bug instead of reading this.
-    #[test]
-    fn missing_cli_yields_an_actionable_message() {
-        let _guard = crate::harness::WORKSPACE_ENV_LOCK
-            .lock()
-            .expect("workspace env lock");
+    #[tokio::test]
+    async fn missing_cli_yields_an_actionable_message() {
+        let _guard = crate::harness::WORKSPACE_ENV_LOCK.lock().await;
         let tmp = std::env::temp_dir().join(format!("vibe-code-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&tmp).expect("create workspace root");
         let previous = std::env::var_os("VIBE_WORKSPACE_ROOT");

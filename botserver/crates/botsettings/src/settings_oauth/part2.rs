@@ -102,16 +102,16 @@ pub async fn oauth_unlink(
     .execute(&mut conn)
     .unwrap_or(0);
 
-    record_audit_event(
-        &state,
-        "oauth.unlink",
-        user_id,
-        "oauth.unlink",
-        Some("oauth_account_links"),
-        None,
-        affected > 0,
-        Some(&format!("Unlinked {} account", provider)),
-    );
+    record_audit_event(crate::audit_log::AuditEvent {
+        state: &state,
+        event_type: "oauth.unlink",
+        actor_id: user_id,
+        action: "oauth.unlink",
+        target_type: Some("oauth_account_links"),
+        target_id: None,
+        success: affected > 0,
+        details: Some(&format!("Unlinked {} account", provider)),
+    });
 
     if affected == 0 {
         return (

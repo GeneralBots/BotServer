@@ -228,16 +228,16 @@ pub async fn oauth_callback(
         &user_info,
     ) {
         Ok(()) => {
-            record_audit_event(
-                &state,
-                "oauth.link",
-                user_id,
-                "oauth.link",
-                Some("oauth_account_links"),
-                None,
-                true,
-                Some(&format!("Linked {} account ({})", provider, user_info.provider_id)),
-            );
+            record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "oauth.link",
+                actor_id: user_id,
+                action: "oauth.link",
+                target_type: Some("oauth_account_links"),
+                target_id: None,
+                success: true,
+                details: Some(&format!("Linked {} account ({})", provider, user_info.provider_id)),
+            });
             log::info!(
                 "Linked {provider} account {} to user {user_id}",
                 user_info.provider_id

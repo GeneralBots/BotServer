@@ -75,16 +75,29 @@ pub fn queue_position(
     Ok(rows.first().map(|r| r.position).unwrap_or(1))
 }
 
-pub fn insert_queue_entry(
-    pool: &botlib::db_pool::DbPool,
-    bot_id: UuidValue,
-    session_id: Option<UuidValue>,
-    user_id: Option<UuidValue>,
-    topic: &str,
-    reason: Option<&str>,
-    priority: &str,
-    metadata: &Value,
-) -> Result<UuidValue, String> {
+/// The handoff queue row to create.
+pub struct NewQueueEntry<'a> {
+    pub pool: &'a botlib::db_pool::DbPool,
+    pub bot_id: UuidValue,
+    pub session_id: Option<UuidValue>,
+    pub user_id: Option<UuidValue>,
+    pub topic: &'a str,
+    pub reason: Option<&'a str>,
+    pub priority: &'a str,
+    pub metadata: &'a Value,
+}
+
+pub fn insert_queue_entry(entry: NewQueueEntry<'_>) -> Result<UuidValue, String> {
+    let NewQueueEntry {
+        pool,
+        bot_id,
+        session_id,
+        user_id,
+        topic,
+        reason,
+        priority,
+        metadata,
+    } = entry;
     ensure_schema(pool)?;
     let mut conn = pool.get().map_err(|e| format!("DB pool: {e}"))?;
     let id = UuidValue::new_v4();

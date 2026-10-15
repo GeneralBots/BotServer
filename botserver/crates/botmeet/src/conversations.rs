@@ -11,7 +11,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use botcore::shared::state::AppState;
-use botsecurity::AuthenticatedUser;
+use botsecurity::auth::AuthenticatedUser;
 
 pub use crate::conversation_types::*;
 

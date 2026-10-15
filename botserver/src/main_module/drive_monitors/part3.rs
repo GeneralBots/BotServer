@@ -48,7 +48,6 @@ pub(super) async fn process_org_bucket(
                         start_org_bot_monitor(
                             state, pool, bucket_name, &bot_name,
                             &branch_slug, &tenant_slug, &prefix,
-                            tenant_id, org_id,
                         ).await;
                     }
                 }
@@ -190,7 +189,7 @@ pub(super) async fn scan_org_bucket(
                 if !monitored_bots.contains(&mon_key) {
                     monitored_bots.insert(mon_key);
                     start_org_bot_monitor(state, pool, bucket_name, &bot_name, &branch_slug,
-                                          &tenant_slug, &prefix, tenant_id, org_id).await;
+                                          &tenant_slug, &prefix).await;
                 }
             }
         }
@@ -207,8 +206,6 @@ pub(super) async fn start_org_bot_monitor(
     branch_slug: &str,
     tenant_slug: &str,
     s3_prefix: &str,
-    _tenant_id: Uuid,
-    _org_id: Uuid,
 ) {
     let mon_pool = pool.clone();
     let mn = bot_name.to_string();
@@ -240,10 +237,16 @@ pub(super) async fn start_org_bot_monitor(
             use crate::drive::drive_monitor::DriveMonitor;
             use botcore::shared::memory_monitor::register_thread;
             register_thread(&format!("drive-monitor-{}", bn_for_log), "drive");
-            let monitor = DriveMonitor::new_with_params(
-                mon_state, bucket, bot_id, bn, bs,
-                Some(prefix), ts, org_slug_for_spawn,
-            );
+            let monitor = DriveMonitor::new_with_params(botdrive::drive_monitor::DriveMonitorParams {
+                state: mon_state,
+                bucket_name: bucket,
+                bot_id,
+                bot_name: bn,
+                branch_slug: bs,
+                s3_prefix: Some(prefix),
+                tenant_slug: ts,
+                org_slug: org_slug_for_spawn,
+            });
             info!("Starting DriveMonitor for org bot: {} (bucket: {})", bn_for_log, bucket_for_log);
             if let Err(e) = monitor.start_monitoring().await {
                 error!("DriveMonitor failed for org bot {}: {}", bn_for_log, e);

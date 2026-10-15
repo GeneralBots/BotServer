@@ -128,11 +128,16 @@ impl SitePublish<'_> {
     // A production request that was not sanctioned by the deploy pipeline
     // is served by the test twin; report where the release actually went
     // so the agent (and the user) never assume the live page changed.
+    let public_url = format!(
+        "https://{}.{}",
+        crate::proxy_sites::site_slug(&project.name),
+        crate::publish::published_domain()
+    );
     let note = if requested_production && !approved {
         format!(
             "release published to the test site ({}) — the public site ({}) is only updated by the Deploy action",
             deployment["url"].as_str().unwrap_or_default(),
-            format!("https://{}.{}", crate::proxy_sites::site_slug(&project.name), crate::publish::published_domain()),
+            public_url,
         )
     } else {
         String::new()

@@ -279,7 +279,7 @@ pub(super) fn find_apps(query: &str) -> Vec<Value> {
             }
         })
         .collect();
-    scored.sort_by_key(|a| std::cmp::Reverse(a.0.clone()));
+    scored.sort_by_key(|a| std::cmp::Reverse(a.0));
     scored
         .into_iter()
         .take(3)

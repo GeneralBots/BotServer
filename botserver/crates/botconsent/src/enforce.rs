@@ -28,6 +28,10 @@ pub struct PendingRequest {
     pub detail: Value,
 }
 
+/// Pending requests keyed by request id, each paired with the instant it was
+/// raised so the sweeper can expire it.
+pub type PendingMap = HashMap<String, (PendingRequest, Instant)>;
+
 pub enum ConsentDecision {
     Granted(crate::models::AppPermissionRow),
     Pending(PendingRequest),
@@ -44,8 +48,8 @@ pub enum ResolvedOutcome {
 
 pub struct ConsentService {
     pub pool: DbPool,
-    pub(crate) pending: tokio::sync::Mutex<HashMap<String, (PendingRequest, Instant)>>,
-    pub(crate) approved_once: tokio::sync::Mutex<HashMap<String, (PendingRequest, Instant)>>,
+    pub(crate) pending: tokio::sync::Mutex<PendingMap>,
+    pub(crate) approved_once: tokio::sync::Mutex<PendingMap>,
     sweeper_started: Arc<AtomicBool>,
 }
 
@@ -82,8 +86,8 @@ fn ttl() -> Duration {
 }
 
 pub(crate) fn sweep_maps(
-    pending: &mut HashMap<String, (PendingRequest, Instant)>,
-    approved: &mut HashMap<String, (PendingRequest, Instant)>,
+    pending: &mut PendingMap,
+    approved: &mut PendingMap,
     now: Instant,
 ) {
     let ttl = ttl();
@@ -182,8 +186,8 @@ fn deny_audited(
 
 /// Pure map-level transition shared by [`resolve`] and unit tests.
 pub(crate) fn resolve_in_memory(
-    pending: &mut HashMap<String, (PendingRequest, Instant)>,
-    approved_once: &mut HashMap<String, (PendingRequest, Instant)>,
+    pending: &mut PendingMap,
+    approved_once: &mut PendingMap,
     request_id: &str,
     decision: Decision,
     now: Instant,
@@ -285,10 +289,7 @@ mod tests {
         }
     }
 
-    fn maps() -> (
-        HashMap<String, (PendingRequest, Instant)>,
-        HashMap<String, (PendingRequest, Instant)>,
-    ) {
+    fn maps() -> (PendingMap, PendingMap) {
         (HashMap::new(), HashMap::new())
     }
 
@@ -354,7 +355,7 @@ mod tests {
     }
 
     fn take_from(
-        a: &mut HashMap<String, (PendingRequest, Instant)>,
+        a: &mut PendingMap,
         id: &str,
     ) -> Option<PendingRequest> {
         a.remove(id).map(|(req, _)| req)

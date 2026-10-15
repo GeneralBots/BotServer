@@ -136,7 +136,7 @@ async fn calendars_resource(
             }
             let calendars = match load_calendars(&state, &headers).await {
                 Ok(calendars) => calendars,
-                Err(response) => return response,
+                Err(error) => return error.into_response(),
             };
             let mut responses = caldav_xml::response(
                 "/caldav/calendars/",
@@ -181,14 +181,14 @@ async fn calendar_resource(
             let calendar = match load_calendar(&state, &headers, calendar_uuid).await {
                 Ok(Some(calendar)) => calendar,
                 Ok(None) => return not_found("Unknown calendar"),
-                Err(response) => return response,
+                Err(error) => return error.into_response(),
             };
             let mut responses = crate::caldav_store::calendar_response(&calendar);
             if depth_of(&headers) != 0 {
                 let events =
                     match load_events(&state, &headers, calendar_uuid, None, None, Vec::new()).await {
                         Ok(events) => events,
-                        Err(response) => return response,
+                        Err(error) => return error.into_response(),
                     };
                 for event in &events {
                     responses.push_str(&crate::caldav_store::event_response(
@@ -204,8 +204,8 @@ async fn calendar_resource(
             if !authenticated(&headers) {
                 return challenge();
             }
-            if let Err(response) = load_calendar(&state, &headers, calendar_uuid).await {
-                return response;
+            if let Err(error) = load_calendar(&state, &headers, calendar_uuid).await {
+                return error.into_response();
             }
             let (time_min, time_max) = caldav_xml::parse_time_range(&body);
             let hrefs = caldav_xml::parse_hrefs(&body);
@@ -217,7 +217,7 @@ async fn calendar_resource(
                 match load_events(&state, &headers, calendar_uuid, time_min, time_max, wanted).await
                 {
                     Ok(events) => events,
-                    Err(response) => return response,
+                    Err(error) => return error.into_response(),
                 };
             let mut responses = String::new();
             for event in &events {
@@ -273,7 +273,7 @@ async fn event_resource(
                     )),
                     None => not_found("Unknown event"),
                 },
-                Err(response) => response,
+                Err(error) => error.into_response(),
             }
         }
         "PUT" => {

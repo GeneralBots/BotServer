@@ -202,14 +202,16 @@ pub async fn create_lead_form(
 
     audit::record(
         &state,
-        &headers,
-        effective_branch_id,
-        "lead",
-        Some(id),
-        "create",
-        None,
-        Some(serde_json::to_value(&lead).unwrap_or(serde_json::Value::Null)),
-        None,
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id: effective_branch_id,
+            entity: "lead",
+            entity_id: Some(id),
+            action: "create",
+            before: None,
+            after: Some(serde_json::to_value(&lead).unwrap_or(serde_json::Value::Null)),
+            detail: None,
+        },
     );
 
     Ok(Json(lead))
@@ -400,14 +402,16 @@ pub async fn update_lead_stage(
             (state.trigger_deal_stage_change)(&mut conn, id, &old, &stage, branch_id);
             audit::record(
                 &state,
-                &headers,
-                branch_id,
-                "lead",
-                Some(id),
-                "stage_change",
-                Some(serde_json::json!({ "stage": old })),
-                Some(serde_json::json!({ "stage": stage })),
-                None,
+                audit::AuditRecord {
+                    headers: &headers,
+                    branch_id,
+                    entity: "lead",
+                    entity_id: Some(id),
+                    action: "stage_change",
+                    before: Some(serde_json::json!({ "stage": old })),
+                    after: Some(serde_json::json!({ "stage": stage })),
+                    detail: None,
+                },
             );
         }
     }

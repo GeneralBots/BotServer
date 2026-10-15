@@ -24,11 +24,9 @@ use super::*;
         }
     }
 
-    #[test]
-    fn collect_workspace_files_packages_source_and_skips_vcs() {
-        let _guard = harness::WORKSPACE_ENV_LOCK
-            .lock()
-            .expect("workspace env lock");
+    #[tokio::test]
+    async fn collect_workspace_files_packages_source_and_skips_vcs() {
+        let _guard = harness::WORKSPACE_ENV_LOCK.lock().await;
         let previous = std::env::var_os("VIBE_WORKSPACE_ROOT");
         let tmp = std::env::temp_dir().join(format!("vibe-publish-test-{}", Uuid::new_v4()));
         std::env::set_var("VIBE_WORKSPACE_ROOT", &tmp);

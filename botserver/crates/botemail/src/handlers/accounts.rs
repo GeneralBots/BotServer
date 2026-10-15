@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, State},
-    response::{IntoResponse, Response},
+    response::IntoResponse,
     Json,
 };
 use base64::{engine::general_purpose, Engine as _};
@@ -55,9 +55,9 @@ pub async fn add_email_account(
     State(state): State<Arc<AppState>>,
     headers: axum::http::HeaderMap,
     Json(request): Json<EmailAccountRequest>,
-) -> Result<Json<ApiResponse<EmailAccountResponse>>, Response> {
+) -> Result<Json<ApiResponse<EmailAccountResponse>>, EmailError> {
     let Ok(current_user_id) = extract_user_from_session(&headers) else {
-        return Err(EmailError("Authentication required".to_string()).into_response());
+        return Err(EmailError("Authentication required".to_string()));
     };
 
     let auth_mode = request
@@ -65,25 +65,25 @@ pub async fn add_email_account(
         .clone()
         .unwrap_or_else(|| "password".to_string());
     if auth_mode != "password" && auth_mode != "oauth2" {
-        return Err(EmailError(format!("Unsupported auth_mode '{auth_mode}'")).into_response());
+        return Err(EmailError(format!("Unsupported auth_mode '{auth_mode}'")));
     }
     if auth_mode == "oauth2" {
         // An OAuth2 account needs tokens, which only the provider consent flow
         // can supply. Storing one without them would create a mailbox that can
         // never authenticate.
         return Err(EmailError(
-            "OAuth2 accounts are connected through the provider consent flow"
-                .to_string(),
-        )
-        .into_response());
+            "OAuth2 accounts are connected through the provider consent flow".to_string(),
+        ));
     }
     if request.email.trim().is_empty() || request.username.trim().is_empty() {
-        return Err(EmailError("Email address and username are required".to_string()).into_response());
+        return Err(EmailError(
+            "Email address and username are required".to_string(),
+        ));
     }
     if request.imap_server.trim().is_empty() || request.smtp_server.trim().is_empty() {
-        return Err(
-            EmailError("IMAP and SMTP servers are required".to_string()).into_response(),
-        );
+        return Err(EmailError(
+            "IMAP and SMTP servers are required".to_string(),
+        ));
     }
 
     #[cfg(feature = "mail")]
@@ -100,8 +100,7 @@ pub async fn add_email_account(
             return Err(EmailError(format!(
                 "Could not connect to {}: {e}",
                 request.imap_server
-            ))
-            .into_response());
+            )));
         }
     }
 
@@ -151,8 +150,8 @@ pub async fn add_email_account(
         Ok::<_, String>(account_id)
     })
     .await
-    .map_err(|e| EmailError(format!("Task join error: {e}")).into_response())?
-    .map_err(|e| EmailError(e).into_response())?;
+    .map_err(|e| EmailError(format!("Task join error: {e}")))?
+    .map_err(EmailError)?;
 
     Ok(Json(ApiResponse {
         success: true,

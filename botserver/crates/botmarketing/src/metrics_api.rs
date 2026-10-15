@@ -14,6 +14,16 @@ use crate::metrics::{AggregateMetrics, ChannelBreakdown, TimeSeriesMetric};
 use crate::schema::{email_tracking, marketing_campaigns, marketing_recipients};
 use crate::state::AppState;
 
+/// `(sent_at, delivered_at, failed_at)` timestamps of one recipient delivery.
+type RecipientTimestamps = (
+    Option<DateTime<Utc>>,
+    Option<DateTime<Utc>>,
+    Option<DateTime<Utc>>,
+);
+
+/// `(opened_at, clicked_at)` timestamps of one tracked email event.
+type EmailEventTimestamps = (Option<DateTime<Utc>>, Option<DateTime<Utc>>);
+
 pub async fn get_time_series_metrics(
     state: &Arc<AppState>,
     campaign_id: Uuid,
@@ -21,8 +31,7 @@ pub async fn get_time_series_metrics(
 ) -> Result<Vec<TimeSeriesMetric>, String> {
     let mut conn = state.conn.get().map_err(|e| format!("DB error: {}", e))?;
 
-    let recipients: Vec<(Option<DateTime<Utc>>, Option<DateTime<Utc>>, Option<DateTime<Utc>>)> =
-        marketing_recipients::table
+    let recipients: Vec<RecipientTimestamps> = marketing_recipients::table
             .filter(marketing_recipients::campaign_id.eq(campaign_id))
             .select((
                 marketing_recipients::sent_at,
@@ -51,8 +60,7 @@ pub async fn get_time_series_metrics(
         }
     }
 
-    let email_events: Vec<(Option<DateTime<Utc>>, Option<DateTime<Utc>>)> =
-        email_tracking::table
+    let email_events: Vec<EmailEventTimestamps> = email_tracking::table
             .filter(email_tracking::campaign_id.eq(campaign_id))
             .select((email_tracking::opened_at, email_tracking::clicked_at))
             .load(&mut conn)

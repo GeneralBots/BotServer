@@ -61,7 +61,7 @@ impl IncidentResponseService {
             })
             .collect();
 
-        filtered.sort_by_key(|a| std::cmp::Reverse(a.created_at.clone()));
+        filtered.sort_by_key(|a| std::cmp::Reverse(a.created_at));
 
         let total = filtered.len() as u64;
         let total_pages = ((total as f64) / (per_page as f64)).ceil() as u32;

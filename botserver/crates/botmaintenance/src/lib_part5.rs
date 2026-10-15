@@ -55,7 +55,7 @@ impl CleanupService {
             };
         }
 
-        categories.sort_by_key(|a| std::cmp::Reverse(a.bytes_used.clone()));
+        categories.sort_by_key(|a| std::cmp::Reverse(a.bytes_used));
 
         let quota = self.get_organization_quota(organization_id).await.ok();
         let quota_percent = quota.map(|q| (total_bytes as f32 / q as f32) * 100.0);

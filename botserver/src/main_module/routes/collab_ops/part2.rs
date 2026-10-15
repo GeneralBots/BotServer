@@ -62,19 +62,35 @@ pub(super) fn upsert_state(
     .bind::<Text, _>(vector_json)
     .execute(conn)
 }
-pub(super) fn insert_op(
-    conn: &mut PgConnection,
-    ty: &str,
-    id: &str,
-    actor_id: &str,
-    actor_name: &str,
-    actor_type: &str,
-    op_type: &str,
-    base_version: i64,
-    lamport: i64,
-    payload_json: &str,
-    conflict: bool,
-) -> Result<String, diesel::result::Error> {
+/// The collaborative operation to append to the log.
+pub(super) struct NewOp<'a> {
+    pub conn: &'a mut PgConnection,
+    pub ty: &'a str,
+    pub id: &'a str,
+    pub actor_id: &'a str,
+    pub actor_name: &'a str,
+    pub actor_type: &'a str,
+    pub op_type: &'a str,
+    pub base_version: i64,
+    pub lamport: i64,
+    pub payload_json: &'a str,
+    pub conflict: bool,
+}
+
+pub(super) fn insert_op(op: NewOp<'_>) -> Result<String, diesel::result::Error> {
+    let NewOp {
+        conn,
+        ty,
+        id,
+        actor_id,
+        actor_name,
+        actor_type,
+        op_type,
+        base_version,
+        lamport,
+        payload_json,
+        conflict,
+    } = op;
     #[derive(QueryableByName)]
     struct Row {
         #[diesel(sql_type = Text)]
@@ -140,19 +156,19 @@ pub async fn submit_op(
         let conflict = base_version < current;
         let lamport = current.max(base_version) + 1;
 
-        let op_id = insert_op(
-            tx,
-            &ty,
-            &id,
-            &actor_id,
-            &actor_name,
+        let op_id = insert_op(NewOp {
+            conn: tx,
+            ty: &ty,
+            id: &id,
+            actor_id: &actor_id,
+            actor_name: &actor_name,
             actor_type,
-            &op_type,
+            op_type: &op_type,
             base_version,
             lamport,
-            &payload_json,
+            payload_json: &payload_json,
             conflict,
-        )?;
+        })?;
 
         let mut vector = read_vector(tx, &ty, &id)?;
         vector.insert(actor_id.clone(), lamport);

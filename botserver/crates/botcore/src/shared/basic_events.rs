@@ -231,16 +231,30 @@ pub fn mark_processed(pool: &DbPool, event_id: Uuid) {
 /// `channel_user_id` is its sender as the channel knows it (a Telegram chat
 /// id, a WhatsApp phone number); both are required for the reply the
 /// subscribed tool produces to be deliverable.
-pub fn publish_media_uploaded(
-    pool: &Arc<DbPool>,
-    bot_id: Uuid,
-    path: &str,
-    kind: &str,
-    caption: &str,
-    channel: &str,
-    session_id: &str,
-    channel_user_id: &str,
-) {
+/// One channel media upload, as the subscribers of the event see it.
+#[derive(Clone, Copy)]
+pub struct MediaUpload<'a> {
+    pub pool: &'a Arc<DbPool>,
+    pub bot_id: Uuid,
+    pub path: &'a str,
+    pub kind: &'a str,
+    pub caption: &'a str,
+    pub channel: &'a str,
+    pub session_id: &'a str,
+    pub channel_user_id: &'a str,
+}
+
+pub fn publish_media_uploaded(upload: &MediaUpload<'_>) {
+    let MediaUpload {
+        pool,
+        bot_id,
+        path,
+        kind,
+        caption,
+        channel,
+        session_id,
+        channel_user_id,
+    } = *upload;
     let payload = serde_json::json!({
         "path": path,
         "kind": kind,

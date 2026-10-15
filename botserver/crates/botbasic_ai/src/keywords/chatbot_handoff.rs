@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use super::chatbot_handoff_storage::{
     append_event, ensure_schema, fetch_handoff, insert_queue_entry, queue_position,
-    set_agent_presence, update_handoff_status,
+    set_agent_presence, update_handoff_status, NewQueueEntry,
 };
 
 /// Chatbot handoff BASIC keywords for issue #621.
@@ -108,16 +108,16 @@ fn register_transfer_to_human(
                         "channel": "bot",
                         "session_id": session_id,
                     });
-                    let handoff_id = insert_queue_entry(
+                    let handoff_id = insert_queue_entry(NewQueueEntry {
                         pool,
                         bot_id,
-                        Some(session_id),
+                        session_id: Some(session_id),
                         user_id,
-                        &topic,
-                        Some(&reason_clone),
-                        "normal",
-                        &metadata,
-                    )?;
+                        topic: &topic,
+                        reason: Some(&reason_clone),
+                        priority: "normal",
+                        metadata: &metadata,
+                    })?;
                     append_event(
                         pool,
                         handoff_id,
@@ -168,16 +168,16 @@ fn register_escalate(state: Arc<dyn BasicRuntime>, user: UserSession, engine: &m
                         "session_id": session_id,
                         "issue": issue_clone,
                     });
-                    let handoff_id = insert_queue_entry(
+                    let handoff_id = insert_queue_entry(NewQueueEntry {
                         pool,
                         bot_id,
-                        Some(session_id),
+                        session_id: Some(session_id),
                         user_id,
-                        &issue_clone,
-                        Some(&issue_clone),
-                        &priority_clone,
-                        &metadata,
-                    )?;
+                        topic: &issue_clone,
+                        reason: Some(&issue_clone),
+                        priority: &priority_clone,
+                        metadata: &metadata,
+                    })?;
                     append_event(
                         pool,
                         handoff_id,
@@ -224,16 +224,16 @@ fn register_request_agent(state: Arc<dyn BasicRuntime>, user: UserSession, engin
                     let user_id = user_id_from_session(&user_clone);
                     let session_id = user_clone.id;
                     let metadata = json!({ "channel": "bot", "session_id": session_id });
-                    let handoff_id = insert_queue_entry(
+                    let handoff_id = insert_queue_entry(NewQueueEntry {
                         pool,
                         bot_id,
-                        Some(session_id),
+                        session_id: Some(session_id),
                         user_id,
-                        &topic_clone,
-                        Some(&topic_clone),
-                        "normal",
-                        &metadata,
-                    )?;
+                        topic: &topic_clone,
+                        reason: Some(&topic_clone),
+                        priority: "normal",
+                        metadata: &metadata,
+                    })?;
                     append_event(
                         pool,
                         handoff_id,

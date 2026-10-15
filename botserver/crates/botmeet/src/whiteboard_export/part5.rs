@@ -218,17 +218,24 @@ impl WhiteboardExportService {
             .unwrap_or((0, 0, 0));
 
         let alpha = (shape.opacity * 255.0) as u8;
+        let area = CanvasRect { x, y, w, h };
 
         match shape.shape_type {
             ShapeType::Rectangle | ShapeType::Sticky => {
                 if let Some((r, g, b)) = fill {
-                    self.fill_rect(pixels, width, height, x, y, w, h, r, g, b, alpha);
+                    self.fill_rect(pixels, width, height, area, Rgba { r, g, b, a: alpha });
                 }
-                self.draw_rect_outline(pixels, width, height, x, y, w, h, stroke.0, stroke.1, stroke.2, alpha);
+                self.draw_rect_outline(
+                    pixels,
+                    width,
+                    height,
+                    area,
+                    Rgba { r: stroke.0, g: stroke.1, b: stroke.2, a: alpha },
+                );
             }
             ShapeType::Ellipse => {
                 if let Some((r, g, b)) = fill {
-                    self.fill_ellipse(pixels, width, height, x, y, w, h, r, g, b, alpha);
+                    self.fill_ellipse(pixels, width, height, area, Rgba { r, g, b, a: alpha });
                 }
             }
             ShapeType::Line | ShapeType::Arrow | ShapeType::Freehand => {
@@ -239,12 +246,19 @@ impl WhiteboardExportService {
                     let y1 = ((p1.y - offset_y) * scale) as i32;
                     let x2 = ((p2.x - offset_x) * scale) as i32;
                     let y2 = ((p2.y - offset_y) * scale) as i32;
-                    self.draw_line(pixels, width, height, x1, y1, x2, y2, stroke.0, stroke.1, stroke.2, alpha);
+                    self.draw_line(
+                        pixels,
+                        width,
+                        height,
+                        CanvasPoint { x: x1, y: y1 },
+                        CanvasPoint { x: x2, y: y2 },
+                        Rgba { r: stroke.0, g: stroke.1, b: stroke.2, a: alpha },
+                    );
                 }
             }
             _ => {
                 if let Some((r, g, b)) = fill {
-                    self.fill_rect(pixels, width, height, x, y, w, h, r, g, b, alpha);
+                    self.fill_rect(pixels, width, height, area, Rgba { r, g, b, a: alpha });
                 }
             }
         }
@@ -255,15 +269,11 @@ impl WhiteboardExportService {
         pixels: &mut [u8],
         width: u32,
         height: u32,
-        x: i32,
-        y: i32,
-        w: i32,
-        h: i32,
-        r: u8,
-        g: u8,
-        b: u8,
-        a: u8,
+        area: CanvasRect,
+        color: Rgba,
     ) {
+        let CanvasRect { x, y, w, h } = area;
+        let Rgba { r, g, b, a } = color;
         let x_start = x.max(0) as u32;
         let y_start = y.max(0) as u32;
         let x_end = ((x + w) as u32).min(width);
@@ -284,18 +294,27 @@ impl WhiteboardExportService {
         pixels: &mut [u8],
         width: u32,
         height: u32,
-        x: i32,
-        y: i32,
-        w: i32,
-        h: i32,
-        r: u8,
-        g: u8,
-        b: u8,
-        a: u8,
+        area: CanvasRect,
+        color: Rgba,
     ) {
-        self.draw_line(pixels, width, height, x, y, x + w, y, r, g, b, a);
-        self.draw_line(pixels, width, height, x + w, y, x + w, y + h, r, g, b, a);
-        self.draw_line(pixels, width, height, x + w, y + h, x, y + h, r, g, b, a);
-        self.draw_line(pixels, width, height, x, y + h, x, y, r, g, b, a);
+        let CanvasRect { x, y, w, h } = area;
+        self.draw_line(pixels, width, height, CanvasPoint { x, y }, CanvasPoint { x: x + w, y }, color);
+        self.draw_line(
+            pixels,
+            width,
+            height,
+            CanvasPoint { x: x + w, y },
+            CanvasPoint { x: x + w, y: y + h },
+            color,
+        );
+        self.draw_line(
+            pixels,
+            width,
+            height,
+            CanvasPoint { x: x + w, y: y + h },
+            CanvasPoint { x, y: y + h },
+            color,
+        );
+        self.draw_line(pixels, width, height, CanvasPoint { x, y: y + h }, CanvasPoint { x, y }, color);
     }
 }

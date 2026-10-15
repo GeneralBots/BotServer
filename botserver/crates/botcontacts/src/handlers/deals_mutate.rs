@@ -277,25 +277,17 @@ pub async fn update_deal(
         .unwrap_or_else(|_| before.clone());
 
     audit::record(
-
         &state,
-
-        &headers,
-
-        branch_id,
-
-        "deal",
-
-        Some(id),
-
-        "update",
-
-        Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
-
-        Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
-
-        None,
-
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "deal",
+            entity_id: Some(id),
+            action: "update",
+            before: Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
+            after: Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
+            detail: None,
+        },
     );
 
     Ok(Json(after))
@@ -331,14 +323,16 @@ pub async fn delete_deal(
     if let Some(row) = before {
         audit::record(
             &state,
-            &headers,
-            branch_id,
-            "deal",
-            Some(id),
-            "delete",
-            Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
-            None,
-            None,
+            audit::AuditRecord {
+                headers: &headers,
+                branch_id,
+                entity: "deal",
+                entity_id: Some(id),
+                action: "delete",
+                before: Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
+                after: None,
+                detail: None,
+            },
         );
     }
     Ok(StatusCode::NO_CONTENT)

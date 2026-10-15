@@ -180,11 +180,12 @@ async fn handle_procurement(State(state): State<Arc<BillingApiState>>, headers: 
         "<table class=\"billing-table\"><thead><tr><th>PO #</th><th>Vendor</th><th>Total</th><th>Status</th><th>Created</th></tr></thead><tbody>",
     );
     for r in &rows {
+        let total = format!("${:.2}", r.total_amount);
         html.push_str(&format!(
             "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
             html_escape(&r.po_number),
             html_escape(&r.vendor_name),
-            format!("${:.2}", r.total_amount),
+            total,
             html_escape(&r.status),
             r.created_at.format("%Y-%m-%d"),
         ));
@@ -300,11 +301,11 @@ async fn handle_gl_balance_sheet(State(state): State<Arc<BillingApiState>>, head
         "<table class=\"billing-table\"><thead><tr><th>Account</th><th>Type</th><th>Balance</th></tr></thead><tbody>",
     );
     for r in &rows {
+        let name = html_escape(&r.account_name);
+        let atype = html_escape(&r.account_type);
+        let balance = format!("${:.2}", r.balance);
         html.push_str(&format!(
-            "<tr><td>{name}</td><td>{atype}</td><td>{balance}</td></tr>",
-            name = html_escape(&r.account_name),
-            atype = html_escape(&r.account_type),
-            balance = format!("${:.2}", r.balance),
+            "<tr><td>{name}</td><td>{atype}</td><td>{balance}</td></tr>"
         ));
     }
     html.push_str("</tbody></table>");
@@ -359,11 +360,11 @@ async fn handle_gl_income_statement(State(state): State<Arc<BillingApiState>>, h
         "<table class=\"billing-table\"><thead><tr><th>Account</th><th>Type</th><th>Amount</th></tr></thead><tbody>",
     );
     for r in &rows {
+        let name = html_escape(&r.account_name);
+        let atype = html_escape(&r.account_type);
+        let balance = format!("${:.2}", r.balance);
         html.push_str(&format!(
-            "<tr><td>{name}</td><td>{atype}</td><td>{balance}</td></tr>",
-            name = html_escape(&r.account_name),
-            atype = html_escape(&r.account_type),
-            balance = format!("${:.2}", r.balance),
+            "<tr><td>{name}</td><td>{atype}</td><td>{balance}</td></tr>"
         ));
     }
     html.push_str("</tbody></table>");

@@ -68,7 +68,7 @@ impl PayrollService {
             .filter(|p| p.employee_id == employee_id)
             .cloned()
             .collect();
-        records.sort_by_key(|a| std::cmp::Reverse(a.period_start.clone()));
+        records.sort_by_key(|a| std::cmp::Reverse(a.period_start));
         Ok(records)
     }
 

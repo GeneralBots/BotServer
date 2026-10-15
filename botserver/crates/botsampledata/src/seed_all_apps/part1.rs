@@ -53,9 +53,15 @@ pub(super) fn first_uuid(conn: &mut diesel::PgConnection, sql: &str) -> Result<U
     }
     sql_query(sql).get_result::<Row>(conn).map(|r| r.id).map_err(|e| e.to_string())
 }
+/// A seed domain: its name and the function that populates it.
+type SeedDomain = (
+    &'static str,
+    fn(&mut diesel::PgConnection, &Scopes) -> Result<(), String>,
+);
+
 /// Seeds every additional app. Failures are logged and isolated per domain.
 pub fn seed(conn: &mut diesel::PgConnection, s: &Scopes) -> Result<(), String> {
-    let domains: Vec<(&str, fn(&mut diesel::PgConnection, &Scopes) -> Result<(), String>)> = vec![
+    let domains: Vec<SeedDomain> = vec![
         ("products", seed_products),
         ("dashboards", seed_dashboards),
         ("meet", seed_meet),

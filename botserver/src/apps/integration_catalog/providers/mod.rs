@@ -12,29 +12,35 @@ use super::types::{
     ActionTemplate, AuthProfile, Category, Priority, ProviderSeed, Status, Strategy,
 };
 
+/// Everything a catalog provider declares beyond its identity, grouped so
+/// [`provider`] keeps a short argument list.
+pub(super) struct ProviderSpec {
+    pub(super) category: Category,
+    pub(super) strategy: Strategy,
+    pub(super) status: Status,
+    pub(super) priority: Priority,
+    pub(super) module: Option<&'static str>,
+    pub(super) official_docs: Option<&'static str>,
+    pub(super) auth: &'static AuthProfile,
+    pub(super) actions: &'static [ActionTemplate],
+}
+
 pub(super) const fn provider(
     id: &'static str,
     name: &'static str,
-    category: Category,
-    strategy: Strategy,
-    status: Status,
-    priority: Priority,
-    module: Option<&'static str>,
-    official_docs: Option<&'static str>,
-    auth: &'static AuthProfile,
-    actions: &'static [ActionTemplate],
+    spec: ProviderSpec,
 ) -> ProviderSeed {
     ProviderSeed {
         id,
         name,
-        category,
-        strategy,
-        status,
-        priority,
-        module,
-        official_docs,
-        auth,
-        actions,
+        category: spec.category,
+        strategy: spec.strategy,
+        status: spec.status,
+        priority: spec.priority,
+        module: spec.module,
+        official_docs: spec.official_docs,
+        auth: spec.auth,
+        actions: spec.actions,
         llm_available: false,
     }
 }

@@ -91,16 +91,16 @@ pub async fn create_role(State(state): State<Arc<AppState>>, Json(req): Json<Cre
 
     match result {
         Ok(Ok(role)) => {
-            crate::audit_log::record_audit_event(
-                &state,
-                "rbac",
-                Uuid::nil(),
-                "role.create",
-                Some("role"),
-                Some(role.id),
-                true,
-                Some(&format!("Created role '{}'", role.name)),
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "rbac",
+                actor_id: Uuid::nil(),
+                action: "role.create",
+                target_type: Some("role"),
+                target_id: Some(role.id),
+                success: true,
+                details: Some(&format!("Created role '{}'", role.name)),
+            });
             (StatusCode::CREATED, Json(role)).into_response()
         }
         Ok(Err(e)) => {
@@ -143,16 +143,16 @@ pub async fn update_role(
 
     match result {
         Ok(Ok(role)) => {
-            crate::audit_log::record_audit_event(
-                &state,
-                "rbac",
-                Uuid::nil(),
-                "role.update",
-                Some("role"),
-                Some(role.id),
-                true,
-                Some(&format!("Updated role '{}'", role.name)),
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "rbac",
+                actor_id: Uuid::nil(),
+                action: "role.update",
+                target_type: Some("role"),
+                target_id: Some(role.id),
+                success: true,
+                details: Some(&format!("Updated role '{}'", role.name)),
+            });
             Json(role).into_response()
         }
         Ok(Err(e)) => {
@@ -179,16 +179,16 @@ pub async fn delete_role(State(state): State<Arc<AppState>>, Path(role_id): Path
 
     match result {
         Ok(Ok(())) => {
-            crate::audit_log::record_audit_event(
-                &state,
-                "rbac",
-                Uuid::nil(),
-                "role.delete",
-                Some("role"),
-                Some(role_id),
-                true,
-                Some("Deactivated role"),
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "rbac",
+                actor_id: Uuid::nil(),
+                action: "role.delete",
+                target_type: Some("role"),
+                target_id: Some(role_id),
+                success: true,
+                details: Some("Deactivated role"),
+            });
             StatusCode::NO_CONTENT.into_response()
         }
         Ok(Err(e)) => {

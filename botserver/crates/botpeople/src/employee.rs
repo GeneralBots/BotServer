@@ -8,6 +8,34 @@ use crate::models::{Employee, EmploymentStatus};
 
 type Storage = Arc<Mutex<HashMap<Uuid, Employee>>>;
 
+/// A new employee record.
+pub struct NewEmployee {
+    pub org_id: Uuid,
+    pub first_name: String,
+    pub last_name: String,
+    pub email: String,
+    pub phone: Option<String>,
+    pub department: String,
+    pub position: String,
+    pub hire_date: NaiveDate,
+    pub salary: f64,
+    pub manager_id: Option<Uuid>,
+}
+
+/// The fields one update may change; a `None` field keeps its current value.
+#[derive(Default)]
+pub struct EmployeeUpdate {
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub department: Option<String>,
+    pub position: Option<String>,
+    pub salary: Option<f64>,
+    pub status: Option<String>,
+    pub manager_id: Option<Uuid>,
+}
+
 #[derive(Clone)]
 pub struct EmployeeService {
     storage: Storage,
@@ -20,19 +48,19 @@ impl EmployeeService {
         }
     }
 
-    pub fn create(
-        &self,
-        org_id: Uuid,
-        first_name: String,
-        last_name: String,
-        email: String,
-        phone: Option<String>,
-        department: String,
-        position: String,
-        hire_date: NaiveDate,
-        salary: f64,
-        manager_id: Option<Uuid>,
-    ) -> Result<Employee, String> {
+    pub fn create(&self, new_employee: NewEmployee) -> Result<Employee, String> {
+        let NewEmployee {
+            org_id,
+            first_name,
+            last_name,
+            email,
+            phone,
+            department,
+            position,
+            hire_date,
+            salary,
+            manager_id,
+        } = new_employee;
         let id = Uuid::new_v4();
         let now = Utc::now();
         let employee = Employee {
@@ -88,19 +116,18 @@ impl EmployeeService {
         Ok(employees)
     }
 
-    pub fn update(
-        &self,
-        id: Uuid,
-        first_name: Option<String>,
-        last_name: Option<String>,
-        email: Option<String>,
-        phone: Option<String>,
-        department: Option<String>,
-        position: Option<String>,
-        salary: Option<f64>,
-        status: Option<String>,
-        manager_id: Option<Uuid>,
-    ) -> Result<Employee, String> {
+    pub fn update(&self, id: Uuid, changes: EmployeeUpdate) -> Result<Employee, String> {
+        let EmployeeUpdate {
+            first_name,
+            last_name,
+            email,
+            phone,
+            department,
+            position,
+            salary,
+            status,
+            manager_id,
+        } = changes;
         let mut store = self.storage.lock().map_err(|e| format!("Lock error: {e}"))?;
         let emp = store.get_mut(&id).ok_or_else(|| format!("Employee not found: {id}"))?;
         if let Some(fn_val) = first_name {

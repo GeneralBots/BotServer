@@ -77,14 +77,16 @@ pub async fn delete_lead(
     if let Some(row) = before {
         audit::record(
             &state,
-            &headers,
-            branch_id,
-            "lead",
-            Some(id),
-            "delete",
-            Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
-            None,
-            None,
+            audit::AuditRecord {
+                headers: &headers,
+                branch_id,
+                entity: "lead",
+                entity_id: Some(id),
+                action: "delete",
+                before: Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
+                after: None,
+                detail: None,
+            },
         );
     }
 
@@ -166,14 +168,16 @@ pub async fn convert_lead_to_opportunity(
 
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "lead",
-        Some(id),
-        "convert",
-        Some(serde_json::to_value(&lead).unwrap_or(serde_json::Value::Null)),
-        Some(serde_json::to_value(&opportunity).unwrap_or(serde_json::Value::Null)),
-        Some(serde_json::json!({ "opportunity_id": opp_id })),
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "lead",
+            entity_id: Some(id),
+            action: "convert",
+            before: Some(serde_json::to_value(&lead).unwrap_or(serde_json::Value::Null)),
+            after: Some(serde_json::to_value(&opportunity).unwrap_or(serde_json::Value::Null)),
+            detail: Some(serde_json::json!({ "opportunity_id": opp_id })),
+        },
     );
 
     Ok(Json(opportunity))
@@ -249,14 +253,16 @@ pub async fn update_lead(
     // audit row records which fields the caller sent.
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "lead",
-        Some(id),
-        "update",
-        None,
-        None,
-        Some(serde_json::json!({ "fields": changed_fields })),
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "lead",
+            entity_id: Some(id),
+            action: "update",
+            before: None,
+            after: None,
+            detail: Some(serde_json::json!({ "fields": changed_fields })),
+        },
     );
 
     super::deals::get_lead(State(state), headers, Path(id)).await

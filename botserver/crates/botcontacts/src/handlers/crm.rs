@@ -168,14 +168,16 @@ pub async fn create_deal(
 
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "deal",
-        Some(id),
-        "create",
-        None,
-        Some(serde_json::to_value(&deal).unwrap_or(serde_json::Value::Null)),
-        None,
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "deal",
+            entity_id: Some(id),
+            action: "create",
+            before: None,
+            after: Some(serde_json::to_value(&deal).unwrap_or(serde_json::Value::Null)),
+            detail: None,
+        },
     );
     Ok(Json(deal))
 }

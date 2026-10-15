@@ -40,6 +40,6 @@ pub(crate) use metrics::{create_run};
 pub(crate) use metrics_2::{cancel_run, get_global_metrics, get_run, get_run_metrics, promote_project_site, rollback_project_site, unpublish_project_site};
 pub use run::{PipelineResponse};
 pub(crate) use run::{MAX_INTENT_CHARS, MAX_TIMEOUT_SECONDS, UnpublishSiteRequest, bot_accessible_to_user, get_pipeline, get_run_events, list_runs, resolve_effective_bot_id, resolve_project, truncate_chars};
-pub use tools::{CreateRunRequest, GetRunResponse, ListToolsResponse, VibeSecurityDeps, router};
+pub use tools::{CreateRunRequest, GetRunResponse, ListToolsResponse, VibeApiDeps, VibeSecurityDeps, router};
 pub(crate) use tools::{MAX_TOOL_CALLS, VibeApiInner, is_modifying_intent, run_to_response};
 pub(crate) use tools_2::{execute_run, list_capabilities_for_use_case, list_tools_for_use_case};

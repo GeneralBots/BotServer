@@ -93,11 +93,7 @@ pub fn upload_file(window: Window, src_path: &str, dest_path: &str) -> Result<()
 
         total_read += bytes_read as u64;
 
-        let progress = if file_size > 0 {
-            (total_read * 100) / file_size
-        } else {
-            100
-        };
+        let progress = (total_read * 100).checked_div(file_size).unwrap_or(100);
 
         window
             .emit("upload_progress", progress)

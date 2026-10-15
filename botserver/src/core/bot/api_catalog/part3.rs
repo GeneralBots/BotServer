@@ -23,7 +23,7 @@ pub(super) fn find_api_entries(state: &Arc<AppState>, user_id: Uuid, query: &str
             }
         })
         .collect();
-    scored_cmds.sort_by_key(|a| std::cmp::Reverse(a.0.clone()));
+    scored_cmds.sort_by_key(|a| std::cmp::Reverse(a.0));
     for (_, cmd) in scored_cmds.into_iter().take(3) {
         out.push(json!({
             "kind": "command",
@@ -52,7 +52,7 @@ pub(super) fn find_api_entries(state: &Arc<AppState>, user_id: Uuid, query: &str
             if score > 0 { Some((score, c)) } else { None }
         })
         .collect();
-    scored_dc.sort_by_key(|a| std::cmp::Reverse(a.0.clone()));
+    scored_dc.sort_by_key(|a| std::cmp::Reverse(a.0));
     for (_, c) in scored_dc.into_iter().take(6) {
         out.push(json!({
             "kind": "derived",
@@ -80,7 +80,7 @@ pub(super) fn find_api_entries(state: &Arc<AppState>, user_id: Uuid, query: &str
         })
         .collect();
     // first occurrence wins (curated list precedes the auto inventory)
-    scored_ep.sort_by_key(|a| std::cmp::Reverse(a.0.clone()));
+    scored_ep.sort_by_key(|a| std::cmp::Reverse(a.0));
     let mut seen = std::collections::HashSet::new();
     for (_, ep) in scored_ep.into_iter().take(6) {
         if !seen.insert((ep.method, ep.path)) {

@@ -23,7 +23,7 @@ pub mod test_tools;
 use std::path::{Path, PathBuf};
 
 #[cfg(test)]
-pub(crate) static WORKSPACE_ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+pub(crate) static WORKSPACE_ENV_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 #[cfg(test)]
 pub(crate) fn restore_workspace_root(previous: Option<std::ffi::OsString>) {
@@ -126,8 +126,6 @@ pub fn resolve_workspace_path(project: &str, rel: &str) -> Result<PathBuf, Strin
             .or_else(|| trimmed.strip_prefix('\\'))
             .unwrap_or(trimmed)
     };
-    #[cfg(not(target_os = "windows"))]
-    let rel = rel;
 
     for seg in rel.split(['/', '\\']) {
         if seg == ".." {
@@ -239,9 +237,9 @@ mod tests {
         assert!(resolve_workspace_path("proj", r"C:\index.js").is_err());
     }
 
-    #[test]
-    fn write_read_list_roundtrip() {
-        let _guard = WORKSPACE_ENV_LOCK.lock().expect("workspace env lock");
+    #[tokio::test]
+    async fn write_read_list_roundtrip() {
+        let _guard = WORKSPACE_ENV_LOCK.lock().await;
         let previous = std::env::var_os("VIBE_WORKSPACE_ROOT");
         let tmp = std::env::temp_dir().join(format!("vibe-harness-test-{}", uuid::Uuid::new_v4()));
         std::env::set_var("VIBE_WORKSPACE_ROOT", &tmp);
@@ -262,9 +260,9 @@ mod tests {
         restore_workspace_root(previous);
     }
 
-    #[test]
-    fn read_rejects_oversize() {
-        let _guard = WORKSPACE_ENV_LOCK.lock().expect("workspace env lock");
+    #[tokio::test]
+    async fn read_rejects_oversize() {
+        let _guard = WORKSPACE_ENV_LOCK.lock().await;
         let previous = std::env::var_os("VIBE_WORKSPACE_ROOT");
         let tmp = std::env::temp_dir().join(format!("vibe-harness-test-{}", uuid::Uuid::new_v4()));
         std::env::set_var("VIBE_WORKSPACE_ROOT", &tmp);

@@ -3,6 +3,8 @@ mod chat_ai;
 mod clips_layers;
 mod effects;
 
+pub use effects::CaptionRequest;
+
 use crate::schema::*;
 use crate::models::*;
 use crate::requests::*;

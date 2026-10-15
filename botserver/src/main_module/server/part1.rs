@@ -174,7 +174,19 @@ pub async fn run_axum_server(
 
     let base_router = build_base_router(app_state.clone(), api_router, sub_router, oauth_state, &site_path);
 
-    let app = apply_middleware(base_router, app_state.clone(), sec.cors, csrf_manager, panic_config, security_headers_extension, rate_limit_extension, sec.rbac_manager, sec.auth_middleware_state);
+    let app = apply_middleware(
+        base_router,
+        app_state.clone(),
+        ServerLayers {
+            cors: sec.cors,
+            csrf_manager,
+            panic_config,
+            security_headers: security_headers_extension,
+            rate_limit: rate_limit_extension,
+            rbac_manager: sec.rbac_manager,
+            auth_middleware_state: sec.auth_middleware_state,
+        },
+    );
 
     listen(app, port).await
 }

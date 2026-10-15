@@ -20,4 +20,4 @@ pub use llm::stream_llm_response;
 pub use sink::{ChannelSink, MpscChannelSink};
 pub use start_bas::run_start_bas;
 pub use tool_exec::{run_llm_tool_call, run_tool_exec};
-pub use types::{PipelineError, PipelineResult};
+pub use types::{LlmTarget, PipelineError, PipelineResult, SessionIdentity};

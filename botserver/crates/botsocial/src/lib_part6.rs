@@ -31,7 +31,7 @@ pub async fn handle_trending_topics(
             .into_iter()
             .map(|(tag, count)| TrendingTopic { tag, count })
             .collect();
-        ranked.sort_by_key(|a| std::cmp::Reverse(a.count.clone()));
+        ranked.sort_by_key(|a| std::cmp::Reverse(a.count));
         ranked.truncate(10);
         Ok::<_, SocialError>(ranked)
     })

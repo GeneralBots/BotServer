@@ -4,7 +4,7 @@ use super::*;
 
     use uuid::Uuid;
     use super::llm_5::project_scoped_arguments;
-    use crate::VibeRunConfig;
+    use crate::types::VibeRunConfig;
     use serde_json::json;
     use tokio::sync::RwLock;
 
@@ -314,9 +314,11 @@ use super::*;
 
     #[test]
     fn project_scope_overrides_model_workspace_arguments() {
-        let mut config = crate::types::VibeRunConfig::default();
-        config.project_id = Some("project-id".to_string());
-        config.project_name = Some("calculator-e2e".to_string());
+        let config = crate::types::VibeRunConfig {
+            project_id: Some("project-id".to_string()),
+            project_name: Some("calculator-e2e".to_string()),
+            ..crate::types::VibeRunConfig::default()
+        };
         let run = VibeRun::new(
             Uuid::nil(),
             Uuid::nil(),

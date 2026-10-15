@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 use uuid::Uuid;
 
 use super::message::run_start_bas_on_connect;
-use crate::core::bot::pipeline::{self, ChannelSink, PipelineError};
+use crate::core::bot::pipeline::{self, ChannelSink, PipelineError, SessionIdentity};
 
 struct WebSocketSink(Arc<tokio::sync::Mutex<futures_util::stream::SplitSink<WebSocket, Message>>>);
 
@@ -116,10 +116,16 @@ pub async fn handle_ws(
                 match msg {
                     Some(Ok(Message::Text(text))) => {
                         let sink = WebSocketSink(ws_sender.clone());
+                        let identity = SessionIdentity {
+                            sink: &sink,
+                            state: &state,
+                            bot_uuid,
+                            session_id,
+                            user_id,
+                            bot_name: &bot_name,
+                        };
                         let _ = pipeline::process_message_internal(
-                            &sink, &mut rx, &state,
-                            session_id, user_id, bot_uuid, &bot_name,
-                            &mut start_bas_ran, &text,
+                            &identity, &mut rx, &mut start_bas_ran, &text,
                         ).await;
                     }
                     Some(Ok(Message::Ping(data))) => {

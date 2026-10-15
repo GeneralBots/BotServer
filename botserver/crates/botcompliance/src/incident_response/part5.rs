@@ -1,5 +1,40 @@
 use super::*;
 
+/// A new incident as the caller reports it.
+pub struct NewIncident {
+    pub title: String,
+    pub description: String,
+    pub severity: IncidentSeverity,
+    pub category: IncidentCategory,
+    pub affected_systems: Vec<String>,
+    pub reported_by: String,
+    pub source: IncidentSource,
+    pub tags: Vec<String>,
+    pub metadata: HashMap<String, serde_json::Value>,
+}
+
+/// One remediation action performed while handling an incident.
+pub struct NewAction {
+    pub incident_id: Uuid,
+    pub action_type: ActionType,
+    pub description: String,
+    pub performed_by: String,
+    pub automated: bool,
+    pub success: bool,
+    pub result: Option<String>,
+}
+
+/// One piece of evidence attached to an incident.
+pub struct NewEvidence {
+    pub incident_id: Uuid,
+    pub evidence_type: EvidenceType,
+    pub title: String,
+    pub description: Option<String>,
+    pub file_path: Option<String>,
+    pub url: Option<String>,
+    pub collected_by: String,
+}
+
 impl IncidentResponseService {
     pub fn new() -> Self {
         Self {
@@ -29,18 +64,18 @@ impl IncidentResponseService {
         format!("INC-{}{:02}{:02}-{:04}", now.format("%Y"), now.format("%m"), now.format("%d"), num)
     }
 
-    pub async fn create_incident(
-        &self,
-        title: String,
-        description: String,
-        severity: IncidentSeverity,
-        category: IncidentCategory,
-        affected_systems: Vec<String>,
-        reported_by: String,
-        source: IncidentSource,
-        tags: Vec<String>,
-        metadata: HashMap<String, serde_json::Value>,
-    ) -> Incident {
+    pub async fn create_incident(&self, new_incident: NewIncident) -> Incident {
+        let NewIncident {
+            title,
+            description,
+            severity,
+            category,
+            affected_systems,
+            reported_by,
+            source,
+            tags,
+            metadata,
+        } = new_incident;
         let now = Utc::now();
         let incident_id = Uuid::new_v4();
         let incident_number = self.generate_incident_number();
@@ -204,16 +239,16 @@ impl IncidentResponseService {
         Ok(incident.clone())
     }
 
-    pub async fn add_action(
-        &self,
-        incident_id: Uuid,
-        action_type: ActionType,
-        description: String,
-        performed_by: String,
-        automated: bool,
-        success: bool,
-        result: Option<String>,
-    ) -> Result<ActionTaken, String> {
+    pub async fn add_action(&self, action: NewAction) -> Result<ActionTaken, String> {
+        let NewAction {
+            incident_id,
+            action_type,
+            description,
+            performed_by,
+            automated,
+            success,
+            result,
+        } = action;
         let mut incidents = self.incidents.write().await;
         let incident = incidents
             .get_mut(&incident_id)
@@ -246,16 +281,16 @@ impl IncidentResponseService {
         Ok(action)
     }
 
-    pub async fn add_evidence(
-        &self,
-        incident_id: Uuid,
-        evidence_type: EvidenceType,
-        title: String,
-        description: Option<String>,
-        file_path: Option<String>,
-        url: Option<String>,
-        collected_by: String,
-    ) -> Result<Evidence, String> {
+    pub async fn add_evidence(&self, evidence: NewEvidence) -> Result<Evidence, String> {
+        let NewEvidence {
+            incident_id,
+            evidence_type,
+            title,
+            description,
+            file_path,
+            url,
+            collected_by,
+        } = evidence;
         let mut incidents = self.incidents.write().await;
         let incident = incidents
             .get_mut(&incident_id)

@@ -151,16 +151,16 @@ pub async fn webhooks_create(
         return (StatusCode::INTERNAL_SERVER_ERROR, Html("Failed to register webhook".to_string()));
     }
 
-    crate::audit_log::record_audit_event(
-        &state,
-        "webhook",
-        user_id,
-        "webhook.create",
-        Some("webhook"),
-        Some(webhook_id),
-        true,
-        Some(&format!("registered webhook for {url}")),
-    );
+    crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+        state: &state,
+        event_type: "webhook",
+        actor_id: user_id,
+        action: "webhook.create",
+        target_type: Some("webhook"),
+        target_id: Some(webhook_id),
+        success: true,
+        details: Some(&format!("registered webhook for {url}")),
+    });
 
     (
         StatusCode::OK,
@@ -202,16 +202,16 @@ pub async fn webhooks_delete(
             if let Ok(sm) = SecretsManager::get() {
                 let _ = sm.delete_secret(&crate::webhook_delivery::webhook_vault_path(webhook_id)).await;
             }
-            crate::audit_log::record_audit_event(
-                &state,
-                "webhook",
-                user_id,
-                "webhook.delete",
-                Some("webhook"),
-                Some(webhook_id),
-                true,
-                None,
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "webhook",
+                actor_id: user_id,
+                action: "webhook.delete",
+                target_type: Some("webhook"),
+                target_id: Some(webhook_id),
+                success: true,
+                details: None,
+            });
             (StatusCode::OK, Html(String::new()))
         }
         Ok(_) => (StatusCode::NOT_FOUND, Html("Webhook not found".to_string())),

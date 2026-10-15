@@ -13,7 +13,7 @@ use uuid::Uuid;
 
 use super::exec::process_message_internal;
 use super::sink::ChannelSink;
-use super::types::PipelineResult;
+use super::types::{PipelineResult, SessionIdentity};
 
 pub async fn run_pipeline_for_channel(
     state: &Arc<AppState>,
@@ -78,18 +78,16 @@ pub async fn run_pipeline_for_channel(
     .to_string();
 
     let mut start_bas_ran = false;
-    let result = process_message_internal(
+    let identity = SessionIdentity {
         sink,
-        &mut rx_internal,
         state,
+        bot_uuid,
         session_id,
         user_id,
-        bot_uuid,
-        &bot_name,
-        &mut start_bas_ran,
-        &json_msg,
-    )
-    .await;
+        bot_name: &bot_name,
+    };
+    let result = process_message_internal(&identity, &mut rx_internal, &mut start_bas_ran, &json_msg)
+        .await;
 
     {
         let mut channels = state.response_channels.lock().await;
@@ -156,16 +154,17 @@ fn publish_channel_event(
         } else {
             after_path.to_string()
         };
-        basic_events::publish_media_uploaded(
-            &Arc::new(state.conn.clone()),
-            bot_uuid,
-            &path,
+        let pool = Arc::new(state.conn.clone());
+        basic_events::publish_media_uploaded(&basic_events::MediaUpload {
+            pool: &pool,
+            bot_id: bot_uuid,
+            path: &path,
             kind,
-            &caption,
+            caption: &caption,
             channel,
-            &reply_target.session_id,
-            &reply_target.user_id,
-        );
+            session_id: &reply_target.session_id,
+            channel_user_id: &reply_target.user_id,
+        });
         return;
     }
     let text = user_text.trim();

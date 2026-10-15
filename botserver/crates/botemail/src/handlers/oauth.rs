@@ -152,27 +152,25 @@ fn constant_time_eq(left: &str, right: &str) -> bool {
 pub async fn start_mail_oauth(
     headers: axum::http::HeaderMap,
     Json(request): Json<OAuthStartRequest>,
-) -> Result<Json<ApiResponse<OAuthStartResponse>>, Response> {
+) -> Result<Json<ApiResponse<OAuthStartResponse>>, EmailError> {
     let Ok(user_id) = extract_user_from_session(&headers) else {
-        return Err(EmailError("Authentication required".to_string()).into_response());
+        return Err(EmailError("Authentication required".to_string()));
     };
     let Some(provider) = MailOAuthProvider::parse(&request.provider) else {
         return Err(EmailError(format!(
             "Unsupported OAuth2 provider '{}'",
             request.provider
-        ))
-        .into_response());
+        )));
     };
     let email = request.email.trim().to_string();
     if email.is_empty() {
-        return Err(EmailError("The mailbox address is required".to_string()).into_response());
+        return Err(EmailError("The mailbox address is required".to_string()));
     }
     let Some(secret) = state_secret() else {
         return Err(EmailError(
             "MAIL_OAUTH_STATE_SECRET is not configured, so the consent flow cannot be signed"
                 .to_string(),
-        )
-        .into_response());
+        ));
     };
     // Only the client id is needed here; the secret is used by the callback
     // when the authorization code is exchanged.
@@ -180,8 +178,7 @@ pub async fn start_mail_oauth(
         return Err(EmailError(format!(
             "No OAuth2 client credentials configured for {}",
             provider.as_str()
-        ))
-        .into_response());
+        )));
     };
 
     let redirect_uri = callback_url(&headers);

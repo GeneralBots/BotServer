@@ -71,6 +71,7 @@ pub(super) fn ensure_tenant_and_org(pool: &botcore::shared::utils::DbPool, tenan
         None => {
             // No existing org — create the legacy "{slug}-org" naming.
             let org_id = Uuid::new_v4();
+            let org_slug = format!("{tenant_slug}-org");
             sql_query(format!(
                 "INSERT INTO organizations (org_id, tenant_id, name, slug, created_at) \
                  VALUES ('{oid}', '{tid}', '{slug}', '{orgslug}', NOW()) \
@@ -78,7 +79,7 @@ pub(super) fn ensure_tenant_and_org(pool: &botcore::shared::utils::DbPool, tenan
                 oid = org_id,
                 tid = tid,
                 slug = tenant_slug,
-                orgslug = format!("{}-org", tenant_slug)
+                orgslug = org_slug
             ))
             .execute(&mut conn)
             .ok();

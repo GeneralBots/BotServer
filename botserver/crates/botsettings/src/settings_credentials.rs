@@ -188,16 +188,16 @@ pub async fn api_keys_create(
         return (StatusCode::INTERNAL_SERVER_ERROR, Html("Failed to create API key".to_string()));
     }
 
-    crate::audit_log::record_audit_event(
-        &state,
-        "api_key",
-        user_id,
-        "api_key.create",
-        Some("api_key"),
-        None,
-        true,
-        Some(&format!("created key '{name}'")),
-    );
+    crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+        state: &state,
+        event_type: "api_key",
+        actor_id: user_id,
+        action: "api_key.create",
+        target_type: Some("api_key"),
+        target_id: None,
+        success: true,
+        details: Some(&format!("created key '{name}'")),
+    });
 
     (
         StatusCode::OK,
@@ -244,16 +244,16 @@ pub async fn api_keys_rotate(
 
     match updated {
         Ok(1) => {
-            crate::audit_log::record_audit_event(
-                &state,
-                "api_key",
-                user_id,
-                "api_key.rotate",
-                Some("api_key"),
-                Some(key_id),
-                true,
-                None,
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "api_key",
+                actor_id: user_id,
+                action: "api_key.rotate",
+                target_type: Some("api_key"),
+                target_id: Some(key_id),
+                success: true,
+                details: None,
+            });
             (
                 StatusCode::OK,
                 Html(format!(
@@ -298,16 +298,16 @@ pub async fn api_keys_delete(
 
     match updated {
         Ok(1) => {
-            crate::audit_log::record_audit_event(
-                &state,
-                "api_key",
-                user_id,
-                "api_key.revoke",
-                Some("api_key"),
-                Some(key_id),
-                true,
-                None,
-            );
+            crate::audit_log::record_audit_event(crate::audit_log::AuditEvent {
+                state: &state,
+                event_type: "api_key",
+                actor_id: user_id,
+                action: "api_key.revoke",
+                target_type: Some("api_key"),
+                target_id: Some(key_id),
+                success: true,
+                details: None,
+            });
             (StatusCode::OK, Html(String::new()))
         }
         Ok(_) => (StatusCode::NOT_FOUND, Html("API key not found".to_string())),

@@ -11,6 +11,17 @@ pub struct FraudEngine {
     pub pool: DbPool,
 }
 
+/// The assessment outcome to persist as a fraud event.
+struct FraudEventLog<'a> {
+    conn: &'a mut PgConnection,
+    branch: Uuid,
+    request: &'a FraudAssessmentRequest,
+    risk_score: i32,
+    risk_level: &'a str,
+    triggered: &'a [String],
+    action_taken: &'a str,
+}
+
 impl FraudEngine {
     pub fn new(pool: DbPool) -> Self {
         Self { pool }
@@ -64,15 +75,15 @@ impl FraudEngine {
         let (risk_level, action_taken) = scoring::classify(risk_score, blocked);
 
         // 6. Log event
-        let _ = self.log_event(
-            &mut conn,
+        let _ = Self::log_event(FraudEventLog {
+            conn: &mut conn,
             branch,
             request,
             risk_score,
-            &risk_level,
-            &triggered,
-            &action_taken,
-        );
+            risk_level: &risk_level,
+            triggered: &triggered,
+            action_taken: &action_taken,
+        });
 
         FraudAssessmentResult {
             risk_score,
@@ -149,16 +160,17 @@ impl FraudEngine {
         Ok(false)
     }
 
-    fn log_event(
-        &self,
-        conn: &mut PgConnection,
-        branch: Uuid,
-        request: &FraudAssessmentRequest,
-        risk_score: i32,
-        risk_level: &str,
-        triggered: &[String],
-        action_taken: &str,
-    ) -> Result<(), diesel::result::Error> {
+    /// The assessment outcome to persist as a fraud event.
+    fn log_event(event: FraudEventLog<'_>) -> Result<(), diesel::result::Error> {
+        let FraudEventLog {
+            conn,
+            branch,
+            request,
+            risk_score,
+            risk_level,
+            triggered,
+            action_taken,
+        } = event;
         let id = Uuid::new_v4();
         let rules_json: serde_json::Value =
             serde_json::to_value(triggered).unwrap_or_default();

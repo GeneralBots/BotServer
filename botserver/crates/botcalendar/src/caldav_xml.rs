@@ -112,9 +112,7 @@ fn find_element(body: &str, name: &str) -> Option<String> {
     let mut search_from = 0;
     while let Some(offset) = body[search_from..].find('<') {
         let tag_start = search_from + offset + 1;
-        let Some(tag_end_offset) = body[tag_start..].find('>') else {
-            return None;
-        };
+        let tag_end_offset = body[tag_start..].find('>')?;
         let tag_end = tag_start + tag_end_offset;
         let tag = &body[tag_start..tag_end];
         let qualified = tag.split_whitespace().next().unwrap_or_default();

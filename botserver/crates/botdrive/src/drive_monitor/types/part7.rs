@@ -1,16 +1,29 @@
 use super::*;
 
+/// Everything one drive monitor is created with.
+pub struct DriveMonitorParams {
+    pub state: Arc<AppState>,
+    pub bucket_name: String,
+    pub bot_id: uuid::Uuid,
+    pub bot_name: String,
+    pub branch_slug: String,
+    pub s3_prefix: Option<String>,
+    pub tenant_slug: String,
+    pub org_slug: String,
+}
+
 impl DriveMonitor {
-    pub fn new_with_params(
-        state: Arc<AppState>,
-        bucket_name: String,
-        bot_id: uuid::Uuid,
-        bot_name: String,
-        branch_slug: String,
-        s3_prefix: Option<String>,
-        tenant_slug: String,
-        org_slug: String,
-    ) -> Self {
+    pub fn new_with_params(params: DriveMonitorParams) -> Self {
+        let DriveMonitorParams {
+            state,
+            bucket_name,
+            bot_id,
+            bot_name,
+            branch_slug,
+            s3_prefix,
+            tenant_slug,
+            org_slug,
+        } = params;
         let work_root = PathBuf::from(botcore::shared::utils::get_work_path());
         #[cfg(any(feature = "research", feature = "llm"))]
         let kb_manager = Arc::new(KnowledgeBaseManager::with_bot_config(

@@ -9,7 +9,7 @@ pub async fn callback(
     State(state): State<Arc<IntegrationState>>,
     Path((bot_id, provider)): Path<(String, String)>,
     Query(query): Query<CallbackQuery>,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     if let Some(error) = query.error {
         return Err(error_response(StatusCode::BAD_REQUEST, IntegrationError::Validation(error)));
     }

@@ -61,6 +61,7 @@ pub async fn dashboard_invitations(State(state): State<Arc<AppState>>) -> Html<S
             .unwrap_or(invite.created_at + ChronoDuration::days(7));
         let expires_in = (expires - now).num_days().max(0);
         let exp_class = if expires_in <= 2 { " warning" } else { "" };
+        let sent_label = format!("Sent {}", relative_time(invite.created_at));
         items.push_str(&format!(
             r##"<div class="invitation-item">
     <div class="invitation-info">
@@ -88,7 +89,7 @@ pub async fn dashboard_invitations(State(state): State<Arc<AppState>>) -> Html<S
 </div>"##,
             email = invite.email,
             role = invite.role,
-            sent = format!("Sent {}", relative_time(invite.created_at)),
+            sent = sent_label,
             id = invite.id,
         ));
     }

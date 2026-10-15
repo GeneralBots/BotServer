@@ -89,14 +89,16 @@ pub async fn bulk_leads(
             for row in &before_rows {
                 audit::record(
                     &state,
-                    &headers,
-                    branch_id,
-                    "lead",
-                    Some(row.id),
-                    "bulk_stage",
-                    Some(serde_json::json!({ "stage": row.stage })),
-                    Some(serde_json::json!({ "stage": stage })),
-                    None,
+                    audit::AuditRecord {
+                        headers: &headers,
+                        branch_id,
+                        entity: "lead",
+                        entity_id: Some(row.id),
+                        action: "bulk_stage",
+                        before: Some(serde_json::json!({ "stage": row.stage })),
+                        after: Some(serde_json::json!({ "stage": stage })),
+                        detail: None,
+                    },
                 );
             }
             LeadBulkActionResult { updated, deleted: 0, failed }
@@ -117,14 +119,16 @@ pub async fn bulk_leads(
             for row in &before_rows {
                 audit::record(
                     &state,
-                    &headers,
-                    branch_id,
-                    "lead",
-                    Some(row.id),
-                    "bulk_owner",
-                    Some(serde_json::json!({ "owner_id": row.owner_id })),
-                    Some(serde_json::json!({ "owner_id": owner })),
-                    None,
+                    audit::AuditRecord {
+                        headers: &headers,
+                        branch_id,
+                        entity: "lead",
+                        entity_id: Some(row.id),
+                        action: "bulk_owner",
+                        before: Some(serde_json::json!({ "owner_id": row.owner_id })),
+                        after: Some(serde_json::json!({ "owner_id": owner })),
+                        detail: None,
+                    },
                 );
             }
             LeadBulkActionResult { updated, deleted: 0, failed }
@@ -144,14 +148,16 @@ pub async fn bulk_leads(
             for row in &before_rows {
                 audit::record(
                     &state,
-                    &headers,
-                    branch_id,
-                    "lead",
-                    Some(row.id),
-                    "bulk_delete",
-                    Some(serde_json::to_value(row).unwrap_or(serde_json::Value::Null)),
-                    None,
-                    None,
+                    audit::AuditRecord {
+                        headers: &headers,
+                        branch_id,
+                        entity: "lead",
+                        entity_id: Some(row.id),
+                        action: "bulk_delete",
+                        before: Some(serde_json::to_value(row).unwrap_or(serde_json::Value::Null)),
+                        after: None,
+                        detail: None,
+                    },
                 );
             }
             LeadBulkActionResult { updated: 0, deleted, failed }
@@ -212,14 +218,16 @@ pub async fn bulk_contacts(
             for row in &before_rows {
                 audit::record(
                     &state,
-                    &headers,
-                    branch_id,
-                    "contact",
-                    Some(row.id),
-                    "bulk_owner",
-                    Some(serde_json::json!({ "owner_id": row.owner_id })),
-                    Some(serde_json::json!({ "owner_id": owner })),
-                    None,
+                    audit::AuditRecord {
+                        headers: &headers,
+                        branch_id,
+                        entity: "contact",
+                        entity_id: Some(row.id),
+                        action: "bulk_owner",
+                        before: Some(serde_json::json!({ "owner_id": row.owner_id })),
+                        after: Some(serde_json::json!({ "owner_id": owner })),
+                        detail: None,
+                    },
                 );
             }
             LeadBulkActionResult { updated, deleted: 0, failed }
@@ -239,14 +247,16 @@ pub async fn bulk_contacts(
             for row in &before_rows {
                 audit::record(
                     &state,
-                    &headers,
-                    branch_id,
-                    "contact",
-                    Some(row.id),
-                    "bulk_delete",
-                    Some(serde_json::to_value(row).unwrap_or(serde_json::Value::Null)),
-                    None,
-                    None,
+                    audit::AuditRecord {
+                        headers: &headers,
+                        branch_id,
+                        entity: "contact",
+                        entity_id: Some(row.id),
+                        action: "bulk_delete",
+                        before: Some(serde_json::to_value(row).unwrap_or(serde_json::Value::Null)),
+                        after: None,
+                        detail: None,
+                    },
                 );
             }
             LeadBulkActionResult { updated: 0, deleted, failed }

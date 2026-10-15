@@ -64,6 +64,7 @@ mod part6;
 mod part7;
 
 pub use part1::*;
+pub use part7::DriveMonitorParams;
 use part5::*;
 // `part6` only defines `parse_kb_path`, which is behind these features.
 #[cfg(any(feature = "research", feature = "llm"))]

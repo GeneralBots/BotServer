@@ -4,23 +4,26 @@ use botcore::shared::state::AppState;
 use uuid::Uuid;
 
 use super::sink::ChannelSink;
-use super::types::PipelineResult;
+use super::types::{PipelineResult, SessionIdentity};
 
 /// Enriches the LLM prompt with KB context, memory recall and integration
 /// mention blocks, saves the user turn, and streams the LLM response.
 pub(super) async fn build_and_stream(
-    state: &Arc<AppState>,
-    sink: &dyn ChannelSink,
+    identity: &SessionIdentity<'_>,
     rx: &mut tokio::sync::mpsc::Receiver<botlib::models::BotResponse>,
-    bot_uuid: Uuid,
-    session_id: Uuid,
-    user_id: Uuid,
-    bot_name: &str,
     messages: &[serde_json::Value],
     user_text: &str,
     #[cfg(feature = "integrations")] mentions: &[botlib::models::MentionRef],
     is_switcher_replay: bool,
 ) -> PipelineResult<()> {
+    let SessionIdentity {
+        state,
+        bot_uuid,
+        session_id,
+        user_id,
+        bot_name,
+        ..
+    } = *identity;
     let user_query = user_text.to_string();
     let mut messages_val = serde_json::Value::Array(messages.to_vec());
     if tokio::time::timeout(
@@ -77,17 +80,7 @@ pub(super) async fn build_and_stream(
 
     if tokio::time::timeout(
         std::time::Duration::from_secs(300),
-        super::llm::stream_llm_response(
-            sink,
-            rx,
-            state,
-            bot_uuid,
-            session_id,
-            user_id,
-            bot_name,
-            &messages_val,
-            &user_query,
-        ),
+        super::llm::stream_llm_response(identity, rx, &messages_val, &user_query),
     )
     .await
     .is_err()

@@ -138,29 +138,29 @@ pub(super) fn register_save_variants(state: Arc<dyn BasicRuntime>, user: UserSes
                     };
 
                     if has_id && !rid.is_empty() {
-                        fire_table_triggers(
-                            &mut conn,
-                            &state_clone,
-                            &user_clone,
-                            &table,
-                            1,
-                            Some(rid),
-                            None,
-                            None,
-                        );
+                        fire_table_triggers(TableTrigger {
+                            conn: &mut conn,
+                            state: &state_clone,
+                            user: &user_clone,
+                            table: &table,
+                            trigger_kind_val: 1,
+                            record_id: Some(rid),
+                            old_status: None,
+                            new_status: None,
+                        });
                     }
 
                     if !has_id {
-                        fire_table_triggers(
-                            &mut conn,
-                            &state_clone,
-                            &user_clone,
-                            &table,
-                            2,
-                            None,
-                            None,
-                            None,
-                        );
+                        fire_table_triggers(TableTrigger {
+                            conn: &mut conn,
+                            state: &state_clone,
+                            user: &user_clone,
+                            table: &table,
+                            trigger_kind_val: 2,
+                            record_id: None,
+                            old_status: None,
+                            new_status: None,
+                        });
                     }
 
                     Ok(json_value_to_dynamic(&result))
@@ -210,7 +210,16 @@ let mut conn = match bot_pool {
                 let result = execute_insert(&mut conn, &table, &data)
                     .map_err(|e| format!("INSERT error: {}", e))?;
 
-                fire_table_triggers(&mut conn, &state_clone, &user_clone, &table, 2, None, None, None);
+                fire_table_triggers(TableTrigger {
+                    conn: &mut conn,
+                    state: &state_clone,
+                    user: &user_clone,
+                    table: &table,
+                    trigger_kind_val: 2,
+                    record_id: None,
+                    old_status: None,
+                    new_status: None,
+                });
 
                 Ok(json_value_to_dynamic(&result))
             },
@@ -269,16 +278,16 @@ pub fn register_update_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, 
                     .and_then(|id| query_table_field_by_id(&mut conn, &table, "status", id).ok())
                     .flatten();
 
-                fire_table_triggers(
-                    &mut conn,
-                    &state_clone,
-                    &user_clone,
-                    &table,
-                    1,
-                    ids.first().cloned(),
+                fire_table_triggers(TableTrigger {
+                    conn: &mut conn,
+                    state: &state_clone,
+                    user: &user_clone,
+                    table: &table,
+                    trigger_kind_val: 1,
+                    record_id: ids.first().cloned(),
                     old_status,
                     new_status,
-                );
+                });
 
                 Ok(Dynamic::from(row_count))
             },

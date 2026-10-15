@@ -63,11 +63,12 @@ pub fn evaluate_pivotby(expr: &str, worksheet: &Worksheet) -> Option<String> {
     let value_data = super::get_range_string_values(parts[2].trim(), worksheet);
     let agg = parts[3].trim().trim_matches('"').to_uppercase();
     let mut cells: std::collections::BTreeMap<(String, String), Vec<f64>> = std::collections::BTreeMap::new();
-    for i in 0..row_data.len() {
-        let row_key = row_data[i].clone();
-        let col_key = col_data.get(i).cloned().unwrap_or_default();
-        if let Some(v) = value_data.get(i).and_then(|v| v.parse().ok()) {
-            cells.entry((row_key, col_key)).or_default().push(v);
+    for ((row_key, col_key), value) in row_data.iter().zip(col_data.iter()).zip(value_data.iter()) {
+        if let Ok(v) = value.parse::<f64>() {
+            cells
+                .entry((row_key.clone(), col_key.clone()))
+                .or_default()
+                .push(v);
         }
     }
     let mut out: Vec<String> = Vec::new();

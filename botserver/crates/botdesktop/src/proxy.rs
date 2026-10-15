@@ -319,10 +319,9 @@ mod tests {
         assert_eq!(MAX_FRAME_SIZE, 1024 * 1024);
     }
 
-    #[test]
-    fn test_relay_channel_size() {
-        assert!(RELAY_CHANNEL_SIZE > 0);
-    }
+    /// Checked while compiling, so a zero-sized relay channel can never
+    /// reach a build: an array length of `1` only fits a zero constant.
+    const _: [(); 0] = [(); (RELAY_CHANNEL_SIZE == 0) as usize];
 
     #[tokio::test]
     async fn test_rdp_health_check_rejects_non_rdp_peer() {

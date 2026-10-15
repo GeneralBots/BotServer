@@ -150,11 +150,7 @@ pub(crate) async fn verify_and_repair(
     exhausted_verdict(outcomes)
 }
 
-async fn rerun_steps(
-    ctx: &Arc<RunCtx>,
-    repair_ids: &[String],
-    outcomes: &mut Vec<StepOutcome>,
-) {
+async fn rerun_steps(ctx: &Arc<RunCtx>, repair_ids: &[String], outcomes: &mut [StepOutcome]) {
     let Some(plan_steps) = load_plan_steps(ctx).await else {
         tracing::error!("automation run {}: repair skipped, plan unavailable", ctx.run_id);
         return;

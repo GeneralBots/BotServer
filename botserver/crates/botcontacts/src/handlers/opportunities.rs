@@ -102,14 +102,16 @@ pub async fn create_opportunity(
 
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "opportunity",
-        Some(id),
-        "create",
-        None,
-        Some(serde_json::to_value(&opportunity).unwrap_or(serde_json::Value::Null)),
-        None,
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "opportunity",
+            entity_id: Some(id),
+            action: "create",
+            before: None,
+            after: Some(serde_json::to_value(&opportunity).unwrap_or(serde_json::Value::Null)),
+            detail: None,
+        },
     );
     Ok(Json(opportunity))
 }
@@ -237,14 +239,16 @@ pub async fn update_opportunity(
         .unwrap_or_else(|_| before.clone());
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "opportunity",
-        Some(id),
-        "update",
-        Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
-        Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
-        None,
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "opportunity",
+            entity_id: Some(id),
+            action: "update",
+            before: Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
+            after: Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
+            detail: None,
+        },
     );
     Ok(Json(after))
 }
@@ -296,14 +300,16 @@ pub async fn close_opportunity(
         .unwrap_or_else(|_| before.clone());
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "opportunity",
-        Some(id),
-        if req.won { "close_won" } else { "close_lost" },
-        Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
-        Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
-        req.lost_reason.clone().map(|r| serde_json::json!({ "lost_reason": r })),
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "opportunity",
+            entity_id: Some(id),
+            action: if req.won { "close_won" } else { "close_lost" },
+            before: Some(serde_json::to_value(&before).unwrap_or(serde_json::Value::Null)),
+            after: Some(serde_json::to_value(&after).unwrap_or(serde_json::Value::Null)),
+            detail: req.lost_reason.clone().map(|r| serde_json::json!({ "lost_reason": r })),
+        },
     );
     Ok(Json(after))
 }
@@ -337,14 +343,16 @@ pub async fn delete_opportunity(
     if let Some(row) = before {
         audit::record(
             &state,
-            &headers,
-            branch_id,
-            "opportunity",
-            Some(id),
-            "delete",
-            Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
-            None,
-            None,
+            audit::AuditRecord {
+                headers: &headers,
+                branch_id,
+                entity: "opportunity",
+                entity_id: Some(id),
+                action: "delete",
+                before: Some(serde_json::to_value(&row).unwrap_or(serde_json::Value::Null)),
+                after: None,
+                detail: None,
+            },
         );
     }
     Ok(StatusCode::NO_CONTENT)

@@ -99,7 +99,12 @@ pub(crate) async fn handle_signup(
     sql_query("BEGIN").execute(&mut conn)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("BEGIN: {e}")))?;
 
-    let tx_result = (|| -> Result<(Uuid, Uuid, Uuid, String, Uuid, Option<Uuid>), String> {
+    /// Identifiers created by the signup transaction: organization, branch,
+    /// bot, the organization slug, the CRM contact and the subscription —
+    /// `None` for custom plans, which are billed on request.
+    type SignupIds = (Uuid, Uuid, Uuid, String, Uuid, Option<Uuid>);
+
+    let tx_result = (|| -> Result<SignupIds, String> {
         // 1. Get or create tenant
         let tenant_id = integration::get_or_create_default_tenant_inner(&mut conn)?;
 

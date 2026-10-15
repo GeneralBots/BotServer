@@ -201,10 +201,10 @@ pub fn register_vibe_events_command(engine: &mut Engine) {
                 if let Some(events) = v.as_array() {
                     let summary: Vec<String> = events
                         .iter()
-                        .filter_map(|e| {
+                        .map(|e| {
                             let step = e.get("step").and_then(|x| x.as_str()).unwrap_or("?");
                             let msg = e.get("message").and_then(|x| x.as_str()).unwrap_or("");
-                            Some(format!("[{step}] {msg}"))
+                            format!("[{step}] {msg}")
                         })
                         .collect();
                     Dynamic::from(format!(

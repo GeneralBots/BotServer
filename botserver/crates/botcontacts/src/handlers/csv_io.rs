@@ -125,14 +125,16 @@ pub async fn export_leads_csv(
     }
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "lead",
-        None,
-        "export_csv",
-        None,
-        None,
-        Some(serde_json::json!({ "rows": rows.len(), "total": total })),
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "lead",
+            entity_id: None,
+            action: "export_csv",
+            before: None,
+            after: None,
+            detail: Some(serde_json::json!({ "rows": rows.len(), "total": total })),
+        },
     );
     Ok((
         [
@@ -326,14 +328,16 @@ pub async fn import_leads_csv(
                 report.imported += 1;
                 audit::record(
                     &state,
-                    &headers,
-                    branch_id,
-                    "lead",
-                    Some(lead.id),
-                    "import_csv",
-                    None,
-                    Some(serde_json::to_value(&lead).unwrap_or(serde_json::Value::Null)),
-                    Some(serde_json::json!({ "row": idx + 1 })),
+                    audit::AuditRecord {
+                        headers: &headers,
+                        branch_id,
+                        entity: "lead",
+                        entity_id: Some(lead.id),
+                        action: "import_csv",
+                        before: None,
+                        after: Some(serde_json::to_value(&lead).unwrap_or(serde_json::Value::Null)),
+                        detail: Some(serde_json::json!({ "row": idx + 1 })),
+                    },
                 );
             }
             Err(e) => report.errors.push((idx + 1, format!("insert failed: {e}"))),
@@ -342,19 +346,21 @@ pub async fn import_leads_csv(
 
     audit::record(
         &state,
-        &headers,
-        branch_id,
-        "lead",
-        None,
-        "import_csv",
-        None,
-        None,
-        Some(serde_json::json!({
+        audit::AuditRecord {
+            headers: &headers,
+            branch_id,
+            entity: "lead",
+            entity_id: None,
+            action: "import_csv",
+            before: None,
+            after: None,
+            detail: Some(serde_json::json!({
             "rows": report.imported,
             "skipped": report.skipped_duplicates,
             "errors": report.errors.len(),
             "dry_run": dry_run
         })),
+        },
     );
     Ok(Json(report))
 }

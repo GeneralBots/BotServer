@@ -6,6 +6,7 @@ use std::sync::Arc;
 use tracing::info;
 use uuid::Uuid;
 
+use crate::engine::CaptionRequest;
 use crate::engine::VideoEngine;
 use crate::requests::*;
 use crate::routes::DbPool;
@@ -106,9 +107,15 @@ pub async fn generate_captions_tool(
     let with_bg = input.with_background.unwrap_or(true);
 
     match engine
-        .generate_captions_from_transcription(
-            project_id, &transcription, style, max_chars, font_size, color, with_bg,
-        )
+        .generate_captions_from_transcription(CaptionRequest {
+            project_id,
+            transcription: &transcription,
+            style,
+            max_chars,
+            font_size,
+            color,
+            with_background: with_bg,
+        })
         .await
     {
         Ok(layers) => {

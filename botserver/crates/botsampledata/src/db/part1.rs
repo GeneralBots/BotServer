@@ -15,13 +15,19 @@ impl Scopes {
         })
     }
 }
+/// A seed domain: its name and the function that populates it.
+type SeedDomain = (
+    &'static str,
+    fn(&mut diesel::PgConnection, &Scopes) -> Result<(), String>,
+);
+
 /// Seed every domain. Each domain runs independently: a failure in one app
 /// (e.g. a legacy/missing table on an un-migrated prod schema) is logged and
 /// the remaining domains still seed.
 pub fn seed(conn: &mut diesel::PgConnection) -> Result<(), String> {
     let scopes = Scopes::new(conn)?;
 
-    let domains: Vec<(&str, fn(&mut diesel::PgConnection, &Scopes) -> Result<(), String>)> = vec![
+    let domains: Vec<SeedDomain> = vec![
         ("people", seed_people),
         ("crm", seed_crm),
         ("tickets", seed_tickets),

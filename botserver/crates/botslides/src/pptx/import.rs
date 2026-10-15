@@ -76,8 +76,10 @@ fn parse_shape_element(sp_xml: &str) -> Option<SlideElement> {
     let id = uuid::Uuid::new_v4().to_string();
 
     if !text.trim().is_empty() || is_tx_box {
-        let mut style = ElementStyle::default();
-        style.font_size = Some(24.0);
+        let style = ElementStyle {
+            font_size: Some(24.0),
+            ..Default::default()
+        };
         return Some(SlideElement {
             id,
             element_type: "text".to_string(),
@@ -95,8 +97,10 @@ fn parse_shape_element(sp_xml: &str) -> Option<SlideElement> {
     }
 
     // Fall back to a shape so non-text content is still represented.
-    let mut style = ElementStyle::default();
-    style.fill = Some("#cccccc".to_string());
+    let style = ElementStyle {
+        fill: Some("#cccccc".to_string()),
+        ..ElementStyle::default()
+    };
     Some(SlideElement {
         id,
         element_type: "shape".to_string(),

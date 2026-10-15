@@ -45,12 +45,9 @@ fn fill_path(template: &str, params: &serde_json::Map<String, Value>) -> Result<
     while let Some(open) = rest.find(':').or_else(|| rest.find('{')) {
         out.push_str(&rest[..open]);
         let after = &rest[open..];
-        let (key, consumed) = if after.starts_with(':') {
-            let end = after[1..]
-                .find('/')
-                .map(|i| i + 1)
-                .unwrap_or(after.len());
-            (after[1..end].to_string(), end)
+        let (key, consumed) = if let Some(stripped) = after.strip_prefix(':') {
+            let end = stripped.find('/').unwrap_or(stripped.len());
+            (stripped[..end].to_string(), end + 1)
         } else {
             let Some(close) = after.find('}') else {
                 return Err(format!("unterminated path param in '{template}'"));

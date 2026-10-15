@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use uuid::Uuid;
 
+use crate::engine::CaptionRequest;
 use crate::engine::VideoEngine;
 use crate::requests::*;
 use crate::routes::AppState;
@@ -59,9 +60,15 @@ pub async fn generate_captions_handler(
     let with_bg = req.background.is_some();
 
     match engine
-        .generate_captions_from_transcription(
-            project_id, &transcription, style, max_chars, font_size, color, with_bg,
-        )
+        .generate_captions_from_transcription(CaptionRequest {
+            project_id,
+            transcription: &transcription,
+            style,
+            max_chars,
+            font_size,
+            color,
+            with_background: with_bg,
+        })
         .await
     {
         Ok(layers) => (

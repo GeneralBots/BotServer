@@ -15,8 +15,6 @@ pub fn classify(score: i32, blocked: bool) -> (String, String) {
         ("high".into(), "review".into())
     } else if score >= 30 {
         ("medium".into(), "flag".into())
-    } else if score >= 10 {
-        ("low".into(), "allow".into())
     } else {
         ("low".into(), "allow".into())
     }

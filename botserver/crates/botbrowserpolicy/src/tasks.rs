@@ -113,22 +113,36 @@ fn set_status(
     .ok_or(TaskError::NotFound)
 }
 
-/// Creates a queued task. When `policy` is provided it is embedded in the
+/// The fields a queued task is created from, grouped so `create_task` keeps a
+/// short argument list. When `policy_cfg` is provided it is embedded in the
 /// `plan` JSONB under key `policy`; otherwise defaults apply at advance time.
 /// `task_kind` (`default` | `checkout`) is stored alongside it and drives the
 /// credential-phishing guard.
-pub fn create_task(
-    pool: &DbPool,
-    user_id: Uuid,
-    org_id: Option<Uuid>,
-    bot_id: Option<Uuid>,
-    goal: String,
-    domains: Vec<String>,
-    budget_steps: i32,
-    policy_cfg: Option<PolicyConfig>,
-    task_kind: &str,
-) -> Result<BrowserTask, TaskError> {
+pub struct NewTaskRequest<'a> {
+    pub user_id: Uuid,
+    pub org_id: Option<Uuid>,
+    pub bot_id: Option<Uuid>,
+    pub goal: String,
+    pub domains: Vec<String>,
+    pub budget_steps: i32,
+    pub policy_cfg: Option<PolicyConfig>,
+    pub task_kind: &'a str,
+}
+
+/// Creates a queued task from `request`.
+pub fn create_task(pool: &DbPool, request: NewTaskRequest<'_>) -> Result<BrowserTask, TaskError> {
     use crate::schema::browser_tasks::dsl as bt;
+
+    let NewTaskRequest {
+        user_id,
+        org_id,
+        bot_id,
+        goal,
+        domains,
+        budget_steps,
+        policy_cfg,
+        task_kind,
+    } = request;
 
     let plan = policy_cfg.map(|p| serde_json::json!({ "policy": p, "kind": task_kind }));
     let new_task = NewBrowserTask {

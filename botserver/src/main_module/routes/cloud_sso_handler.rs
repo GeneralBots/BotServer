@@ -162,14 +162,12 @@ fn sanitize_redirect(url: &str) -> String {
             || s.contains('\n')
             || s.contains('\r')
     };
-    if url.starts_with('/') && !forbidden(url) {
-        url.to_string()
-    } else if (url.starts_with("http://") || url.starts_with("https://"))
-        && !forbidden(url)
+    let is_relative = url.starts_with('/');
+    let is_absolute_with_host = (url.starts_with("http://") || url.starts_with("https://"))
         && url::Url::parse(url)
             .map(|u| u.host_str().is_some())
-            .unwrap_or(false)
-    {
+            .unwrap_or(false);
+    if (is_relative || is_absolute_with_host) && !forbidden(url) {
         url.to_string()
     } else {
         "/".to_string()
