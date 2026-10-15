@@ -1,8 +1,8 @@
 use botbasic_types::BasicRuntime;
+use botkyc::KycRequest;
 use botbasic_types::UserSession;
 use log::trace;
 use rhai::{Dynamic, Engine};
-use serde_json::{json, Value};
 use std::sync::Arc;
 
 /// KYC and identity BASIC keywords for issue #622.
@@ -34,14 +34,8 @@ fn register_verify_face(
                 let profile_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 let selfie_url = context.eval_expression_tree(&inputs[1])?.to_string();
                 trace!("VERIFY FACE: profile={profile_id} selfie={selfie_url}");
-                let result = json!({
-                    "kind": "face_verification",
-                    "action": "verify",
-                    "profile_id": profile_id,
-                    "selfie_url": selfie_url,
-                    "status": "pending",
-                });
-                Ok(serde_json_to_dynamic(&result))
+                let request = KycRequest::face(profile_id, selfie_url);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -64,14 +58,8 @@ fn register_validate_document(
                 let profile_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 let document_url = context.eval_expression_tree(&inputs[1])?.to_string();
                 trace!("VALIDATE DOCUMENT: profile={profile_id} doc={document_url}");
-                let result = json!({
-                    "kind": "document_validation",
-                    "action": "validate",
-                    "profile_id": profile_id,
-                    "document_url": document_url,
-                    "verification_status": "pending",
-                });
-                Ok(serde_json_to_dynamic(&result))
+                let request = KycRequest::document(profile_id, document_url);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -95,14 +83,8 @@ fn register_capture_signature(
                 let document_id = context.eval_expression_tree(&inputs[1])?.to_string();
                 let signature_data = context.eval_expression_tree(&inputs[2])?.to_string();
                 trace!("CAPTURE SIGNATURE: profile={profile_id} doc={document_id}");
-                let result = json!({
-                    "kind": "signature_capture",
-                    "action": "create",
-                    "profile_id": profile_id,
-                    "document_id": document_id,
-                    "signature_data": signature_data,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                let request = KycRequest::signature(profile_id, document_id, signature_data);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -125,15 +107,8 @@ fn register_start_kyc(
                 let profile_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 let workflow_name = context.eval_expression_tree(&inputs[1])?.to_string();
                 trace!("START KYC: profile={profile_id} workflow={workflow_name}");
-                let result = json!({
-                    "kind": "kyc_workflow",
-                    "action": "start",
-                    "profile_id": profile_id,
-                    "workflow_name": workflow_name,
-                    "current_step": "document_upload",
-                    "status": "in_progress",
-                });
-                Ok(serde_json_to_dynamic(&result))
+                let request = KycRequest::workflow(profile_id, workflow_name);
+                Ok(serde_json_to_dynamic(&request))
             },
         )
     {
@@ -141,6 +116,12 @@ fn register_start_kyc(
     }
 }
 
-fn serde_json_to_dynamic(v: &Value) -> Dynamic {
-    Dynamic::from(v.to_string())
+fn serde_json_to_dynamic<T: serde::Serialize>(value: &T) -> Dynamic {
+    match serde_json::to_value(value) {
+        Ok(json) => Dynamic::from(json.to_string()),
+        Err(e) => {
+            log::error!("KYC request serialization failed: {e}");
+            Dynamic::UNIT
+        }
+    }
 }

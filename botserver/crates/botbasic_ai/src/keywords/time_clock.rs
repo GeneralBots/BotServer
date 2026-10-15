@@ -1,8 +1,9 @@
 use botbasic_types::BasicRuntime;
+use bottimeclock::TimeClockRequest;
 use botbasic_types::UserSession;
 use log::trace;
 use rhai::{Dynamic, Engine};
-use serde_json::{json, Value};
+
 use std::sync::Arc;
 
 /// HR time clock BASIC keywords for issue #623.
@@ -30,13 +31,7 @@ fn register_clock_in(
     if let Err(e) = engine
         .register_custom_syntax(["CLOCK", "IN"], false, move |_context, _inputs| {
             trace!("CLOCK IN");
-            let result = json!({
-                "kind": "clock_entry",
-                "action": "in",
-                "entry_type": "clock_in",
-                "timestamp": "now",
-            });
-            Ok(serde_json_to_dynamic(&result))
+            Ok(serde_json_to_dynamic(&TimeClockRequest::clock_in()))
         })
     {
         log::error!("valid CLOCK IN syntax failed: {e}");
@@ -53,13 +48,7 @@ fn register_clock_out(
     if let Err(e) = engine
         .register_custom_syntax(["CLOCK", "OUT"], false, move |_context, _inputs| {
             trace!("CLOCK OUT");
-            let result = json!({
-                "kind": "clock_entry",
-                "action": "out",
-                "entry_type": "clock_out",
-                "timestamp": "now",
-            });
-            Ok(serde_json_to_dynamic(&result))
+            Ok(serde_json_to_dynamic(&TimeClockRequest::clock_out()))
         })
     {
         log::error!("valid CLOCK OUT syntax failed: {e}");
@@ -80,14 +69,7 @@ fn register_get_banco_horas(
             move |context, inputs| {
                 let person_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 trace!("GET BANCO HORAS: {person_id}");
-                let result = json!({
-                    "kind": "banco_horas",
-                    "person_id": person_id,
-                    "balance_hours": 0.0,
-                    "pending_overtime": 0.0,
-                    "pending_debit": 0.0,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                Ok(serde_json_to_dynamic(&TimeClockRequest::banco_horas(person_id)))
             },
         )
     {
@@ -109,15 +91,7 @@ fn register_ferias_balance(
             move |context, inputs| {
                 let person_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 trace!("FERIAS BALANCE: {person_id}");
-                let result = json!({
-                    "kind": "ferias_balance",
-                    "person_id": person_id,
-                    "days_available": 30,
-                    "days_taken": 0,
-                    "days_remaining": 30,
-                    "next_period_start": null,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                Ok(serde_json_to_dynamic(&TimeClockRequest::ferias_balance(person_id)))
             },
         )
     {
@@ -140,16 +114,9 @@ fn register_banco_horas_report(
                 let person_id = context.eval_expression_tree(&inputs[0])?.to_string();
                 let period = context.eval_expression_tree(&inputs[1])?.to_string();
                 trace!("BANCO HORAS REPORT: {person_id} period={period}");
-                let result = json!({
-                    "kind": "banco_horas_report",
-                    "person_id": person_id,
-                    "period": period,
-                    "total_hours_worked": 0.0,
-                    "total_overtime": 0.0,
-                    "total_night_shift": 0.0,
-                    "total_absences": 0,
-                });
-                Ok(serde_json_to_dynamic(&result))
+                Ok(serde_json_to_dynamic(&TimeClockRequest::banco_horas_report(
+                    person_id, period,
+                )))
             },
         )
     {
@@ -157,6 +124,12 @@ fn register_banco_horas_report(
     }
 }
 
-fn serde_json_to_dynamic(v: &Value) -> Dynamic {
-    Dynamic::from(v.to_string())
+fn serde_json_to_dynamic<T: serde::Serialize>(value: &T) -> Dynamic {
+    match serde_json::to_value(value) {
+        Ok(json) => Dynamic::from(json.to_string()),
+        Err(e) => {
+            log::error!("time-clock request serialization failed: {e}");
+            Dynamic::UNIT
+        }
+    }
 }
