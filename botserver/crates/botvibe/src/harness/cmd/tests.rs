@@ -1,3 +1,4 @@
+use super::*;
 
 #[test]
 pub(super) fn rejects_non_allowlisted_commands() {

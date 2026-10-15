@@ -23,15 +23,30 @@ pub type BoxFutureRefOptionString<'a> =
 pub type BoxFutureRefValue<'a> =
     std::pin::Pin<Box<dyn std::future::Future<Output = Result<serde_json::Value, String>> + Send + 'a>>;
 
+/// The single LLM provider contract (#1498).
+///
+/// `botllm::LLMProvider` is a re-export of this trait, so the nine provider
+/// implementations (OpenAI, Claude, Bedrock, Vertex, GLM, Kimi, Kiro and the
+/// dynamic/cache wrappers) and the handful of callers that hold an
+/// `Arc<dyn LLMProvider>` all speak the same trait — a provider fix can no
+/// longer miss a caller that picked a different abstraction.
+///
+/// `generate_simple` / `generate_with_context` are conveniences for callers
+/// that have no per-call model or key. They default to an empty model/key,
+/// which is what a provider with its own configured defaults wants; the
+/// botserver wraps a provider in `BotlibLLMProviderWrapper` to substitute the
+/// bot's configured model and key instead.
+#[async_trait::async_trait]
 pub trait LLMProvider: Send + Sync + Debug {
-    fn generate(&self, prompt: &str, config: &serde_json::Value, model: &str, key: &str) -> BoxFutureResult;
-    fn generate_simple(&self, prompt: &str) -> BoxFutureString;
-    fn generate_with_context(
+    async fn generate(
         &self,
         prompt: &str,
-        context: &str,
-    ) -> BoxFutureString;
-    fn generate_stream(
+        config: &serde_json::Value,
+        model: &str,
+        key: &str,
+    ) -> Result<String, BoxError>;
+
+    async fn generate_stream(
         &self,
         prompt: &str,
         config: &serde_json::Value,
@@ -39,7 +54,30 @@ pub trait LLMProvider: Send + Sync + Debug {
         model: &str,
         key: &str,
         tools: Option<&Vec<serde_json::Value>>,
-    ) -> BoxFutureUnit;
+    ) -> Result<(), BoxError>;
+
+    /// Cancels an in-flight generation; providers without a job registry
+    /// ignore it.
+    async fn cancel_job(&self, _session_id: &str) -> Result<(), BoxError> {
+        Ok(())
+    }
+
+    async fn generate_simple(&self, prompt: &str) -> Result<String, String> {
+        self.generate(prompt, &serde_json::Value::Null, "", "")
+            .await
+            .map_err(|e| e.to_string())
+    }
+
+    async fn generate_with_context(&self, prompt: &str, context: &str) -> Result<String, String> {
+        self.generate(
+            &format!("{context}\n\n{prompt}"),
+            &serde_json::Value::Null,
+            "",
+            "",
+        )
+        .await
+        .map_err(|e| e.to_string())
+    }
 }
 
 /// The single channel contract (#1499).

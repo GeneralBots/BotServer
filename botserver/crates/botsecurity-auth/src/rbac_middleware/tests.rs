@@ -1,6 +1,5 @@
 use super::*;
 
-use super::*;
 
 #[test]
 fn test_route_permission_exact_match() {

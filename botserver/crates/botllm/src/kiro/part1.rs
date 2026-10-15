@@ -146,8 +146,29 @@ impl KiroClient {
         Err("Kiro request failed after retries".into())
     }
 
-    /// Builds the Kiro request from OpenAI-style messages.
-    pub(super) fn build_request(messages: &Value, model_id: &str) -> Value {
+    /// Converts OpenAI `{"type":"function","function":{…}}` schemas into the
+    /// Kiro `toolSpecification` shape.
+    pub fn convert_tools(tools: &[Value]) -> Vec<Value> {
+        tools
+            .iter()
+            .filter_map(|t| {
+                let f = t.get("function")?;
+                Some(json!({
+                    "toolSpecification": {
+                        "name": f.get("name")?,
+                        "description": f.get("description").cloned().unwrap_or(json!("")),
+                        "inputSchema": { "json": f.get("parameters").cloned().unwrap_or(json!({})) },
+                    }
+                }))
+            })
+            .collect()
+    }
+
+    /// Builds the GenerateAssistantResponse request from OpenAI-style
+    /// messages. `tools` are advertised to the model as native
+    /// toolSpecification entries; the response comes back as `__tool_call__`
+    /// events on the stream (#1498: one Kiro implementation, not two).
+    pub(super) fn build_request(messages: &Value, model_id: &str, tools: &[Value]) -> Value {
         let empty = vec![];
         let arr = messages.as_array().unwrap_or(&empty);
         // System content is folded into the first user message (Kiro has no
@@ -229,10 +250,16 @@ impl KiroClient {
         };
         let current_user = current;
 
+        let mut current_user_message = current_user["userInputMessage"].clone();
+        let specs = Self::convert_tools(tools);
+        if !specs.is_empty() {
+            current_user_message["userInputMessageContext"] = json!({ "tools": specs });
+        }
+
         let mut conversation = json!({
             "chatTriggerType": "MANUAL",
             "agentTaskType": "vibe",
-            "currentMessage": { "userInputMessage": current_user["userInputMessage"].clone() },
+            "currentMessage": { "userInputMessage": current_user_message },
         });
         if !history.is_empty() {
             conversation["history"] = json!(history);

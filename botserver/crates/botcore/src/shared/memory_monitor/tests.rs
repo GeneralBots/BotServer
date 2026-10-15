@@ -1,8 +1,10 @@
+use super::*;
 
 #[test]
 pub(super) fn test_memory_stats() {
-let stats = MemoryStats::current();
-assert!(stats.rss_bytes > 0 || stats.virtual_bytes > 0);
+    let stats = MemoryStats::current();
+    assert!(stats.rss_bytes > 0 || stats.virtual_bytes > 0);
+}
 
 #[test]
 pub(super) fn test_format_bytes() {
@@ -24,6 +26,4 @@ pub(super) fn test_thread_registry() {
     record_thread_activity("test-thread");
     log_thread_stats();
     unregister_thread("test-thread");
-}
-
 }

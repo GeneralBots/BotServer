@@ -26,6 +26,7 @@ pub enum SuggestionType {
 mod registration;
 mod suggestions;
 mod read;
+#[cfg(test)]
 mod tests;
 
 pub use registration::*;

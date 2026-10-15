@@ -60,27 +60,31 @@ mod tests {
     fn provided_provider_streams_chunks() {
         #[derive(Debug)]
         struct FakeLlm;
+        #[async_trait::async_trait]
         impl LLMProvider for FakeLlm {
-            fn generate(
+            async fn generate(
                 &self,
                 _prompt: &str,
                 _config: &serde_json::Value,
                 _model: &str,
                 _key: &str,
-            ) -> botlib::traits::BoxFutureResult {
-                Box::pin(async { Ok("fake".to_string()) })
+            ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+                Ok("fake".to_string())
             }
-            fn generate_simple(&self, _prompt: &str) -> botlib::traits::BoxFutureString {
-                Box::pin(async { Ok("fake".to_string()) })
+
+            async fn generate_simple(&self, _prompt: &str) -> Result<String, String> {
+                Ok("fake".to_string())
             }
-            fn generate_with_context(
+
+            async fn generate_with_context(
                 &self,
                 _prompt: &str,
                 _context: &str,
-            ) -> botlib::traits::BoxFutureString {
-                Box::pin(async { Ok("fake".to_string()) })
+            ) -> Result<String, String> {
+                Ok("fake".to_string())
             }
-            fn generate_stream(
+
+            async fn generate_stream(
                 &self,
                 _prompt: &str,
                 _config: &serde_json::Value,
@@ -88,12 +92,9 @@ mod tests {
                 _model: &str,
                 _key: &str,
                 _tools: Option<&Vec<serde_json::Value>>,
-            ) -> botlib::traits::BoxFutureUnit {
-                let tx = tx.clone();
-                Box::pin(async move {
-                    let _ = tx.send("chunk-1".to_string()).await;
-                    Ok(())
-                })
+            ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+                let _ = tx.send("chunk-1".to_string()).await;
+                Ok(())
             }
         }
 

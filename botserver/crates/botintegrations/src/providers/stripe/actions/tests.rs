@@ -1,3 +1,4 @@
+use super::*;
 
 #[test]
 pub(super) fn stripe_ids_require_prefix_and_safe_charset() {
@@ -49,7 +50,7 @@ pub(super) fn payment_intents_need_positive_amount_and_currency() {
 
 #[test]
 pub(super) fn unknown_actions_reject_before_any_network_activity() {
-    let names = super::super::super::STRIPE_IMPLEMENTED_ACTIONS;
+    let names = super::super::STRIPE_IMPLEMENTED_ACTIONS;
     assert!(!names.contains(&"payouts.create"));
     assert!(names.contains(&"balance.retrieve"));
 }

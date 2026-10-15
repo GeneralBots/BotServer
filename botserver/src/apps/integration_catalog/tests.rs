@@ -39,7 +39,6 @@ fn github_and_stripe_flip_llm_available_without_status_drift() {
     for (id, status) in expectations {
         let Some(provider) = provider_by_id(id) else {
             panic!("{id} provider is missing");
-            return;
         };
         assert!(
             provider.llm_available,
@@ -65,7 +64,6 @@ fn github_and_stripe_registered_actions_match_catalog_exactly() {
     for (id, registered) in cases {
         let Some(provider) = provider_by_id(id) else {
             panic!("{id} provider is missing");
-            return;
         };
         let registered_names: HashSet<String> =
             registered.iter().map(|key| format!("{id}.{key}")).collect();
@@ -94,7 +92,6 @@ fn github_and_stripe_advertise_no_implemented_actions_without_the_registry() {
     for id in ["github", "stripe"] {
         let Some(provider) = provider_by_id(id) else {
             panic!("{id} provider is missing");
-            return;
         };
         assert!(!provider.llm_available);
         assert!(provider.actions.iter().all(|action| !action.implemented));
@@ -118,7 +115,6 @@ fn expanded_action_names_are_unique() {
 fn aws_auth_and_actions_are_explicit_and_guarded() {
     let Some(aws) = provider_by_id("aws") else {
         panic!("AWS provider is missing");
-        return;
     };
     assert_eq!(aws.auth.method, AuthMethod::AccessKey);
     assert!(aws.official_docs.is_some());
@@ -189,17 +185,14 @@ fn aws_auth_and_actions_are_explicit_and_guarded() {
 fn llm_action_manifest_omits_secret_auth_metadata() {
     let Some(aws) = provider_by_id("aws") else {
         panic!("AWS provider is missing");
-        return;
     };
     let Some(actions) = llm_actions("aws") else {
         panic!("AWS LLM action manifest is missing");
-        return;
     };
     let value = match serde_json::to_value(actions) {
         Ok(value) => value,
         Err(error) => {
             panic!("LLM action manifest serialization failed: {error}");
-            return;
         }
     };
     let encoded = value.to_string();
@@ -213,7 +206,6 @@ fn llm_action_manifest_omits_secret_auth_metadata() {
 
     let Value::Array(items) = value else {
         panic!("LLM action manifest must be an array");
-        return;
     };
     let allowed: HashSet<&str> = [
         "name",
@@ -228,7 +220,6 @@ fn llm_action_manifest_omits_secret_auth_metadata() {
     for item in items {
         let Value::Object(fields) = item else {
             panic!("LLM action entries must be objects");
-            continue;
         };
         assert!(fields.keys().all(|key| allowed.contains(key.as_str())));
     }
@@ -244,7 +235,6 @@ async fn serve_catalog_for_browser() {
         Ok(listener) => listener,
         Err(error) => {
             panic!("browser contract server bind failed: {error}");
-            return;
         }
     };
     let router = super::register(Router::new())

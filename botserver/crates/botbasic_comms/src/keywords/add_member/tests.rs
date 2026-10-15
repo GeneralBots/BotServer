@@ -1,3 +1,4 @@
+use super::*;
 
 #[test]
 pub(super) fn test_validate_role() {

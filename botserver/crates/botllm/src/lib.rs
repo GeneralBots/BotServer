@@ -57,36 +57,10 @@ pub use pipeline::{PipelineConfig, LlmPipeline, MessageBuilder, KbContextManager
 pub use router::{chat_with_fallback, RouteMeta};
 pub use dynamic_provider::DynamicLLMProvider;
 
-use async_trait::async_trait;
 
-use serde_json::Value;
 
-use tokio::sync::mpsc;
-
-#[async_trait]
-pub trait LLMProvider: Send + Sync + std::fmt::Debug {
-    async fn generate(
-        &self,
-        prompt: &str,
-        config: &Value,
-        model: &str,
-        key: &str,
-    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>>;
-
-    async fn generate_stream(
-        &self,
-        prompt: &str,
-        config: &Value,
-        tx: mpsc::Sender<String>,
-        model: &str,
-        key: &str,
-        tools: Option<&Vec<Value>>,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
-
-    async fn cancel_job(
-        &self,
-        session_id: &str,
-    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
-}
+/// The provider contract is owned by `botlib` (#1498): every provider in this
+/// crate implements the same trait the runtime holds as `Arc<dyn LLMProvider>`.
+pub use botlib::traits::LLMProvider;
 
 mod re_cache;

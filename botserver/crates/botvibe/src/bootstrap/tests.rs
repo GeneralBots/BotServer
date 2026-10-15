@@ -1,3 +1,5 @@
+use super::alm_org_from_slug;
+use super::bot_slug;
 
 #[test]
 pub(super) fn bot_slug_normalizes() {
@@ -8,6 +10,6 @@ pub(super) fn bot_slug_normalizes() {
 
 #[test]
 pub(super) fn alm_org_slug_is_url_safe() {
-    assert_eq!(super::super::alm_org_from_slug("My Branch"), "mybranch");
-    assert_eq!(super::super::alm_org_from_slug("cristo"), "cristo");
+    assert_eq!(alm_org_from_slug("My Branch"), "mybranch");
+    assert_eq!(alm_org_from_slug("cristo"), "cristo");
 }

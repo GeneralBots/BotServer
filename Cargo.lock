@@ -1295,6 +1295,7 @@ dependencies = [
 name = "botautotask"
 version = "6.7.0"
 dependencies = [
+ "async-trait",
  "axum",
  "botbasic_compiler",
  "botbasic_core",
@@ -2478,6 +2479,7 @@ name = "botlib"
 version = "6.7.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "chrono",
  "diesel",
  "dirs 5.0.1",
@@ -3664,6 +3666,7 @@ dependencies = [
  "botcoresecrets",
  "botdeployment",
  "botlib",
+ "botllm",
  "botsecurity-auth",
  "botsecurity-core",
  "chrono",

@@ -17,6 +17,7 @@ mod validate;
 mod fields;
 mod project;
 mod email;
+#[cfg(test)]
 mod tests;
 
 use validate::*;

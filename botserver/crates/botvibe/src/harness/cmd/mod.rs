@@ -99,7 +99,9 @@ mod prepare;
 mod validate;
 mod runner;
 mod drain;
+#[cfg(test)]
 mod tests;
+#[cfg(test)]
 mod harness_cmd_tests;
 
 use prepare::*;

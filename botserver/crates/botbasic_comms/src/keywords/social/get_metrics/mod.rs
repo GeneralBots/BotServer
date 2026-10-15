@@ -35,6 +35,7 @@ impl PostEngagement {
 mod registration;
 mod credentials;
 mod fetch;
+#[cfg(test)]
 mod tests;
 
 pub use registration::*;

@@ -14,6 +14,7 @@ mod registration;
 mod execution;
 mod roles;
 mod activity;
+#[cfg(test)]
 mod tests;
 
 pub use registration::*;

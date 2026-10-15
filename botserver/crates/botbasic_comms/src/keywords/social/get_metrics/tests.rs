@@ -1,3 +1,4 @@
+use super::*;
 
 #[test]
 pub(super) fn test_engagement_to_dynamic() {

@@ -1,5 +1,6 @@
-#[cfg(test)]
+use super::{AuthConfig, AuthError};
 use super::super::types::*;
+use axum::http::StatusCode;
 
 #[test]
 fn test_role_permissions() {

@@ -147,6 +147,13 @@ pub trait BotDatabaseOps: Send + Sync {
     fn persist_task(&self, task: &TaskRecord) -> Result<(), BoxError>;
 }
 
+/// Narrow, testable seam over the single provider contract
+/// (`botlib::traits::LLMProvider`, #1498): AutoTask streams completions
+/// through this facade so the compiler and the intent classifier can be
+/// exercised with a fake, and so a missing provider degrades to the offline
+/// heuristic classifier instead of failing. It is an adapter, not a second
+/// provider abstraction — every real implementation delegates to the
+/// canonical trait.
 pub trait LlmProviderOps: Send + Sync {
     fn generate_stream(
         &self,

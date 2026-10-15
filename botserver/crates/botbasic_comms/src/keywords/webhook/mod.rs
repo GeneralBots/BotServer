@@ -70,6 +70,7 @@ mod registration;
 mod request;
 mod response;
 mod convert;
+#[cfg(test)]
 mod tests;
 
 pub use registration::*;

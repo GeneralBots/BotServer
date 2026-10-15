@@ -1,6 +1,5 @@
 use crate::models::UserSession;
 use crate::BotResult;
-use serde_json::Value;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -62,22 +61,6 @@ pub trait ScriptRunner: Send + Sync {
         ast_content: &str,
     ) -> BotResult<String>;
     fn set_variable(&self, key: &str, value: &str) -> BotResult<()>;
-}
-
-pub trait LLMProvider: Send + Sync + std::fmt::Debug {
-    fn generate_stream(
-        &self,
-        model: &str,
-        messages: &Value,
-        stream_tx: tokio::sync::mpsc::Sender<String>,
-        key: &str,
-        tools: Option<&Value>,
-    ) -> BotResult<()>;
-    fn build_messages(
-        system_prompt: &str,
-        context_data: &Value,
-        history: &[(String, String)],
-    ) -> Value;
 }
 
 pub trait SuggestionProvider: Send + Sync {

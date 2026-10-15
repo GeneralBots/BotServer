@@ -117,8 +117,8 @@ impl AgentLoop {
         // speaks the CodeWhisperer protocol, not OpenAI SSE. Translate the
         // same system/prompt/tools and map the response back to the canonical
         // tool-call envelope.
-        if crate::kiro_llm::is_kiro(&api_url) {
-            return crate::kiro_llm::call_kiro(
+        if crate::kiro_bridge::is_kiro(&api_url) {
+            return crate::kiro_bridge::call_kiro(
                 &api_url,
                 &api_key,
                 &model,

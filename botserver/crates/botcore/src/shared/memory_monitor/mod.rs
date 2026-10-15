@@ -36,6 +36,7 @@ mod checkpoint;
 mod component;
 mod leak;
 mod monitor;
+#[cfg(test)]
 mod tests;
 
 pub use threads::*;

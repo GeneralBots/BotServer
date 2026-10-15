@@ -42,7 +42,7 @@ impl LLMProvider for KiroClient {
             json!([{"role": "user", "content": prompt}])
         };
         let model_id = Self::kiro_model_id(model);
-        let request = Self::build_request(&raw_messages, &model_id);
+        let request = Self::build_request(&raw_messages, &model_id, &[]);
         let stream = self.request_stream(&request, key).await?;
         let (tx, mut rx) = mpsc::channel::<String>(100_000);
         let handler = get_handler(model);
@@ -71,7 +71,7 @@ impl LLMProvider for KiroClient {
         tx: mpsc::Sender<String>,
         model: &str,
         key: &str,
-        _tools: Option<&Vec<Value>>,
+        tools: Option<&Vec<Value>>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let raw_messages = if config.is_array() && !config.as_array().unwrap_or(&vec![]).is_empty() {
             config.clone()
@@ -79,7 +79,7 @@ impl LLMProvider for KiroClient {
             json!([{"role": "user", "content": prompt}])
         };
         let model_id = Self::kiro_model_id(model);
-        let request = Self::build_request(&raw_messages, &model_id);
+        let request = Self::build_request(&raw_messages, &model_id, tools.map(Vec::as_slice).unwrap_or(&[]));
         if let Err(e) = self.rate_limiter.acquire(1).await {
             error!("Kiro rate limit: {e}");
             return Err(Box::new(e));

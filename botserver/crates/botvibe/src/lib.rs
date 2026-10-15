@@ -7,7 +7,7 @@ pub mod telemetry;
 pub mod api;
 pub mod knowledge_graph;
 pub mod agent_loop;
-pub mod kiro_llm;
+pub mod kiro_bridge;
 pub mod projects;
 pub mod projects_api;
 pub mod project_db;

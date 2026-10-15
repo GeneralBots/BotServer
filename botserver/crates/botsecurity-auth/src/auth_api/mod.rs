@@ -19,6 +19,7 @@ pub mod auth_types_users;
 pub mod config;
 pub mod error;
 pub mod middleware;
+#[cfg(test)]
 pub mod tests;
 pub mod types;
 // Re-export commonly used types at the module level

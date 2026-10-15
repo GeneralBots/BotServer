@@ -31,6 +31,18 @@ const MAX_CAPACITY_RETRIES: u32 = 3;
 /// Aligns with the other providers (OpenAI/GLM/Bedrock use 180s).
 const REQUEST_TIMEOUT_SECS: u64 = 180;
 
+impl KiroClient {
+    /// `true` when a configured LLM url points at the Kiro / CodeWhisperer
+    /// endpoint rather than an OpenAI-compatible API (#1498).
+    pub fn is_kiro_endpoint(url: &str) -> bool {
+        let u = url.to_lowercase();
+        u.contains("kiro")
+            || u.contains("q.us-east-1.amazonaws.com")
+            || u.contains("codewhisperer")
+            || u.contains("q.eu-central-1.amazonaws.com")
+    }
+}
+
 #[derive(Debug)]
 pub struct KiroClient {
     http: reqwest::Client,
@@ -50,6 +62,37 @@ mod tests {
     fn capacity_error_is_classified() {
         assert!(KiroClient::is_capacity_error("{\"error\":\"INSUFFICIENT_MODEL_CAPACITY\"}"));
         assert!(!KiroClient::is_capacity_error("{\"error\":\"AccessDeniedException\"}"));
+    }
+
+    #[test]
+    fn tools_are_advertised_as_specifications() {
+        let tools = vec![json!({
+            "type": "function",
+            "function": {
+                "name": "file/write",
+                "description": "Write a file",
+                "parameters": {"type": "object", "properties": {"path": {"type": "string"}}}
+            }
+        })];
+        let messages = json!([
+            {"role": "system", "content": "SYS"},
+            {"role": "user", "content": "do it"},
+        ]);
+        let body = KiroClient::build_request(&messages, "claude-sonnet-4-5", &tools);
+        let uim = &body["conversationState"]["currentMessage"]["userInputMessage"];
+        assert_eq!(uim["modelId"], json!("claude-sonnet-4-5"));
+        assert_eq!(uim["origin"], json!("AI_EDITOR"));
+        assert!(uim["content"].as_str().unwrap_or("").starts_with("SYS\n\ndo it"));
+        let spec = &uim["userInputMessageContext"]["tools"][0]["toolSpecification"];
+        assert_eq!(spec["name"], json!("file/write"));
+        assert_eq!(spec["inputSchema"]["json"]["properties"]["path"]["type"], json!("string"));
+    }
+
+    #[test]
+    fn endpoints_are_detected() {
+        assert!(KiroClient::is_kiro_endpoint("https://q.us-east-1.amazonaws.com/"));
+        assert!(KiroClient::is_kiro_endpoint("kiro"));
+        assert!(!KiroClient::is_kiro_endpoint("https://integrate.api.nvidia.com/v1/chat/completions"));
     }
 
     #[test]

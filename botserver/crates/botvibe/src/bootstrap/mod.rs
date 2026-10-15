@@ -73,6 +73,7 @@ mod insert_find;
 mod ensure;
 mod default_project;
 mod pool;
+#[cfg(test)]
 mod tests;
 
 pub use slug::*;

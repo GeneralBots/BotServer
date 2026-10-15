@@ -49,6 +49,9 @@ pub struct LlmConfig {
     pub url: String,
 }
 
+/// Vibe's seam over the single provider contract
+/// (`botlib::traits::LLMProvider`, #1498): it adds only the system-prompt
+/// argument, so implementations forward to the canonical trait.
 pub trait VibeLlmOps: Send + Sync {
     fn generate(
         &self,

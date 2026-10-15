@@ -19,6 +19,7 @@ mod span;
 mod middleware;
 mod reqwest_layer;
 mod subscriber;
+#[cfg(test)]
 mod tests;
 
 pub use span::*;

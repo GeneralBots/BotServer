@@ -20,30 +20,45 @@ impl BotlibLLMProviderWrapper {
     }
 }
 
+/// Documented adapter (#1498): binds a provider to one bot's model and key
+/// so callers can use `generate_simple` / `generate_with_context` without
+/// repeating the configuration on every call. The provider contract itself
+/// is `botlib::traits::LLMProvider` — this is not a second trait.
+#[async_trait::async_trait]
 impl botlib::traits::LLMProvider for BotlibLLMProviderWrapper {
-    fn generate(&self, prompt: &str, config: &serde_json::Value, model: &str, key: &str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, Box<dyn std::error::Error + Send + Sync>>> + Send>> {
-        let prompt = prompt.to_string();
-        let config = config.clone();
-        let model = model.to_string();
-        let key = key.to_string();
-        let inner = self.inner.clone();
-        Box::pin(async move {
-            inner.generate(&prompt, &config, &model, &key).await.map_err(|e| Box::new(std::io::Error::other(e.to_string())) as Box<dyn std::error::Error + Send + Sync>)
-        })
+    async fn generate(
+        &self,
+        prompt: &str,
+        config: &serde_json::Value,
+        model: &str,
+        key: &str,
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        self.inner
+            .generate(prompt, config, model, key)
+            .await
+            .map_err(|e| Box::new(std::io::Error::other(e.to_string())) as Box<dyn std::error::Error + Send + Sync>)
     }
-    fn generate_simple(&self, prompt: &str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, String>> + Send>> {
-        let prompt = prompt.to_string();
-        let inner = self.inner.clone();
-        let model = self.model.clone();
-        let key = self.key.clone();
-        Box::pin(async move {
-            inner.generate(&prompt, &serde_json::Value::Null, &model, &key).await.map_err(|e| e.to_string())
-        })
+
+    async fn generate_simple(&self, prompt: &str) -> Result<String, String> {
+        self.inner
+            .generate(prompt, &serde_json::Value::Null, &self.model, &self.key)
+            .await
+            .map_err(|e| e.to_string())
     }
-    fn generate_with_context(&self, prompt: &str, _context: &str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, String>> + Send>> {
-        self.generate_simple(prompt)
+
+    async fn generate_with_context(&self, prompt: &str, context: &str) -> Result<String, String> {
+        self.inner
+            .generate(
+                &format!("{context}\n\n{prompt}"),
+                &serde_json::Value::Null,
+                &self.model,
+                &self.key,
+            )
+            .await
+            .map_err(|e| e.to_string())
     }
-    fn generate_stream(
+
+    async fn generate_stream(
         &self,
         prompt: &str,
         config: &serde_json::Value,
@@ -51,15 +66,17 @@ impl botlib::traits::LLMProvider for BotlibLLMProviderWrapper {
         model: &str,
         key: &str,
         tools: Option<&Vec<serde_json::Value>>,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), String>> + Send>> {
-        let prompt = prompt.to_string();
-        let config = config.clone();
-        let model = model.to_string();
-        let key = key.to_string();
-        let tools = tools.cloned();
-        let inner = self.inner.clone();
-        Box::pin(async move {
-            inner.generate_stream(&prompt, &config, tx, &model, &key, tools.as_ref()).await.map_err(|e| e.to_string())
-        })
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        self.inner
+            .generate_stream(prompt, config, tx, model, key, tools)
+            .await
+            .map_err(|e| Box::new(std::io::Error::other(e.to_string())) as Box<dyn std::error::Error + Send + Sync>)
+    }
+
+    async fn cancel_job(
+        &self,
+        session_id: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        self.inner.cancel_job(session_id).await
     }
 }

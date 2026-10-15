@@ -12,29 +12,31 @@ impl MockLLMProvider {
 }
 
 #[cfg(feature = "llm")]
+#[async_trait::async_trait]
 impl botlib::traits::LLMProvider for MockLLMProvider {
-    fn generate(
+    async fn generate(
         &self,
         _prompt: &str,
         _config: &serde_json::Value,
         _model: &str,
         _key: &str,
-    ) -> botlib::traits::BoxFutureResult {
-        let response = self.response.clone();
-        Box::pin(async move { Ok(response) })
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        Ok(self.response.clone())
     }
 
-    fn generate_simple(&self, _prompt: &str) -> botlib::traits::BoxFutureString {
-        let response = self.response.clone();
-        Box::pin(async move { Ok(response) })
+    async fn generate_simple(&self, _prompt: &str) -> Result<String, String> {
+        Ok(self.response.clone())
     }
 
-    fn generate_with_context(&self, _prompt: &str, _context: &str) -> botlib::traits::BoxFutureString {
-        let response = self.response.clone();
-        Box::pin(async move { Ok(response) })
+    async fn generate_with_context(
+        &self,
+        _prompt: &str,
+        _context: &str,
+    ) -> Result<String, String> {
+        Ok(self.response.clone())
     }
 
-    fn generate_stream(
+    async fn generate_stream(
         &self,
         _prompt: &str,
         _config: &serde_json::Value,
@@ -42,8 +44,8 @@ impl botlib::traits::LLMProvider for MockLLMProvider {
         _model: &str,
         _key: &str,
         _tools: Option<&Vec<serde_json::Value>>,
-    ) -> botlib::traits::BoxFutureUnit {
-        Box::pin(async move { Ok(()) })
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        Ok(())
     }
 }
 

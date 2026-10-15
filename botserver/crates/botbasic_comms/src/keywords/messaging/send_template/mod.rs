@@ -9,6 +9,7 @@ pub(crate) use std::sync::Arc;
 mod registration;
 mod sending;
 mod templates;
+#[cfg(test)]
 mod tests;
 
 pub use registration::*;

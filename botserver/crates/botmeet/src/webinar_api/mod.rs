@@ -3,6 +3,7 @@ mod error;
 mod handlers;
 pub mod migrations;
 mod service;
+#[cfg(test)]
 mod tests;
 pub mod types;
 

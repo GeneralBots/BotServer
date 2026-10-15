@@ -1,5 +1,5 @@
 #[cfg(test)]
-use super::super::types::{WebinarStatus, ParticipantRole};
+use super::types::{WebinarStatus, ParticipantRole};
 
 #[test]
 fn test_webinar_status_display() {

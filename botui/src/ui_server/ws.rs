@@ -18,6 +18,9 @@ use crate::shared::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct WsQuery {
+    /// Forwarded verbatim to the backend WebSocket URL; not read here.
+    pub session_id: Option<String>,
+    pub user_id: Option<String>,
     pub bot_name: Option<String>,
 }
 
@@ -180,8 +183,8 @@ async fn handle_ws_proxy(
             .replace("https://", "wss://")
             .replace("http://", "ws://"),
         bot_name,
-        params.session_id,
-        params.user_id
+        params.session_id.as_deref().unwrap_or(""),
+        params.user_id.as_deref().unwrap_or(""),
     );
 
     info!("Proxying WebSocket to: {backend_url}");
