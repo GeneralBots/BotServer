@@ -85,17 +85,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    price_list_items (id) {
-        id -> Uuid,
-        price_list_id -> Uuid,
-        product_id -> Nullable<Uuid>,
-        service_id -> Nullable<Uuid>,
-        price -> Numeric,
-        min_quantity -> Int4,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::price_list_items;
 
 diesel::table! {
     inventory_movements (id) {
@@ -114,28 +105,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    product_variants (id) {
-        id -> Uuid,
-        product_id -> Uuid,
-        sku -> Nullable<Varchar>,
-        name -> Varchar,
-        price_adjustment -> Numeric,
-        stock_quantity -> Int4,
-        attributes -> Jsonb,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        global_trade_number -> Nullable<Varchar>,
-        net_weight -> Nullable<Numeric>,
-        gross_weight -> Nullable<Numeric>,
-        width -> Nullable<Numeric>,
-        height -> Nullable<Numeric>,
-        length -> Nullable<Numeric>,
-        color -> Nullable<Varchar>,
-        size -> Nullable<Varchar>,
-        images -> Nullable<Jsonb>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::product_variants;
 
 diesel::table! {
     organizations (id) {
@@ -174,9 +145,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     services,
     product_categories,
     price_lists,
-    price_list_items,
     inventory_movements,
-    product_variants,
     organizations,
     bots,
     product_variations,

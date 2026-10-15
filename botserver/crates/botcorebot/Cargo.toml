@@ -17,6 +17,7 @@ nvidia = []
 
 [dependencies]
 botlib = { workspace = true, features = ["database", "i18n"] }
+botschema = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }

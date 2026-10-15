@@ -30,21 +30,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    billing_invoice_items (id) {
-        id -> Uuid,
-        invoice_id -> Uuid,
-        product_id -> Nullable<Uuid>,
-        description -> Varchar,
-        quantity -> Numeric,
-        unit_price -> Numeric,
-        discount_percent -> Numeric,
-        tax_rate -> Numeric,
-        amount -> Numeric,
-        sort_order -> Int4,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::billing_invoice_items;
 
 diesel::table! {
     billing_payments (id) {
@@ -100,21 +86,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    billing_quote_items (id) {
-        id -> Uuid,
-        quote_id -> Uuid,
-        product_id -> Nullable<Uuid>,
-        description -> Varchar,
-        quantity -> Numeric,
-        unit_price -> Numeric,
-        discount_percent -> Numeric,
-        tax_rate -> Numeric,
-        amount -> Numeric,
-        sort_order -> Int4,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::billing_quote_items;
 
 diesel::table! {
     billing_recurring (id) {
@@ -248,17 +220,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    price_list_items (id) {
-        id -> Uuid,
-        price_list_id -> Uuid,
-        product_id -> Nullable<Uuid>,
-        service_id -> Nullable<Uuid>,
-        price -> Numeric,
-        min_quantity -> Int4,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::price_list_items;
 
 diesel::table! {
     inventory_movements (id) {
@@ -277,28 +240,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    product_variants (id) {
-        id -> Uuid,
-        product_id -> Uuid,
-        sku -> Nullable<Varchar>,
-        name -> Varchar,
-        price_adjustment -> Numeric,
-        stock_quantity -> Int4,
-        attributes -> Jsonb,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        global_trade_number -> Nullable<Varchar>,
-        net_weight -> Nullable<Numeric>,
-        gross_weight -> Nullable<Numeric>,
-        width -> Nullable<Numeric>,
-        height -> Nullable<Numeric>,
-        length -> Nullable<Numeric>,
-        color -> Nullable<Varchar>,
-        size -> Nullable<Varchar>,
-        images -> Nullable<Jsonb>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::product_variants;
 
 diesel::table! {
     billing_usage_alerts (id) {
@@ -394,19 +337,15 @@ diesel::table! {
 
 diesel::allow_tables_to_appear_in_same_query!(
     billing_invoices,
-    billing_invoice_items,
     billing_payments,
     billing_quotes,
-    billing_quote_items,
     billing_recurring,
     billing_tax_rates,
     products,
     services,
     product_categories,
     price_lists,
-    price_list_items,
     inventory_movements,
-    product_variants,
     billing_usage_alerts,
     billing_alert_history,
     billing_notification_preferences,

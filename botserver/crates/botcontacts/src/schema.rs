@@ -191,20 +191,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    crm_notes (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        contact_id -> Nullable<Uuid>,
-        lead_id -> Nullable<Uuid>,
-        opportunity_id -> Nullable<Uuid>,
-        account_id -> Nullable<Uuid>,
-        content -> Text,
-        author_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::crm_notes;
 
 // #1441 P2 — append-only audit trail for destructive/state-changing CRM
 // operations (migration 2026-09-20-120100-crm-audit-trail).
@@ -400,21 +387,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    people_departments (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        code -> Nullable<Varchar>,
-        parent_id -> Nullable<Uuid>,
-        head_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        description -> Nullable<Text>,
-        cost_center -> Nullable<Varchar>,
-        is_active -> Bool,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::people_departments;
 
 diesel::table! {
     tasks (id) {

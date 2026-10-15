@@ -18,6 +18,7 @@
 | **CDP control** | 🖥️ Browser automation MUST be fragmented: one short script = ONE action, print state, STOP. NEVER generate long all-in-one CDP scripts that batch many steps silently |
 | **Env status** | I AM IN DEV ENV, but sometimes pasting from PROD — do not treat my env as prod! Just fix, push to CI, so I can test in PROD for a while |
 | **License** | The project is **MIT** (relicensed from AGPL-3.0 in `4ef5f58fc`, 2026-09-12) and the copyright holder is **General Bots**. ❌ NEVER describe our own code as AGPL/GPL. ✅ Third-party AGPL notices (MinIO, Stalwart, Forgejo, Garage, Skytable) are correct and MUST stay |
+| **Diesel schema** | 🗄️ `table!`/`joinable!` live ONLY in the `botschema` crate (#1497). NEVER copy a table into a feature crate — re-export `pub use botschema::<table>;`. Change schema via a migration → `diesel migration run` → `diesel print-schema` → update `botschema` → commit. CI guard: `scripts/schema_guard.py` fails on any new non-canonical `table!`. |
 
 ### Ports (quick reference)
 8080 = botserver API · 3000 = suite · 4000 = cloud · 5000 = login
@@ -652,6 +653,29 @@ struct MyStruct { }
 format!("Hello {name}")                               // Inline args, not format!("{}", name)
 match x { A | B => do_thing(), C => other() }         // Combine identical arms
 ```
+
+## Diesel Schema Ownership (#1497)
+
+**One `table!` source, one home: the `botschema` crate.** Every Diesel
+`table!` / `joinable!` / `allow_tables_to_appear_in_same_query!` macro lives in
+`botschema`; no other crate declares one. This closes the drift where `bots` was
+declared 16×, `user_sessions` 12× and `users` 10×, with the same rows modelled
+under mutually incompatible Rust types.
+
+- ✅ Consume: `botschema = { workspace = true, features = ["people", "billing"] }`, then `use botschema::{bots, users};`
+- ✅ Replacing a local `table!`: `pub use botschema::<table>;` — keeps `<crate>::schema::<table>::dsl` call sites working
+- ❌ NEVER copy a `table!` block into a feature crate
+- ❌ NEVER let a `#[derive(Queryable)]` struct and its `table!` disagree on a column's type
+
+**Changing the schema:** migration → `cd botserver && diesel migration run` →
+`diesel print-schema` → update the matching `botschema` module to match the real
+DB → commit the migration and the `botschema` change together. See
+`botschema/README.md` for the full walkthrough.
+
+**Enforcement:** `scripts/schema_guard.py` runs in CI and fails on any new
+`table!` outside `botschema` (baseline: `issues/schema/table_baseline.json`,
+which only moves down). `scripts/schema_drift_inventory.py` regenerates the
+checked-in classification at `issues/schema/schema_drift.md`.
 
 ## Absolute Prohibitions
 

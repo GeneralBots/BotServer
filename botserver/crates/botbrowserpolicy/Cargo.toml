@@ -9,6 +9,7 @@ description = "Hardened agentic browsing control plane: domain policy, budgets, 
 
 [dependencies]
 botlib = { workspace = true, features = ["database"] }
+botschema = { workspace = true }
 async-stream = { workspace = true }
 axum = { workspace = true }
 botsecurity-auth = { workspace = true }

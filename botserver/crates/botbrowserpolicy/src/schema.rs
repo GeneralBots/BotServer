@@ -43,16 +43,8 @@ diesel::table! {
     }
 }
 
-// Existing platform table (migration 6.0.0-01-core). Declared read-only here
-// to persist the admin browser policy under a settings-style key without a
-// new migration; the platform-global scope uses the nil UUID sentinel user.
-diesel::table! {
-    user_preferences (id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        preference_key -> Varchar,
-        preference_value -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Existing platform table (migration 6.0.0-01-core). Consumed read-only to
+// persist the admin browser policy under a settings-style key; the
+// platform-global scope uses the nil UUID sentinel user.
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::user_preferences;

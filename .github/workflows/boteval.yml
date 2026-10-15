@@ -27,6 +27,13 @@ jobs:
       - name: "Guard: no pre-merge repository URLs (#1473)"
         run: ./scripts/check-repo-urls.sh
 
+      # #1520 — `table!` declarations live only in the `botschema` crate. The
+      # guard enforces the checked-in baseline so the count of non-canonical
+      # declarations can only fall, never rise. Pure Python, no cargo: fails in
+      # seconds with the offending file:line.
+      - name: "Guard: no new table! outside botschema (#1520)"
+        run: python3 scripts/schema_guard.py
+
       # .cargo/config.toml links every target with `-fuse-ld=/usr/bin/mold`, so
       # the runner must provide mold (and clang) or the very first build-script
       # link dies with "clang: error: invalid linker name". libpq/libssl/liblzma

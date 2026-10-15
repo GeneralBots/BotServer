@@ -40,122 +40,25 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    people_teams (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        leader_id -> Nullable<Uuid>,
-        parent_team_id -> Nullable<Uuid>,
-        color -> Nullable<Varchar>,
-        icon -> Nullable<Varchar>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::people_teams;
 
-diesel::table! {
-    people_team_members (id) {
-        id -> Uuid,
-        team_id -> Uuid,
-        person_id -> Uuid,
-        role -> Nullable<Varchar>,
-        is_primary -> Bool,
-        joined_at -> Timestamptz,
-    }
-}
+pub use botschema::people_team_members;
 
-diesel::table! {
-    people_org_chart (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        person_id -> Uuid,
-        reports_to_id -> Nullable<Uuid>,
-        position_title -> Nullable<Varchar>,
-        position_level -> Int4,
-        position_order -> Int4,
-        effective_from -> Nullable<Date>,
-        effective_until -> Nullable<Date>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::people_org_chart;
 
-diesel::table! {
-    people_departments (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        code -> Nullable<Varchar>,
-        parent_id -> Nullable<Uuid>,
-        head_id -> Nullable<Uuid>,
-        cost_center -> Nullable<Varchar>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::people_departments;
 
-diesel::table! {
-    people_skills (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        category -> Nullable<Varchar>,
-        description -> Nullable<Text>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::people_skills;
 
-diesel::table! {
-    people_person_skills (id) {
-        id -> Uuid,
-        person_id -> Uuid,
-        skill_id -> Uuid,
-        proficiency_level -> Int4,
-        years_experience -> Nullable<Numeric>,
-        verified_by -> Nullable<Uuid>,
-        verified_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::people_person_skills;
 
-diesel::table! {
-    people_time_off (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        person_id -> Uuid,
-        time_off_type -> Varchar,
-        status -> Varchar,
-        start_date -> Date,
-        end_date -> Date,
-        hours_requested -> Nullable<Numeric>,
-        reason -> Nullable<Text>,
-        approved_by -> Nullable<Uuid>,
-        approved_at -> Nullable<Timestamptz>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::people_time_off;
 
-diesel::joinable!(people_team_members -> people_teams (team_id));
 diesel::joinable!(people_team_members -> people (person_id));
 diesel::joinable!(people_person_skills -> people (person_id));
-diesel::joinable!(people_person_skills -> people_skills (skill_id));
 diesel::allow_tables_to_appear_in_same_query!(
     people,
-    people_teams,
-    people_team_members,
-    people_org_chart,
-    people_departments,
-    people_skills,
-    people_person_skills,
-    people_time_off,
     hr_clock_entries,
     hr_work_periods,
     hr_overtime_rules,

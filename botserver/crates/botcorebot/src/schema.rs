@@ -207,14 +207,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    clicks (id) {
-        id -> Uuid,
-        campaign_id -> Text,
-        email -> Text,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::clicks;
 
 diesel::table! {
     organization_invitations (id) {
@@ -234,41 +227,12 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    user_organizations (id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        org_id -> Uuid,
-        role -> Varchar,
-        is_default -> Bool,
-        joined_at -> Timestamptz,
-    }
-}
+pub use botschema::user_organizations;
 
-diesel::table! {
-    user_preferences (id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        preference_key -> Varchar,
-        preference_value -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::user_preferences;
 
-diesel::table! {
-    user_login_tokens (id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        token_hash -> Varchar,
-        expires_at -> Timestamptz,
-        created_at -> Timestamptz,
-        last_used -> Timestamptz,
-        user_agent -> Nullable<Text>,
-        ip_address -> Nullable<Varchar>,
-        is_active -> Bool,
-    }
-}
+pub use botschema::user_login_tokens;
 
 diesel::table! {
     website_crawls (id) {
@@ -309,10 +273,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     workflow_events,
     organizations,
     tenants,
-    clicks,
     organization_invitations,
-    user_organizations,
-    user_preferences,
-    user_login_tokens,
     website_crawls,
 );
