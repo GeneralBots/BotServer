@@ -1,13 +1,16 @@
 use botbasic_types::BasicRuntime;
 use botbasic_types::UserSession;
+use botm365::M365Request;
 use log::trace;
 use rhai::{Dynamic, Engine};
-use serde_json::{json, Value};
 use std::sync::Arc;
 
 /// Microsoft 365 / SharePoint / Teams BASIC keywords for issue #624.
 ///
 /// Provides: GET SHAREPOINT LISTS, CREATE SHAREPOINT ITEM, SEND TEAMS MESSAGE.
+///
+/// The Graph endpoints and payload shapes are built by `botm365::intent`
+/// (#1506) — this module only binds arguments.
 pub fn register_m365_keywords(
     state: Arc<dyn BasicRuntime>,
     user: UserSession,
@@ -25,23 +28,15 @@ fn register_get_sharepoint_lists(
 ) {
     let _state_clone = state;
 
-    if let Err(e) = engine
-        .register_custom_syntax(
-            ["GET", "SHAREPOINT", "LISTS", "$expr$"],
-            false,
-            move |context, inputs| {
-                let site_id = context.eval_expression_tree(&inputs[0])?.to_string();
-                trace!("GET SHAREPOINT LISTS: site={site_id}");
-                let result = json!({
-                    "kind": "sharepoint_lists",
-                    "site_id": site_id,
-                    "endpoint": format!("/v1.0/sites/{}/lists", site_id),
-                    "method": "GET",
-                });
-                Ok(serde_json_to_dynamic(&result))
-            },
-        )
-    {
+    if let Err(e) = engine.register_custom_syntax(
+        ["GET", "SHAREPOINT", "LISTS", "$expr$"],
+        false,
+        move |context, inputs| {
+            let site_id = context.eval_expression_tree(&inputs[0])?.to_string();
+            trace!("GET SHAREPOINT LISTS: site={site_id}");
+            Ok(to_dynamic(&M365Request::sharepoint_lists(&site_id)))
+        },
+    ) {
         log::error!("valid GET SHAREPOINT LISTS syntax failed: {e}");
     }
 }
@@ -53,30 +48,23 @@ fn register_create_sharepoint_item(
 ) {
     let _state_clone = state;
 
-    if let Err(e) = engine
-        .register_custom_syntax(
-            [
-                "CREATE", "SHAREPOINT", "ITEM", "$expr$", ",", "$expr$", ",", "$expr$",
-            ],
-            false,
-            move |context, inputs| {
-                let site_id = context.eval_expression_tree(&inputs[0])?.to_string();
-                let list_id = context.eval_expression_tree(&inputs[1])?.to_string();
-                let fields_json = context.eval_expression_tree(&inputs[2])?.to_string();
-                trace!("CREATE SHAREPOINT ITEM: site={site_id} list={list_id}");
-                let result = json!({
-                    "kind": "sharepoint_item",
-                    "action": "create",
-                    "site_id": site_id,
-                    "list_id": list_id,
-                    "fields": fields_json,
-                    "endpoint": format!("/v1.0/sites/{}/lists/{}/items", site_id, list_id),
-                    "method": "POST",
-                });
-                Ok(serde_json_to_dynamic(&result))
-            },
-        )
-    {
+    if let Err(e) = engine.register_custom_syntax(
+        [
+            "CREATE", "SHAREPOINT", "ITEM", "$expr$", ",", "$expr$", ",", "$expr$",
+        ],
+        false,
+        move |context, inputs| {
+            let site_id = context.eval_expression_tree(&inputs[0])?.to_string();
+            let list_id = context.eval_expression_tree(&inputs[1])?.to_string();
+            let fields_json = context.eval_expression_tree(&inputs[2])?.to_string();
+            trace!("CREATE SHAREPOINT ITEM: site={site_id} list={list_id}");
+            Ok(to_dynamic(&M365Request::sharepoint_item(
+                &site_id,
+                &list_id,
+                &fields_json,
+            )))
+        },
+    ) {
         log::error!("valid CREATE SHAREPOINT ITEM syntax failed: {e}");
     }
 }
@@ -88,21 +76,18 @@ fn register_send_teams_message(
 ) {
     let _state_clone = state;
 
-    engine
-        .register_fn("send_teams_message", |chat_id: String, message: String| {
-            trace!("send_teams_message: chat={chat_id}");
-            let result = json!({
-                "kind": "teams_message",
-                "action": "send",
-                "chat_id": chat_id,
-                "body": { "contentType": "html", "content": message },
-                "endpoint": format!("/v1.0/chats/{}/messages", chat_id),
-                "method": "POST",
-            });
-            serde_json_to_dynamic(&result)
-        });
+    engine.register_fn("send_teams_message", |chat_id: String, message: String| {
+        trace!("send_teams_message: chat={chat_id}");
+        to_dynamic(&M365Request::teams_message(&chat_id, &message))
+    });
 }
 
-fn serde_json_to_dynamic(v: &Value) -> Dynamic {
-    Dynamic::from(v.to_string())
+fn to_dynamic<T: serde::Serialize>(value: &T) -> Dynamic {
+    match serde_json::to_value(value) {
+        Ok(json) => Dynamic::from(json.to_string()),
+        Err(e) => {
+            log::error!("Microsoft 365 request serialization failed: {e}");
+            Dynamic::UNIT
+        }
+    }
 }

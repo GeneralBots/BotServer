@@ -9,6 +9,14 @@ pub mod storage;
 pub mod handlers;
 pub mod accounts_pix;
 pub mod routes;
+pub mod intent;
+
+pub use intent::{
+    BankTransactionImport, BankTransactionRow, BankingRequest, BankingRequestKind,
+    DeliveryMarginsSummary, DeliveryTransactionImport, DeliveryTransactionRow, PlatformRevenue,
+    ReconciliationRuleRequest, ReconciliationSummary, RevenueByPlatformReport,
+    UnmatchedDeliveriesQuery, UnmatchedFilter,
+};
 
 pub use routes::configure;
 pub use platform::{DeliveryPlatform, PlatformConnector, ConnectorKind, ConnectorError};

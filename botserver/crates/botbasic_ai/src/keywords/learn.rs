@@ -7,14 +7,17 @@ use std::sync::Arc;
 use std::time::Duration;
 use uuid::Uuid;
 
-use super::learn_storage::{ensure_schema as ensure_learn_schema, persist_lesson, progress_for, upsert_fact};
+use botlearn::basic_storage::{
+    ensure_schema as ensure_learn_schema, persist_lesson, progress_for, upsert_fact,
+};
 
 /// Learning and education BASIC keywords for issue #625.
 ///
 /// Provides: TEACH, STUDY, QUIZ, FLASHCARD, CURRICULUM,
 /// LESSON, PROGRESS, REMEMBER FACT.
 ///
-/// Persistence is delegated to `learn_storage` (learn_facts/learn_lessons).
+/// Persistence is delegated to `botlearn::basic_storage`
+/// (learn_facts/learn_basic_lessons) — #1506.
 /// LLM-backed keywords (TEACH, STUDY, QUIZ, CURRICULUM) build structured
 /// JSON content via `state.llm_generate` and fall back to local scaffolding
 /// when the LLM is not configured.
@@ -24,7 +27,7 @@ pub fn register_learn_keywords(
     engine: &mut Engine,
 ) {
     if let Err(e) = ensure_learn_schema(state.db_pool()) {
-        eprintln!("learn: bootstrap schema failed: {e}");
+        log::error!("learn: bootstrap schema failed: {e}");
     }
     register_teach(state.clone(), user.clone(), engine);
     register_study(state.clone(), user.clone(), engine);

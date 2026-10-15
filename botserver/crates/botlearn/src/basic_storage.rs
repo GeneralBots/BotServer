@@ -1,11 +1,23 @@
+//! Storage behind the learning BASIC keywords (TEACH, STUDY, QUIZ,
+//! FLASHCARD, CURRICULUM, LESSON, PROGRESS, REMEMBER FACT).
+//!
+//! `learn_facts` backs the remembered facts and flashcards; the generated
+//! lesson/quiz/curriculum bodies go to `learn_basic_lessons`. That table is
+//! deliberately distinct from `learn_lessons` — migration 6.0.5 created the
+//! latter with the course shape (`course_id`, `title`, …), so the keyword
+//! storage cannot share the name without breaking one of the two users
+//! (#1506).
+
 use diesel::sql_types::{BigInt, Nullable, Text, Uuid};
 use diesel::QueryableByName;
+use diesel::RunQueryDsl;
 use serde_json::Value;
 use uuid::Uuid as UuidValue;
-use diesel::RunQueryDsl;
 
-/// Ensure the learn_* tables exist (idempotent migration fallback).
-pub fn ensure_schema(pool: &botlib::db_pool::DbPool) -> Result<(), String> {
+use botlib::db_pool::DbPool;
+
+/// Ensure the keyword tables exist (idempotent migration fallback).
+pub fn ensure_schema(pool: &DbPool) -> Result<(), String> {
     let mut conn = pool.get().map_err(|e| format!("DB pool: {e}"))?;
     diesel::sql_query(
         "CREATE TABLE IF NOT EXISTS learn_facts (
@@ -22,7 +34,7 @@ pub fn ensure_schema(pool: &botlib::db_pool::DbPool) -> Result<(), String> {
     .execute(&mut conn)
     .map_err(|e| format!("learn_facts: {e}"))?;
     diesel::sql_query(
-        "CREATE TABLE IF NOT EXISTS learn_lessons (
+        "CREATE TABLE IF NOT EXISTS learn_basic_lessons (
             id UUID PRIMARY KEY,
             bot_id UUID NOT NULL,
             user_id UUID,
@@ -33,12 +45,13 @@ pub fn ensure_schema(pool: &botlib::db_pool::DbPool) -> Result<(), String> {
         )",
     )
     .execute(&mut conn)
-    .map_err(|e| format!("learn_lessons: {e}"))?;
+    .map_err(|e| format!("learn_basic_lessons: {e}"))?;
     Ok(())
 }
 
+/// Stores one generated lesson/quiz/curriculum body.
 pub fn persist_lesson(
-    pool: &botlib::db_pool::DbPool,
+    pool: &DbPool,
     bot_id: UuidValue,
     user_id: Option<UuidValue>,
     topic: &str,
@@ -50,7 +63,7 @@ pub fn persist_lesson(
     let id = UuidValue::new_v4();
     let body = serde_json::to_string(content).map_err(|e| format!("Serialize: {e}"))?;
     diesel::sql_query(
-        "INSERT INTO learn_lessons (id, bot_id, user_id, topic, kind, content)
+        "INSERT INTO learn_basic_lessons (id, bot_id, user_id, topic, kind, content)
          VALUES ($1, $2, $3, $4, $5, $6::jsonb)
          ON CONFLICT DO NOTHING",
     )
@@ -65,8 +78,9 @@ pub fn persist_lesson(
     Ok(id)
 }
 
+/// Inserts or refreshes a fact keyed by `(bot_id, key)`.
 pub fn upsert_fact(
-    pool: &botlib::db_pool::DbPool,
+    pool: &DbPool,
     bot_id: UuidValue,
     user_id: Option<UuidValue>,
     key: &str,
@@ -94,14 +108,16 @@ pub fn upsert_fact(
     Ok(id)
 }
 
+/// Row shape of the `COUNT(*)` queries.
 #[derive(QueryableByName, Debug)]
 pub struct FactCount {
     #[diesel(sql_type = BigInt)]
     pub count: i64,
 }
 
+/// `(facts, lessons)` recorded for one student under one bot.
 pub fn progress_for(
-    pool: &botlib::db_pool::DbPool,
+    pool: &DbPool,
     bot_id: UuidValue,
     user_id: UuidValue,
 ) -> Result<(i64, i64), String> {
@@ -115,7 +131,7 @@ pub fn progress_for(
     .get_results(&mut conn)
     .map_err(|e| format!("Count facts: {e}"))?;
     let lessons: Vec<FactCount> = diesel::sql_query(
-        "SELECT COUNT(*) AS count FROM learn_lessons WHERE bot_id = $1 AND user_id = $2",
+        "SELECT COUNT(*) AS count FROM learn_basic_lessons WHERE bot_id = $1 AND user_id = $2",
     )
     .bind::<Uuid, _>(bot_id)
     .bind::<Uuid, _>(user_id)

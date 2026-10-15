@@ -1,3 +1,4 @@
+pub mod basic_storage;
 pub mod certification;
 pub mod course;
 pub mod gamification;

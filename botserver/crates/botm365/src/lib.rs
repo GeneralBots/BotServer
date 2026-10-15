@@ -6,6 +6,9 @@ pub mod db;
 pub mod storage;
 pub mod handlers;
 pub mod routes;
+pub mod intent;
+
+pub use intent::{M365Request, M365RequestKind};
 
 pub use routes::configure;
 pub use oauth::{M365OAuthFlow, M365Token, M365Scope, M365Error};
