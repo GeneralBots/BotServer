@@ -8,6 +8,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use botsecurity_auth::auth_api::types::AuthenticatedUser;
+use botsecurity_core::response_error::ResponseError;
 use diesel::prelude::*;
 
 use crate::automations::schedules_map;
@@ -47,17 +48,16 @@ pub struct AutomationRow {
     pub last_outcome: Option<String>,
 }
 
-fn error_response(status: StatusCode, error: IntegrationError) -> Response {
-    (status, Json(json!({ "detail": error.to_string() }))).into_response()
+fn error_response(status: StatusCode, error: IntegrationError) -> ResponseError {
+    ResponseError::new((status, Json(json!({ "detail": error.to_string() }))).into_response())
 }
 
-
-fn parse_bot(value: &str) -> Result<Uuid, Response> {
+fn parse_bot(value: &str) -> Result<Uuid, ResponseError> {
     Uuid::parse_str(value)
         .map_err(|_| error_response(StatusCode::BAD_REQUEST, IntegrationError::Validation("bot_id must be a UUID".to_string())))
 }
 
-fn validate_payload(payload: &AutomationPayload) -> Result<(), Response> {
+fn validate_payload(payload: &AutomationPayload) -> Result<(), ResponseError> {
     if payload.provider.len() > 100 || payload.action.len() > 200 {
         return Err(error_response(StatusCode::BAD_REQUEST, IntegrationError::Validation(
             "provider or action exceeds the allowed length".to_string(),
@@ -86,7 +86,7 @@ pub async fn list(
     State(state): State<Arc<IntegrationState>>,
     user: AuthenticatedUser,
     Path(bot_id): Path<String>,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     let uuid = parse_bot(&bot_id)?;
     let scope = resolve_scope(&state.pool, &user, uuid).map_err(|e| error_response(StatusCode::FORBIDDEN, e))?;
     let mut conn = state.pool.get().map_err(|_| error_response(StatusCode::INTERNAL_SERVER_ERROR, IntegrationError::VaultUnavailable))?;
@@ -114,7 +114,7 @@ pub async fn create(
     user: AuthenticatedUser,
     Path(bot_id): Path<String>,
     Json(payload): Json<AutomationPayload>,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     validate_payload(&payload)?;
     let uuid = parse_bot(&bot_id)?;
     let scope = resolve_scope(&state.pool, &user, uuid).map_err(|e| error_response(StatusCode::FORBIDDEN, e))?;
@@ -147,7 +147,7 @@ pub async fn remove(
     State(state): State<Arc<IntegrationState>>,
     user: AuthenticatedUser,
     Path((bot_id, automation_id)): Path<(String, String)>,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     let uuid = parse_bot(&bot_id)?;
     let scope = resolve_scope(&state.pool, &user, uuid).map_err(|e| error_response(StatusCode::FORBIDDEN, e))?;
     let automation = Uuid::parse_str(&automation_id)
@@ -178,7 +178,7 @@ pub async fn toggle(
     user: AuthenticatedUser,
     Path((bot_id, automation_id)): Path<(String, String)>,
     Json(payload): Json<TogglePayload>,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     let uuid = parse_bot(&bot_id)?;
     let scope = resolve_scope(&state.pool, &user, uuid).map_err(|e| error_response(StatusCode::FORBIDDEN, e))?;
     let automation = Uuid::parse_str(&automation_id)

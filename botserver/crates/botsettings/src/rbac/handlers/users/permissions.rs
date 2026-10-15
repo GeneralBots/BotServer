@@ -12,7 +12,7 @@ use botcore::shared::models::{
     RbacGroup, RbacPermission, RbacRole, User,
 };
 use botcore::shared::state::AppState;
-use botsecurity::AuthenticatedUser;
+use botsecurity::auth::AuthenticatedUser;
 use botsecurity::error_sanitizer::log_and_sanitize_str;
 
 use crate::rbac::{CheckPermissionRequest, CheckPermissionResponse, PaginationParams};

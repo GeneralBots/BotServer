@@ -62,6 +62,11 @@ pub trait BlacklistStore: Send + Sync {
 
     /// Returns the number of entries currently held (metric/observability).
     async fn len(&self) -> usize;
+
+    /// Returns `true` when the store holds no entries.
+    async fn is_empty(&self) -> bool {
+        self.len().await == 0
+    }
 }
 
 /// In-memory blacklist backed by a `HashMap` guarded by an async `RwLock`.

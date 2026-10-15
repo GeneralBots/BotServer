@@ -181,10 +181,10 @@ pub(super) async fn main() -> std::io::Result<()> {
             crate::main_module::routes::anonymous_auth::cloud_jwt_session_user,
         );
         let session_pool = app_state.conn.clone();
-        botsecurity::set_session_cache_lookup(Box::new(move |token: &str| {
+        botsecurity_core::set_session_cache_lookup(Box::new(move |token: &str| {
             let cache = botcoredirectory::auth_routes::SESSION_CACHE.try_read().ok()?;
             match cache.get(token) {
-                Some(u) => Some(botsecurity::SessionCacheEntry {
+                Some(u) => Some(botsecurity_core::SessionCacheEntry {
                     user_id: u.user_id.clone(),
                     email: u.email.clone(),
                     roles: u.roles.clone(),
@@ -236,7 +236,7 @@ pub(super) async fn main() -> std::io::Result<()> {
                                 } else {
                                     roles.push("user".to_string());
                                 }
-                                return Some(botsecurity::SessionCacheEntry {
+                                return Some(botsecurity_core::SessionCacheEntry {
                                     user_id: user_id.to_string(),
                                     email: String::new(),
                                     roles,
@@ -254,7 +254,7 @@ pub(super) async fn main() -> std::io::Result<()> {
                     if botcoredirectory::auth_routes::session_expired(&user) {
                         return None;
                     }
-                    Some(botsecurity::SessionCacheEntry {
+                    Some(botsecurity_core::SessionCacheEntry {
                         user_id: user.user_id.clone(),
                         email: user.email.clone(),
                         roles: user.roles.clone(),

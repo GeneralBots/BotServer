@@ -17,7 +17,7 @@ use axum::{body::Body, http::Request, middleware::Next, response::Response};
 use std::sync::Arc;
 
 use botcore::shared::state::AppState;
-use crate::security::{AuthenticatedUser, Role};
+use crate::security::auth::{AuthenticatedUser, Role};
 use crate::security::user_role::{resolve_user_role_with_email, ROLE_ADMIN};
 
 pub async fn rbac_role_resolver_middleware(mut request: Request<Body>, next: Next) -> Response {

@@ -4,6 +4,7 @@ use axum::extract::{Json, Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use botsecurity_auth::auth_api::types::AuthenticatedUser;
+use botsecurity_core::response_error::ResponseError;
 use serde_json::Value;
 
 use crate::providers;
@@ -11,22 +12,24 @@ use crate::request::parse_bot_id;
 use crate::scope::resolve_scope;
 use crate::state::IntegrationState;
 
-fn invalid(detail: String) -> Response {
-    (
-        StatusCode::BAD_REQUEST,
-        Json(serde_json::json!({ "error": "Validation failed", "detail": detail })),
+fn invalid(detail: String) -> ResponseError {
+    ResponseError::new(
+        (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({ "error": "Validation failed", "detail": detail })),
+        )
+            .into_response(),
     )
-        .into_response()
 }
 
-fn static_error(status: StatusCode, message: &'static str) -> Response {
-    (status, Json(serde_json::json!({ "error": message }))).into_response()
+fn static_error(status: StatusCode, message: &'static str) -> ResponseError {
+    ResponseError::new((status, Json(serde_json::json!({ "error": message }))).into_response())
 }
 
 /// Maps adapter error sentinels onto HTTP responses. Only the validation
 /// branch echoes a server-generated detail string back to the caller; every
 /// other branch returns a static message and keeps details in logs.
-fn map_error(error: String) -> Response {
+fn map_error(error: String) -> ResponseError {
     if error == providers::ERR_UNKNOWN_ACTION || error == providers::ERR_ACTION_NOT_AVAILABLE {
         return static_error(StatusCode::NOT_FOUND, "Action not found for this provider");
     }
@@ -62,7 +65,7 @@ pub async fn invoke_action(
     user: AuthenticatedUser,
     Path(bot_id): Path<String>,
     Json(body): Json<Value>,
-) -> Result<Response, Response> {
+) -> Result<Response, ResponseError> {
     let bot_uuid = match parse_bot_id(&bot_id) {
         Ok(uuid) => uuid,
         Err(error) => {
@@ -75,7 +78,7 @@ pub async fn invoke_action(
     };
     let scope = match resolve_scope(&state.pool, &user, bot_uuid) {
         Ok(scope) => scope,
-        Err(error) => return Err(error.into_response()),
+        Err(error) => return Err(ResponseError::new(error.into_response())),
     };
 
     let provider = required_field(&body, "provider").map_err(invalid)?;

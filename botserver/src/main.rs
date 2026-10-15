@@ -191,7 +191,7 @@ use log::{error, info, trace, warn};
 
 use std::sync::Arc;
 #[cfg(feature = "security")]
-use crate::security::set_global_panic_hook;
+use crate::security::panic_handler::set_global_panic_hook;
 
 mod main_body;
 

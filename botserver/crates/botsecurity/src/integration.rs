@@ -30,7 +30,7 @@ pub struct TlsIntegration {
 
 impl TlsIntegration {
     pub fn new(tls_enabled: bool) -> Self {
-        let sm = crate::get_vault_provider();
+        let sm = botsecurity_core::get_vault_provider();
 
         let (qdrant_url, _) = sm
             .as_ref()

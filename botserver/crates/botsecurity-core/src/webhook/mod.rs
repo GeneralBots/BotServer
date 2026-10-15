@@ -195,8 +195,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_expired_timestamp() {
-        let mut config = WebhookConfig::default();
-        config.timestamp_tolerance_seconds = 60;
+        let config = WebhookConfig {
+            timestamp_tolerance_seconds: 60,
+            ..Default::default()
+        };
         let manager = WebhookSecurityManager::new(config);
 
         let payload = r#"{"event":"test"}"#;
@@ -226,8 +228,10 @@ mod tests {
 
     #[test]
     fn test_url_validation_no_https_required() {
-        let mut config = WebhookConfig::default();
-        config.require_https = false;
+        let config = WebhookConfig {
+            require_https: false,
+            ..Default::default()
+        };
         let manager = WebhookSecurityManager::new(config);
 
         assert!(manager.validate_url("http://example.com/webhook").is_ok());
@@ -236,8 +240,10 @@ mod tests {
 
     #[test]
     fn test_payload_size_validation() {
-        let mut config = WebhookConfig::default();
-        config.max_payload_size = 100;
+        let config = WebhookConfig {
+            max_payload_size: 100,
+            ..Default::default()
+        };
         let manager = WebhookSecurityManager::new(config);
 
         let small_payload = vec![0u8; 50];
@@ -365,8 +371,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_signature_cleanup() {
-        let mut config = WebhookConfig::default();
-        config.replay_window_seconds = 0;
+        let config = WebhookConfig {
+            replay_window_seconds: 0,
+            ..Default::default()
+        };
         let manager = WebhookSecurityManager::new(config);
 
         let payload = r#"{"event":"test"}"#;

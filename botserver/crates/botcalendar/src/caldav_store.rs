@@ -10,6 +10,8 @@ use diesel::prelude::*;
 use std::sync::Arc;
 use uuid::Uuid;
 
+use botsecurity_core::response_error::ResponseError;
+
 use super::{calendar_events, calendars, record_to_event, CalendarEventRecord, CalendarRecord, DbPool};
 use crate::caldav_http::{not_found, unavailable};
 use crate::caldav_xml;
@@ -18,11 +20,19 @@ use crate::caldav_xml;
 /// an unbounded range cannot make the server materialize an entire table.
 pub(crate) const REPORT_EVENT_LIMIT: i64 = 2000;
 
+/// Renders a failed store operation as the response the request must return.
+///
+/// The boxed wrapper keeps the `Result` of every loader small
+/// (`clippy::result_large_err`); callers render it with `IntoResponse`.
+fn store_error(message: String) -> ResponseError {
+    unavailable(message).into()
+}
+
 /// Resolves the calendars visible to the caller's scope.
 pub(crate) async fn load_calendars(
     pool: &Arc<DbPool>,
     headers: &axum::http::HeaderMap,
-) -> Result<Vec<CalendarRecord>, axum::response::Response> {
+) -> Result<Vec<CalendarRecord>, ResponseError> {
     let (org_id, bot_id) = super::scope_from_headers(pool, headers);
     let pool = pool.clone();
     let result = tokio::task::spawn_blocking(move || {
@@ -35,8 +45,8 @@ pub(crate) async fn load_calendars(
             .map_err(|e| format!("Failed to load calendars: {e}"))
     })
     .await
-    .map_err(|e| unavailable(format!("Task join error: {e}")))?;
-    result.map_err(unavailable)
+    .map_err(|e| store_error(format!("Task join error: {e}")))?;
+    result.map_err(store_error)
 }
 
 /// Resolves one calendar, refusing a calendar outside the caller's scope.
@@ -44,7 +54,7 @@ pub(crate) async fn load_calendar(
     pool: &Arc<DbPool>,
     headers: &axum::http::HeaderMap,
     calendar_id: Uuid,
-) -> Result<Option<CalendarRecord>, axum::response::Response> {
+) -> Result<Option<CalendarRecord>, ResponseError> {
     let (org_id, bot_id) = super::scope_from_headers(pool, headers);
     let pool = pool.clone();
     let result = tokio::task::spawn_blocking(move || {
@@ -58,8 +68,8 @@ pub(crate) async fn load_calendar(
             .map_err(|e| format!("Failed to load the calendar: {e}"))
     })
     .await
-    .map_err(|e| unavailable(format!("Task join error: {e}")))?;
-    result.map_err(unavailable)
+    .map_err(|e| store_error(format!("Task join error: {e}")))?;
+    result.map_err(store_error)
 }
 
 /// Resolves the events of a calendar.
@@ -75,7 +85,7 @@ pub(crate) async fn load_events(
     time_min: Option<DateTime<Utc>>,
     time_max: Option<DateTime<Utc>>,
     wanted: Vec<Uuid>,
-) -> Result<Vec<CalendarEventRecord>, axum::response::Response> {
+) -> Result<Vec<CalendarEventRecord>, ResponseError> {
     let (org_id, bot_id) = super::scope_from_headers(pool, headers);
     let pool = pool.clone();
 
@@ -102,8 +112,8 @@ pub(crate) async fn load_events(
             .map_err(|e| format!("Failed to load events: {e}"))
     })
     .await
-    .map_err(|e| unavailable(format!("Task join error: {e}")))?;
-    result.map_err(unavailable)
+    .map_err(|e| store_error(format!("Task join error: {e}")))?;
+    result.map_err(store_error)
 }
 
 /// Removes an event from the caller's scope.

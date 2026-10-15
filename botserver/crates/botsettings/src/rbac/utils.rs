@@ -102,17 +102,17 @@ pub fn user_has_db_permission(
     for perm in &user_permissions {
         let perm_name_lower = perm.name.to_lowercase();
 
-        if botsecurity::match_wildcard(&perm_name_lower, &req_lower) {
+        if botsecurity::rbac_middleware::match_wildcard(&perm_name_lower, &req_lower) {
             return Ok(true);
         }
 
         let colon_alias = format!("{}:{}:*", perm.resource_type, perm.action);
-        if botsecurity::match_wildcard(&colon_alias, &req_lower) {
+        if botsecurity::rbac_middleware::match_wildcard(&colon_alias, &req_lower) {
             return Ok(true);
         }
 
         let colon_alias_full = format!("{}:{}:{}", perm.resource_type, perm.action, perm_name_lower);
-        if botsecurity::match_wildcard(&colon_alias_full, &req_lower) {
+        if botsecurity::rbac_middleware::match_wildcard(&colon_alias_full, &req_lower) {
             return Ok(true);
         }
     }

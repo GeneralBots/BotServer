@@ -102,11 +102,13 @@ impl ScriptService {
 
         #[cfg(feature = "security")]
         {
-            use botsecurity::{InspectionContext, ScriptAuditLogger, ScriptGuard};
+            use botsecurity::protection::script_guard::{
+                AuditLogger, InspectionContext, ScriptGuard,
+            };
             let ctx = InspectionContext::default();
             let result = ScriptGuard::inspect(&preprocessed, &ctx);
             if !result.allowed {
-                ScriptAuditLogger::log_blocked(&result);
+                AuditLogger::log_blocked(&result);
                 log::error!(
                     "[SECURITY] Script blocked — {} dangerous patterns detected",
                     result.blocked_patterns.len()

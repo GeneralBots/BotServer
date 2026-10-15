@@ -1,3 +1,10 @@
+//! Vibe project automation.
+//!
+//! The crate exposes its modules, not a flattened item list (#1500): callers
+//! spell the namespace they use (`botvibe::permissions::PermissionEngine`,
+//! `botvibe::sessions::SessionRoutes`) so a rename inside a module stays
+//! visible at the call site.
+
 pub mod types;
 pub mod bootstrap;
 pub mod bootstrap_backfill;
@@ -74,48 +81,5 @@ pub mod browser_driver_api;
 pub mod proactivity;
 pub mod proactivity_api;
 pub mod project_locks;
-
-pub use types::{
-    VibeContext, VibeLlmOps, VibeProgressEvent, VibeRun, VibeRunConfig, VibeRunState, VibeState,
-    VibeToolCall, VibeUseCase,
-};
-pub use prompt_manager::VibePromptManager;
-pub use tool_executor::{VibeToolExecutor, ToolRegistry, ToolDescriptor, ToolSchema};
-pub use telemetry::VibeTelemetry;
-pub use api::router;
-pub use agent_loop::AgentLoop;
-pub use projects::{Project, ProjectKind, ProjectRegistry};
-pub use projects_api::projects_router;
-pub use rbac::{ProjectMember, ProjectRbac, ProjectRole};
-pub use members_api::members_router;
-pub use metering::{MeterPlan, UsageSummary, VMetering, VMeteringRef};
-pub use metering_api::metering_router;
-pub use permissions::{PermissionEngine, PermissionEngineRef, PermissionMode};
-pub use permissions_api::permissions_router;
-pub use skills::{SkillStore, VibeSkill, skills_router};
-pub use skill_loader::{parse_skill_markdown, skill_from_markdown, bootstrap_skill_definitions, MAX_STACKED_SKILLS};
-pub use doctor::{DoctorCheck, DoctorReport, doctor_router, run_doctor};
-pub use browser::browser_tools;
-pub use canvases::{CanvasStore, VibeCanvas, canvases_router};
-pub use issues::{IssueState, IssueStore, VibeIssue, issues_router};
-pub use websearch::websearch_tools;
-pub use gitflow::gitflow_tools;
-pub use sessions::{SessionRoutes, SessionStore, VibeSession, sessions_router};
-pub use teams::{TeamRoutes, TeamStore, VibeTeam, teams_router};
-pub use capability_registry::{build_capabilities, capabilities_for, Capability};
-pub use pipeline::{PipelineEngine, PipelineRunReport, PipelineStage, PipelineStageKind, PipelineStageReport, RunPipeline, StageStatus};
-pub use llm_client::{chat_completion, extract_json, resolve_llm, LlmSettings};
-pub use planner::{PlannerExecutor, PlannerRef, PlannerRun};
-pub use planner_api::planner_router;
-pub use moa::{MoaEngine, MoaRef, MoaRun};
-pub use moa_api::moa_router;
-pub use agents::{AgentDef, AgentRegistry, AgentRun, AgentUsage, AgentsRef};
-pub use agents_api::agents_router;
-pub use browser_memory::{BrowserMemory, BrowserMemoryRef, CitedAnswer, MemoryEntry};
-pub use browser_memory_api::browser_memory_router;
-pub use browser_driver::{BrowserDriver, BrowserDriverRef, DriverRun, TaskContract};
-pub use browser_driver_api::browser_driver_router;
-pub use proactivity::{ProactivityEngine, ProactivityRef, SuggestionCard, TriggerDef};
-pub use proactivity_api::proactivity_router;
 
 mod re_cache;

@@ -5,6 +5,7 @@
 // ============================================================================
 
 pub(crate) use axum::{ body::Body, extract::{FromRequestParts, State}, http::{header::AUTHORIZATION, request::Parts, Request, StatusCode}, middleware::Next, response::{IntoResponse, Response}, Json, };
+pub(crate) use botsecurity_core::response_error::ResponseError;
 pub(crate) use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 pub(crate) use serde::{Deserialize, Serialize};
 #[cfg(any(feature = "research", feature = "llm"))]
@@ -89,7 +90,8 @@ pub struct CachedUserData {
     pub cached_at: chrono::DateTime<chrono::Utc>,
 }
 
-type MiddlewareFuture = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Response, Response>> + Send>>;
+type MiddlewareFuture =
+    std::pin::Pin<Box<dyn std::future::Future<Output = Result<Response, ResponseError>> + Send>>;
 
 #[derive(Debug)]
 enum AuthError {

@@ -1,16 +1,26 @@
 use super::*;
 
-pub(super) fn apply_middleware(
-    app: Router,
-    app_state: Arc<AppState>,
-    cors: tower_http::cors::CorsLayer,
-    csrf_manager: Arc<CsrfManager>,
-    panic_config: PanicHandlerConfig,
-    security_headers_extension: axum::Extension<SecurityHeadersConfig>,
-    rate_limit_extension: axum::Extension<Arc<CombinedRateLimiter>>,
-    rbac_manager: Arc<crate::security::RbacManager>,
-    auth_middleware_state: crate::security::AuthMiddlewareState,
-) -> Router {
+/// The tower layers the server applies to every route.
+pub(super) struct ServerLayers {
+    pub cors: tower_http::cors::CorsLayer,
+    pub csrf_manager: Arc<CsrfManager>,
+    pub panic_config: PanicHandlerConfig,
+    pub security_headers: axum::Extension<SecurityHeadersConfig>,
+    pub rate_limit: axum::Extension<Arc<CombinedRateLimiter>>,
+    pub rbac_manager: Arc<crate::security::rbac_middleware::RbacManager>,
+    pub auth_middleware_state: crate::security::auth::AuthMiddlewareState,
+}
+
+pub(super) fn apply_middleware(app: Router, app_state: Arc<AppState>, layers: ServerLayers) -> Router {
+    let ServerLayers {
+        cors,
+        csrf_manager,
+        panic_config,
+        security_headers: security_headers_extension,
+        rate_limit: rate_limit_extension,
+        rbac_manager,
+        auth_middleware_state,
+    } = layers;
     async fn csrf_cookie_injector(
         manager: Arc<CsrfManager>,
         request: axum::http::Request<axum::body::Body>,
@@ -65,7 +75,7 @@ pub(super) fn apply_middleware(
         .layer(axum::middleware::from_fn(
             move |req: axum::http::Request<axum::body::Body>, next: axum::middleware::Next| {
                 let rbac = rbac_manager.clone();
-                async move { crate::security::rbac_middleware_fn(req, next, rbac).await }
+                async move { crate::security::rbac_middleware::rbac_middleware_fn(req, next, rbac).await }
             },
         ))
         // Resolves DB-backed roles (rbac_user_groups) for cloud-JWT/Zitadel
@@ -78,19 +88,19 @@ pub(super) fn apply_middleware(
             move |req: axum::http::Request<axum::body::Body>, next: axum::middleware::Next| {
                 let state = auth_middleware_state.clone();
                 async move {
-                    crate::security::auth_middleware_with_providers(req, next, state).await
+                    crate::security::auth::auth_middleware_with_providers(req, next, state).await
                 }
             },
         ))
         .layer(axum::middleware::from_fn(move |req, next| {
             let config = panic_config.clone();
             async move {
-                crate::security::panic_handler_middleware_with_config(req, next, &config).await
+                crate::security::panic_handler::panic_handler_middleware_with_config(req, next, &config).await
             }
         }))
         .layer(axum::Extension(app_state))
         .layer(cors)
-        .layer(axum::middleware::from_fn(crate::security::strip_proxy_cors_middleware))
+        .layer(axum::middleware::from_fn(crate::security::cors::strip_proxy_cors_middleware))
         .layer(TraceLayer::new_for_http())
 }
 #[cfg(feature = "calendar")]

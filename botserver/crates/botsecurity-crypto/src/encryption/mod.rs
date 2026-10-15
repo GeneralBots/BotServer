@@ -179,8 +179,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_envelope_encryption() {
-        let mut config = EncryptionConfig::default();
-        config.envelope_encryption = true;
+        let config = EncryptionConfig {
+            envelope_encryption: true,
+            ..EncryptionConfig::default()
+        };
         let manager = EncryptionManager::new(config).expect("Manager creation failed");
         manager.initialize().await.expect("Init failed");
 

@@ -11,6 +11,7 @@ pub(crate) use sha2::Sha256;
 pub(crate) use std::sync::Arc;
 pub(crate) use uuid::Uuid;
 pub(crate) use botsecurity_auth::auth_api::types::AuthenticatedUser;
+pub(crate) use botsecurity_core::response_error::ResponseError;
 pub(crate) use crate::error::IntegrationError;
 pub(crate) use crate::repository;
 pub(crate) use crate::scope::{resolve_scope, ConnectionScope};

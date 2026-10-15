@@ -11,6 +11,7 @@ pub mod panic_handler;
 pub mod path_guard;
 pub mod prompt_security;
 pub mod request_id;
+pub mod response_error;
 pub mod safe_unwrap;
 pub mod scope;
 pub mod security_monitoring;

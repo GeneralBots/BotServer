@@ -165,8 +165,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_brute_force_detection() {
-        let mut config = SecurityMonitoringConfig::default();
-        config.brute_force_threshold = 3;
+        let config = SecurityMonitoringConfig {
+            brute_force_threshold: 3,
+            ..Default::default()
+        };
         let monitor = SecurityMonitor::new(config);
         let user_id = Uuid::new_v4();
 
@@ -187,8 +189,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_lockout() {
-        let mut config = SecurityMonitoringConfig::default();
-        config.brute_force_threshold = 2;
+        let config = SecurityMonitoringConfig {
+            brute_force_threshold: 2,
+            ..Default::default()
+        };
         let monitor = SecurityMonitor::new(config);
 
         let user_id = Uuid::new_v4();
@@ -337,8 +341,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_cleanup() {
-        let mut config = SecurityMonitoringConfig::default();
-        config.retention_hours = 0;
+        let config = SecurityMonitoringConfig {
+            retention_hours: 0,
+            ..Default::default()
+        };
         let monitor = SecurityMonitor::new(config);
 
         let event = SecurityEvent::new(SecurityEventType::LoginSuccess);

@@ -343,8 +343,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_scan_direction() {
-        let mut config = DlpConfig::default();
-        config.scan_inbound = false;
+        let config = DlpConfig {
+            scan_inbound: false,
+            ..Default::default()
+        };
         let manager = DlpManager::new(config).expect("Failed to create manager");
 
         let content = "Email: test@example.com";

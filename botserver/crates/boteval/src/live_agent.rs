@@ -9,7 +9,7 @@ use botvibe::types::{
     DbPool, LlmConfig, VibeProgressEvent, VibeRun, VibeRunConfig, VibeRunState, VibeRunSignal,
     VibeState,
 };
-use botvibe::VibePromptManager;
+use botvibe::prompt_manager::VibePromptManager;
 use diesel::r2d2::{ConnectionManager, Pool};
 use std::collections::HashMap;
 use std::sync::Arc;

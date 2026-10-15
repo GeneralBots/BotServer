@@ -34,7 +34,7 @@ pub struct AppFilePath {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use botsecurity::sanitize_path_component;
+    use botsecurity::path_guard::sanitize_path_component;
 
     /// `sanitize_path_component` flattens a single path component: separators
     /// and traversal dots are neutralised so the result can never escape its

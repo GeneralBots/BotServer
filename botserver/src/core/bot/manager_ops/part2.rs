@@ -3,12 +3,14 @@ use super::*;
 pub async fn get_public_bot_config(
     axum::extract::State(state): axum::extract::State<Arc<botcore::shared::state::AppState>>,
     axum::extract::Query(params): axum::extract::Query<HashMap<String, String>>,
-) -> Result<axum::Json<serde_json::Value>, crate::security::SafeErrorResponse> {
+) -> Result<axum::Json<serde_json::Value>, crate::security::ResponseError> {
     use botcore::shared::models::schema::bots;
 
     let mut conn = state.conn.get().map_err(|e| {
         log::error!("DB connection error in get_public_bot_config: {}", e);
-        crate::security::SafeErrorResponse::internal_error()
+        crate::security::boxed_error(
+            crate::security::error_sanitizer::SafeErrorResponse::internal_error(),
+        )
     })?;
 
     let mut map: HashMap<String, String> = HashMap::new();
@@ -23,7 +25,9 @@ pub async fn get_public_bot_config(
         .optional()
         .map_err(|e| {
             log::error!("get_public_bot_config query failed: {e}");
-            crate::security::SafeErrorResponse::internal_error()
+            crate::security::boxed_error(
+                crate::security::error_sanitizer::SafeErrorResponse::internal_error(),
+            )
         })?;
 
     let Some((bot_id, is_public)) = bot else {

@@ -198,7 +198,7 @@ pub(super) async fn merge_part_a(
     }
 
     *sub_router = sub_router.clone().merge(crate::core::i18n::configure_i18n_routes().with_state(app_state.clone()));
-    *sub_router = sub_router.clone().merge(crate::security::configure_protection_routes().with_state(app_state.clone()));
+    *sub_router = sub_router.clone().merge(crate::security::protection::configure_protection_routes().with_state(app_state.clone()));
     *sub_router = sub_router.clone().merge(crate::settings::configure_settings_routes().with_state(app_state.clone()));
     *sub_router = sub_router.clone().merge(crate::jukebox::configure_jukebox_routes());
     *sub_router = sub_router.clone().merge(botcore::shared::admin::configure().with_state(app_state.clone()));

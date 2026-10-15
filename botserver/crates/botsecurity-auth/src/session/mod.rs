@@ -89,7 +89,10 @@ mod tests {
 
     #[test]
     fn test_session_touch() {
-        let config = SessionConfig::default();
+        let config = SessionConfig {
+            max_concurrent_sessions: 2,
+            ..Default::default()
+        };
         let user_id = Uuid::new_v4();
         let mut session = Session::new(user_id, &config);
         let original_expires = session.expires_at;
@@ -102,7 +105,9 @@ mod tests {
 
     #[test]
     fn test_session_revoke() {
-        let config = SessionConfig::default();
+        let config = SessionConfig {
+            ..Default::default()
+        };
         let user_id = Uuid::new_v4();
         let mut session = Session::new(user_id, &config);
 
@@ -163,6 +168,8 @@ mod tests {
     #[test]
     fn test_remember_me_extends_session() {
         let config = SessionConfig::default();
+            ..Default::default()
+        };
         let user_id = Uuid::new_v4();
         let session_normal = Session::new(user_id, &config);
         let session_remember = Session::new(user_id, &config).with_remember_me(true);
@@ -181,6 +188,8 @@ mod tests {
     async fn test_in_memory_store() {
         let store = InMemorySessionStore::new();
         let config = SessionConfig::default();
+            ..Default::default()
+        };
         let user_id = Uuid::new_v4();
         let session = Session::new(user_id, &config);
         let session_id = session.id.clone();
@@ -265,8 +274,10 @@ mod tests {
     #[tokio::test]
     async fn test_concurrent_session_limit() {
         let store = InMemorySessionStore::new();
-        let mut config = SessionConfig::default();
-        config.max_concurrent_sessions = 2;
+        let config = SessionConfig {
+            max_concurrent_sessions: 2,
+            ..Default::default()
+        };
         let manager = SessionManager::new(store, config);
         let user_id = Uuid::new_v4();
 

@@ -150,7 +150,7 @@ pub(crate) fn ensure_checkout_with_heal(
 fn provision_repo(pool: &DbPool, project: &MonitoredBot, org: &str) -> Result<(), String> {
     let safe_name = botvibe::harness::sanitize_project_id(&project.name)?;
     let cwd = botvibe::harness::ensure_workspace(&safe_name)?;
-    let registry = botvibe::ProjectRegistry::new(pool.clone());
+    let registry = botvibe::projects::ProjectRegistry::new(pool.clone());
     let mut p = registry
         .get(project.project_id)
         .map_err(|e| format!("project load: {e}"))?

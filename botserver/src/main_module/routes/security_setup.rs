@@ -1,10 +1,10 @@
 use std::sync::Arc;
 use log::{info, error};
-use crate::security::{
-    AuthConfig, AuthMiddlewareState, AuthProviderBuilder, ApiKeyAuthProvider,
-    JwtConfig, JwtKey, JwtManager, RbacConfig, RbacManager,
-    build_default_route_permissions, create_cors_layer,
-};
+use crate::security::auth::{AuthConfig, AuthMiddlewareState};
+use crate::security::auth_provider::{ApiKeyAuthProvider, AuthProviderBuilder};
+use crate::security::cors::create_cors_layer;
+use crate::security::jwt::{JwtConfig, JwtKey, JwtManager};
+use crate::security::rbac_middleware::{build_default_route_permissions, RbacConfig, RbacManager};
 use botcore::shared::state::AppState;
 
 pub struct SecurityComponents {
@@ -29,7 +29,7 @@ pub async fn setup_security(app_state: &Arc<AppState>) -> SecurityComponents {
             .collect();
         if !origins.is_empty() {
             info!("Loaded {} CORS allowed origins from config", origins.len());
-            crate::security::set_cors_allowed_origins(origins);
+            crate::security::cors::set_cors_allowed_origins(origins);
         }
     }
 
@@ -155,7 +155,7 @@ pub async fn setup_security(app_state: &Arc<AppState>) -> SecurityComponents {
                 // back to in-memory when no cache client is available.
                 match &app_state.cache {
                     Some(client) => {
-                        let store = Arc::new(crate::security::RedisBlacklistStore::new(Arc::clone(client)));
+                        let store = Arc::new(crate::security::redis_blacklist_store::RedisBlacklistStore::new(Arc::clone(client)));
                         info!("JWT Manager using Redis-backed token blacklist");
                         manager.with_blacklist_store(store)
                     }

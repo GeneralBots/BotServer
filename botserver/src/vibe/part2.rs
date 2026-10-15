@@ -118,20 +118,20 @@ pub async fn configure_vibe_routes(app_state: &Arc<AppState>) -> axum::Router {
     }
 
     let prompt_manager = Arc::new(VibePromptManager::new());
-    let permissions = Arc::new(botvibe::PermissionEngine::new());
+    let permissions = Arc::new(botvibe::permissions::PermissionEngine::new());
     // #1444 M2 — persistent skills: the store hydrates the `vibe_skills`
     // table (custom skills + marketplace installs survive restarts) and
     // writes through on register/delete; bootstrap seeding stays idempotent.
-    let skills = Arc::new(botvibe::SkillStore::with_persistence(skills_pool));
+    let skills = Arc::new(botvibe::skills::SkillStore::with_persistence(skills_pool));
     if let Err(e) = skills.seed_bootstrap().await {
         log::error!("Vibe: bootstrap skills seeding failed: {e}");
     }
     // #816 — write-through persistence so canvases/issues/sessions/teams
     // survive server restarts (previously in-memory RwLock<Vec> only).
-    let canvases = Arc::new(botvibe::CanvasStore::with_persistence(app_state.conn.clone()));
-    let issues = Arc::new(botvibe::IssueStore::with_persistence(app_state.conn.clone()));
-    let sessions = Arc::new(botvibe::SessionStore::with_persistence(app_state.conn.clone()));
-    let teams = Arc::new(botvibe::TeamStore::with_persistence(app_state.conn.clone()));
+    let canvases = Arc::new(botvibe::canvases::CanvasStore::with_persistence(app_state.conn.clone()));
+    let issues = Arc::new(botvibe::issues::IssueStore::with_persistence(app_state.conn.clone()));
+    let sessions = Arc::new(botvibe::sessions::SessionStore::with_persistence(app_state.conn.clone()));
+    let teams = Arc::new(botvibe::teams::TeamStore::with_persistence(app_state.conn.clone()));
 
     let tool_registry = Arc::new(ToolRegistry::new());
     if let Err(e) = tool_registry
@@ -169,16 +169,16 @@ pub async fn configure_vibe_routes(app_state: &Arc<AppState>) -> axum::Router {
     // AI-OS wave (#1171/#1172/#1173/#1175/#1182/#1185): in-memory run
     // stores (same model as the pre-#816 canvases/issues) exposed through
     // the routers merged above.
-    let planner = Arc::new(botvibe::PlannerExecutor::new());
-    let agents = Arc::new(botvibe::AgentRegistry::new());
-    let moa = Arc::new(botvibe::MoaEngine::new());
-    let browser_memory = Arc::new(botvibe::BrowserMemory::new());
-    let browser_driver = Arc::new(botvibe::BrowserDriver::new());
+    let planner = Arc::new(botvibe::planner::PlannerExecutor::new());
+    let agents = Arc::new(botvibe::agents::AgentRegistry::new());
+    let moa = Arc::new(botvibe::moa::MoaEngine::new());
+    let browser_memory = Arc::new(botvibe::browser_memory::BrowserMemory::new());
+    let browser_driver = Arc::new(botvibe::browser_driver::BrowserDriver::new());
 
     // #1185 — Proactivity scheduler. Seeds a couple of consented demo
     // triggers, then ticks every 60s emitting suggestion cards that the
     // desktop Notification Center polls via /api/vibe/proactivity/cards.
-    let proactivity = Arc::new(botvibe::ProactivityEngine::new());
+    let proactivity = Arc::new(botvibe::proactivity::ProactivityEngine::new());
     {
         use botvibe::proactivity::RegisterTriggerRequest;
         let seeds = [
@@ -238,19 +238,19 @@ pub async fn configure_vibe_routes(app_state: &Arc<AppState>) -> axum::Router {
     VMetering::spawn_vm_hours_sampler(metering.clone(), 3600);
     info!("Vibe: vm-hours metering sampler started (hourly)");
 
-    botvibe::api::router(
-        state.clone(),
-        prompt_manager.clone(),
-        tool_executor.clone(),
-        telemetry.clone(),
-        botvibe::api::VibeSecurityDeps {
+    botvibe::api::router(botvibe::api::VibeApiDeps {
+        state: state.clone(),
+        prompt_manager: prompt_manager.clone(),
+        tool_executor: tool_executor.clone(),
+        telemetry: telemetry.clone(),
+        security: botvibe::api::VibeSecurityDeps {
             permissions: permissions.clone(),
             skills: skills.clone(),
         },
-        app_state.conn.clone(),
-        project_registry.clone(),
-        project_rbac.clone(),
-    )
+        pool: app_state.conn.clone(),
+        project_registry: project_registry.clone(),
+        project_rbac: project_rbac.clone(),
+    })
         .merge(projects_router(
             project_registry.clone(),
             project_rbac.clone(),
@@ -276,12 +276,12 @@ pub async fn configure_vibe_routes(app_state: &Arc<AppState>) -> axum::Router {
             rbac: project_rbac,
             metering: metering.clone(),
         }))
-        .merge(botvibe::permissions_router(permissions.clone()))
-        .merge(botvibe::skills_router(skills.clone()))
-        .merge(botvibe::doctor_router(skills.clone(), sessions.clone()))
-        .merge(botvibe::canvases_router(canvases.clone()))
-        .merge(botvibe::issues_router(issues.clone()))
-        .merge(botvibe::sessions_router(botvibe::SessionRoutes {
+        .merge(botvibe::permissions_api::permissions_router(permissions.clone()))
+        .merge(botvibe::skills::skills_router(skills.clone()))
+        .merge(botvibe::doctor::doctor_router(skills.clone(), sessions.clone()))
+        .merge(botvibe::canvases::canvases_router(canvases.clone()))
+        .merge(botvibe::issues::issues_router(issues.clone()))
+        .merge(botvibe::sessions::sessions_router(botvibe::sessions::SessionRoutes {
             sessions: sessions.clone(),
             state: state.clone(),
             prompt_manager: prompt_manager.clone(),
@@ -290,7 +290,7 @@ pub async fn configure_vibe_routes(app_state: &Arc<AppState>) -> axum::Router {
             permissions: permissions.clone(),
             skills: skills.clone(),
         }))
-        .merge(botvibe::teams_router(botvibe::TeamRoutes {
+        .merge(botvibe::teams::teams_router(botvibe::teams::TeamRoutes {
             teams: teams.clone(),
             state: state.clone(),
             prompt_manager: prompt_manager.clone(),
@@ -302,10 +302,10 @@ pub async fn configure_vibe_routes(app_state: &Arc<AppState>) -> axum::Router {
         // AI-OS wave (#1171/#1172/#1173/#1175/#1182/#1185): planner,
         // agent API, mixture-of-agents, browsing memory, browser driver
         // and proactivity scheduler — all mounted under /api/vibe/**.
-        .merge(botvibe::planner_router(planner))
-        .merge(botvibe::agents_router(agents))
-        .merge(botvibe::moa_router(moa))
-        .merge(botvibe::browser_memory_router(browser_memory))
-        .merge(botvibe::browser_driver_router(browser_driver))
-        .merge(botvibe::proactivity_router(proactivity))
+        .merge(botvibe::planner_api::planner_router(planner))
+        .merge(botvibe::agents_api::agents_router(agents))
+        .merge(botvibe::moa_api::moa_router(moa))
+        .merge(botvibe::browser_memory_api::browser_memory_router(browser_memory))
+        .merge(botvibe::browser_driver_api::browser_driver_router(browser_driver))
+        .merge(botvibe::proactivity_api::proactivity_router(proactivity))
 }
