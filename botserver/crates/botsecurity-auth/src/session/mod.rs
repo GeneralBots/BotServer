@@ -168,8 +168,6 @@ mod tests {
     #[test]
     fn test_remember_me_extends_session() {
         let config = SessionConfig::default();
-            ..Default::default()
-        };
         let user_id = Uuid::new_v4();
         let session_normal = Session::new(user_id, &config);
         let session_remember = Session::new(user_id, &config).with_remember_me(true);
@@ -188,8 +186,6 @@ mod tests {
     async fn test_in_memory_store() {
         let store = InMemorySessionStore::new();
         let config = SessionConfig::default();
-            ..Default::default()
-        };
         let user_id = Uuid::new_v4();
         let session = Session::new(user_id, &config);
         let session_id = session.id.clone();

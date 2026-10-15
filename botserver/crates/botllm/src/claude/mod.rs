@@ -10,7 +10,7 @@ pub(crate) use serde_json::Value;
 pub(crate) use std::time::Duration;
 pub(crate) use tokio::sync::mpsc;
 pub(crate) use tokio::time::Instant;
-pub(crate) use super::{llm_models::get_handler, LLMProvider};
+pub(crate) use super::{llm_models::get_handler, traits::LLMProvider};
 
 const MAX_RETRIES: u32 = 5;
 const INITIAL_DELAY_MS: u64 = 1000;

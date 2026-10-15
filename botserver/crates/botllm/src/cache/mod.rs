@@ -8,7 +8,7 @@ pub(crate) use std::sync::Arc;
 pub(crate) use std::time::{SystemTime, UNIX_EPOCH};
 pub(crate) use tokio::sync::mpsc;
 pub(crate) use uuid::Uuid;
-pub(crate) use super::LLMProvider;
+pub(crate) use super::traits::LLMProvider;
 pub(crate) use botcore::config::ConfigManager;
 pub(crate) use botcore::shared::utils::{estimate_token_count, DbPool};
 

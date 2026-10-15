@@ -181,7 +181,7 @@ pub mod telegram;
 #[cfg(feature = "llm")]
 pub use llm::cache::{CacheConfig, CachedLLMProvider, CachedResponse, LocalEmbeddingService};
 #[cfg(feature = "llm")]
-pub use llm::DynamicLLMProvider;
+pub use llm::dynamic_provider::DynamicLLMProvider;
 
 #[cfg(feature = "tasks")]
 pub use tasks::TaskEngine;

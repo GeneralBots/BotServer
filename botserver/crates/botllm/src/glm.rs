@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::mpsc;
 
-use super::LLMProvider;
+use super::traits::LLMProvider;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GLMMessage {

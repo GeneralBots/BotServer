@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::mpsc;
 
-use super::LLMProvider;
+use super::traits::LLMProvider;
 
 // Kimi K2.5 (moonshotai) API Client
 // NVIDIA endpoint with special chat_template_kwargs for thinking mode
