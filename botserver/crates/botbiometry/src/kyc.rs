@@ -28,6 +28,33 @@ impl KycState {
     pub fn is_terminal(self) -> bool {
         matches!(self, Self::Approved | Self::Rejected | Self::Expired)
     }
+
+    /// Wire status of this state, as used by the KYC APIs.
+    pub fn as_status(self) -> &'static str {
+        match self {
+            Self::Pending => "pending",
+            Self::Incomplete => "incomplete",
+            Self::UnderReview => "under_review",
+            Self::LivenessRequired => "liveness_required",
+            Self::Approved => "approved",
+            Self::Rejected => "rejected",
+            Self::Expired => "expired",
+        }
+    }
+
+    /// Parses a wire status; `None` when the caller sent an unknown state.
+    pub fn from_status(status: &str) -> Option<Self> {
+        match status {
+            "pending" => Some(Self::Pending),
+            "incomplete" => Some(Self::Incomplete),
+            "under_review" | "in_review" | "review" => Some(Self::UnderReview),
+            "liveness_required" => Some(Self::LivenessRequired),
+            "approved" => Some(Self::Approved),
+            "rejected" => Some(Self::Rejected),
+            "expired" => Some(Self::Expired),
+            _ => None,
+        }
+    }
 }
 
 /// Kind of identity document uploaded.
@@ -179,5 +206,22 @@ mod tests {
         assert!(KycState::Approved.is_terminal());
         assert!(KycState::Rejected.is_terminal());
         assert!(KycState::Expired.is_terminal());
+    }
+
+    #[test]
+    fn wire_statuses_round_trip() {
+        for state in [
+            KycState::Pending,
+            KycState::Incomplete,
+            KycState::UnderReview,
+            KycState::LivenessRequired,
+            KycState::Approved,
+            KycState::Rejected,
+            KycState::Expired,
+        ] {
+            assert_eq!(KycState::from_status(state.as_status()), Some(state));
+        }
+        assert_eq!(KycState::from_status("in_review"), Some(KycState::UnderReview));
+        assert_eq!(KycState::from_status("bogus"), None);
     }
 }

@@ -48,8 +48,26 @@ pub async fn list_nfe(headers: HeaderMap) -> Result<Json<Vec<NFe>>, (StatusCode,
     }).collect()))
 }
 
+/// Fiscal documents carry Brazilian taxpayer numbers; the checker lives in
+/// `botbrazil` (#1502).
+fn require_cnpj(field: &str, value: &str) -> Result<(), (StatusCode, String)> {
+    if botbrazil::validators::is_valid_cnpj(value) {
+        Ok(())
+    } else {
+        Err((
+            StatusCode::BAD_REQUEST,
+            format!(
+                "Invalid {field} CNPJ '{}': check digit mismatch",
+                botbrazil::validators::only_digits(value)
+            ),
+        ))
+    }
+}
+
 pub async fn create_nfe(headers: HeaderMap, Json(req): Json<NewNFe>) -> Result<Json<NFe>, (StatusCode, String)> {
     ensure_schema_sync()?;
+    require_cnpj("emitter", &req.emitter_cnpj)?;
+    require_cnpj("recipient", &req.recipient_cnpj)?;
     let branch = resolve_branch(&headers);
     let total = parse_decimal(&req.total)?;
     let pool = db::pool()?;
@@ -133,6 +151,7 @@ pub async fn list_nfse(headers: HeaderMap) -> Result<Json<Vec<NFSe>>, (StatusCod
 
 pub async fn create_nfse(headers: HeaderMap, Json(req): Json<NewNFSe>) -> Result<Json<NFSe>, (StatusCode, String)> {
     ensure_schema_sync()?;
+    require_cnpj("provider", &req.provider_cnpj)?;
     let branch = resolve_branch(&headers);
     let total = parse_decimal(&req.total)?;
     let pool = db::pool()?;
@@ -189,6 +208,8 @@ pub async fn list_cte(headers: HeaderMap) -> Result<Json<Vec<CTe>>, (StatusCode,
 
 pub async fn create_cte(headers: HeaderMap, Json(req): Json<NewCTe>) -> Result<Json<CTe>, (StatusCode, String)> {
     ensure_schema_sync()?;
+    require_cnpj("sender", &req.sender_cnpj)?;
+    require_cnpj("recipient", &req.recipient_cnpj)?;
     let branch = resolve_branch(&headers);
     let total = parse_decimal(&req.total)?;
     let pool = db::pool()?;
@@ -355,4 +376,21 @@ pub async fn list_calculations(
         })
         .collect();
     Ok(Json(serde_json::json!({ "count": items.len(), "calculations": items })))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::require_cnpj;
+
+    #[test]
+    fn valid_cnpj_passes_the_check_digit_test() {
+        assert!(require_cnpj("emitter", "11.222.333/0001-81").is_ok());
+    }
+
+    #[test]
+    fn invalid_cnpj_is_rejected_with_a_400() {
+        let err = require_cnpj("recipient", "11.222.333/0001-80").expect_err("bad check digit");
+        assert_eq!(err.0, axum::http::StatusCode::BAD_REQUEST);
+        assert!(err.1.contains("recipient"), "field name must be reported: {}", err.1);
+    }
 }

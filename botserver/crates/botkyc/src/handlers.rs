@@ -100,11 +100,47 @@ pub async fn update_verification(
 ) -> Result<Json<Verification>, (StatusCode, String)> {
     let parsed = Uuid::parse_str(&id)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid id '{id}': {e}")))?;
+    // The biometric KYC state machine owns the lifecycle (#1502): unknown
+    // statuses are rejected here and terminal cases cannot be reopened.
+    let state = botbiometry::kyc::KycState::from_status(&req.status).ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            format!("Unknown KYC status '{}'", req.status),
+        )
+    })?;
     ensure_schema_sync()?;
     let branch = resolve_branch(&headers);
     let pool = db::pool()?;
     let mut conn = pool.get().map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Pool error: {e}")))?;
-    let completed_at = if req.status == "approved" || req.status == "rejected" {
+    #[derive(diesel::QueryableByName)]
+    struct CurrentRow {
+        #[diesel(sql_type = diesel::sql_types::Text)]
+        status: String,
+    }
+    let current: Vec<CurrentRow> = diesel::sql_query(
+        "SELECT status FROM identity_kyc_workflows WHERE id = $1 AND branch_id = $2",
+    )
+    .bind::<diesel::sql_types::Uuid, _>(parsed)
+    .bind::<diesel::sql_types::Uuid, _>(branch)
+    .load(&mut conn)
+    .map_err(db::map_diesel_err)?;
+    let current = match current.into_iter().next() {
+        Some(row) => row.status,
+        None => return Err((StatusCode::NOT_FOUND, format!("Verification {id} not found"))),
+    };
+    if let Some(current_state) = botbiometry::kyc::KycState::from_status(&current) {
+        if current_state.is_terminal() && current_state != state {
+            return Err((
+                StatusCode::CONFLICT,
+                format!(
+                    "KYC case {id} is terminal ({}) and cannot transition to '{}'",
+                    current_state.as_status(),
+                    state.as_status()
+                ),
+            ));
+        }
+    }
+    let completed_at = if state.is_terminal() {
         Some(Utc::now())
     } else {
         None
@@ -112,15 +148,38 @@ pub async fn update_verification(
     let n = diesel::sql_query(
         "UPDATE identity_kyc_workflows SET status = $1, completed_at = COALESCE($2, completed_at) WHERE id = $3 AND branch_id = $4",
     )
-    .bind::<diesel::sql_types::Text, _>(&req.status)
+    .bind::<diesel::sql_types::Text, _>(state.as_status())
     .bind::<diesel::sql_types::Nullable<diesel::sql_types::Timestamptz>, _>(completed_at)
     .bind::<diesel::sql_types::Uuid, _>(parsed)
     .bind::<diesel::sql_types::Uuid, _>(branch)
     .execute(&mut conn)
     .map_err(db::map_diesel_err)?;
     if n == 0 { return Err((StatusCode::NOT_FOUND, format!("Verification {id} not found"))); }
+    // Structured biometric audit trail for the state change.
+    let event = botbiometry::audit::BiometricAuditEvent {
+        id: Uuid::new_v4(),
+        tenant_id: branch.to_string(),
+        actor_id: req
+            .reviewed_by
+            .map(|reviewer| reviewer.to_string())
+            .unwrap_or_else(|| "system".to_string()),
+        action: botbiometry::audit::AuditAction::KycStateChanged,
+        payload_json: format!(
+            "{{\"verification_id\":\"{parsed}\",\"from\":\"{current}\",\"to\":\"{}\"}}",
+            state.as_status()
+        ),
+        at: Utc::now(),
+    };
+    log::info!(
+        "biometric audit: action={:?} id={} tenant={} actor={} payload={}",
+        event.action,
+        event.id,
+        event.tenant_id,
+        event.actor_id,
+        event.payload_json
+    );
     Ok(Json(Verification {
-        id: parsed, user_id: Uuid::nil(), kind: "identity".to_string(), status: req.status,
+        id: parsed, user_id: Uuid::nil(), kind: "identity".to_string(), status: state.as_status().to_string(),
         documents: req.documents.unwrap_or_default(), reviewed_by: req.reviewed_by,
         created_at: Utc::now(), completed_at,
     }))

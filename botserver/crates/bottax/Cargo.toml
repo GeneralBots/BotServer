@@ -6,6 +6,7 @@ license = "MIT"
 
 [dependencies]
 axum = { workspace = true }
+botbrazil = { workspace = true }
 botcore = { workspace = true }
 botlib = { workspace = true }
 chrono = { workspace = true, features = ["serde", "clock"] }

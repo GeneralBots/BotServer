@@ -1,6 +1,7 @@
 use axum::extract::{Json, Path};
 use axum::http::{HeaderMap, StatusCode};
 use chrono::Utc;
+use rust_decimal::prelude::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use diesel::RunQueryDsl;
@@ -12,6 +13,37 @@ use botcore::shared::tenant::branch_from_claims;
 
 fn resolve_branch(headers: &HeaderMap) -> Uuid {
     branch_from_claims(headers).unwrap_or_else(Uuid::nil)
+}
+
+/// CLT band split of a requested overtime, owned by `botclock` (#1502).
+struct OvertimeBands {
+    first_rate_min: u32,
+    rest_rate_min: u32,
+    first_rate_bps: u32,
+    rest_rate_bps: u32,
+}
+
+/// Converts a requested overtime in hours to whole minutes and splits it into
+/// the first band (50%, up to two hours) and the rest band (100%). Returns
+/// `None` when the value is negative or exceeds whole-minute precision, so the
+/// caller answers 400 instead of silently recording zero minutes.
+fn overtime_bands(hours: rust_decimal::Decimal) -> Option<OvertimeBands> {
+    let rules = botclock::rules::WorkdayRules::brazil_clt();
+    let minutes = (hours * rust_decimal::Decimal::from(60))
+        .round_dp(0)
+        .to_u32()?;
+    let summary = botclock::payroll::compute_summary(
+        String::new(),
+        Uuid::nil(),
+        rules.max_daily_min.saturating_add(minutes),
+        &rules,
+    );
+    Some(OvertimeBands {
+        first_rate_min: summary.overtime.first_rate_min,
+        rest_rate_min: summary.overtime.rest_rate_min,
+        first_rate_bps: rules.overtime_first_rate_bps,
+        rest_rate_bps: rules.overtime_rest_rate_bps,
+    })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -193,6 +225,17 @@ pub async fn create_overtime(
         .parse::<rust_decimal::Decimal>()
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid hours: {e}")))?;
     let id = Uuid::new_v4();
+    // CLT policy (#1502): the overtime splits into the first band (50%, up to
+    // 2h) and the rest band (100%); `botclock` owns the thresholds.
+    let bands = overtime_bands(hours).ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            format!(
+                "Invalid hours '{}': must be a non-negative number of hours",
+                req.hours
+            ),
+        )
+    })?;
     diesel::sql_query(
         "INSERT INTO timeclock_overtime (id, employee_id, date, hours, reason, status, branch_id)
          VALUES ($1, $2, $3, $4, $5, 'pending', $6)",
@@ -205,7 +248,14 @@ pub async fn create_overtime(
     .bind::<diesel::sql_types::Uuid, _>(branch)
     .execute(&mut conn)
     .map_err(db::map_diesel_err)?;
-    Ok(Json(serde_json::json!({ "ok": true, "id": id })))
+    Ok(Json(serde_json::json!({
+        "ok": true,
+        "id": id,
+        "overtime_first_rate_min": bands.first_rate_min,
+        "overtime_rest_rate_min": bands.rest_rate_min,
+        "overtime_first_rate_bps": bands.first_rate_bps,
+        "overtime_rest_rate_bps": bands.rest_rate_bps,
+    })))
 }
 
 pub async fn get_reports(headers: HeaderMap) -> Result<Json<Vec<Report>>, (StatusCode, String)> {
@@ -233,4 +283,39 @@ pub async fn get_reports(headers: HeaderMap) -> Result<Json<Vec<Report>>, (Statu
         id: r.id, period: r.period, total_hours: r.total_hours.to_string(),
         overtime_hours: r.overtime_hours.to_string(), employees: r.employees, created_at: r.created_at,
     }).collect()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rust_decimal::Decimal;
+
+    fn bands(hours: &str) -> Option<OvertimeBands> {
+        match hours.parse::<Decimal>() {
+            Ok(value) => overtime_bands(value),
+            Err(_) => None,
+        }
+    }
+
+    #[test]
+    fn overtime_within_first_band_uses_fifty_percent_only() {
+        let split = bands("1.5").expect("1.5h overtime is valid");
+        assert_eq!(split.first_rate_min, 90);
+        assert_eq!(split.rest_rate_min, 0);
+    }
+
+    #[test]
+    fn overtime_beyond_two_hours_splits_into_both_bands() {
+        let split = bands("3").expect("3h overtime is valid");
+        assert_eq!(split.first_rate_min, 120);
+        assert_eq!(split.rest_rate_min, 60);
+        assert!(split.rest_rate_bps > split.first_rate_bps);
+    }
+
+    #[test]
+    fn negative_hours_are_rejected_and_fractions_round_to_minutes() {
+        assert!(bands("-1").is_none());
+        let half_hour = bands("0.5").expect("0.5h overtime is valid");
+        assert_eq!(half_hour.first_rate_min, 30);
+    }
 }
