@@ -93,3 +93,24 @@ immediate CI failure.
 `issues/schema/schema_drift.md`, which classifies every non-canonical
 declaration as identical / additive / conflicting and names the file:line —
 the data artifact the migration children consume.
+
+## Column order is part of the contract
+
+The drift inventory classifies by column *sets* and types, but `diesel`
+maps `#[derive(Queryable)]` structs to the table **positionally**: field *n* of
+the struct reads column *n* of the declaration. Consequences for replacing a
+local `table!` with `pub use botschema::<table>;`:
+
+- **Identical** declarations swap mechanically (column order is equal by
+  definition).
+- **Additive** declarations only swap when the local order is the canonical
+  order *plus extras appended at the end* — then the extras can be appended to
+the canonical declaration and every existing `Queryable` struct keeps mapping
+correctly (e.g. `user_email_accounts`).
+- If the two orders differ anywhere else (extra columns inserted mid-list,
+  or a column such as `branch_id` moved), swapping silently mis-maps fields of
+  the same type. Those tables need the canonical order chosen first and every
+  `Queryable` struct in the consuming crate re-ordered to match — that is the
+  decision [#1516](https://github.com/generalbots/generalbots/issues/1516)
+  owns, not a mechanical pass. Before swapping an *additive* table, diff the
+  column order of both declarations, not just the column sets.

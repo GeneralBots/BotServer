@@ -24,15 +24,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    organizations (org_id) {
-        org_id -> Uuid,
-        tenant_id -> Uuid,
-        name -> Text,
-        slug -> Text,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::organizations;
 
 diesel::table! {
     crm_contacts (id) {
@@ -317,42 +309,11 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    calendar_event_attendees (id) {
-        id -> Uuid,
-        event_id -> Uuid,
-        email -> Varchar,
-        name -> Nullable<Varchar>,
-        status -> Varchar,
-        role -> Varchar,
-        rsvp_time -> Nullable<Timestamptz>,
-        comment -> Nullable<Text>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::calendar_event_attendees;
 
-diesel::table! {
-    calendar_event_reminders (id) {
-        id -> Uuid,
-        event_id -> Uuid,
-        reminder_type -> Varchar,
-        minutes_before -> Int4,
-        is_sent -> Bool,
-        sent_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::calendar_event_reminders;
 
-diesel::table! {
-    calendar_shares (id) {
-        id -> Uuid,
-        calendar_id -> Uuid,
-        shared_with_user_id -> Nullable<Uuid>,
-        shared_with_email -> Nullable<Varchar>,
-        permission -> Varchar,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::calendar_shares;
 
 diesel::table! {
     people (id) {

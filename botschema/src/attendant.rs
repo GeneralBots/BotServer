@@ -162,7 +162,20 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    attendant_attachments (id) {
+        id -> Uuid,
+        session_id -> Uuid,
+        name -> Varchar,
+        content_type -> Varchar,
+        size_bytes -> BigInt,
+        data -> Bytea,
+        created_at -> Timestamptz,
+    }
+}
+
 diesel::joinable!(attendant_queues -> branches (branch_id));
+diesel::joinable!(attendant_attachments -> attendant_sessions (session_id));
 diesel::joinable!(attendant_sessions -> branches (branch_id));
 diesel::joinable!(attendant_sessions -> attendant_queues (queue_id));
 diesel::joinable!(attendant_session_messages -> attendant_sessions (session_id));

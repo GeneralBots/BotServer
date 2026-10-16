@@ -8,15 +8,4 @@
 //! (`CREATE TABLE users`); CRM only ever reads `id`/`email` here — writes stay
 //! with the auth crate.
 
-diesel::table! {
-    users (id) {
-        id -> Uuid,
-        username -> Text,
-        email -> Text,
-        password_hash -> Text,
-        is_active -> Bool,
-        is_admin -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::users;

@@ -32,17 +32,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    social_community_members (id) {
-        id -> Uuid,
-        community_id -> Uuid,
-        user_id -> Uuid,
-        role -> Varchar,
-        notifications_enabled -> Bool,
-        joined_at -> Timestamptz,
-        last_seen_at -> Nullable<Timestamptz>,
-    }
-}
+pub use botschema::social::social_community_members;
 
 diesel::table! {
     social_posts (id) {
@@ -72,33 +62,9 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    social_comments (id) {
-        id -> Uuid,
-        post_id -> Uuid,
-        parent_comment_id -> Nullable<Uuid>,
-        author_id -> Uuid,
-        content -> Text,
-        mentions -> Jsonb,
-        reaction_counts -> Jsonb,
-        reply_count -> Int4,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        edited_at -> Nullable<Timestamptz>,
-        deleted_at -> Nullable<Timestamptz>,
-    }
-}
+pub use botschema::social::social_comments;
 
-diesel::table! {
-    social_reactions (id) {
-        id -> Uuid,
-        post_id -> Nullable<Uuid>,
-        comment_id -> Nullable<Uuid>,
-        user_id -> Uuid,
-        reaction_type -> Varchar,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::social::social_reactions;
 
 diesel::table! {
     social_praises (id) {
@@ -115,14 +81,6 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(
-    social_communities,
-    social_community_members,
-    social_posts,
-    social_comments,
-    social_reactions,
-    social_praises,
-);
 #[derive(Debug, Clone, Queryable, Insertable, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = social_posts)]
 pub struct DbPost {

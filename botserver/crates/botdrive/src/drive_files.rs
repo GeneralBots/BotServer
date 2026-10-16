@@ -3,21 +3,7 @@ use chrono::{DateTime, Utc};
 use diesel::dsl::{max, sql};
 use diesel::prelude::*;
 
-diesel::table! {
-    drive_files (id) {
-        id -> Uuid,
-        file_path -> Text,
-        file_type -> Varchar,
-        etag -> Nullable<Text>,
-        last_modified -> Nullable<Timestamptz>,
-        file_size -> Nullable<Int8>,
-        indexed -> Bool,
-        fail_count -> Int4,
-        last_failed_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::drive_files;
 
 pub mod dsl {
     pub use super::drive_files::*;

@@ -29,6 +29,14 @@ diesel::table! {
         is_active -> Bool,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        auth_mode -> Varchar,
+        oauth_provider -> Nullable<Varchar>,
+        refresh_token_encrypted -> Nullable<Text>,
+        access_token_encrypted -> Nullable<Text>,
+        token_expires_at -> Nullable<Timestamptz>,
+        last_sync_at -> Nullable<Timestamptz>,
+        last_error -> Nullable<Text>,
+        last_error_at -> Nullable<Timestamptz>,
     }
 }
 

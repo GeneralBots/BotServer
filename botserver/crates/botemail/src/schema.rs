@@ -14,32 +14,9 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    user_email_accounts (id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        email -> Varchar,
-        display_name -> Nullable<Varchar>,
-        imap_server -> Varchar,
-        imap_port -> Int4,
-        smtp_server -> Varchar,
-        smtp_port -> Int4,
-        username -> Varchar,
-        password_encrypted -> Text,
-        is_primary -> Bool,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        auth_mode -> Varchar,
-        oauth_provider -> Nullable<Varchar>,
-        refresh_token_encrypted -> Nullable<Text>,
-        access_token_encrypted -> Nullable<Text>,
-        token_expires_at -> Nullable<Timestamptz>,
-        last_sync_at -> Nullable<Timestamptz>,
-        last_error -> Nullable<Text>,
-        last_error_at -> Nullable<Timestamptz>,
-    }
-}
+// Canonical declaration lives in `botschema` (#1497); column order matches the
+// crate's `Queryable` structs, which map positionally.
+pub use botschema::user_email_accounts;
 
 diesel::table! {
     email_drafts (id) {
@@ -62,19 +39,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    email_folders (id) {
-        id -> Uuid,
-        account_id -> Uuid,
-        folder_name -> Varchar,
-        folder_path -> Varchar,
-        unread_count -> Int4,
-        total_count -> Int4,
-        last_synced -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::email_folders;
 
 diesel::table! {
     email_signatures (id) {
@@ -202,14 +167,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    email_label_assignments (id) {
-        id -> Uuid,
-        email_message_id -> Varchar,
-        label_id -> Uuid,
-        assigned_at -> Timestamptz,
-    }
-}
+pub use botschema::email_label_assignments;
 
 diesel::table! {
     distribution_lists (id) {
@@ -246,33 +204,9 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    shared_mailbox_members (id) {
-        id -> Uuid,
-        mailbox_id -> Uuid,
-        user_id -> Uuid,
-        permission_level -> Varchar,
-        added_at -> Timestamptz,
-    }
-}
+pub use botschema::shared_mailbox_members;
 
-diesel::table! {
-    email_tracking (id) {
-        id -> Uuid,
-        recipient_id -> Nullable<Uuid>,
-        campaign_id -> Nullable<Uuid>,
-        message_id -> Nullable<Varchar>,
-        open_token -> Nullable<Uuid>,
-        open_tracking_enabled -> Nullable<Bool>,
-        opened -> Nullable<Bool>,
-        opened_at -> Nullable<Timestamptz>,
-        clicked -> Nullable<Bool>,
-        clicked_at -> Nullable<Timestamptz>,
-        ip_address -> Nullable<Varchar>,
-        user_agent -> Nullable<Text>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::email_tracking;
 
 diesel::table! {
     feature_flags (id) {
@@ -284,55 +218,15 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    email_crm_links (id) {
-        id -> Uuid,
-        email_id -> Uuid,
-        contact_id -> Nullable<Uuid>,
-        opportunity_id -> Nullable<Uuid>,
-        logged_at -> Timestamp,
-    }
-}
+pub use botschema::email_crm_links;
 
-diesel::table! {
-    email_campaign_links (id) {
-        id -> Uuid,
-        email_id -> Uuid,
-        campaign_id -> Nullable<Uuid>,
-        list_id -> Nullable<Uuid>,
-        sent_at -> Timestamp,
-    }
-}
+pub use botschema::email_campaign_links;
 
-diesel::table! {
-    email_snooze (id) {
-        id -> Uuid,
-        email_id -> Uuid,
-        snooze_until -> Timestamp,
-        created_at -> Timestamp,
-    }
-}
+pub use botschema::email_snooze;
 
-diesel::table! {
-    email_flags (id) {
-        id -> Uuid,
-        email_id -> Uuid,
-        follow_up_date -> Nullable<Date>,
-        flag_type -> Nullable<Varchar>,
-        completed -> Bool,
-        created_at -> Timestamp,
-    }
-}
+pub use botschema::email_flags;
 
-diesel::table! {
-    email_nudges (id) {
-        id -> Uuid,
-        email_id -> Uuid,
-        last_sent -> Nullable<Timestamp>,
-        dismissed -> Bool,
-        created_at -> Timestamp,
-    }
-}
+pub use botschema::email_nudges;
 
 diesel::table! {
     crm_contacts (id) {

@@ -15,18 +15,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    message_history (id) {
-        id -> Uuid,
-        session_id -> Uuid,
-        user_id -> Uuid,
-        role -> Int4,
-        content_encrypted -> Text,
-        message_type -> Int4,
-        message_index -> Int4,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::message_history;
 
 diesel::table! {
     bots (id) {

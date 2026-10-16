@@ -55,74 +55,15 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    ticket_comments (id) {
-        id -> Uuid,
-        ticket_id -> Uuid,
-        author_id -> Nullable<Uuid>,
-        author_name -> Nullable<Varchar>,
-        author_email -> Nullable<Varchar>,
-        content -> Text,
-        is_internal -> Bool,
-        attachments -> Jsonb,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::ticket_comments;
 
-diesel::table! {
-    ticket_sla_policies (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        priority -> Varchar,
-        first_response_hours -> Int4,
-        resolution_hours -> Int4,
-        business_hours_only -> Bool,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::ticket_sla_policies;
 
-diesel::table! {
-    ticket_canned_responses (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        title -> Varchar,
-        content -> Text,
-        category -> Nullable<Varchar>,
-        shortcut -> Nullable<Varchar>,
-        created_by -> Nullable<Uuid>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::ticket_canned_responses;
 
-diesel::table! {
-    ticket_categories (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        parent_id -> Nullable<Uuid>,
-        color -> Nullable<Varchar>,
-        icon -> Nullable<Varchar>,
-        sort_order -> Int4,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::ticket_categories;
 
-diesel::table! {
-    ticket_tags (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        color -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::ticket_tags;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = support_tickets)]
@@ -315,26 +256,7 @@ pub struct TicketWithComments {
     pub comments: Vec<TicketComment>,
 }
 
-diesel::table! {
-    bots (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        slug -> Varchar,
-        description -> Nullable<Text>,
-        llm_provider -> Varchar,
-        llm_config -> Jsonb,
-        context_provider -> Varchar,
-        context_config -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        is_active -> Nullable<Bool>,
-        database_name -> Nullable<Varchar>,
-        is_public -> Bool,
-        is_default_for_branch -> Bool,
-    }
-}
+pub use botschema::bots;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TicketActivity {

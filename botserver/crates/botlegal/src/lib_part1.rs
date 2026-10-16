@@ -2,138 +2,22 @@ use super::*;
 
 pub use botlib::db_pool::DbPool;
 
-diesel::table! {
-    branches (id) {
-        id -> Uuid,
-    }
-}
+pub use botschema::branches;
 
-diesel::table! {
-    legal_documents (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        slug -> Varchar,
-        title -> Varchar,
-        content -> Text,
-        document_type -> Varchar,
-        version -> Varchar,
-        effective_date -> Timestamptz,
-        is_active -> Bool,
-        requires_acceptance -> Bool,
-        metadata -> Jsonb,
-        created_by -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::legal_documents;
 
-diesel::table! {
-    legal_document_versions (id) {
-        id -> Uuid,
-        document_id -> Uuid,
-        version -> Varchar,
-        content -> Text,
-        change_summary -> Nullable<Text>,
-        created_by -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::legal_document_versions;
 
-diesel::table! {
-    cookie_consents (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        user_id -> Nullable<Uuid>,
-        session_id -> Nullable<Varchar>,
-        ip_address -> Nullable<Varchar>,
-        user_agent -> Nullable<Text>,
-        country_code -> Nullable<Varchar>,
-        consent_necessary -> Bool,
-        consent_analytics -> Bool,
-        consent_marketing -> Bool,
-        consent_preferences -> Bool,
-        consent_functional -> Bool,
-        consent_version -> Varchar,
-        consent_given_at -> Timestamptz,
-        consent_updated_at -> Timestamptz,
-        consent_withdrawn_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::cookie_consents;
 
-diesel::table! {
-    consent_history (id) {
-        id -> Uuid,
-        consent_id -> Uuid,
-        action -> Varchar,
-        previous_consents -> Jsonb,
-        new_consents -> Jsonb,
-        ip_address -> Nullable<Varchar>,
-        user_agent -> Nullable<Text>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::consent_history;
 
-diesel::table! {
-    legal_acceptances (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        user_id -> Uuid,
-        document_id -> Uuid,
-        document_version -> Varchar,
-        accepted_at -> Timestamptz,
-        ip_address -> Nullable<Varchar>,
-        user_agent -> Nullable<Text>,
-    }
-}
+pub use botschema::legal_acceptances;
 
-diesel::table! {
-    data_deletion_requests (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        user_id -> Uuid,
-        request_type -> Varchar,
-        status -> Varchar,
-        reason -> Nullable<Text>,
-        requested_at -> Timestamptz,
-        scheduled_for -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        confirmation_token -> Varchar,
-        confirmed_at -> Nullable<Timestamptz>,
-        processed_by -> Nullable<Uuid>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::data_deletion_requests;
 
-diesel::table! {
-    data_export_requests (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        user_id -> Uuid,
-        status -> Varchar,
-        format -> Varchar,
-        include_sections -> Jsonb,
-        requested_at -> Timestamptz,
-        started_at -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        file_url -> Nullable<Text>,
-        file_size -> Nullable<Int4>,
-        expires_at -> Nullable<Timestamptz>,
-        error_message -> Nullable<Text>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::data_export_requests;
 
-diesel::joinable!(legal_documents -> branches (branch_id));
-diesel::joinable!(legal_document_versions -> legal_documents (document_id));
-diesel::joinable!(cookie_consents -> branches (branch_id));
-diesel::joinable!(consent_history -> cookie_consents (consent_id));
-diesel::joinable!(legal_acceptances -> branches (branch_id));
-diesel::joinable!(legal_acceptances -> legal_documents (document_id));
-diesel::joinable!(data_deletion_requests -> branches (branch_id));
-diesel::joinable!(data_export_requests -> branches (branch_id));
 #[derive(Debug, Clone, Queryable, Insertable, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = legal_documents)]
 pub struct DbLegalDocument {

@@ -10,6 +10,7 @@ keywords = ["bot", "lms", "learning", "education", "courses"]
 categories = ["web-programming", "data-structures"]
 
 [dependencies]
+botschema = { workspace = true, features = ["learn"] }
 axum = { workspace = true }
 base64 = { workspace = true }
 botlib = { workspace = true, features = ["database"] }

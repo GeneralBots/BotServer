@@ -8,6 +8,7 @@ authors = ["General Bots"]
 repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
+botschema = { workspace = true, features = ["billing"] }
 botlib = { workspace = true, features = ["database"] }
 argon2 = { workspace = true }
 axum = { workspace = true }
