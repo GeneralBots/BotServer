@@ -62,21 +62,67 @@ pub use botschema::bots;
 ## How to change the schema
 
 1. **Write a migration** under `botserver/migrations/`
-   (`YYYY-MM-DD-HHMMSS_name/{up.sql,down.sql}`). Never edit an applied migration.
+   (`<version>-name/{up.sql,down.sql}`). Never edit an applied migration, and
+   mind the **version order**: `diesel` compares the dash-stripped directory
+   names as strings, so a migration runs after everything whose name sorts
+   lower. Use the dotted `6.7.1-…` form — a date-prefixed name such as
+   `2026-09-11-210100-…` sorts *before* `6.0.0-01-core` and runs against an
+   empty database (see the bootstrap defect below).
 2. **Apply it** to a dev database:
    `cd botserver && diesel migration run` (uses `botserver/diesel.toml`).
-3. **Validate the real shape** against `botschema`: run
-   `diesel print-schema` (against the migrated DB) and diff it with the
-   corresponding `botschema` module; update the `table!` there to match.
+3. **Validate the real shape** against `botschema`: `diesel print-schema` over
+   the migrated DB, then
+   `python3 scripts/schema_db_audit.py --print-schema <file>`, which diffs every
+   `table!` in the tree against the database and lists missing columns, ghost
+   columns, type differences and primary-key differences per file. Update the
+   `table!` in `botschema` to match.
 4. **Commit** the migration *and* the `botschema` change together.
 5. Regenerate the drift inventory so the baseline stays honest:
    `python3 scripts/schema_drift_inventory.py` and, if the change removes a
    non-canonical declaration, refresh the guard baseline with
    `python3 scripts/schema_guard.py --update`.
 
-> Steps 2–3 need a live Postgres built from `botserver/migrations`. Verifying
-> that `print-schema` output equals the committed schema on a fresh DB is the
-> deliverable of [#1519](https://github.com/generalbots/generalbots/issues/1519).
+### Database verification (#1519)
+
+The audit runs without a container engine — the PostgreSQL binaries extract to
+`/tmp` and `initdb` a throwaway cluster as a normal user. `diesel_cli` 2.3 with
+the `postgres` feature (`cargo install diesel_cli --no-default-features
+--features postgres`) and a `libpq` on the box are the only other requirements:
+
+```bash
+# 1. throwaway cluster (PostgreSQL from the zonky embedded-postgres jar)
+mkdir -p /tmp/pgdist && cd /tmp/pgdist
+curl -sO "https://repo1.maven.org/maven2/io/zonky/test/postgres/embedded-postgres-binaries-linux-amd64/16.2.0/embedded-postgres-binaries-linux-amd64-16.2.0.jar"
+python3 -c "import zipfile; zipfile.ZipFile('embedded-postgres-binaries-linux-amd64-16.2.0.jar').extract('postgres-linux-x86_64.txz', '.')"
+mkdir -p /tmp/pgsock && tar -xJf postgres-linux-x86_64.txz -C /tmp/pgdist
+PATH=/tmp/pgdist/bin:$PATH initdb -D /tmp/pgdata -U postgres --auth=trust
+PATH=/tmp/pgdist/bin:$PATH pg_ctl -D /tmp/pgdata -l /tmp/pgdata/server.log \
+  -o "-p 54329 -k /tmp/pgsock" -w start
+# 2. apply every migration with diesel itself
+cd botserver && DATABASE_URL=postgres://postgres@127.0.0.1:54329/gbtest \
+  diesel migration run            # 166 migrations, exit 0; a second run is a no-op
+# 3. dump the real shape and diff it against the committed declarations
+DATABASE_URL=postgres://postgres@127.0.0.1:54329/gbtest \
+  diesel print-schema --schema public > /tmp/print_schema.rs
+python3 scripts/schema_db_audit.py --print-schema /tmp/print_schema.rs
+```
+
+The resulting snapshot is checked in as `issues/schema/db_audit.md`: of the 471
+tables the migrations build, 298 are declared somewhere in the tree, **171 of
+those declarations disagree with the database (128 of them canonical)**, 10
+declarations name a table no migration creates (`billing_subscriptions`, and
+the `botmarketing` / `botautotask` / `botvideo` tables) — those are runtime
+query failures, not cosmetics — and 183 database tables have no declaration at
+all (touched through raw SQL only).
+
+The first run of this workflow exposed a **bootstrap defect**: six migrations
+were named `2026-…`, which sorts before `6.0.0-01-core`, so a fresh
+`diesel migration run` began with `ALTER TABLE user_email_accounts …` against
+an empty database, aborted, and left the remaining 160 migrations unapplied
+(the runtime logs the migration error and continues, so only a fresh database
+shows it). They are now `6.7.0`–`6.7.5`; the two `ADD CONSTRAINT` statements
+that were not `IF NOT EXISTS`-guarded sit in `DO` blocks so a database that
+already applied them under the old version re-runs them harmlessly.
 
 ## CI guard
 

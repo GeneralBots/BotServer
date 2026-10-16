@@ -1,5 +1,10 @@
 [migrations_directory]
 dir = "migrations"
 
-[print_schema]
-file = "src/shared/schema.rs"
+# No `[print_schema] file` on purpose: `diesel migration run` regenerates that
+# file, and since #1497 the canonical schema lives in the `botschema` crate, not
+# in a generated `botserver/src/shared/schema.rs` (whose stale copy would also
+# trip `scripts/schema_guard.py`). Run print-schema explicitly when you need a
+# snapshot, as documented in `botschema/README.md`:
+#
+#   diesel print-schema --schema public > /tmp/print_schema.rs
