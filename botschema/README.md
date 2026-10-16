@@ -92,7 +92,18 @@ immediate CI failure.
 `python3 scripts/schema_drift_inventory.py` regenerates
 `issues/schema/schema_drift.md`, which classifies every non-canonical
 declaration as identical / additive / conflicting and names the file:line —
-the data artifact the migration children consume.## Column order is part of the contract
+the data artifact the migration children consume.
+
+`python3 scripts/schema_migration_truth.py [--table NAME] [--json OUT]` derives
+each table's column list from the migrations themselves (including the
+`EXECUTE format(...)` loops that 6.5.15.1-consolidated uses for `branch_id`).
+Its `--audit` mode lists every declaration naming a column no migration
+creates — the evidence base for the 65 conflicting tables (#1517). Migrations
+are not the only schema writer (the runtime may add columns through
+`sync_bot_tables()`), so treat a hit as a lead to confirm against a live
+`diesel print-schema` (#1519), not as proof of a dead column.
+
+## Column order is part of the contract
 
 The drift inventory classifies by column *sets* and types, but `diesel`
 maps `#[derive(Queryable)]` structs to the table **positionally**: field *n* of
