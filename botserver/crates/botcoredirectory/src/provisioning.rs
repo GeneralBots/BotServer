@@ -327,7 +327,9 @@ mod schema {
   // Canonical declaration lives in `botschema`; the local copy here declared the
   // primary key as `user_id` while the table's real key is `id`
   // (6.0.0-01-core / 6.5.15.1-consolidated), and it omitted the account-sync
-  // columns. Only explicit-column queries are used below.
+  // columns. Only explicit-column queries are used below, both of them inside
+  // the `mail`-gated bodies, so the re-export follows the same cfg.
+  #[cfg(feature = "mail")]
   pub use botschema::user_email_accounts;
 
   allow_tables_to_appear_in_same_query!(users, bot_configuration,);
