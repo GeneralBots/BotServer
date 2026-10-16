@@ -223,47 +223,12 @@ diesel::table! {
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::price_list_items;
 
-diesel::table! {
-    inventory_movements (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        product_id -> Uuid,
-        quantity -> Int4,
-        movement_type -> Varchar,
-        reference -> Nullable<Varchar>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        reference_type -> Nullable<Varchar>,
-        reference_id -> Nullable<Uuid>,
-        created_by -> Nullable<Uuid>,
-    }
-}
+pub use botschema::inventory_movements;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::product_variants;
 
-diesel::table! {
-    billing_usage_alerts (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        threshold -> Numeric,
-        metric -> Varchar,
-        recipients -> Text,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        severity -> Varchar,
-        current_usage -> Int8,
-        usage_limit -> Int8,
-        percentage -> Numeric,
-        message -> Text,
-        acknowledged_at -> Nullable<Timestamptz>,
-        acknowledged_by -> Nullable<Uuid>,
-        notification_sent -> Bool,
-        notification_channels -> Jsonb,
-    }
-}
+pub use botschema::billing_usage_alerts;
 
 diesel::table! {
     billing_alert_history (id) {
@@ -313,27 +278,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    billing_grace_periods (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        subscription_id -> Nullable<Uuid>,
-        starts_at -> Timestamptz,
-        ends_at -> Timestamptz,
-        reason -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        metric -> Varchar,
-        started_at -> Timestamptz,
-        expires_at -> Timestamptz,
-        overage_at_start -> Numeric,
-        current_overage -> Numeric,
-        max_allowed_overage -> Numeric,
-        is_active -> Bool,
-        ended_at -> Nullable<Timestamptz>,
-        end_reason -> Nullable<Varchar>,
-    }
-}
+pub use botschema::billing_grace_periods;
 
 diesel::allow_tables_to_appear_in_same_query!(
     billing_invoices,
@@ -345,11 +290,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     services,
     product_categories,
     price_lists,
-    inventory_movements,
-    billing_usage_alerts,
     billing_alert_history,
     billing_notification_preferences,
-    billing_grace_periods,
 );
 
 diesel::table! {

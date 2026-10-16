@@ -324,19 +324,11 @@ mod schema {
     }
   }
 
-  table! {
-    user_email_accounts (user_id) {
-      user_id -> Uuid,
-      email -> Varchar,
-      imap_server -> Varchar,
-      imap_port -> Int4,
-      smtp_server -> Varchar,
-      smtp_port -> Int4,
-      username -> Varchar,
-      password_encrypted -> Text,
-      is_active -> Bool,
-    }
-  }
+  // Canonical declaration lives in `botschema`; the local copy here declared the
+  // primary key as `user_id` while the table's real key is `id`
+  // (6.0.0-01-core / 6.5.15.1-consolidated), and it omitted the account-sync
+  // columns. Only explicit-column queries are used below.
+  pub use botschema::user_email_accounts;
 
-  allow_tables_to_appear_in_same_query!(users, bot_configuration, user_email_accounts,);
+  allow_tables_to_appear_in_same_query!(users, bot_configuration,);
 }

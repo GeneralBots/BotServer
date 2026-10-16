@@ -139,7 +139,8 @@ diesel::table! {
 diesel::table! {
     compliance_issues (id) {
         id -> Uuid,
-        branch_id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         check_id -> Nullable<Uuid>,
         severity -> Varchar,
         title -> Varchar,
@@ -153,13 +154,15 @@ diesel::table! {
         resolution_notes -> Nullable<Text>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 
 diesel::table! {
     compliance_audit_log (id) {
         id -> Uuid,
-        branch_id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         event_type -> Varchar,
         user_id -> Nullable<Uuid>,
         resource_type -> Varchar,
@@ -170,13 +173,15 @@ diesel::table! {
         user_agent -> Nullable<Text>,
         metadata -> Jsonb,
         created_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 
 diesel::table! {
     compliance_evidence (id) {
         id -> Uuid,
-        branch_id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         check_id -> Nullable<Uuid>,
         issue_id -> Nullable<Uuid>,
         evidence_type -> Varchar,
@@ -190,13 +195,15 @@ diesel::table! {
         collected_at -> Timestamptz,
         collected_by -> Nullable<Uuid>,
         created_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 
 diesel::table! {
     compliance_risk_assessments (id) {
         id -> Uuid,
-        branch_id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         title -> Varchar,
         assessor_id -> Uuid,
         methodology -> Varchar,
@@ -208,6 +215,7 @@ diesel::table! {
         notes -> Nullable<Text>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 
@@ -235,7 +243,8 @@ diesel::table! {
 diesel::table! {
     compliance_training_records (id) {
         id -> Uuid,
-        branch_id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         user_id -> Uuid,
         training_type -> Varchar,
         training_name -> Varchar,
@@ -247,13 +256,15 @@ diesel::table! {
         certificate_url -> Nullable<Text>,
         metadata -> Jsonb,
         created_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 
 diesel::table! {
     compliance_access_reviews (id) {
         id -> Uuid,
-        branch_id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         user_id -> Uuid,
         reviewer_id -> Uuid,
         review_date -> Timestamptz,
@@ -265,6 +276,7 @@ diesel::table! {
         notes -> Nullable<Text>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 

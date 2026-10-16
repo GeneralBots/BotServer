@@ -24,6 +24,7 @@ diesel::table! {
 diesel::table! {
     okr_key_results (id) {
         id -> Uuid,
+        org_id -> Uuid,
         branch_id -> Uuid,
         objective_id -> Uuid,
         owner_id -> Uuid,
@@ -46,6 +47,7 @@ diesel::table! {
 diesel::table! {
     okr_checkins (id) {
         id -> Uuid,
+        org_id -> Uuid,
         branch_id -> Uuid,
         key_result_id -> Uuid,
         user_id -> Uuid,

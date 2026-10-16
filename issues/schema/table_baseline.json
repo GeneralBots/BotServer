@@ -36,12 +36,11 @@
     "botserver/crates/botsources/src/schema.rs",
     "botserver/crates/bottasks/src/schema.rs",
     "botserver/crates/bottelegram/src/schema.rs",
-    "botserver/crates/bottickets/src/lib.rs",
     "botserver/crates/botvideo/src/schema.rs",
     "botserver/crates/botwhatsapp/src/schema.rs",
     "botserver/crates/botworkspaces/src/lib.rs",
     "botserver/src/main_module/routes/catalog.rs",
     "botserver/src/main_module/routes/workspace_tabs.rs"
   ],
-  "total": 240
+  "total": 221
 }

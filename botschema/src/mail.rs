@@ -3,13 +3,16 @@
 diesel::table! {
     global_email_signatures (id) {
         id -> Uuid,
+        branch_id -> Uuid,
         name -> Varchar,
+        content -> Text,
+        is_default -> Nullable<Bool>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
         content_html -> Text,
         content_plain -> Text,
         position -> Varchar,
         is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
     }
 }
 
@@ -107,8 +110,14 @@ diesel::table! {
 diesel::table! {
     email_templates (id) {
         id -> Uuid,
-        user_id -> Nullable<Uuid>,
+        branch_id -> Uuid,
         name -> Varchar,
+        subject -> Nullable<Varchar>,
+        body -> Text,
+        variables -> Nullable<Jsonb>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        user_id -> Nullable<Uuid>,
         description -> Nullable<Text>,
         subject_template -> Text,
         body_html_template -> Text,
@@ -117,8 +126,6 @@ diesel::table! {
         category -> Nullable<Varchar>,
         is_shared -> Bool,
         usage_count -> Int4,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
     }
 }
 
@@ -181,15 +188,18 @@ diesel::table! {
 diesel::table! {
     distribution_lists (id) {
         id -> Uuid,
-        owner_id -> Uuid,
+        branch_id -> Uuid,
         name -> Varchar,
+        members -> Nullable<Text>,
+        is_active -> Nullable<Bool>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        owner_id -> Uuid,
         email_alias -> Nullable<Varchar>,
         description -> Nullable<Text>,
         members_json -> Text,
         is_public -> Bool,
         stalwart_principal_id -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
     }
 }
 

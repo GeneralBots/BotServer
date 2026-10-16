@@ -21,6 +21,7 @@ diesel::table! {
         resolved_at -> Nullable<Timestamptz>,
         closed_at -> Nullable<Timestamptz>,
         satisfaction_rating -> Nullable<Int4>,
+        record_type -> Varchar,
         tags -> Array<Text>,
         custom_fields -> Jsonb,
         created_at -> Timestamptz,

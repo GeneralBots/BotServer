@@ -92,9 +92,7 @@ immediate CI failure.
 `python3 scripts/schema_drift_inventory.py` regenerates
 `issues/schema/schema_drift.md`, which classifies every non-canonical
 declaration as identical / additive / conflicting and names the file:line —
-the data artifact the migration children consume.
-
-## Column order is part of the contract
+the data artifact the migration children consume.## Column order is part of the contract
 
 The drift inventory classifies by column *sets* and types, but `diesel`
 maps `#[derive(Queryable)]` structs to the table **positionally**: field *n* of
@@ -103,14 +101,53 @@ local `table!` with `pub use botschema::<table>;`:
 
 - **Identical** declarations swap mechanically (column order is equal by
   definition).
-- **Additive** declarations only swap when the local order is the canonical
-  order *plus extras appended at the end* — then the extras can be appended to
-the canonical declaration and every existing `Queryable` struct keeps mapping
-correctly (e.g. `user_email_accounts`).
-- If the two orders differ anywhere else (extra columns inserted mid-list,
-  or a column such as `branch_id` moved), swapping silently mis-maps fields of
-  the same type. Those tables need the canonical order chosen first and every
-  `Queryable` struct in the consuming crate re-ordered to match — that is the
-  decision [#1516](https://github.com/generalbots/generalbots/issues/1516)
-  owns, not a mechanical pass. Before swapping an *additive* table, diff the
-  column order of both declarations, not just the column sets.
+- **Additive** declarations swap when the local order is the canonical order
+  *plus extras appended at the end* — then the extras can be appended to the
+  canonical declaration and every existing `Queryable` struct keeps mapping
+  correctly (e.g. `user_email_accounts`).
+- If the two orders differ anywhere else the declaration cannot simply be
+  dropped. The order to keep is then derived, not guessed:
+
+  1. **Check who reads the canonical declaration.** If nothing outside this
+     crate imports `botschema::<table>` (verify with
+     `grep -rn 'botschema::<table>' --include=*.rs`), the canonical column
+     order is free — no `Queryable` struct depends on it.
+  2. **Adopt the consuming declaration's order verbatim**, including every
+     column the canonical copy was missing. The consuming structs were written
+     against it, so after the swap they map to the same columns as before: a
+     positional no-op. This also repairs the canonical copy, which for those
+     tables was missing real migration-backed columns (`support_tickets`
+     lacked `record_type` from `6.5.33-tickets-itsm-unification`, the
+     `okr_*` tables lacked `org_id`, the `compliance_*` tables lacked
+     `org_id`/`bot_id`).
+  3. **Then** replace the local declaration with `pub use botschema::<table>;`.
+
+  Extra columns therefore land wherever the consumer has them (not necessarily
+  at the end) — the invariant that matters is *the canonical order equals the
+  consuming order*, not prefix compatibility. All 18 additive declarations
+  were adopted this way in [#1516](https://github.com/generalbots/generalbots/issues/1516)
+  (`user_email_accounts` first, then the remaining 17); the inventory now
+  reports **additive 0 / identical 0**, leaving 65 conflicting tables, whose
+  orders disagree in ways a swap cannot repair.
+  If a second consumer of such a table ever appears, it must adopt the same
+  order (or select columns explicitly).
+
+**Verification for adopted tables:** `Queryable` order is invisible to
+`cargo check`, so a positional mismatch compiles and mis-maps at runtime. After
+changing a canonical order, compare every consuming struct's field order with
+the declaration it now compiles against (crate-local `table!` if it still
+has one, otherwise the canonical one). For the #1516 batch that check covered
+161 positionally-mapped structs with **0 order mismatches**; structs whose
+field count differs from the column count are the `Insertable`/`New*` ones,
+which map by name.
+
+### `allow_tables_to_appear_in_same_query!` after a swap
+
+The macro expands to `impl TableNotEqual<A::table> for B::table {}`, so it can
+only name tables declared in the invoking crate. When a table moves to
+`botschema`, drop it from the consuming crate's list. If both tables of a pair
+are canonical, the impl belongs in the `botschema` module that declares them —
+note that `botschema` does not re-export the `dashboards`, `analytics` and
+`social` modules at the crate root (their own `dashboards`/`analytics`/`social`
+tables would collide with the module name), so reach those tables through the
+module path: `botschema::dashboards::conversational_queries`.

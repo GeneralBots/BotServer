@@ -64,15 +64,18 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     conversational_queries (id) {
         id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         dashboard_id -> Nullable<Uuid>,
         user_id -> Uuid,
         natural_language -> Text,
         generated_query -> Nullable<Text>,
         result_widget_config -> Nullable<Jsonb>,
         created_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 

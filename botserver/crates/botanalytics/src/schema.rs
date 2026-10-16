@@ -68,44 +68,9 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    okr_key_results (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        branch_id -> Uuid,
-        objective_id -> Uuid,
-        owner_id -> Uuid,
-        title -> Varchar,
-        description -> Nullable<Text>,
-        metric_type -> Varchar,
-        start_value -> Numeric,
-        target_value -> Numeric,
-        current_value -> Numeric,
-        unit -> Nullable<Varchar>,
-        weight -> Numeric,
-        status -> Varchar,
-        due_date -> Nullable<Date>,
-        scoring_type -> Varchar,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::okr_key_results;
 
-diesel::table! {
-    okr_checkins (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        branch_id -> Uuid,
-        key_result_id -> Uuid,
-        user_id -> Uuid,
-        previous_value -> Nullable<Numeric>,
-        new_value -> Numeric,
-        note -> Nullable<Text>,
-        confidence -> Nullable<Varchar>,
-        blockers -> Nullable<Text>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::okr_checkins;
 
 diesel::table! {
     okr_templates (id) {
@@ -200,8 +165,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     organizations,
     users,
     okr_objectives,
-    okr_key_results,
-    okr_checkins,
     okr_templates,
     dashboards,
     dashboard_widgets,

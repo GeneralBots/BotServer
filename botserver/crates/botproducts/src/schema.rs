@@ -88,22 +88,7 @@ diesel::table! {
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::price_list_items;
 
-diesel::table! {
-    inventory_movements (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        product_id -> Uuid,
-        quantity -> Int4,
-        movement_type -> Varchar,
-        reference -> Nullable<Varchar>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        reference_type -> Nullable<Varchar>,
-        reference_id -> Nullable<Uuid>,
-        created_by -> Nullable<Uuid>,
-    }
-}
+pub use botschema::inventory_movements;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::product_variants;
@@ -145,7 +130,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     services,
     product_categories,
     price_lists,
-    inventory_movements,
     organizations,
     bots,
     product_variations,

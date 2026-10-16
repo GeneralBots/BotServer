@@ -26,34 +26,7 @@ pub struct TicketsState {
     pub get_default_bot: GetDefaultBotFn,
 }
 
-diesel::table! {
-    support_tickets (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        ticket_number -> Varchar,
-        subject -> Varchar,
-        description -> Nullable<Text>,
-        status -> Varchar,
-        priority -> Varchar,
-        category -> Nullable<Varchar>,
-        source -> Varchar,
-        requester_id -> Nullable<Uuid>,
-        requester_email -> Nullable<Varchar>,
-        requester_name -> Nullable<Varchar>,
-        assignee_id -> Nullable<Uuid>,
-        team_id -> Nullable<Uuid>,
-        due_date -> Nullable<Timestamptz>,
-        first_response_at -> Nullable<Timestamptz>,
-        resolved_at -> Nullable<Timestamptz>,
-        closed_at -> Nullable<Timestamptz>,
-        satisfaction_rating -> Nullable<Int4>,
-        record_type -> Varchar,
-        tags -> Array<Text>,
-        custom_fields -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::support_tickets;
 
 pub use botschema::ticket_comments;
 

@@ -249,13 +249,15 @@ diesel::table! {
         id -> Uuid,
         branch_id -> Uuid,
         product_id -> Uuid,
-        movement_type -> Varchar,
         quantity -> Int4,
+        movement_type -> Varchar,
+        reference -> Nullable<Varchar>,
+        notes -> Nullable<Text>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
         reference_type -> Nullable<Varchar>,
         reference_id -> Nullable<Uuid>,
-        notes -> Nullable<Text>,
         created_by -> Nullable<Uuid>,
-        created_at -> Timestamptz,
     }
 }
 
@@ -286,19 +288,21 @@ diesel::table! {
     billing_usage_alerts (id) {
         id -> Uuid,
         branch_id -> Uuid,
+        threshold -> Numeric,
         metric -> Varchar,
+        recipients -> Text,
+        is_active -> Nullable<Bool>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
         severity -> Varchar,
         current_usage -> Int8,
         usage_limit -> Int8,
         percentage -> Numeric,
-        threshold -> Numeric,
         message -> Text,
         acknowledged_at -> Nullable<Timestamptz>,
         acknowledged_by -> Nullable<Uuid>,
         notification_sent -> Bool,
         notification_channels -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
     }
 }
 
@@ -348,6 +352,12 @@ diesel::table! {
     billing_grace_periods (id) {
         id -> Uuid,
         branch_id -> Uuid,
+        subscription_id -> Nullable<Uuid>,
+        starts_at -> Timestamptz,
+        ends_at -> Timestamptz,
+        reason -> Nullable<Text>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
         metric -> Varchar,
         started_at -> Timestamptz,
         expires_at -> Timestamptz,
@@ -357,8 +367,6 @@ diesel::table! {
         is_active -> Bool,
         ended_at -> Nullable<Timestamptz>,
         end_reason -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
     }
 }
 

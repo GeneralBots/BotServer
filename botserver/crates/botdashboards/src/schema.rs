@@ -70,25 +70,14 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    conversational_queries (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        dashboard_id -> Nullable<Uuid>,
-        user_id -> Uuid,
-        natural_language -> Text,
-        generated_query -> Nullable<Text>,
-        result_widget_config -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        branch_id -> Uuid,
-    }
-}
+// `botschema` does not re-export the `dashboards` module at the root (its own
+// `dashboards` table would collide with the module name), so the canonical path
+// goes through the module.
+pub use botschema::dashboards::conversational_queries;
 
 diesel::allow_tables_to_appear_in_same_query!(
     dashboards,
     dashboard_data_sources,
     dashboard_widgets,
     dashboard_filters,
-    conversational_queries,
 );

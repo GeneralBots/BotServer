@@ -101,39 +101,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    crm_leads (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        first_name -> Varchar,
-        last_name -> Nullable<Varchar>,
-        email -> Nullable<Varchar>,
-        phone -> Nullable<Varchar>,
-        company -> Nullable<Varchar>,
-        source -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        score -> Nullable<Int4>,
-        notes -> Nullable<Text>,
-        assigned_to -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        contact_id -> Nullable<Uuid>,
-        account_id -> Nullable<Uuid>,
-        title -> Varchar,
-        description -> Nullable<Text>,
-        value -> Nullable<Float8>,
-        currency -> Nullable<Varchar>,
-        stage_id -> Nullable<Uuid>,
-        stage -> Varchar,
-        probability -> Int4,
-        expected_close_date -> Nullable<Date>,
-        owner_id -> Nullable<Uuid>,
-        lost_reason -> Nullable<Varchar>,
-        tags -> Array<Text>,
-        custom_fields -> Jsonb,
-        closed_at -> Nullable<Timestamptz>,
-    }
-}
+pub use botschema::crm_leads;
 
 diesel::table! {
     crm_opportunities (id) {

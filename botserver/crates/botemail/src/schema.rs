@@ -1,18 +1,4 @@
-diesel::table! {
-    global_email_signatures (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        content -> Text,
-        is_default -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        content_html -> Text,
-        content_plain -> Text,
-        position -> Varchar,
-        is_active -> Bool,
-    }
-}
+pub use botschema::global_email_signatures;
 
 // Canonical declaration lives in `botschema` (#1497); column order matches the
 // crate's `Queryable` structs, which map positionally.
@@ -85,27 +71,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    email_templates (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        subject -> Nullable<Varchar>,
-        body -> Text,
-        variables -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        user_id -> Nullable<Uuid>,
-        description -> Nullable<Text>,
-        subject_template -> Text,
-        body_html_template -> Text,
-        body_plain_template -> Nullable<Text>,
-        variables_json -> Text,
-        category -> Nullable<Varchar>,
-        is_shared -> Bool,
-        usage_count -> Int4,
-    }
-}
+pub use botschema::email_templates;
 
 diesel::table! {
     email_auto_responders (id) {
@@ -169,23 +135,7 @@ diesel::table! {
 
 pub use botschema::email_label_assignments;
 
-diesel::table! {
-    distribution_lists (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        members -> Nullable<Text>,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        owner_id -> Uuid,
-        email_alias -> Nullable<Varchar>,
-        description -> Nullable<Text>,
-        members_json -> Text,
-        is_public -> Bool,
-        stalwart_principal_id -> Nullable<Varchar>,
-    }
-}
+pub use botschema::distribution_lists;
 
 diesel::table! {
     shared_mailboxes (id) {
