@@ -108,12 +108,13 @@ python3 scripts/schema_db_audit.py --print-schema /tmp/print_schema.rs
 ```
 
 The resulting snapshot is checked in as `issues/schema/db_audit.md`: of the 471
-tables the migrations build, 298 are declared somewhere in the tree, **171 of
-those declarations disagree with the database (128 of them canonical)**, 10
-declarations name a table no migration creates (`billing_subscriptions`, and
-the `botmarketing` / `botautotask` / `botvideo` tables) — those are runtime
-query failures, not cosmetics — and 183 database tables have no declaration at
-all (touched through raw SQL only).
+tables the migrations build, 297 are declared somewhere in the tree, **171 of
+those declarations disagree with the database (128 of them canonical)**, 9
+declarations name a table no migration creates (six in `botmarketing`, two in
+`botautotask`, one in `botvideo`) — a table that does not exist is a runtime
+query failure, not a cosmetic one; `botautotask` is a default dependency and
+its safety layer runs `SELECT … FROM safety_constraints` — and 183 database
+tables have no declaration at all (touched through raw SQL only).
 
 The first run of this workflow exposed a **bootstrap defect**: six migrations
 were named `2026-…`, which sorts before `6.0.0-01-core`, so a fresh

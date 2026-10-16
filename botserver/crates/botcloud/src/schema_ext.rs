@@ -12,21 +12,9 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    billing_subscriptions (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        customer_name -> Varchar,
-        customer_email -> Nullable<Varchar>,
-        plan_id -> Varchar,
-        status -> Varchar,
-        amount -> Numeric,
-        currency -> Varchar,
-        billing_period -> Varchar,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// `billing_subscriptions` used to be declared here; no migration ever created
+// it and no code referenced it (the live subscription table is
+// `billing_recurring`, below), so the declaration was deleted (#1517).
 
 pub use botschema::billing_recurring;
 
