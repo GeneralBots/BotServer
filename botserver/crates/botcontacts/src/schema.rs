@@ -154,7 +154,7 @@ diesel::table! {
 pub use botschema::crm_notes;
 
 // #1441 P2 — append-only audit trail for destructive/state-changing CRM
-// operations (migration 2026-09-20-120100-crm-audit-trail).
+// operations (migration 6.7.3-crm-audit-trail).
 diesel::table! {
     crm_audit_logs (id) {
         id -> Uuid,

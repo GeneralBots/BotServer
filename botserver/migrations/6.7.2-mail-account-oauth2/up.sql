@@ -14,9 +14,20 @@ ALTER TABLE user_email_accounts
 ALTER TABLE user_email_accounts
     DROP CONSTRAINT IF EXISTS user_email_accounts_auth_mode_check;
 
-ALTER TABLE user_email_accounts
-    ADD CONSTRAINT user_email_accounts_auth_mode_check
-    CHECK (auth_mode IN ('password', 'oauth2'));
+-- Guarded so the migration is idempotent: databases that applied this under its
+-- earlier version string (2026-09-11-210200) re-run it once after the renumber.
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+         WHERE conname = 'user_email_accounts_auth_mode_check'
+           AND conrelid = 'user_email_accounts'::regclass
+    ) THEN
+        ALTER TABLE user_email_accounts
+            ADD CONSTRAINT user_email_accounts_auth_mode_check
+            CHECK (auth_mode IN ('password', 'oauth2'));
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_user_email_accounts_auth_mode
     ON user_email_accounts (auth_mode);
