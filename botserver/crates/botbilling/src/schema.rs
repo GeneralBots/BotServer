@@ -162,45 +162,11 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    services (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        sku -> Varchar,
-        description -> Nullable<Text>,
-        price -> Nullable<Numeric>,
-        currency -> Nullable<Varchar>,
-        is_recurring -> Nullable<Bool>,
-        billing_cycle -> Nullable<Varchar>,
-        attributes -> Nullable<Jsonb>,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        category -> Nullable<Varchar>,
-        service_type -> Varchar,
-        hourly_rate -> Nullable<Numeric>,
-        fixed_price -> Nullable<Numeric>,
-        duration_minutes -> Nullable<Int4>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::services;
 
-diesel::table! {
-    product_categories (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        slug -> Varchar,
-        description -> Nullable<Text>,
-        parent_id -> Nullable<Uuid>,
-        display_order -> Nullable<Int4>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        image_url -> Nullable<Text>,
-        sort_order -> Int4,
-        is_active -> Bool,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::product_categories;
 
 diesel::table! {
     price_lists (id) {
@@ -287,8 +253,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     billing_recurring,
     billing_tax_rates,
     products,
-    services,
-    product_categories,
     price_lists,
     billing_alert_history,
     billing_notification_preferences,
@@ -300,28 +264,5 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    bots (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        name -> Varchar,
-        slug -> Varchar,
-        org_id -> Uuid,
-        tenant_id -> Nullable<Uuid>,
-        is_default_for_branch -> Nullable<Bool>,
-        description -> Nullable<Text>,
-        is_public -> Nullable<Bool>,
-        is_active -> Nullable<Bool>,
-        avatar_url -> Nullable<Varchar>,
-        settings -> Nullable<Jsonb>,
-        metadata -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        llm_provider -> Varchar,
-        llm_config -> Jsonb,
-        context_provider -> Varchar,
-        context_config -> Jsonb,
-        database_name -> Nullable<Varchar>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::bots;

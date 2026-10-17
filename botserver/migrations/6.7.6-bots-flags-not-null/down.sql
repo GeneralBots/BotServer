@@ -1,0 +1,2 @@
+ALTER TABLE bots ALTER COLUMN is_public DROP NOT NULL;
+ALTER TABLE bots ALTER COLUMN is_default_for_branch DROP NOT NULL;

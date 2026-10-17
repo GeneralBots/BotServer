@@ -1,29 +1,6 @@
 pub mod tables {
-    diesel::table! {
-        bots (id) {
-            id -> Uuid,
-            branch_id -> Uuid,
-            bot_id -> Uuid,
-            name -> Varchar,
-            slug -> Varchar,
-            org_id -> Uuid,
-            tenant_id -> Nullable<Uuid>,
-            is_default_for_branch -> Nullable<Bool>,
-            description -> Nullable<Text>,
-            is_public -> Nullable<Bool>,
-            is_active -> Nullable<Bool>,
-            avatar_url -> Nullable<Varchar>,
-            settings -> Nullable<Jsonb>,
-            metadata -> Nullable<Jsonb>,
-            created_at -> Timestamptz,
-            updated_at -> Timestamptz,
-            llm_provider -> Varchar,
-            llm_config -> Jsonb,
-            context_provider -> Varchar,
-            context_config -> Jsonb,
-            database_name -> Nullable<Varchar>,
-        }
-    }
+    // Canonical definition lives in `botschema` (#1497).
+    pub use botschema::bots;
 
     diesel::table! {
         user_sessions (id) {
@@ -157,7 +134,9 @@ diesel::table! {
     }
 }
 
-// The org lookup joins `bots` to `organizations` on `org_id`.
-diesel::allow_tables_to_appear_in_same_query!(bots, organizations);
+// The org lookup joins `bots` to `organizations` on `org_id`. Both tables are
+// canonical in `botschema`, which already grants that join in its own
+// `allow_tables_to_appear_in_same_query!`; repeating the macro here would emit
+// the impls for two foreign types and break the orphan rule (#1497).
 
 pub use tables::*;
