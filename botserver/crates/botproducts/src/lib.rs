@@ -69,44 +69,52 @@ pub struct Product {
     pub barcode: Option<String>,
 }
 
+/// Field order matches the canonical `services` declaration in
+/// `botschema::billing` (issue #1497): `Queryable` binds positionally, and the
+/// previous revision named four columns (`sku`, `price`, `is_recurring`,
+/// `billing_cycle`) no migration ever created on this table.
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = services)]
 pub struct Service {
     pub id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub branch_id: Uuid,
     pub name: String,
-    pub sku: String,
     pub description: Option<String>,
-    pub price: Option<BigDecimal>,
-    pub currency: Option<String>,
-    pub is_recurring: Option<bool>,
-    pub billing_cycle: Option<String>,
-    pub attributes: Option<serde_json::Value>,
-    pub is_active: Option<bool>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
     pub category: Option<String>,
     pub service_type: String,
     pub hourly_rate: Option<BigDecimal>,
     pub fixed_price: Option<BigDecimal>,
+    pub currency: String,
     pub duration_minutes: Option<i32>,
+    pub is_active: bool,
+    pub attributes: serde_json::Value,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub tax_rate: BigDecimal,
 }
 
+/// Field order matches the canonical `product_categories` declaration; the
+/// database makes `org_id`/`bot_id` nullable and `slug` optional, and adds
+/// `display_order`/`updated_at`.
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = product_categories)]
 pub struct ProductCategory {
     pub id: Uuid,
+    pub org_id: Option<Uuid>,
+    pub bot_id: Option<Uuid>,
     pub branch_id: Uuid,
     pub name: String,
-    pub slug: String,
     pub description: Option<String>,
     pub parent_id: Option<Uuid>,
-    pub display_order: Option<i32>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub slug: Option<String>,
     pub image_url: Option<String>,
     pub sort_order: i32,
     pub is_active: bool,
+    pub created_at: DateTime<Utc>,
+    pub display_order: Option<i32>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]

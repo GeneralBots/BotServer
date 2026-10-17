@@ -246,11 +246,15 @@ Ghost columns removed with the swap: the 14 `bots` copies carried `bot_id`,
 They are the `6.5.15.1` restatement mechanism in reverse — the declaration was
 written against the shape of a table that was never built, so every query
 naming them would have failed with `column bots.avatar_url does not exist`.
-`services` has the same problem in `botbilling`/`botproducts` (`sku`, `price`,
-`is_recurring`, `billing_cycle`) and is the next unit of work: the
-`Service` / `ProductCategory` structs in `botproducts/src/lib.rs` must be
-re-aligned with the repaired declaration before those two copies can be
-dropped.
+`services` had the same problem in `botbilling`/`botproducts` (`sku`, `price`,
+`is_recurring`, `billing_cycle`); both copies are gone now, and the
+`Service` / `ProductCategory` structs in `botproducts/src/lib.rs` were
+re-ordered to the canonical column order at the same time (`Queryable` binds
+positionally, so a correct column *set* with the wrong order still mis-maps).
+`services.org_id` / `bot_id` are NOT NULL, so `create_service` resolves them
+from the branch (`org_for_branch` / `bot_for_branch`, mirroring
+`botpeople`), while `product_categories` keeps both NULL on insert — that is
+exactly what `6.5.15.1`/`6.5.98` dropped NOT NULL for.
 
 ## CI guard
 

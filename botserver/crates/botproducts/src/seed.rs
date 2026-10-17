@@ -50,19 +50,21 @@ fn seed_categories(conn: &mut PgConnection, branch_id: Uuid) -> Vec<ProductCateg
     let mut inserted = Vec::new();
     for (name, description, slug, sort_order) in cats {
         let cat = ProductCategory {
-    id: Uuid::new_v4(),
-    branch_id,
-    name: name.to_string(),
-    slug: slug.to_string(),
-    description: Some(description.to_string()),
-    parent_id: None,
-    display_order: None,
-    created_at: chrono::Utc::now(),
-    updated_at: chrono::Utc::now(),
-    image_url: None,
-    sort_order,
-    is_active: true,
-};
+            id: Uuid::new_v4(),
+            org_id: None,
+            bot_id: None,
+            branch_id,
+            name: name.to_string(),
+            description: Some(description.to_string()),
+            parent_id: None,
+            slug: Some(slug.to_string()),
+            image_url: None,
+            sort_order,
+            is_active: true,
+            created_at: chrono::Utc::now(),
+            display_order: None,
+            updated_at: chrono::Utc::now(),
+        };
         match diesel::insert_into(product_categories::table)
             .values(&cat)
             .execute(conn)
@@ -75,7 +77,10 @@ fn seed_categories(conn: &mut PgConnection, branch_id: Uuid) -> Vec<ProductCateg
 }
 
 fn find_category_id(categories: &[ProductCategory], slug: &str) -> Option<Uuid> {
-    categories.iter().find(|c| c.slug.as_str() == slug).map(|c| c.id)
+    categories
+        .iter()
+        .find(|c| c.slug.as_deref() == Some(slug))
+        .map(|c| c.id)
 }
 
 fn seed_plan_products(conn: &mut PgConnection, branch_id: Uuid, categories: &[ProductCategory]) {

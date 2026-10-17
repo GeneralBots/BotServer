@@ -11,16 +11,16 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 149 |
-| Total `table!` declarations | 191 |
-| Tables declared more than once | 62 |
+| Distinct tables (outside botschema) | 147 |
+| Total `table!` declarations | 189 |
+| Tables declared more than once | 60 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 62 |
+| — conflicting drift | 60 |
 | Tables already in `botschema` | 210 |
 | Distinct tables NOT yet in `botschema` | 87 |
 
-## Conflicting tables (62)
+## Conflicting tables (60)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
 
@@ -1092,7 +1092,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `botserver/crates/botbasic_types/src/schema.rs` | 112 | `org_id` | 5 |
 | `botserver/crates/botcorebot/src/schema.rs` | 130 | `org_id` | 5 |
 | `botserver/crates/botbilling/src/schema.rs` | 261 | `id` | 1 |
-| `botserver/crates/botproducts/src/schema.rs` | 96 | `id` | 1 |
+| `botserver/crates/botproducts/src/schema.rs` | 62 | `id` | 1 |
 
 ### `people` ×2 (in botschema)
 
@@ -1155,28 +1155,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botbilling/src/schema.rs` | 171 | `id` | 13 |
-| `botserver/crates/botproducts/src/schema.rs` | 70 | `id` | 13 |
-
-### `product_categories` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `description` | `Nullable<Text>` |
-| `display_order` | `Nullable<Int4>` |
-| `id` | `Uuid` |
-| `image_url` | `Nullable<Text>` |
-| `is_active` | `Bool` |
-| `name` | `Varchar` |
-| `parent_id` | `Nullable<Uuid>` |
-| `slug` | `Varchar` |
-| `sort_order` | `Int4` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botproducts/src/schema.rs` | 53 | `id` | 12 |
+| `botserver/crates/botproducts/src/schema.rs` | 36 | `id` | 13 |
 
 ### `products` ×3 (in botschema)
 
@@ -1268,33 +1247,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botemail/src/schema.rs` | 46 | `id` | 23 |
-
-### `services` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `attributes` | `Nullable<Jsonb>` |
-| `billing_cycle` | `Nullable<Varchar>` |
-| `branch_id` | `Uuid` |
-| `category` | `Nullable<Varchar>` |
-| `created_at` | `Timestamptz` |
-| `currency` | `Nullable<Varchar>` |
-| `description` | `Nullable<Text>` |
-| `duration_minutes` | `Nullable<Int4>` |
-| `fixed_price` | `Nullable<Numeric>` |
-| `hourly_rate` | `Nullable<Numeric>` |
-| `id` | `Uuid` |
-| `is_active` | `Nullable<Bool>` |
-| `is_recurring` | `Nullable<Bool>` |
-| `name` | `Varchar` |
-| `price` | `Nullable<Numeric>` |
-| `service_type` | `Varchar` |
-| `sku` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botproducts/src/schema.rs` | 30 | `id` | 18 |
 
 ### `session_tool_associations` ×1 (in botschema)
 

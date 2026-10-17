@@ -79,25 +79,26 @@ pub async fn create_service(
     let now = Utc::now();
 
     let service = Service {
-    id,
-    branch_id,
-    name: req.name,
-    sku: String::new(),
-    description: req.description,
-    price: None,
-    currency: Some(req.currency.unwrap_or_else(|| "USD".to_string())),
-    is_recurring: None,
-    billing_cycle: None,
-    attributes: Some(serde_json::json!({})),
-    is_active: Some(true),
-    created_at: now,
-    updated_at: now,
-    category: req.category,
-    service_type: req.service_type.unwrap_or_else(|| "hourly".to_string()),
-    hourly_rate: req.hourly_rate.map(bd),
-    fixed_price: req.fixed_price.map(bd),
-    duration_minutes: req.duration_minutes,
-};
+        id,
+        // `services.org_id`/`bot_id` are NOT NULL since `6.0.10-01-products`;
+        // the branch they belong to owns both.
+        org_id: org_for_branch(&state.pool, branch_id),
+        bot_id: bot_for_branch(&state.pool, branch_id),
+        branch_id,
+        name: req.name,
+        description: req.description,
+        category: req.category,
+        service_type: req.service_type.unwrap_or_else(|| "hourly".to_string()),
+        hourly_rate: req.hourly_rate.map(bd),
+        fixed_price: req.fixed_price.map(bd),
+        currency: req.currency.unwrap_or_else(|| "USD".to_string()),
+        duration_minutes: req.duration_minutes,
+        is_active: true,
+        attributes: serde_json::json!({}),
+        created_at: now,
+        updated_at: now,
+        tax_rate: bd(0.0),
+    };
 
     diesel::insert_into(services::table)
         .values(&service)
@@ -274,19 +275,23 @@ pub async fn create_category(
         .unwrap_or(None);
 
     let category = ProductCategory {
-    id,
-    branch_id,
-    name: req.name,
-    slug: req.slug.unwrap_or_default(),
-    description: req.description,
-    parent_id: req.parent_id,
-    display_order: None,
-    created_at: now,
-    updated_at: chrono::Utc::now(),
-    image_url: req.image_url,
-    sort_order: max_order.unwrap_or(0) + 1,
-    is_active: true,
-};
+        id,
+        // Nullable by design: `6.5.15.1`/`6.5.98` drop NOT NULL on both so the
+        // catalog seed can insert categories without a resolved bot context.
+        org_id: None,
+        bot_id: None,
+        branch_id,
+        name: req.name,
+        description: req.description,
+        parent_id: req.parent_id,
+        slug: req.slug,
+        image_url: req.image_url,
+        sort_order: max_order.unwrap_or(0) + 1,
+        is_active: true,
+        created_at: now,
+        display_order: None,
+        updated_at: now,
+    };
 
     diesel::insert_into(product_categories::table)
         .values(&category)

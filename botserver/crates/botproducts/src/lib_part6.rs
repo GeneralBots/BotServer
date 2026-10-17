@@ -176,7 +176,7 @@ pub(super) async fn handle_products_services(
                 services::duration_minutes,
                 services::is_active,
             ))
-            .load::<(Uuid, String, Option<String>, Option<String>, String, Option<BigDecimal>, Option<BigDecimal>, Option<String>, Option<i32>, Option<bool>)>(&mut conn)
+            .load::<(Uuid, String, Option<String>, Option<String>, String, Option<BigDecimal>, Option<BigDecimal>, String, Option<i32>, bool)>(&mut conn)
             .ok()?;
 
         if items.is_empty() {
@@ -190,7 +190,7 @@ pub(super) async fn handle_products_services(
                 if cat_id.is_empty() { "General".to_string() } else { cat_id }
             });
             let type_str = svc_type;
-            let cur = currency.as_deref().unwrap_or("USD");
+            let cur = currency.as_str();
             let price_str = if let Some(ref h) = hourly {
                 format!("{}/hr", format_currency(bd_to_f64(h), cur))
             } else if let Some(ref f) = fixed {
@@ -199,7 +199,7 @@ pub(super) async fn handle_products_services(
                 "-".to_string()
             };
             let duration_str = duration.map(|d| format!("{} min", d)).unwrap_or_else(|| "-".to_string());
-            let active = is_active.unwrap_or(false);
+            let active = is_active;
             let status_class = if active { "status-active" } else { "status-inactive" };
             let status_text = if active { "Active" } else { "Inactive" };
 
