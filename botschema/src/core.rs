@@ -97,13 +97,20 @@ diesel::table! {
 diesel::table! {
     user_sessions (id) {
         id -> Uuid,
-        user_id -> Uuid,
+        // `6.5.30-user-sessions-schema-fix` retypes the column to VARCHAR.
+        user_id -> Varchar,
         bot_id -> Nullable<Uuid>,
         title -> Text,
         context_data -> Jsonb,
         current_tool -> Nullable<Text>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        tenant_id -> Nullable<Uuid>,
+        active_email_account_id -> Nullable<Uuid>,
+        branch_id -> Uuid,
+        session_id -> Nullable<Varchar>,
+        data -> Nullable<Jsonb>,
+        expires_at -> Nullable<Timestamptz>,
     }
 }
 
