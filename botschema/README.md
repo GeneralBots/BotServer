@@ -74,13 +74,52 @@ pub use botschema::bots;
    the migrated DB, then
    `python3 scripts/schema_db_audit.py --print-schema <file>`, which diffs every
    `table!` in the tree against the database and lists missing columns, ghost
-   columns, type differences and primary-key differences per file. Update the
-   `table!` in `botschema` to match.
-4. **Commit** the migration *and* the `botschema` change together.
-5. Regenerate the drift inventory so the baseline stays honest:
+   columns, type differences and primary-key differences per file.
+4. **Repair the canonical declaration** with
+   `python3 scripts/schema_sync_canonical.py --print-schema <file> --table
+   <name>` (add `--apply` to rewrite). It appends the columns the database has
+   and the declaration lacks, corrects the types in place, and corrects the
+   primary key — see "Repairing a canonical declaration" below for the rules it
+   follows, why it never reorders a table it leaves in place, and why one table
+   (with its readers) is the unit of work. Tables whose declaration names a
+   column the database does *not* have are reported and skipped
+   (`--skip-ghost-tables`): that column needs a migration, not a rewrite (see
+   "Ghost columns").
+5. **Commit** the migration *and* the `botschema` change together.
+6. Regenerate the drift inventory so the baseline stays honest:
    `python3 scripts/schema_drift_inventory.py` and, if the change removes a
    non-canonical declaration, refresh the guard baseline with
    `python3 scripts/schema_guard.py --update`.
+
+### Repairing a canonical declaration
+
+`schema_sync_canonical.py` treats the database as the authority, but it never
+reorders a declaration. Diesel maps `#[derive(Queryable)]` structs to a
+declaration **positionally**, so the committed order is a contract with every
+struct that reads it: a column the database has and the declaration lacks is
+appended at the end (positions `1..n` do not move, so a struct that reads the
+first `n` columns keeps reading the same ones), a wrong type is corrected where
+it sits, and the primary key is corrected in place. Type corrections are
+visible to `cargo check` — a `Nullable<X>` column cannot be read into an `X`
+field and vice versa — so the compiler lists the structs that must follow the
+repair. Appended columns are *not* silent either: a `table.load::<T>()` selects
+the declaration's columns, so `T` needs the new fields.
+
+Two hard constraints make this a **per-module** job, never a wholesale rewrite:
+
+- **Every appended column breaks the positional readers of that table.** All
+  `#[derive(Queryable)]` structs bound to the table must gain the new fields,
+  because `table.load::<T>()` selects the declaration's columns. Reconciling
+  the whole crate at once grew **96 canonical tables** and pulled in structs
+  across ~40 feature crates; repair one module (and its readers) per commit
+  with `--table <name>`.
+- **Diesel caps a declaration at 32 columns** (`32-column-tables`, which every
+  crate here enables). `products` has **71 columns in the database** against 22
+  declared, so it cannot be reconciled at all until that cap is raised — and
+  `128-column-tables` roughly triples the build time of `diesel` itself, which
+  is a cost for the whole workspace. The audit therefore keeps reporting
+  `products` as a mismatch, and reconciling it needs an explicit decision on
+  that build cost.
 
 ### Database verification (#1519)
 
@@ -107,14 +146,21 @@ DATABASE_URL=postgres://postgres@127.0.0.1:54329/gbtest \
 python3 scripts/schema_db_audit.py --print-schema /tmp/print_schema.rs
 ```
 
-The resulting snapshot is checked in as `issues/schema/db_audit.md`: of the 471
-tables the migrations build, 297 are declared somewhere in the tree, **171 of
-those declarations disagree with the database (128 of them canonical)**, 9
-declarations name a table no migration creates (six in `botmarketing`, two in
-`botautotask`, one in `botvideo`) — a table that does not exist is a runtime
-query failure, not a cosmetic one; `botautotask` is a default dependency and
-its safety layer runs `SELECT … FROM safety_constraints` — and 183 database
-tables have no declaration at all (touched through raw SQL only).
+The snapshot is checked in as `issues/schema/db_audit.md`. **Two independent
+fresh databases were built** (the throwaway cluster above and a
+`diesel database setup` run) and their `print-schema` output is byte-identical,
+which is what makes the physical shape a fact rather than a local accident.
+After the canonical repair of this change: of the 471 tables the migrations
+build, 297 are declared somewhere in the tree, **110 of those declarations
+disagree with the database (16 of them canonical)**, 9 declarations name a
+table no migration creates (six in `botmarketing`, two in `botautotask`, one in
+`botvideo`) — a table that does not exist is a runtime query failure, not a
+cosmetic one; `botautotask` is a default dependency and its safety layer runs
+`SELECT … FROM safety_constraints` — and 183 database tables have no
+declaration at all (touched through raw SQL only). The 94 non-canonical
+declarations still disagreeing are the remaining migration children (#1517);
+they resolve into the canonical copy as each feature crate re-exports from
+here.
 
 The first run of this workflow exposed a **bootstrap defect**: six migrations
 were named `2026-…`, which sorts before `6.0.0-01-core`, so a fresh
@@ -124,6 +170,62 @@ an empty database, aborted, and left the remaining 160 migrations unapplied
 shows it). They are now `6.7.0`–`6.7.5`; the two `ADD CONSTRAINT` statements
 that were not `IF NOT EXISTS`-guarded sit in `DO` blocks so a database that
 already applied them under the old version re-runs them harmlessly.
+
+### Ghost columns — a declaration the database does not have
+
+48 columns across **16 canonical declarations** name a column no database has.
+A ghost column is not cosmetic: every `SELECT` that mentions it fails at
+runtime with `column … does not exist`, including the implicit `SELECT *` that
+`table.load::<T>()` issues. Three mechanisms put them there, all checked
+against `botserver/migrations/`:
+
+- **A silently no-op `CREATE TABLE IF NOT EXISTS` restatement** (21 of the 48).
+  `6.5.15.1-consolidated` restates tables that an earlier migration already
+  created; because the guard makes the statement a no-op, the columns it adds
+  never exist — `users.is_admin` (restated at
+  `6.5.15.1-consolidated/up.sql:2909`, while `6.0.0-01-core` already created
+  `users` without it), `workflow_events.execution_id/event_type/payload`,
+  `projects.*`, `basic_tools.file_hash`,
+  `bot_configuration.is_encrypted/config_type`. The same mechanism explains most
+  of the non-canonical mismatches: the later shape is what the declaration was
+  written against, the earlier shape is what runs.
+- **A column no migration ever creates** — `crm_leads`
+  `first_name/last_name/email/phone/company/status/score/notes/assigned_to`
+  (`6.0.7-01-people/up.sql:82` creates `crm_leads` with the deal shape:
+  `title`, `value`, `stage`, `probability`, …), `email_templates
+  .subject/body/variables`, `global_email_signatures.content/is_default`,
+  `billing_grace_periods.subscription_id/starts_at/ends_at/reason`,
+  `billing_usage_alerts.recipients/is_active`, `distribution_lists
+  .members/is_active`, `kb_collections.description`,
+  `kb_group_associations.collection_id/created_at`,
+  `inventory_movements.reference/updated_at`.
+- **A column dropped by a later migration** —
+  `marketing_campaigns.channel/scheduled_at` (`6.2.4-01-campaigns` creates
+  them, `6.5.46-marketing-campaigns-branch-schema` removes them) and
+  `distribution_lists.stalwart_principal_id`.
+
+The 16 declarations, which `schema_sync_canonical.py` reports and skips:
+`basic_tools` (file_hash), `billing_grace_periods`
+(subscription_id, starts_at, ends_at, reason), `billing_usage_alerts`
+(recipients, is_active), `bot_configuration` (is_encrypted, config_type),
+`compliance_checks` (framework, control_id, control_name, score, evidence,
+notes), `crm_leads` (first_name, last_name, email, phone, company, status,
+score, notes, assigned_to), `distribution_lists` (members, is_active,
+stalwart_principal_id), `email_templates` (subject, body, variables),
+`global_email_signatures` (content, is_default), `inventory_movements`
+(reference, updated_at), `kb_collections` (description),
+`kb_group_associations` (collection_id, created_at), `marketing_campaigns`
+(channel, scheduled_at), `projects` (organization_id, start_date, end_date,
+owner_id, settings), `users` (is_admin), `workflow_events` (execution_id,
+event_type, payload).
+
+Each one needs a product decision, not a rewrite — **add the column**
+(`ALTER TABLE … ADD COLUMN IF NOT EXISTS …`, plus a backfill) when the code that
+reads it is the intended behaviour, or **delete the column and its readers**
+when it is not. `projects` is the boundary case: `6.5.49-vibe-projects` and
+`6.5.67-project-persistence` are named as if they own that table, so its
+`organization_id/start_date/end_date/owner_id/settings` may belong to a
+migration that was never written.
 
 ## CI guard
 
