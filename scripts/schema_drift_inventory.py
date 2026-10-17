@@ -59,7 +59,10 @@ def find_blocks(text):
 
 def parse_table_block(inner):
     """Parse `name (pk) { col -> Type, ... }` -> dict or None."""
-    inner = inner.strip()
+    # Comments may sit between `table! {` and the table name; without skipping
+    # them the header regex below fails and the whole declaration is dropped
+    # from the report (silent undercount).
+    inner = re.sub(r"^(?:\s*//[^\n]*|\s*/\*.*?\*/)+", "", inner, flags=re.S).strip()
     hdr = re.match(
         r"(" + TOKEN + r")\s*\(([^)]*)\)\s*\{", inner
     )

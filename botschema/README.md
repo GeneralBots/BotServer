@@ -227,6 +227,31 @@ when it is not. `projects` is the boundary case: `6.5.49-vibe-projects` and
 `organization_id/start_date/end_date/owner_id/settings` may belong to a
 migration that was never written.
 
+## DB-truth repairs applied to canonical declarations
+
+Each shape below is derived from the migrations that actually execute (the
+`CREATE TABLE` that runs first wins; `6.5.15.1-consolidated` restates most core
+tables with `IF NOT EXISTS` and therefore never applies) plus every later
+`ALTER TABLE`:
+
+| table | correction | evidence |
+|---|---|---|
+| `bots` | `is_public` / `is_default_for_branch` are `Bool` (NOT NULL) | `6.5.15.1-consolidated/up.sql:576` declares both NOT NULL, but the incremental path (`6.3.2-01-add-bots-public`, `6.5.15-org-branches`) added them nullable. Migration `6.7.6-bots-flags-not-null` backfills and enforces NOT NULL |
+| `user_sessions` | 18 columns, `user_id Varchar`, `bot_id Uuid`, `title Varchar`, `current_tool Nullable<Varchar>`, plus `answer_mode` / `message_count` / `total_tokens` / `last_activity` | `6.0.0-01-core/up.sql:137` creates the table with the legacy 12-column shape; `6.0.0:490`, `6.1.5-01-mail:266`, `6.5.23-branch-scope-cleanup:732` and `6.5.30-user-sessions-schema-fix` append `tenant_id`, `active_email_account_id`, `branch_id` (NOT NULL after a nil-UUID backfill), `session_id`, `data`, `expires_at`. The 8-column shape in `6.5.15.1-consolidated:2892` never runs |
+| `services` | `org_id`, `bot_id`, `tax_rate` added; `currency` / `attributes` / `is_active` stay non-nullable | `6.0.10-01-products/up.sql:27` creates it, `6.5.23:1324` adds `branch_id` NOT NULL, `6.5.40-services-tax` adds `tax_rate` |
+| `product_categories` | `org_id` / `bot_id` are `Nullable<Uuid>`; `display_order` and `updated_at` added | `6.0.10-01-products/up.sql:45`, then `6.5.15.1:83-93` and `6.5.98-product-categories-display-order` add `display_order`/`updated_at` and drop NOT NULL on `org_id`/`bot_id` (the botproducts seed omits them) |
+
+Ghost columns removed with the swap: the 14 `bots` copies carried `bot_id`,
+`avatar_url`, `settings` and `metadata`, none of which any migration creates.
+They are the `6.5.15.1` restatement mechanism in reverse — the declaration was
+written against the shape of a table that was never built, so every query
+naming them would have failed with `column bots.avatar_url does not exist`.
+`services` has the same problem in `botbilling`/`botproducts` (`sku`, `price`,
+`is_recurring`, `billing_cycle`) and is the next unit of work: the
+`Service` / `ProductCategory` structs in `botproducts/src/lib.rs` must be
+re-aligned with the repaired declaration before those two copies can be
+dropped.
+
 ## CI guard
 
 `scripts/schema_guard.py` (run in CI as the "no new `table!` outside
