@@ -180,9 +180,13 @@ diesel::table! {
     }
 }
 
+// `services` is created by `6.0.10-01-products`; `6.5.23-branch-scope-cleanup`
+// adds `branch_id` (NOT NULL) and `6.5.40-services-tax` adds `tax_rate`.
 diesel::table! {
     services (id) {
         id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         branch_id -> Uuid,
         name -> Varchar,
         description -> Nullable<Text>,
@@ -196,12 +200,19 @@ diesel::table! {
         attributes -> Jsonb,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        tax_rate -> Numeric,
     }
 }
 
+// `product_categories` is created by `6.0.10-01-products`; `6.5.15.1-consolidated`
+// and `6.5.98-product-categories-display-order` add `display_order` + `updated_at`
+// and make `org_id`/`bot_id` nullable (the botproducts seed omits them), while
+// `6.5.23-branch-scope-cleanup` adds `branch_id` as NOT NULL.
 diesel::table! {
     product_categories (id) {
         id -> Uuid,
+        org_id -> Nullable<Uuid>,
+        bot_id -> Nullable<Uuid>,
         branch_id -> Uuid,
         name -> Varchar,
         description -> Nullable<Text>,
@@ -211,6 +222,8 @@ diesel::table! {
         sort_order -> Int4,
         is_active -> Bool,
         created_at -> Timestamptz,
+        display_order -> Nullable<Int4>,
+        updated_at -> Timestamptz,
     }
 }
 
