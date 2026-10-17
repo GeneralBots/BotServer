@@ -95,16 +95,24 @@ diesel::table! {
 }
 
 diesel::table! {
+    // Physical column order follows `6.0.0-01-core` (the migration that
+    // actually creates the table; `6.5.15.1-consolidated` uses IF NOT EXISTS
+    // and therefore never wins) plus the columns appended by later ALTERs.
+    // `6.5.30-user-sessions-schema-fix` retypes `user_id` to VARCHAR, and
+    // `6.5.23-branch-scope-cleanup` backfills + enforces `branch_id` NOT NULL.
     user_sessions (id) {
         id -> Uuid,
-        // `6.5.30-user-sessions-schema-fix` retypes the column to VARCHAR.
         user_id -> Varchar,
-        bot_id -> Nullable<Uuid>,
-        title -> Text,
+        bot_id -> Uuid,
+        title -> Varchar,
+        answer_mode -> Int4,
         context_data -> Jsonb,
-        current_tool -> Nullable<Text>,
+        current_tool -> Nullable<Varchar>,
+        message_count -> Int4,
+        total_tokens -> Int4,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        last_activity -> Timestamptz,
         tenant_id -> Nullable<Uuid>,
         active_email_account_id -> Nullable<Uuid>,
         branch_id -> Uuid,

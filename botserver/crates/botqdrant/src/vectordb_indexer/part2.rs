@@ -89,21 +89,19 @@ impl VectorDBIndexer {
 
             // `user_sessions.user_id` is VARCHAR since 6.5.30-user-sessions-schema-fix;
             // the indexer only handles UUID-shaped ids (the Zitadel users).
-            let results: Vec<(String, Option<Uuid>)> = user_sessions
+            let results: Vec<(String, Uuid)> = user_sessions
                 .select((user_id, bot_id))
-                .filter(bot_id.is_not_null())
                 .distinct()
                 .load(&mut db_conn)?;
 
             let results = results
                 .into_iter()
-                .filter_map(|(uid, bid)| match (Uuid::parse_str(&uid), bid) {
-                    (Ok(uid), Some(bot)) => Some((uid, bot)),
-                    (Err(e), _) => {
+                .filter_map(|(uid, bid)| match Uuid::parse_str(&uid) {
+                    Ok(uid) => Some((uid, bid)),
+                    Err(e) => {
                         warn!("Skipping session user_id {uid:?}: {e}");
                         None
                     }
-                    (Ok(_), None) => None,
                 })
                 .collect::<Vec<(Uuid, Uuid)>>();
 
