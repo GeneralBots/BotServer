@@ -41,32 +41,10 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    message_history (id) {
-        id -> Uuid,
-        session_id -> Uuid,
-        user_id -> Uuid,
-        role -> Int4,
-        content_encrypted -> Text,
-        message_type -> Int4,
-        message_index -> Int4,
-        created_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    users (id) {
-        id -> Uuid,
-        username -> Text,
-        email -> Text,
-        password_hash -> Text,
-        is_active -> Bool,
-        is_admin -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
-
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::message_history;
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::users;
 diesel::table! {
     bot_memories (id) {
         id -> Uuid,
@@ -81,17 +59,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    bot_shared_memory (id) {
-        id -> Uuid,
-        source_bot_id -> Uuid,
-        target_bot_id -> Uuid,
-        memory_key -> Text,
-        memory_value -> Text,
-        shared_at -> Timestamptz,
-    }
-}
-
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::bot_shared_memory;
 diesel::table! {
     basic_tools (id) {
         id -> Uuid,
@@ -114,15 +83,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    session_tool_associations (id) {
-        id -> Text,
-        session_id -> Text,
-        tool_name -> Text,
-        added_at -> Text,
-    }
-}
-
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::session_tool_associations;
 diesel::table! {
     bot_configuration (id) {
         id -> Uuid,
@@ -258,15 +220,13 @@ diesel::table! {
     }
 }
 
+// `message_history`, `users`, `bot_shared_memory` and `session_tool_associations`
+// are re-exported from `botschema`; their join rules live there (#1497).
 diesel::allow_tables_to_appear_in_same_query!(
     bots,
     user_sessions,
-    message_history,
-    users,
     bot_memories,
-    bot_shared_memory,
     basic_tools,
-    session_tool_associations,
     bot_configuration,
     system_automations,
     workflow_executions,

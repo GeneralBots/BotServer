@@ -87,19 +87,8 @@ pub mod tables {
         }
     }
 
-    diesel::table! {
-        message_history (id) {
-            id -> Uuid,
-            session_id -> Uuid,
-            user_id -> Uuid,
-            role -> Int4,
-            content_encrypted -> Text,
-            message_type -> Int4,
-            message_index -> Int4,
-            created_at -> Timestamptz,
-        }
-    }
-
+    // Canonical definition lives in `botschema` (#1497).
+    pub use botschema::message_history;
     diesel::table! {
         workflow_executions (id) {
             id -> Uuid,

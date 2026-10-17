@@ -23,29 +23,10 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    organizations (org_id) {
-        org_id -> Uuid,
-        tenant_id -> Uuid,
-        name -> Text,
-        slug -> Text,
-        created_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    users (id) {
-        id -> Uuid,
-        username -> Text,
-        email -> Text,
-        password_hash -> Text,
-        is_active -> Bool,
-        is_admin -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
-
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::organizations;
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::users;
 diesel::table! {
     okr_objectives (id) {
         id -> Uuid,
@@ -110,23 +91,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    dashboard_widgets (id) {
-        id -> Uuid,
-        dashboard_id -> Uuid,
-        widget_type -> Varchar,
-        title -> Varchar,
-        position_x -> Int4,
-        position_y -> Int4,
-        width -> Int4,
-        height -> Int4,
-        config -> Jsonb,
-        data_query -> Nullable<Jsonb>,
-        style -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::dashboards::dashboard_widgets;
 
 diesel::table! {
     dashboard_data_sources (id) {
@@ -146,28 +112,15 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    dashboard_filters (id) {
-        id -> Uuid,
-        dashboard_id -> Uuid,
-        name -> Varchar,
-        field -> Varchar,
-        filter_type -> Varchar,
-        default_value -> Nullable<Jsonb>,
-        options -> Jsonb,
-        linked_widgets -> Jsonb,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::dashboards::dashboard_filters;
 
+// `organizations`, `users`, `dashboard_widgets` and `dashboard_filters` are
+// re-exported from `botschema`; their join rules live there (#1497).
 diesel::allow_tables_to_appear_in_same_query!(
     bots,
-    organizations,
-    users,
     okr_objectives,
     okr_templates,
     dashboards,
-    dashboard_widgets,
     dashboard_data_sources,
-    dashboard_filters,
 );

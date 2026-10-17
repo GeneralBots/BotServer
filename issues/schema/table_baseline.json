@@ -42,5 +42,5 @@
     "botserver/src/main_module/routes/catalog.rs",
     "botserver/src/main_module/routes/workspace_tabs.rs"
   ],
-  "total": 220
+  "total": 207
 }

@@ -15,32 +15,10 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    message_history (id) {
-        id -> Uuid,
-        session_id -> Uuid,
-        user_id -> Uuid,
-        role -> Int4,
-        content_encrypted -> Text,
-        message_type -> Int4,
-        message_index -> Int4,
-        created_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    users (id) {
-        id -> Uuid,
-        username -> Text,
-        email -> Text,
-        password_hash -> Text,
-        is_active -> Bool,
-        is_admin -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
-
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::message_history;
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::users;
 diesel::table! {
     bots (id) {
         id -> Uuid,
@@ -81,10 +59,10 @@ diesel::table! {
     }
 }
 
+// `message_history` and `users` are re-exported from `botschema`; their join
+// rules live there (#1497).
 diesel::allow_tables_to_appear_in_same_query!(
     user_sessions,
-    message_history,
-    users,
     bots,
     bot_configuration,
 );

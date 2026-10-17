@@ -38,46 +38,20 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    dashboard_widgets (id) {
-        id -> Uuid,
-        dashboard_id -> Uuid,
-        widget_type -> Varchar,
-        title -> Varchar,
-        position_x -> Int4,
-        position_y -> Int4,
-        width -> Int4,
-        height -> Int4,
-        config -> Jsonb,
-        data_query -> Nullable<Jsonb>,
-        style -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema::dashboards` (#1497).
+pub use botschema::dashboards::dashboard_widgets;
 
-diesel::table! {
-    dashboard_filters (id) {
-        id -> Uuid,
-        dashboard_id -> Uuid,
-        name -> Varchar,
-        field -> Varchar,
-        filter_type -> Varchar,
-        default_value -> Nullable<Jsonb>,
-        options -> Jsonb,
-        linked_widgets -> Jsonb,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema::dashboards` (#1497).
+pub use botschema::dashboards::dashboard_filters;
 
 // `botschema` does not re-export the `dashboards` module at the root (its own
 // `dashboards` table would collide with the module name), so the canonical path
 // goes through the module.
 pub use botschema::dashboards::conversational_queries;
 
+// `dashboard_widgets` and `dashboard_filters` are re-exported from
+// `botschema::dashboards`; their join rules live there (#1497).
 diesel::allow_tables_to_appear_in_same_query!(
     dashboards,
     dashboard_data_sources,
-    dashboard_widgets,
-    dashboard_filters,
 );
