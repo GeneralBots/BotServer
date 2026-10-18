@@ -6,21 +6,21 @@ diesel::table! {
         branch_id -> Uuid,
         invoice_number -> Varchar,
         customer_id -> Nullable<Uuid>,
-        customer_name -> Varchar,
+        customer_name -> Nullable<Varchar>,
         customer_email -> Nullable<Varchar>,
         customer_address -> Nullable<Text>,
-        status -> Varchar,
+        status -> Nullable<Varchar>,
         issue_date -> Date,
-        due_date -> Date,
+        due_date -> Nullable<Date>,
         subtotal -> Numeric,
         tax_rate -> Numeric,
         tax_amount -> Numeric,
         discount_percent -> Numeric,
         discount_amount -> Numeric,
-        total -> Numeric,
+        total -> Nullable<Numeric>,
         amount_paid -> Numeric,
         amount_due -> Numeric,
-        currency -> Varchar,
+        currency -> Nullable<Varchar>,
         notes -> Nullable<Text>,
         terms -> Nullable<Text>,
         footer -> Nullable<Text>,
@@ -29,6 +29,8 @@ diesel::table! {
         voided_at -> Nullable<Timestamptz>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -55,17 +57,19 @@ diesel::table! {
         invoice_id -> Nullable<Uuid>,
         payment_number -> Varchar,
         amount -> Numeric,
-        currency -> Varchar,
-        payment_method -> Varchar,
+        currency -> Nullable<Varchar>,
+        payment_method -> Nullable<Varchar>,
         payment_reference -> Nullable<Varchar>,
-        status -> Varchar,
+        status -> Nullable<Varchar>,
         payer_name -> Nullable<Varchar>,
         payer_email -> Nullable<Varchar>,
         notes -> Nullable<Text>,
-        paid_at -> Timestamptz,
+        paid_at -> Nullable<Timestamptz>,
         refunded_at -> Nullable<Timestamptz>,
         refund_amount -> Nullable<Numeric>,
         created_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -75,19 +79,19 @@ diesel::table! {
         branch_id -> Uuid,
         quote_number -> Varchar,
         customer_id -> Nullable<Uuid>,
-        customer_name -> Varchar,
+        customer_name -> Nullable<Varchar>,
         customer_email -> Nullable<Varchar>,
         customer_address -> Nullable<Text>,
-        status -> Varchar,
+        status -> Nullable<Varchar>,
         issue_date -> Date,
-        valid_until -> Date,
+        valid_until -> Nullable<Date>,
         subtotal -> Numeric,
         tax_rate -> Numeric,
         tax_amount -> Numeric,
         discount_percent -> Numeric,
         discount_amount -> Numeric,
-        total -> Numeric,
-        currency -> Varchar,
+        total -> Nullable<Numeric>,
+        currency -> Nullable<Varchar>,
         notes -> Nullable<Text>,
         terms -> Nullable<Text>,
         accepted_at -> Nullable<Timestamptz>,
@@ -96,6 +100,8 @@ diesel::table! {
         sent_at -> Nullable<Timestamptz>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -122,11 +128,11 @@ diesel::table! {
         customer_id -> Nullable<Uuid>,
         customer_name -> Varchar,
         customer_email -> Nullable<Varchar>,
-        status -> Varchar,
+        status -> Nullable<Varchar>,
         frequency -> Varchar,
         interval_count -> Int4,
-        amount -> Numeric,
-        currency -> Varchar,
+        amount -> Nullable<Numeric>,
+        currency -> Nullable<Varchar>,
         description -> Nullable<Text>,
         next_invoice_date -> Date,
         last_invoice_date -> Nullable<Date>,
@@ -136,6 +142,8 @@ diesel::table! {
         invoices_generated -> Int4,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -147,9 +155,11 @@ diesel::table! {
         rate -> Numeric,
         description -> Nullable<Text>,
         region -> Nullable<Varchar>,
-        is_default -> Bool,
+        is_default -> Nullable<Bool>,
         is_active -> Bool,
         created_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -323,7 +333,7 @@ diesel::table! {
     billing_alert_history (id) {
         id -> Uuid,
         branch_id -> Uuid,
-        alert_id -> Uuid,
+        alert_id -> Nullable<Uuid>,
         metric -> Varchar,
         severity -> Varchar,
         current_usage -> Int8,
@@ -335,6 +345,8 @@ diesel::table! {
         resolved_at -> Nullable<Timestamptz>,
         resolution_type -> Nullable<Varchar>,
         created_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -342,7 +354,7 @@ diesel::table! {
     billing_notification_preferences (id) {
         id -> Uuid,
         branch_id -> Uuid,
-        enabled -> Bool,
+        enabled -> Nullable<Bool>,
         channels -> Jsonb,
         email_recipients -> Jsonb,
         webhook_url -> Nullable<Text>,
@@ -358,6 +370,8 @@ diesel::table! {
         metric_overrides -> Jsonb,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -402,6 +416,18 @@ diesel::joinable!(billing_quotes -> branches (branch_id));
 diesel::joinable!(billing_quote_items -> billing_quotes (quote_id));
 diesel::joinable!(billing_recurring -> branches (branch_id));
 diesel::joinable!(billing_tax_rates -> branches (branch_id));
+
+diesel::allow_tables_to_appear_in_same_query!(
+    billing_invoices,
+    billing_payments,
+    billing_quotes,
+    billing_recurring,
+    billing_tax_rates,
+    products,
+    price_lists,
+    billing_alert_history,
+    billing_notification_preferences,
+);
 
 diesel::joinable!(billing_usage_alerts -> branches (branch_id));
 diesel::joinable!(billing_alert_history -> branches (branch_id));

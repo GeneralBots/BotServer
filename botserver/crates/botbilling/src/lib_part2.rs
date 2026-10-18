@@ -1,4 +1,5 @@
 use super::*;
+use diesel::prelude::*;
 
 pub fn default_product_config() -> ProductConfig {
     let mut plans = HashMap::new();
@@ -162,6 +163,40 @@ pub fn get_bot_context(pool: &DbPool, get_default_bot: &Option<GetDefaultBotFn>)
     };
     resolve_branch_id(&mut conn, get_default_bot)
 }
+/// `(org_id, bot_id)` for a branch.
+///
+/// The `billing_*` tables carry both columns NOT NULL (`6.0.9-01-billing`), but
+/// the crate never wrote them: the local declarations were missing the two
+/// columns (`#1517`). Every invoice/payment/quote insert resolves them here,
+/// mirroring `botproducts::org_for_branch` / `bot_for_branch` and returning the
+/// nil UUID when the branch cannot be resolved.
+pub(crate) fn scope_for_branch(conn: &mut diesel::PgConnection, branch_id: Uuid) -> (Uuid, Uuid) {
+    #[derive(diesel::QueryableByName)]
+    struct OrgRow {
+        #[diesel(sql_type = diesel::sql_types::Uuid)]
+        org_id: Uuid,
+    }
+    #[derive(diesel::QueryableByName)]
+    struct BotRow {
+        #[diesel(sql_type = diesel::sql_types::Uuid)]
+        id: Uuid,
+    }
+    let org = diesel::sql_query("SELECT org_id FROM branches WHERE id = $1 LIMIT 1")
+        .bind::<diesel::sql_types::Uuid, _>(branch_id)
+        .get_result::<OrgRow>(conn)
+        .map(|r| r.org_id)
+        .unwrap_or_else(|_| Uuid::nil());
+    let bot = diesel::sql_query(
+        "SELECT id FROM bots WHERE branch_id = $1 \
+         ORDER BY is_default_for_branch DESC, created_at ASC LIMIT 1",
+    )
+    .bind::<diesel::sql_types::Uuid, _>(branch_id)
+    .get_result::<BotRow>(conn)
+    .map(|r| r.id)
+    .unwrap_or_else(|_| Uuid::nil());
+    (org, bot)
+}
+
 pub(crate) fn resolve_branch_id(
     conn: &mut diesel::PgConnection,
     get_default_bot: &Option<GetDefaultBotFn>,

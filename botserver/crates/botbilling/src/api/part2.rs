@@ -9,12 +9,15 @@ pub async fn record_payment(
     })?;
 
     let branch_id = get_bot_context(&state.pool, &state.get_default_bot);
+    let (org_id, bot_id) = scope_for_branch(&mut conn, branch_id);
     let id = Uuid::new_v4();
     let now = Utc::now();
     let payment_number = generate_payment_number(&mut conn, branch_id);
 
     let payment = BillingPayment {
         id,
+        org_id,
+        bot_id,
         branch_id,
         invoice_id: req.invoice_id,
         amount: bd(req.amount),
@@ -22,9 +25,7 @@ pub async fn record_payment(
         payment_method: Some(req.payment_method.clone().unwrap_or_else(|| "other".to_string())),
         status: Some("completed".to_string()),
         paid_at: Some(now),
-        gateway_response: None,
         created_at: now,
-        updated_at: now,
         payment_number,
         payment_reference: req.payment_reference.clone(),
         payer_name: req.payer_name.clone(),
@@ -128,6 +129,7 @@ pub async fn create_quote(
     })?;
 
     let branch_id = get_bot_context(&state.pool, &state.get_default_bot);
+    let (org_id, bot_id) = scope_for_branch(&mut conn, branch_id);
     let id = Uuid::new_v4();
     let now = Utc::now();
     let quote_number = generate_quote_number(&mut conn, branch_id);
@@ -160,11 +162,12 @@ pub async fn create_quote(
 
     let quote = BillingQuote {
         id,
+        org_id,
+        bot_id,
         branch_id,
         quote_number,
         customer_name: req.customer_name.clone(),
         customer_email: req.customer_email.clone(),
-        items: None,
         total: Some(total),
         currency: Some(req.currency.clone().unwrap_or_else(|| "USD".to_string())),
         status: Some("draft".to_string()),

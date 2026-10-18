@@ -1,137 +1,21 @@
-diesel::table! {
-    billing_invoices (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        invoice_number -> Varchar,
-        customer_name -> Nullable<Varchar>,
-        customer_email -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        total -> Nullable<Numeric>,
-        currency -> Nullable<Varchar>,
-        due_date -> Nullable<Date>,
-        paid_at -> Nullable<Timestamptz>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        customer_id -> Nullable<Uuid>,
-        customer_address -> Nullable<Text>,
-        issue_date -> Date,
-        subtotal -> Numeric,
-        tax_rate -> Numeric,
-        tax_amount -> Numeric,
-        discount_percent -> Numeric,
-        discount_amount -> Numeric,
-        amount_paid -> Numeric,
-        amount_due -> Numeric,
-        terms -> Nullable<Text>,
-        footer -> Nullable<Text>,
-        sent_at -> Nullable<Timestamptz>,
-        voided_at -> Nullable<Timestamptz>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::billing_invoices;
 
 pub use botschema::billing_invoice_items;
 
-diesel::table! {
-    billing_payments (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        invoice_id -> Nullable<Uuid>,
-        amount -> Numeric,
-        currency -> Nullable<Varchar>,
-        payment_method -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        paid_at -> Nullable<Timestamptz>,
-        gateway_response -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        payment_number -> Varchar,
-        payment_reference -> Nullable<Varchar>,
-        payer_name -> Nullable<Varchar>,
-        payer_email -> Nullable<Varchar>,
-        notes -> Nullable<Text>,
-        refunded_at -> Nullable<Timestamptz>,
-        refund_amount -> Nullable<Numeric>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::billing_payments;
 
-diesel::table! {
-    billing_quotes (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        quote_number -> Varchar,
-        customer_name -> Nullable<Varchar>,
-        customer_email -> Nullable<Varchar>,
-        items -> Nullable<Jsonb>,
-        total -> Nullable<Numeric>,
-        currency -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        valid_until -> Nullable<Date>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        customer_id -> Nullable<Uuid>,
-        customer_address -> Nullable<Text>,
-        issue_date -> Date,
-        subtotal -> Numeric,
-        tax_rate -> Numeric,
-        tax_amount -> Numeric,
-        discount_percent -> Numeric,
-        discount_amount -> Numeric,
-        terms -> Nullable<Text>,
-        accepted_at -> Nullable<Timestamptz>,
-        rejected_at -> Nullable<Timestamptz>,
-        converted_invoice_id -> Nullable<Uuid>,
-        sent_at -> Nullable<Timestamptz>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::billing_quotes;
 
 pub use botschema::billing_quote_items;
 
-diesel::table! {
-    billing_recurring (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        plan_name -> Varchar,
-        amount -> Nullable<Numeric>,
-        currency -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        trial_end -> Nullable<Timestamptz>,
-        current_period_start -> Nullable<Timestamptz>,
-        current_period_end -> Nullable<Timestamptz>,
-        cancelled_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        customer_id -> Nullable<Uuid>,
-        customer_name -> Varchar,
-        customer_email -> Nullable<Varchar>,
-        frequency -> Varchar,
-        interval_count -> Int4,
-        description -> Nullable<Text>,
-        next_invoice_date -> Date,
-        last_invoice_date -> Nullable<Date>,
-        last_invoice_id -> Nullable<Uuid>,
-        start_date -> Date,
-        end_date -> Nullable<Date>,
-        invoices_generated -> Int4,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::billing_recurring;
 
-diesel::table! {
-    billing_tax_rates (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        rate -> Numeric,
-        country -> Nullable<Varchar>,
-        region -> Nullable<Varchar>,
-        is_default -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        description -> Nullable<Text>,
-        is_active -> Bool,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::billing_tax_rates;
 
 diesel::table! {
     products (id) {
@@ -196,67 +80,16 @@ pub use botschema::product_variants;
 
 pub use botschema::billing_usage_alerts;
 
-diesel::table! {
-    billing_alert_history (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        alert_id -> Nullable<Uuid>,
-        metric -> Varchar,
-        value -> Numeric,
-        threshold -> Numeric,
-        sent_at -> Timestamptz,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        severity -> Varchar,
-        current_usage -> Int8,
-        usage_limit -> Int8,
-        percentage -> Numeric,
-        message -> Text,
-        acknowledged_at -> Nullable<Timestamptz>,
-        acknowledged_by -> Nullable<Uuid>,
-        resolved_at -> Nullable<Timestamptz>,
-        resolution_type -> Nullable<Varchar>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::billing_alert_history;
 
-diesel::table! {
-    billing_notification_preferences (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        event_type -> Varchar,
-        channel -> Varchar,
-        enabled -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        channels -> Jsonb,
-        email_recipients -> Jsonb,
-        webhook_url -> Nullable<Text>,
-        webhook_secret -> Nullable<Text>,
-        slack_webhook_url -> Nullable<Text>,
-        teams_webhook_url -> Nullable<Text>,
-        sms_numbers -> Jsonb,
-        min_severity -> Varchar,
-        quiet_hours_start -> Nullable<Int4>,
-        quiet_hours_end -> Nullable<Int4>,
-        quiet_hours_timezone -> Nullable<Varchar>,
-        quiet_hours_days -> Nullable<Jsonb>,
-        metric_overrides -> Jsonb,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::billing_notification_preferences;
 
 pub use botschema::billing_grace_periods;
 
-diesel::allow_tables_to_appear_in_same_query!(
-    billing_invoices,
-    billing_payments,
-    billing_quotes,
-    billing_recurring,
-    billing_tax_rates,
-    products,
-    price_lists,
-    billing_alert_history,
-    billing_notification_preferences,
-);
+// The `allow_tables_to_appear_in_same_query!` list moved to `botschema::billing`:
+// both sides of every pair are foreign types here, so the orphan rule blocks it.
 
 diesel::table! {
     organizations (id) {

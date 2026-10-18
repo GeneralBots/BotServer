@@ -9,6 +9,7 @@ pub async fn create_invoice(
     })?;
 
     let branch_id = get_bot_context(&state.pool, &state.get_default_bot);
+    let (org_id, bot_id) = scope_for_branch(&mut conn, branch_id);
     let id = Uuid::new_v4();
     let now = Utc::now();
     let invoice_number = generate_invoice_number(&mut conn, branch_id);
@@ -39,8 +40,10 @@ pub async fn create_invoice(
     let tax_amount = &taxable * &tax_rate / bd(100.0);
     let total = &taxable + &tax_amount;
 
-        let invoice = BillingInvoice {
+    let invoice = BillingInvoice {
         id,
+        org_id,
+        bot_id,
         branch_id,
         invoice_number,
         customer_name: req.customer_name.clone(),
