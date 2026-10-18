@@ -1,0 +1,23 @@
+-- Restores the exact definitions from `6.0.2-01-core/up.sql`. Values are lost
+-- on the way down; this only recreates the shape.
+ALTER TABLE products ADD COLUMN IF NOT EXISTS fiscal_code VARCHAR(10);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS origin_code INTEGER DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS tax_unit_code VARCHAR(14);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS package_count INTEGER DEFAULT 1;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sales_tax_code VARCHAR(3);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sales_tax_rate DECIMAL(5,2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS excise_tax_code VARCHAR(2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS excise_tax_rate DECIMAL(5,2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS vat_code VARCHAR(2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS vat_rate DECIMAL(5,2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS service_tax_code VARCHAR(2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS service_tax_rate DECIMAL(5,2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS warehouse_location VARCHAR(100);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS batch_number VARCHAR(50);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS manufacture_date DATE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_price DECIMAL(15,2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_start TIMESTAMPTZ;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS sale_end TIMESTAMPTZ;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS profit_margin DECIMAL(5,2);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS external_category_id VARCHAR(100);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS meta_title VARCHAR(255);
