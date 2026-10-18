@@ -53,9 +53,10 @@ diesel::table! {
         bcc_address -> Nullable<Text>,
         subject -> Nullable<Varchar>,
         body -> Nullable<Text>,
-        attachments -> Jsonb,
+        attachments -> Nullable<Jsonb>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 
@@ -98,7 +99,7 @@ diesel::table! {
         to_addresses -> Text,
         cc_addresses -> Nullable<Text>,
         bcc_addresses -> Nullable<Text>,
-        subject -> Text,
+        subject -> Varchar,
         body_html -> Text,
         body_plain -> Nullable<Text>,
         attachments_json -> Text,
@@ -108,6 +109,8 @@ diesel::table! {
         retry_count -> Int4,
         error_message -> Nullable<Text>,
         created_at -> Timestamptz,
+        branch_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -138,17 +141,19 @@ diesel::table! {
         id -> Uuid,
         user_id -> Uuid,
         responder_type -> Varchar,
-        subject -> Text,
+        subject -> Nullable<Varchar>,
         body_html -> Text,
         body_plain -> Nullable<Text>,
         start_date -> Nullable<Timestamptz>,
         end_date -> Nullable<Timestamptz>,
         send_to_internal_only -> Bool,
         exclude_addresses -> Nullable<Text>,
-        is_active -> Bool,
+        is_active -> Nullable<Bool>,
         stalwart_sieve_id -> Nullable<Varchar>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        branch_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -161,10 +166,12 @@ diesel::table! {
         conditions_json -> Text,
         actions_json -> Text,
         stop_processing -> Bool,
-        is_active -> Bool,
+        is_active -> Nullable<Bool>,
         stalwart_sieve_id -> Nullable<Varchar>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        branch_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 

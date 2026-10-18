@@ -1,9 +1,12 @@
 diesel::table! {
     tenants (id) {
         id -> Uuid,
-        name -> Text,
-        slug -> Text,
+        name -> Varchar,
+        slug -> Varchar,
         created_at -> Timestamptz,
+        is_active -> Bool,
+        metadata -> Nullable<Jsonb>,
+        updated_at -> Timestamptz,
     }
 }
 
@@ -29,12 +32,14 @@ diesel::table! {
         status -> Varchar,
         message -> Nullable<Text>,
         invited_by -> Uuid,
-        token -> Nullable<Varchar>,
+        token -> Nullable<Text>,
         created_at -> Timestamptz,
         updated_at -> Nullable<Timestamptz>,
         expires_at -> Nullable<Timestamptz>,
         accepted_at -> Nullable<Timestamptz>,
         accepted_by -> Nullable<Uuid>,
+        groups -> Jsonb,
+        invited_by_name -> Nullable<Varchar>,
     }
 }
 
@@ -208,18 +213,18 @@ diesel::table! {
 
 diesel::table! {
     basic_tools (id) {
-        id -> Text,
-        bot_id -> Nullable<Text>,
+        id -> Uuid,
+        bot_id -> Uuid,
         tool_name -> Text,
         file_path -> Text,
         ast_path -> Text,
-        file_hash -> Text,
         mcp_json -> Nullable<Text>,
         tool_json -> Nullable<Text>,
         compiled_at -> Text,
-        is_active -> Integer,
-        created_at -> Text,
-        updated_at -> Text,
+        is_active -> Nullable<Bool>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 

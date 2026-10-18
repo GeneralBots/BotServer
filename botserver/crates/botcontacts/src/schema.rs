@@ -62,71 +62,16 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    crm_pipeline_stages (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        branch_id -> Nullable<Uuid>,
-        name -> Varchar,
-        stage_order -> Int4,
-        probability -> Int4,
-        is_won -> Bool,
-        is_lost -> Bool,
-        color -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::crm_pipeline_stages;
 
 pub use botschema::crm_leads;
 
-diesel::table! {
-    crm_opportunities (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        contact_id -> Nullable<Uuid>,
-        name -> Varchar,
-        value -> Nullable<Float8>,
-        currency -> Nullable<Varchar>,
-        stage -> Nullable<Varchar>,
-        probability -> Nullable<Int4>,
-        expected_close_date -> Nullable<Date>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        lead_id -> Nullable<Uuid>,
-        account_id -> Nullable<Uuid>,
-        description -> Nullable<Text>,
-        stage_id -> Nullable<Uuid>,
-        source -> Nullable<Varchar>,
-        actual_close_date -> Nullable<Date>,
-        won -> Nullable<Bool>,
-        owner_id -> Nullable<Uuid>,
-        tags -> Array<Text>,
-        custom_fields -> Jsonb,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::crm_opportunities;
 
-diesel::table! {
-    crm_activities (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        branch_id -> Uuid,
-        contact_id -> Nullable<Uuid>,
-        activity_type -> Varchar,
-        subject -> Varchar,
-        description -> Nullable<Text>,
-        due_date -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        lead_id -> Nullable<Uuid>,
-        opportunity_id -> Nullable<Uuid>,
-        account_id -> Nullable<Uuid>,
-        outcome -> Nullable<Varchar>,
-        owner_id -> Nullable<Uuid>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::crm_activities;
 
 pub use botschema::crm_notes;
 
@@ -147,42 +92,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    crm_deals (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        branch_id -> Uuid,
-        contact_id -> Nullable<Uuid>,
-        name -> Varchar,
-        title -> Nullable<Varchar>,
-        value -> Nullable<Float8>,
-        currency -> Nullable<Varchar>,
-        stage -> Nullable<Varchar>,
-        probability -> Nullable<Int4>,
-        won -> Nullable<Bool>,
-        closed_at -> Nullable<Timestamptz>,
-        owner_id -> Nullable<Uuid>,
-        department_id -> Nullable<Uuid>,
-        source -> Nullable<Varchar>,
-        lost_reason -> Nullable<Text>,
-        notes -> Nullable<Text>,
-        tags -> Nullable<Array<Text>>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        account_id -> Nullable<Uuid>,
-        am_id -> Nullable<Uuid>,
-        lead_id -> Nullable<Uuid>,
-        description -> Nullable<Text>,
-        stage_id -> Nullable<Uuid>,
-        segment_id -> Nullable<Uuid>,
-        expected_close_date -> Nullable<Date>,
-        actual_close_date -> Nullable<Date>,
-        period -> Nullable<Int4>,
-        deal_date -> Nullable<Date>,
-        custom_fields -> Jsonb,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::crm_deals;
 
 diesel::table! {
     marketing_campaigns (id) {

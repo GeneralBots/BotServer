@@ -4,26 +4,8 @@ pub use botschema::global_email_signatures;
 // crate's `Queryable` structs, which map positionally.
 pub use botschema::user_email_accounts;
 
-diesel::table! {
-    email_drafts (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        subject -> Nullable<Varchar>,
-        body -> Nullable<Text>,
-        recipient -> Nullable<Varchar>,
-        cc -> Nullable<Varchar>,
-        bcc -> Nullable<Varchar>,
-        attachments -> Nullable<Jsonb>,
-        saved_at -> Timestamptz,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        user_id -> Uuid,
-        account_id -> Uuid,
-        to_address -> Text,
-        cc_address -> Nullable<Text>,
-        bcc_address -> Nullable<Text>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::email_drafts;
 
 pub use botschema::email_folders;
 
@@ -31,81 +13,16 @@ pub use botschema::email_folders;
 // ghost `content` column and non-null flags; the database has neither.
 pub use botschema::email_signatures;
 
-diesel::table! {
-    scheduled_emails (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        subject -> Varchar,
-        body -> Text,
-        recipient -> Nullable<Varchar>,
-        cc -> Nullable<Varchar>,
-        bcc -> Nullable<Varchar>,
-        send_at -> Timestamptz,
-        sent -> Nullable<Bool>,
-        sent_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        user_id -> Uuid,
-        to_addresses -> Text,
-        cc_addresses -> Nullable<Text>,
-        bcc_addresses -> Nullable<Text>,
-        body_html -> Text,
-        body_plain -> Nullable<Text>,
-        attachments_json -> Text,
-        scheduled_at -> Timestamptz,
-        status -> Varchar,
-        retry_count -> Int4,
-        error_message -> Nullable<Text>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::scheduled_emails;
 
 pub use botschema::email_templates;
 
-diesel::table! {
-    email_auto_responders (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        trigger_type -> Varchar,
-        trigger_value -> Nullable<Varchar>,
-        subject -> Nullable<Varchar>,
-        body -> Text,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        user_id -> Uuid,
-        responder_type -> Varchar,
-        body_html -> Text,
-        body_plain -> Nullable<Text>,
-        start_date -> Nullable<Timestamptz>,
-        end_date -> Nullable<Timestamptz>,
-        send_to_internal_only -> Bool,
-        exclude_addresses -> Nullable<Text>,
-        stalwart_sieve_id -> Nullable<Varchar>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::email_auto_responders;
 
-diesel::table! {
-    email_rules (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        condition_field -> Varchar,
-        condition_operator -> Varchar,
-        condition_value -> Nullable<Varchar>,
-        action_type -> Varchar,
-        action_value -> Nullable<Varchar>,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        user_id -> Uuid,
-        priority -> Int4,
-        conditions_json -> Text,
-        actions_json -> Text,
-        stop_processing -> Bool,
-        stalwart_sieve_id -> Nullable<Varchar>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::email_rules;
 
 // Canonical definition lives in `botschema` (#1497). The local copy carried a
 // ghost `updated_at`; `bot_id` was missing.

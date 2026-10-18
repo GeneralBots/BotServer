@@ -38,27 +38,8 @@ diesel::table! {
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::bot_shared_memory;
-diesel::table! {
-    basic_tools (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        name -> Varchar,
-        source -> Nullable<Text>,
-        compiled -> Nullable<Text>,
-        version -> Int4,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        tool_name -> Text,
-        file_path -> Text,
-        ast_path -> Text,
-        file_hash -> Text,
-        mcp_json -> Nullable<Text>,
-        tool_json -> Nullable<Text>,
-        compiled_at -> Text,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::basic_tools;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::session_tool_associations;
@@ -137,34 +118,13 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    tenants (id) {
-        id -> Uuid,
-        name -> Varchar,
-        slug -> Varchar,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::tenants;
 
 pub use botschema::clicks;
 
-diesel::table! {
-    organization_invitations (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        email -> Varchar,
-        role -> Varchar,
-        status -> Varchar,
-        message -> Nullable<Text>,
-        invited_by -> Uuid,
-        token -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Nullable<Timestamptz>,
-        expires_at -> Nullable<Timestamptz>,
-        accepted_at -> Nullable<Timestamptz>,
-        accepted_by -> Nullable<Uuid>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::organization_invitations;
 
 pub use botschema::user_organizations;
 
@@ -173,42 +133,10 @@ pub use botschema::user_preferences;
 
 pub use botschema::user_login_tokens;
 
-diesel::table! {
-    website_crawls (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        url -> Text,
-        status -> Nullable<Varchar>,
-        depth -> Nullable<Int4>,
-        content -> Nullable<Text>,
-        error -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        last_crawled -> Nullable<Timestamptz>,
-        next_crawl -> Nullable<Timestamptz>,
-        expires_policy -> Varchar,
-        max_depth -> Nullable<Int4>,
-        max_pages -> Nullable<Int4>,
-        crawl_status -> Nullable<Int2>,
-        pages_crawled -> Nullable<Int4>,
-        error_message -> Nullable<Text>,
-        refresh_policy -> Nullable<Varchar>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::website_crawls;
 
 // `message_history`, `users`, `bot_shared_memory` and `session_tool_associations`
-// are re-exported from `botschema`; their join rules live there (#1497).
-diesel::allow_tables_to_appear_in_same_query!(
-    user_sessions,
-    bot_memories,
-    basic_tools,
-    bot_configuration,
-    system_automations,
-    workflow_executions,
-    workflow_events,
-    organizations,
-    tenants,
-    organization_invitations,
-    website_crawls,
-);
+// are re-exported from `botschema`; their join rules live there (#1497) — the
+// `allow_tables_to_appear_in_same_query!` list moved to `botschema::core`, since
+// every pair here is between two foreign types (orphan rule).

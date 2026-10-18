@@ -57,7 +57,7 @@ diesel::table! {
 diesel::table! {
     crm_pipeline_stages (id) {
         id -> Uuid,
-        branch_id -> Uuid,
+        branch_id -> Nullable<Uuid>,
         name -> Varchar,
         stage_order -> Int4,
         probability -> Int4,
@@ -65,6 +65,8 @@ diesel::table! {
         is_lost -> Bool,
         color -> Nullable<Varchar>,
         created_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -114,8 +116,8 @@ diesel::table! {
         value -> Nullable<Float8>,
         currency -> Nullable<Varchar>,
         stage_id -> Nullable<Uuid>,
-        stage -> Varchar,
-        probability -> Int4,
+        stage -> Nullable<Varchar>,
+        probability -> Nullable<Int4>,
         source -> Nullable<Varchar>,
         expected_close_date -> Nullable<Date>,
         actual_close_date -> Nullable<Date>,
@@ -125,6 +127,8 @@ diesel::table! {
         custom_fields -> Jsonb,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -137,13 +141,15 @@ diesel::table! {
         opportunity_id -> Nullable<Uuid>,
         account_id -> Nullable<Uuid>,
         activity_type -> Varchar,
-        subject -> Nullable<Varchar>,
+        subject -> Varchar,
         description -> Nullable<Text>,
         due_date -> Nullable<Timestamptz>,
         completed_at -> Nullable<Timestamptz>,
         outcome -> Nullable<Varchar>,
         owner_id -> Nullable<Uuid>,
         created_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 

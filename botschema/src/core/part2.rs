@@ -139,7 +139,7 @@ diesel::table! {
 diesel::table! {
     website_crawls (id) {
         id -> Uuid,
-        bot_id -> Nullable<Uuid>,
+        bot_id -> Uuid,
         url -> Text,
         last_crawled -> Nullable<Timestamptz>,
         next_crawl -> Nullable<Timestamptz>,
@@ -149,9 +149,10 @@ diesel::table! {
         crawl_status -> Nullable<Int2>,
         pages_crawled -> Nullable<Int4>,
         error_message -> Nullable<Text>,
-        created_at -> Nullable<Timestamptz>,
-        updated_at -> Nullable<Timestamptz>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
         refresh_policy -> Nullable<Varchar>,
+        branch_id -> Uuid,
     }
 }
 
@@ -222,6 +223,13 @@ diesel::allow_tables_to_appear_in_same_query!(
     kb_collections,
     kb_group_associations,
     branches,
+    user_sessions,
+    bot_memories,
+    basic_tools,
+    system_automations,
+    workflow_executions,
+    workflow_events,
+    tenants,
 );
 
 /// Resolve the branch that owns `bot` for a branch-scoped `system_automations` row.
