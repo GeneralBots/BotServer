@@ -240,7 +240,7 @@ tables with `IF NOT EXISTS` and therefore never applies) plus every later
 | `user_sessions` | 18 columns, `user_id Varchar`, `bot_id Uuid`, `title Varchar`, `current_tool Nullable<Varchar>`, plus `answer_mode` / `message_count` / `total_tokens` / `last_activity` | `6.0.0-01-core/up.sql:137` creates the table with the legacy 12-column shape; `6.0.0:490`, `6.1.5-01-mail:266`, `6.5.23-branch-scope-cleanup:732` and `6.5.30-user-sessions-schema-fix` append `tenant_id`, `active_email_account_id`, `branch_id` (NOT NULL after a nil-UUID backfill), `session_id`, `data`, `expires_at`. The 8-column shape in `6.5.15.1-consolidated:2892` never runs |
 | `services` | `org_id`, `bot_id`, `tax_rate` added; `currency` / `attributes` / `is_active` stay non-nullable | `6.0.10-01-products/up.sql:27` creates it, `6.5.23:1324` adds `branch_id` NOT NULL, `6.5.40-services-tax` adds `tax_rate` |
 | `product_categories` | `org_id` / `bot_id` are `Nullable<Uuid>`; `display_order` and `updated_at` added | `6.0.10-01-products/up.sql:45`, then `6.5.15.1:83-93` and `6.5.98-product-categories-display-order` add `display_order`/`updated_at` and drop NOT NULL on `org_id`/`bot_id` (the botproducts seed omits them) |
-| `products` | the 22 columns of `6.0.10-01-products` (+ `branch_id`, `category_id`, `is_public`); 21 dead columns of `6.0.2-01-core` dropped | `6.0.10-01-products/up.sql:1` creates the modelled shape; `6.5.23:1314`, `6.5.15.1:99` and `6.5.22-products-is-public` add the three extras. `6.7.7-products-drop-unused-columns` removes the `6.0.2` fiscal/shipping/SEO columns that no Rust module, no bot template and no later migration names. The remaining `6.0.2` columns stay because bot templates write them into `products` directly (`store-server.gbdialog/get-ncm.bas` writes `tax_code`/`tax_class`, `scan-barcode.bas` writes `global_trade_number`/`net_weight`/`brand`) |
+| `products` | 22 declared columns (`6.0.10-01-products`' 23 minus `org_id`/`bot_id`, plus `branch_id`, `category_id`, `is_public`); 21 of the 45 `6.0.2-01-core` additions dropped | `6.0.10-01-products/up.sql:1` creates the modelled shape; `6.5.23:1314`, `6.5.15.1:99` and `6.5.22-products-is-public` add the three extras. `6.7.7-products-drop-unused-columns` removes the `6.0.2` fiscal/shipping/SEO columns that no Rust module, no bot template and no later migration names. The other 24 `6.0.2` columns stay because bot templates write them into `products` directly (`store-server.gbdialog/get-ncm.bas` writes `tax_code`/`tax_class`, `scan-barcode.bas` writes `global_trade_number`/`net_weight`/`brand`) |
 
 Ghost columns removed with the swap: the 14 `bots` copies carried `bot_id`,
 `avatar_url`, `settings` and `metadata`, none of which any migration creates.
@@ -272,10 +272,11 @@ because a bot template writes them, which no Rust-only audit would have caught.
 A `down.sql` must restore the original `6.0.2-01-core` definitions (values are
 lost either way).
 
-The 28 `products` columns that remain undeclared are live through bot scripts and
-`botbrazil`, so declaring them is the next step, and it has to clear the Diesel
-32-column tuple limit first (subset selects / `QueryableByName` instead of a
-whole-row `Queryable`).
+The `products` columns that remain undeclared (`org_id`, `bot_id`, `tax_code`,
+`tax_class`, `global_trade_number`, `net_weight`, `brand`, `slug`, …) are live
+through bot scripts and `botbrazil`, so declaring them is the next step, and it
+has to clear the Diesel 32-column tuple limit first (subset selects /
+`QueryableByName` instead of a whole-row `Queryable`).
 
 ## CI guard
 

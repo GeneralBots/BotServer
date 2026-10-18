@@ -1,6 +1,7 @@
--- `6.0.2-01-core` added 48 e-commerce/fiscal columns to `products`; the canonical
--- declaration in `botschema::billing` models only the 22-column shape created by
--- `6.0.10-01-products` (plus `branch_id`, `category_id`, `is_public`).
+-- `6.0.2-01-core` added 45 e-commerce/fiscal columns to `products`; the canonical
+-- declaration in `botschema::billing` models only the 22-column shape derived from
+-- `6.0.10-01-products` (its 23 columns minus `org_id`/`bot_id`, plus `branch_id`,
+-- `category_id`, `is_public`).
 -- The 21 columns dropped here are named by no Rust module, no `.bas`/`.gbui`
 -- template (including `botserver/work/templates`, which is generated but is the
 -- bot source of truth) and no later migration, so they only inflate the table.
