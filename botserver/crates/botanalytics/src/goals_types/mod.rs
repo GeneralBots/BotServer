@@ -21,10 +21,11 @@ pub struct ObjectiveRecord {
     pub progress: BigDecimal,
     pub visibility: String,
     pub weight: BigDecimal,
-    pub tags: Vec<String>,
+    pub tags: Vec<Option<String>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub org_id: Uuid,
+    pub bot_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Selectable, Insertable, AsChangeset)]
@@ -82,6 +83,7 @@ pub struct TemplateRecord {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub org_id: Uuid,
+    pub bot_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

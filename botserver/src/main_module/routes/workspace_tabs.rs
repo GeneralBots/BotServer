@@ -18,13 +18,8 @@ type HandlerError = (StatusCode, String);
 const MAX_TABS: usize = 20;
 const MAX_TAB_JSON_BYTES: usize = 32 * 1024;
 
-diesel::table! {
-    user_workspace_tabs (user_id) {
-        user_id -> Uuid,
-        tabs -> Jsonb,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::user_workspace_tabs;
 
 #[derive(Debug, Clone, Queryable, Selectable, Insertable, AsChangeset)]
 #[diesel(table_name = user_workspace_tabs)]

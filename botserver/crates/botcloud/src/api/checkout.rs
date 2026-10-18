@@ -61,6 +61,8 @@ pub(crate) async fn handle_checkout(
     let invoice_id = Uuid::new_v4();
     let invoice_number = botbilling::api_models::generate_invoice_number(&mut conn, effective_branch_id);
 
+    let (org_id, bot_id) = botbilling::scope_for_branch(&mut conn, effective_branch_id);
+
     let invoice = botbilling::api_models::BillingInvoice {
         id: invoice_id, branch_id: effective_branch_id, invoice_number,
         customer_id: None,
@@ -81,6 +83,7 @@ pub(crate) async fn handle_checkout(
         notes: Some(format!("SaaS: plan={}, period={}, storage={}GB", payload.plan, payload.period, payload.storage)),
         terms: None, footer: None, paid_at: None, sent_at: None, voided_at: None,
         created_at: now, updated_at: now,
+        org_id, bot_id,
     };
 
     diesel::insert_into(botbilling::schema::billing_invoices::table)

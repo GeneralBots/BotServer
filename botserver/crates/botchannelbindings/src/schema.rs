@@ -1,25 +1,3 @@
-diesel::table! {
-    channel_bindings (bot_id) {
-        bot_id -> Uuid,
-        phone_default -> Nullable<Varchar>,
-        whatsapp_number -> Nullable<Varchar>,
-        telegram_username -> Nullable<Varchar>,
-        domains -> Jsonb,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definitions live in `botschema` (#1497).
 
-diesel::table! {
-    call_logs (id) {
-        id -> Uuid,
-        bot_id -> Uuid,
-        direction -> Varchar,
-        from_number -> Nullable<Varchar>,
-        to_number -> Nullable<Varchar>,
-        status -> Varchar,
-        duration_sec -> Nullable<Int4>,
-        recording_ref -> Nullable<Text>,
-        transcript -> Nullable<Text>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::{call_logs, channel_bindings};

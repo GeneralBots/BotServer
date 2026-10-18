@@ -34,6 +34,8 @@ pub(super) async fn process_invoice_paid(
     let invoice_number =
         botbilling::api_models::generate_invoice_number(&mut conn, recurring.branch_id);
 
+    let (invoice_org_id, invoice_bot_id) = botbilling::scope_for_branch(&mut conn, recurring.branch_id);
+
     let new_invoice = botbilling::api_models::BillingInvoice {
         id: new_invoice_id,
         branch_id: recurring.branch_id,
@@ -62,6 +64,7 @@ pub(super) async fn process_invoice_paid(
         voided_at: None,
         created_at: now,
         updated_at: now,
+    org_id: invoice_org_id, bot_id: invoice_bot_id,
     };
 
     diesel::insert_into(botbilling::schema::billing_invoices::table)

@@ -58,7 +58,7 @@ pub async fn create_objective(
     let owner_name = Some(user.username.clone());
     let now = Utc::now();
 
-    let tags: Vec<String> = req.tags.unwrap_or_default();
+    let tags: Vec<Option<String>> = req.tags.unwrap_or_default().into_iter().map(Some).collect();
 
     let new_objective = ObjectiveRecord {
         id: Uuid::new_v4(),
@@ -78,6 +78,7 @@ pub async fn create_objective(
         tags,
         created_at: now,
         updated_at: now,
+        bot_id: None,
     };
 
     let record = new_objective.clone();
@@ -156,7 +157,7 @@ pub async fn update_objective(
             objective.period_end = Some(period_end);
         }
         if let Some(tags) = req.tags {
-            objective.tags = tags;
+            objective.tags = tags.into_iter().map(Some).collect();
         }
         objective.updated_at = Utc::now();
 

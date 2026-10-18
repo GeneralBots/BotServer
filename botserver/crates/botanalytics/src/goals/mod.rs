@@ -32,9 +32,10 @@ mod tests {
             progress: BigDecimal::from(0),
             visibility: "team".to_string(),
             weight: BigDecimal::from(1),
-            tags: vec!["test".to_string()],
+            tags: vec![Some("test".to_string())],
             created_at: now,
             updated_at: now,
+            bot_id: None,
         };
 
         assert_eq!(objective.title, "Test Objective");

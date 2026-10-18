@@ -13,6 +13,7 @@ cache = ["botsecurity-auth/cache"]
 directory = ["botsecurity-auth/directory"]
 
 [dependencies]
+botschema = { workspace = true, features = ["security"] }
 botsecurity-core = { workspace = true }
 botsecurity-crypto = { workspace = true }
 botsecurity-auth = { workspace = true }

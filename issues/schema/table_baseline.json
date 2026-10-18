@@ -1,18 +1,12 @@
 {
   "files": [
     "botlib/src/models/session.rs",
-    "botserver/crates/botagent/src/schema.rs",
     "botserver/crates/botattendance/src/schema.rs",
-    "botserver/crates/botautomation/src/schema.rs",
     "botserver/crates/botautotask/src/schema.rs",
     "botserver/crates/botbasic_types/src/schema.rs",
     "botserver/crates/botbilling/src/schema.rs",
-    "botserver/crates/botbrowserpolicy/src/schema.rs",
-    "botserver/crates/botchannelbindings/src/schema.rs",
     "botserver/crates/botcloud/src/schema_ext.rs",
     "botserver/crates/botcompliance/src/schema.rs",
-    "botserver/crates/botconnectors/src/schema.rs",
-    "botserver/crates/botconsent/src/schema.rs",
     "botserver/crates/botcontacts/src/schema.rs",
     "botserver/crates/botcorebot/src/schema.rs",
     "botserver/crates/botcoredirectory/src/api.rs",
@@ -20,21 +14,15 @@
     "botserver/crates/botcoreoauth/src/schema.rs",
     "botserver/crates/botcoresession/src/schema.rs",
     "botserver/crates/botemail/src/schema.rs",
-    "botserver/crates/botmarketplace/src/schema.rs",
-    "botserver/crates/botmemory/src/schema.rs",
     "botserver/crates/botmsteams/src/schema.rs",
     "botserver/crates/botpaper/src/schema.rs",
     "botserver/crates/botpeople/src/lib_part1.rs",
     "botserver/crates/botproducts/src/schema.rs",
-    "botserver/crates/botsecurity/src/schema.rs",
     "botserver/crates/botsources/src/schema.rs",
     "botserver/crates/bottasks/src/schema.rs",
     "botserver/crates/bottelegram/src/schema.rs",
-    "botserver/crates/botvideo/src/schema.rs",
     "botserver/crates/botwhatsapp/src/schema.rs",
-    "botserver/crates/botworkspaces/src/lib.rs",
-    "botserver/src/main_module/routes/catalog.rs",
-    "botserver/src/main_module/routes/workspace_tabs.rs"
+    "botserver/src/main_module/routes/catalog.rs"
   ],
-  "total": 127
+  "total": 86
 }

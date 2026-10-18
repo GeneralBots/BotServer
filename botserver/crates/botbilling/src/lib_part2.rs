@@ -170,7 +170,7 @@ pub fn get_bot_context(pool: &DbPool, get_default_bot: &Option<GetDefaultBotFn>)
 /// columns (`#1517`). Every invoice/payment/quote insert resolves them here,
 /// mirroring `botproducts::org_for_branch` / `bot_for_branch` and returning the
 /// nil UUID when the branch cannot be resolved.
-pub(crate) fn scope_for_branch(conn: &mut diesel::PgConnection, branch_id: Uuid) -> (Uuid, Uuid) {
+pub fn scope_for_branch(conn: &mut diesel::PgConnection, branch_id: Uuid) -> (Uuid, Uuid) {
     #[derive(diesel::QueryableByName)]
     struct OrgRow {
         #[diesel(sql_type = diesel::sql_types::Uuid)]

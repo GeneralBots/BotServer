@@ -11,14 +11,14 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 92 |
-| Total `table!` declarations | 127 |
+| Distinct tables (outside botschema) | 51 |
+| Total `table!` declarations | 86 |
 | Tables declared more than once | 14 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
 | — conflicting drift | 14 |
-| Tables already in `botschema` | 219 |
-| Distinct tables NOT yet in `botschema` | 78 |
+| Tables already in `botschema` | 260 |
+| Distinct tables NOT yet in `botschema` | 37 |
 
 ## Conflicting tables (14)
 

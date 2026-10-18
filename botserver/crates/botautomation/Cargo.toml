@@ -8,6 +8,7 @@ repository = "https://github.com/generalbots/generalbots"
 description = "NL scheduled adaptive agents, planner-executor-verifier engine and progress dashboard API (#1170, #1171)."
 
 [dependencies]
+botschema = { workspace = true, features = ["agents"] }
 botlib = { workspace = true, features = ["database"] }
 async-stream = { workspace = true }
 axum = { workspace = true }

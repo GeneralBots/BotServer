@@ -79,16 +79,16 @@ pub(crate) async fn list_services(
     }
 
     let subs = query
-        .load::<(Uuid, String, Option<String>, String, String, bigdecimal::BigDecimal, String, i32, chrono::NaiveDate, chrono::NaiveDateTime)>(&mut conn)
+        .load::<(Uuid, String, Option<String>, String, Option<String>, Option<bigdecimal::BigDecimal>, Option<String>, i32, chrono::NaiveDate, chrono::DateTime<chrono::Utc>)>(&mut conn)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Query: {e}")))?;
 
     let result: Vec<serde_json::Value> = subs.into_iter().map(|(sid, cname, desc, freq, stat, amt, cur, _interval, sdate, cdate)| {
         let plan_label = desc.as_deref().unwrap_or(&cname);
-        let friendly_desc = if stat == "active" && amt == 0 {
+        let friendly_desc = if stat.as_deref() == Some("active") && amt.as_ref().map(botbilling::api_models::bd_to_f64) == Some(0.0) {
             "GBO Free Service".to_string()
-        } else if stat == "trialing" {
+        } else if stat.as_deref() == Some("trialing") {
             format!("GBO {} Service (Trial)", plan_label)
-        } else if stat == "active" {
+        } else if stat.as_deref() == Some("active") {
             format!("GBO {} Service", plan_label)
         } else {
             plan_label.to_string()
@@ -98,10 +98,10 @@ pub(crate) async fn list_services(
             "name": friendly_desc,
             "description": desc,
             "status": stat,
-            "amount": amt.to_string(),
+            "amount": amt.as_ref().map(|a| a.to_string()),
             "currency": cur,
             "period": if _interval > 1 { format!("every {} {}", _interval, freq) } else { freq.to_string() },
-            "created_at": cdate.and_utc().to_rfc3339(),
+            "created_at": cdate.to_rfc3339(),
             "expires_at": sdate,
         })
     }).collect();

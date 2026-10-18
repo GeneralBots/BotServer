@@ -16,7 +16,7 @@ pub(crate) fn record_to_objective(record: ObjectiveRecord) -> Objective {
         progress: record.progress.to_f32().unwrap_or(0.0),
         visibility: Visibility::from_label(&record.visibility),
         weight: record.weight.to_f32().unwrap_or(1.0),
-        tags: record.tags,
+        tags: record.tags.into_iter().flatten().collect(),
         created_at: record.created_at,
         updated_at: record.updated_at,
     }
