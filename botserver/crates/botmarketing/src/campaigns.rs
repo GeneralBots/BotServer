@@ -17,20 +17,25 @@ use crate::state::AppState;
 pub struct CrmCampaign {
     pub id: Uuid,
     pub branch_id: Uuid,
+    pub deal_id: Option<Uuid>,
     pub name: String,
-    pub campaign_type: String,
     pub status: Option<String>,
+    pub content_template: serde_json::Value,
+    pub sent_at: Option<DateTime<Utc>>,
+    pub completed_at: Option<DateTime<Utc>>,
+    pub metrics: Option<serde_json::Value>,
+    pub budget: Option<bigdecimal::BigDecimal>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub campaign_type: String,
     pub starts_at: Option<DateTime<Utc>>,
     pub ends_at: Option<DateTime<Utc>>,
-    pub budget: Option<bigdecimal::BigDecimal>,
-    pub metrics: Option<serde_json::Value>,
     pub run_offset: Option<i32>,
     pub pause_requested: Option<bool>,
     pub stop_requested: Option<bool>,
     pub started_at: Option<DateTime<Utc>>,
-    pub completed_at: Option<DateTime<Utc>>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub org_id: Option<Uuid>,
+    pub bot_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -129,9 +134,12 @@ pub async fn create_campaign(
     let campaign = CrmCampaign {
         id,
         branch_id,
+        deal_id: None,
         name: req.name,
-        campaign_type: req.campaign_type.unwrap_or_else(|| "email".to_string()),
         status: Some("draft".to_string()),
+        content_template: serde_json::json!({}),
+        sent_at: None,
+        campaign_type: req.campaign_type.unwrap_or_else(|| "email".to_string()),
         starts_at,
         ends_at: None,
         budget: req.budget.map(|b| bigdecimal::BigDecimal::try_from(b).unwrap_or_default()),
@@ -143,6 +151,8 @@ pub async fn create_campaign(
         completed_at: None,
         created_at: now,
         updated_at: now,
+        org_id: None,
+        bot_id: None,
     };
 
     diesel::insert_into(marketing_campaigns::table)

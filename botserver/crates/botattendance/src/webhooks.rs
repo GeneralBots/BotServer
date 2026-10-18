@@ -16,14 +16,13 @@ type HmacSha256 = Hmac<Sha256>;
 pub struct AttendanceWebhook {
     pub id: Uuid,
     pub branch_id: Uuid,
-    pub url: String,
-    pub event_types: Option<String>,
-    pub is_active: Option<bool>,
-    pub created_at: chrono::DateTime<Utc>,
-    pub updated_at: chrono::DateTime<Utc>,
     pub webhook_url: String,
     pub events: Option<String>,
+    pub is_active: Option<bool>,
     pub secret_key: Option<String>,
+    pub created_at: chrono::DateTime<Utc>,
+    pub updated_at: chrono::DateTime<Utc>,
+    pub org_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -153,14 +152,13 @@ pub async fn create_webhook(
     let webhook = AttendanceWebhook {
         id,
         branch_id,
-        url: req.webhook_url.clone(),
-        event_types: None,
         is_active: Some(true),
         created_at: now,
         updated_at: now,
         webhook_url: req.webhook_url,
         events: Some(req.events.join(",")),
         secret_key: req.secret_key,
+        org_id: None,
     };
     diesel::insert_into(attendance_webhooks::table)
         .values(&webhook)

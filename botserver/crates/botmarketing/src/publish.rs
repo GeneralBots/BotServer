@@ -112,7 +112,7 @@ pub async fn publish_campaign(
                 marketing_recipients::contact_id.eq(*cid),
                 marketing_recipients::email.eq(email.clone()),
                 marketing_recipients::name.eq(name.clone()),
-                marketing_recipients::status.eq(Some("queued")),
+                marketing_recipients::status.eq("queued"),
                 marketing_recipients::created_at.eq(now),
             ))
             .execute(&mut conn)
@@ -279,7 +279,7 @@ fn set_recipient_state(
     if status == "failed" {
         diesel::update(target)
             .set((
-                marketing_recipients::status.eq(Some(status)),
+                marketing_recipients::status.eq(status),
                 marketing_recipients::failed_at.eq(Some(chrono::Utc::now())),
                 marketing_recipients::error_message.eq(error_message.map(String::from)),
             ))
@@ -287,7 +287,7 @@ fn set_recipient_state(
     } else {
         diesel::update(target)
             .set((
-                marketing_recipients::status.eq(Some(status)),
+                marketing_recipients::status.eq(status),
                 marketing_recipients::sent_at.eq(Some(chrono::Utc::now())),
                 marketing_recipients::error_message.eq(error_message.map(String::from)),
             ))

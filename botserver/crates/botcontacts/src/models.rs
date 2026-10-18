@@ -44,19 +44,14 @@ pub struct CrmContact {
 #[diesel(table_name = crm_accounts)]
 pub struct CrmAccount {
     pub id: Uuid,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
     pub branch_id: Uuid,
     pub name: String,
-    pub industry: Option<String>,
     pub website: Option<String>,
-    pub phone: Option<String>,
-    pub email: Option<String>,
-    pub owner_id: Option<Uuid>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub industry: Option<String>,
     pub employees_count: Option<i32>,
     pub annual_revenue: Option<f64>,
+    pub phone: Option<String>,
+    pub email: Option<String>,
     pub address_line1: Option<String>,
     pub address_line2: Option<String>,
     pub city: Option<String>,
@@ -66,6 +61,11 @@ pub struct CrmAccount {
     pub description: Option<String>,
     pub tags: Vec<String>,
     pub custom_fields: serde_json::Value,
+    pub owner_id: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]

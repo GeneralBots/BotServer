@@ -18,6 +18,8 @@ diesel::table! {
         tags -> Array<Nullable<Text>>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Nullable<Uuid>,
     }
 }
 
@@ -86,6 +88,8 @@ diesel::table! {
         created_by -> Nullable<Uuid>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Nullable<Uuid>,
     }
 }
 

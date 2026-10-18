@@ -8,8 +8,12 @@ use super::schema::projects;
 #[diesel(table_name = projects)]
 pub struct Project {
     pub id: Uuid,
-    pub org: String,
     pub name: String,
+    pub description: Option<String>,
+    pub status: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub org: String,
     pub project_type: String,
     pub deploy_target: String,
     pub repo_url: Option<String>,
@@ -17,9 +21,5 @@ pub struct Project {
     pub container_name: Option<String>,
     pub custom_domain: Option<String>,
     pub environment: String,
-    pub status: String,
     pub framework: Option<String>,
-    pub description: Option<String>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
 }

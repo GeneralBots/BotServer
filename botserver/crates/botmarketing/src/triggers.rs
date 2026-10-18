@@ -19,20 +19,19 @@ pub enum TriggerKind {
     EmailOpened = 2,
 }
 
+/// Row of the canonical `system_automations` table (`botschema::system_automations`).
 #[derive(Debug, Clone, Queryable)]
 #[diesel(table_name = system_automations)]
 pub struct Automation {
     pub id: Uuid,
-    pub branch_id: Uuid,
-    pub bot_id: Uuid,
-    pub name: String,
+    pub bot_id: Option<Uuid>,
     pub kind: i32,
-    pub event_type: String,
-    pub action_type: String,
-    pub config: Option<serde_json::Value>,
-    pub is_active: Option<bool>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub target: Option<String>,
+    pub schedule: Option<String>,
+    pub param: String,
+    pub is_active: bool,
+    pub last_triggered: Option<DateTime<Utc>>,
+    pub branch_id: Uuid,
 }
 
 pub fn trigger_deal_stage_change(
@@ -45,16 +44,15 @@ pub fn trigger_deal_stage_change(
     let automations: Vec<Automation> = system_automations::table
         .filter(system_automations::kind.eq(TriggerKind::DealStageChange as i32))
         .filter(system_automations::is_active.eq(true))
-        .filter(system_automations::bot_id.eq(_bot_id))
+        .filter(system_automations::bot_id.eq(Some(_bot_id)))
         .load(conn)
         .unwrap_or_default();
 
     for automation in automations {
-        let config = automation.config.as_ref();
-        let target_stage = config.and_then(|c| c.get("target").and_then(|v| v.as_str())).unwrap_or("");
-        let param = config.and_then(|c| c.get("param").and_then(|v| v.as_str())).map(|s| s.to_string());
+        let target_stage = automation.target.as_deref().unwrap_or("");
+        let param = automation.param.as_str();
         if target_stage.is_empty() || target_stage == new_stage {
-            if let Some(param) = &param {
+            if !param.is_empty() {
                 if let Err(e) = execute_campaign_for_deal(conn, param, deal_id) {
                     log::error!("Failed to trigger campaign for deal stage change: {}", e);
                 }
@@ -72,16 +70,15 @@ pub fn trigger_contact_change(
     let automations: Vec<Automation> = system_automations::table
         .filter(system_automations::kind.eq(TriggerKind::ContactChange as i32))
         .filter(system_automations::is_active.eq(true))
-        .filter(system_automations::bot_id.eq(_bot_id))
+        .filter(system_automations::bot_id.eq(Some(_bot_id)))
         .load(conn)
         .unwrap_or_default();
 
     for automation in automations {
-        let config = automation.config.as_ref();
-        let target_value = config.and_then(|c| c.get("target").and_then(|v| v.as_str())).unwrap_or("");
-        let param = config.and_then(|c| c.get("param").and_then(|v| v.as_str())).map(|s| s.to_string());
+        let target_value = automation.target.as_deref().unwrap_or("");
+        let param = automation.param.as_str();
         if target_value.is_empty() || target_value == change_type {
-            if let Some(param) = &param {
+            if !param.is_empty() {
                 if let Err(e) = execute_campaign_for_contact(conn, param, contact_id) {
                     log::error!("Failed to trigger campaign for contact change: {}", e);
                 }
@@ -99,16 +96,15 @@ pub fn trigger_email_opened(
     let automations: Vec<Automation> = system_automations::table
         .filter(system_automations::kind.eq(TriggerKind::EmailOpened as i32))
         .filter(system_automations::is_active.eq(true))
-        .filter(system_automations::bot_id.eq(_bot_id))
+        .filter(system_automations::bot_id.eq(Some(_bot_id)))
         .load(conn)
         .unwrap_or_default();
 
     for automation in automations {
-        let config = automation.config.as_ref();
-        let target_campaign = config.and_then(|c| c.get("target").and_then(|v| v.as_str())).unwrap_or("");
-        let param = config.and_then(|c| c.get("param").and_then(|v| v.as_str())).map(|s| s.to_string());
+        let target_campaign = automation.target.as_deref().unwrap_or("");
+        let param = automation.param.as_str();
         if target_campaign.is_empty() || target_campaign == campaign_id.to_string() {
-            if let Some(param) = &param {
+            if !param.is_empty() {
                 if let Err(e) = execute_campaign_for_contact(conn, param, contact_id) {
                     log::error!("Failed to trigger campaign for email opened: {}", e);
                 }
@@ -154,8 +150,8 @@ fn execute_campaign_for_contact(
                 marketing_recipients::campaign_id.eq(Some(cid)),
                 marketing_recipients::contact_id.eq(Some(contact_id)),
                 marketing_recipients::email.eq(""),
-                marketing_recipients::channel.eq(Some("automation")),
-                marketing_recipients::status.eq(Some("pending")),
+                marketing_recipients::channel.eq("automation"),
+                marketing_recipients::status.eq("pending"),
                 marketing_recipients::created_at.eq(chrono::Utc::now()),
             ))
             .execute(conn)?;
@@ -184,7 +180,7 @@ pub async fn track_email_open(
     if let Some(token_str) = req.token {
         if let Ok(token) = Uuid::parse_str(&token_str) {
             let record: Option<(Uuid, Option<Uuid>)> = email_tracking::table
-                .filter(email_tracking::open_token.eq(Some(token.to_string())))
+                .filter(email_tracking::open_token.eq(Some(token)))
                 .select((email_tracking::id, email_tracking::recipient_id))
                 .first(&mut conn)
                 .ok();

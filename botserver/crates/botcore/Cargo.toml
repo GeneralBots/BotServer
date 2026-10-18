@@ -6,7 +6,7 @@ license = "MIT"
 
 [dependencies]
 botbasic_types = { workspace = true }
-botschema = { workspace = true }
+botschema = { workspace = true, features = ["full"] }
 botlib = { workspace = true, features = ["database"] }
 botsecurity-crypto = { workspace = true }
 # botsecurity removed to break circular dep — use botlib::security:: instead

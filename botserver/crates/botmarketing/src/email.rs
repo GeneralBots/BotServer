@@ -86,17 +86,15 @@ pub async fn send_campaign_email(
         .map(|html| inject_tracking_pixel(&html, open_token, &base_url));
 
     let mut conn = state.conn.get().map_err(|e| format!("DB connection failed: {}", e))?;
-    let (_, branch_id, _) = state.get_scope();
 
+    // `email_tracking` has no `branch_id`/`email`/`event_type` columns in the
+    // database (#1517); the recipient is keyed by id and `open_token` is a UUID.
     diesel::insert_into(email_tracking::table)
         .values((
             email_tracking::id.eq(tracking_id),
-            email_tracking::branch_id.eq(branch_id),
-            email_tracking::email.eq(&payload.to),
-            email_tracking::event_type.eq("campaign"),
             email_tracking::recipient_id.eq(payload.recipient_id),
             email_tracking::campaign_id.eq(payload.campaign_id),
-            email_tracking::open_token.eq(Some(open_token.to_string())),
+            email_tracking::open_token.eq(Some(open_token)),
             email_tracking::open_tracking_enabled.eq(true),
             email_tracking::opened.eq(false),
             email_tracking::clicked.eq(false),
@@ -169,15 +167,15 @@ pub async fn get_campaign_email_metrics(
     let opened = results.iter().filter(|pair| pair.0.unwrap_or(false)).count() as i64;
     let clicked = results.iter().filter(|pair| pair.1.unwrap_or(false)).count() as i64;
 
-    let recipients: Vec<(Option<String>, Option<DateTime<Utc>>)> = marketing_recipients::table
+    let recipients: Vec<(String, Option<DateTime<Utc>>)> = marketing_recipients::table
         .filter(marketing_recipients::campaign_id.eq(campaign_id))
-        .filter(marketing_recipients::channel.eq(Some("email")))
+        .filter(marketing_recipients::channel.eq("email"))
         .select((marketing_recipients::status, marketing_recipients::sent_at))
         .load(&mut conn)
         .map_err(|e| format!("Query error: {}", e))?;
 
-    let sent = recipients.iter().filter(|(s, _)| s.as_deref() == Some("sent")).count() as i64;
-    let failed = recipients.iter().filter(|(s, _)| s.as_deref() == Some("failed")).count() as i64;
+    let sent = recipients.iter().filter(|(s, _)| s == "sent").count() as i64;
+    let failed = recipients.iter().filter(|(s, _)| s == "failed").count() as i64;
     let delivered = sent;
 
     Ok(CampaignMetrics {

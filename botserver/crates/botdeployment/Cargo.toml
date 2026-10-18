@@ -9,6 +9,7 @@ repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
 botlib = { workspace = true, features = ["database"] }
+botschema = { workspace = true, features = ["project"] }
 botcoresecrets = { workspace = true }
 axum = { workspace = true }
 git2 = "0.20"

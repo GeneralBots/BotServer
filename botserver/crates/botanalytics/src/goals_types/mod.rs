@@ -9,7 +9,6 @@ pub(crate) use crate::schema::{okr_checkins, okr_key_results, okr_objectives, ok
 #[diesel(table_name = okr_objectives)]
 pub struct ObjectiveRecord {
     pub id: Uuid,
-    pub org_id: Uuid,
     pub branch_id: Uuid,
     pub owner_id: Uuid,
     pub parent_id: Option<Uuid>,
@@ -25,6 +24,7 @@ pub struct ObjectiveRecord {
     pub tags: Vec<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub org_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Selectable, Insertable, AsChangeset)]
@@ -70,7 +70,6 @@ pub struct CheckInRecord {
 #[diesel(table_name = okr_templates)]
 pub struct TemplateRecord {
     pub id: Uuid,
-    pub org_id: Uuid,
     pub branch_id: Uuid,
     pub name: String,
     pub description: Option<String>,
@@ -82,6 +81,7 @@ pub struct TemplateRecord {
     pub created_by: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub org_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

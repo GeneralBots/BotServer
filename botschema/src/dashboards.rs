@@ -1,10 +1,10 @@
 use diesel::prelude::*;
 
-table! {
+diesel::table! {
     dashboards (id) {
         id -> Uuid,
         owner_id -> Uuid,
-        name -> Text,
+        name -> Varchar,
         description -> Nullable<Text>,
         layout -> Jsonb,
         refresh_interval -> Nullable<Int4>,
@@ -13,6 +13,9 @@ table! {
         tags -> Array<Text>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
+        branch_id -> Uuid,
     }
 }
 
@@ -34,19 +37,22 @@ table! {
     }
 }
 
-table! {
+diesel::table! {
     dashboard_data_sources (id) {
         id -> Uuid,
-        name -> Text,
+        name -> Varchar,
         description -> Nullable<Text>,
-        source_type -> Text,
+        source_type -> Varchar,
         connection -> Jsonb,
         schema_definition -> Jsonb,
-        refresh_schedule -> Nullable<Text>,
+        refresh_schedule -> Nullable<Varchar>,
         last_sync -> Nullable<Timestamptz>,
-        status -> Text,
+        status -> Varchar,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
+        branch_id -> Uuid,
     }
 }
 

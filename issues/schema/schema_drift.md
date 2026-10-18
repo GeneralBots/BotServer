@@ -11,292 +11,18 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 138 |
-| Total `table!` declarations | 179 |
-| Tables declared more than once | 51 |
+| Distinct tables (outside botschema) | 92 |
+| Total `table!` declarations | 127 |
+| Tables declared more than once | 14 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 51 |
-| Tables already in `botschema` | 210 |
-| Distinct tables NOT yet in `botschema` | 87 |
+| — conflicting drift | 14 |
+| Tables already in `botschema` | 219 |
+| Distinct tables NOT yet in `botschema` | 78 |
 
-## Conflicting tables (51)
+## Conflicting tables (14)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
-
-### `attendance_sla_policies` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `channel` | `Nullable<Varchar>` |
-| `created_at` | `Timestamptz` |
-| `escalate_on_breach` | `Nullable<Bool>` |
-| `first_response_minutes` | `Nullable<Int4>` |
-| `id` | `Uuid` |
-| `is_active` | `Nullable<Bool>` |
-| `name` | `Varchar` |
-| `priority` | `Nullable<Int4>` |
-| `resolution_minutes` | `Nullable<Int4>` |
-| `resolution_time_minutes` | `Nullable<Int4>` |
-| `response_time_minutes` | `Int4` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botattendance/src/schema.rs` | 46 | `id` | 13 |
-
-### `attendance_webhooks` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `event_types` | `Nullable<Text>` |
-| `events` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `is_active` | `Nullable<Bool>` |
-| `secret_key` | `Nullable<Text>` |
-| `updated_at` | `Timestamptz` |
-| `url` | `Text` |
-| `webhook_url` | `Varchar` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botattendance/src/schema.rs` | 31 | `id` | 10 |
-
-### `basic_tools` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `ast_path` | `Text` |
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `compiled` | `Nullable<Text>` |
-| `compiled_at` | `Text` |
-| `created_at` | `Timestamptz` |
-| `file_hash` | `Text` |
-| `file_path` | `Text` |
-| `id` | `Uuid` |
-| `is_active` | `Nullable<Bool>` |
-| `mcp_json` | `Nullable<Text>` |
-| `name` | `Varchar` |
-| `source` | `Nullable<Text>` |
-| `tool_json` | `Nullable<Text>` |
-| `tool_name` | `Text` |
-| `updated_at` | `Timestamptz` |
-| `version` | `Int4` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcorebot/src/schema.rs` | 41 | `id` | 17 |
-
-### `billing_alert_history` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `acknowledged_at` | `Nullable<Timestamptz>` |
-| `acknowledged_by` | `Nullable<Uuid>` |
-| `alert_id` | `Nullable<Uuid>` |
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `current_usage` | `Int8` |
-| `id` | `Uuid` |
-| `message` | `Text` |
-| `metric` | `Varchar` |
-| `percentage` | `Numeric` |
-| `resolution_type` | `Nullable<Varchar>` |
-| `resolved_at` | `Nullable<Timestamptz>` |
-| `sent_at` | `Timestamptz` |
-| `severity` | `Varchar` |
-| `threshold` | `Numeric` |
-| `updated_at` | `Timestamptz` |
-| `usage_limit` | `Int8` |
-| `value` | `Numeric` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbilling/src/schema.rs` | 199 | `id` | 18 |
-
-### `billing_invoices` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `amount_due` | `Numeric` |
-| `amount_paid` | `Numeric` |
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `currency` | `Nullable<Varchar>` |
-| `customer_address` | `Nullable<Text>` |
-| `customer_email` | `Nullable<Varchar>` |
-| `customer_id` | `Nullable<Uuid>` |
-| `customer_name` | `Nullable<Varchar>` |
-| `discount_amount` | `Numeric` |
-| `discount_percent` | `Numeric` |
-| `due_date` | `Nullable<Date>` |
-| `footer` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `invoice_number` | `Varchar` |
-| `issue_date` | `Date` |
-| `notes` | `Nullable<Text>` |
-| `paid_at` | `Nullable<Timestamptz>` |
-| `sent_at` | `Nullable<Timestamptz>` |
-| `status` | `Nullable<Varchar>` |
-| `subtotal` | `Numeric` |
-| `tax_amount` | `Numeric` |
-| `tax_rate` | `Numeric` |
-| `terms` | `Nullable<Text>` |
-| `total` | `Nullable<Numeric>` |
-| `updated_at` | `Timestamptz` |
-| `voided_at` | `Nullable<Timestamptz>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbilling/src/schema.rs` | 1 | `id` | 27 |
-
-### `billing_notification_preferences` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `channel` | `Varchar` |
-| `channels` | `Jsonb` |
-| `created_at` | `Timestamptz` |
-| `email_recipients` | `Jsonb` |
-| `enabled` | `Nullable<Bool>` |
-| `event_type` | `Varchar` |
-| `id` | `Uuid` |
-| `metric_overrides` | `Jsonb` |
-| `min_severity` | `Varchar` |
-| `quiet_hours_days` | `Nullable<Jsonb>` |
-| `quiet_hours_end` | `Nullable<Int4>` |
-| `quiet_hours_start` | `Nullable<Int4>` |
-| `quiet_hours_timezone` | `Nullable<Varchar>` |
-| `slack_webhook_url` | `Nullable<Text>` |
-| `sms_numbers` | `Jsonb` |
-| `teams_webhook_url` | `Nullable<Text>` |
-| `updated_at` | `Timestamptz` |
-| `webhook_secret` | `Nullable<Text>` |
-| `webhook_url` | `Nullable<Text>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbilling/src/schema.rs` | 222 | `id` | 20 |
-
-### `billing_payments` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `amount` | `Numeric` |
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `currency` | `Nullable<Varchar>` |
-| `gateway_response` | `Nullable<Jsonb>` |
-| `id` | `Uuid` |
-| `invoice_id` | `Nullable<Uuid>` |
-| `notes` | `Nullable<Text>` |
-| `paid_at` | `Nullable<Timestamptz>` |
-| `payer_email` | `Nullable<Varchar>` |
-| `payer_name` | `Nullable<Varchar>` |
-| `payment_method` | `Nullable<Varchar>` |
-| `payment_number` | `Varchar` |
-| `payment_reference` | `Nullable<Varchar>` |
-| `refund_amount` | `Nullable<Numeric>` |
-| `refunded_at` | `Nullable<Timestamptz>` |
-| `status` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbilling/src/schema.rs` | 35 | `id` | 18 |
-
-### `billing_quotes` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `accepted_at` | `Nullable<Timestamptz>` |
-| `branch_id` | `Uuid` |
-| `converted_invoice_id` | `Nullable<Uuid>` |
-| `created_at` | `Timestamptz` |
-| `currency` | `Nullable<Varchar>` |
-| `customer_address` | `Nullable<Text>` |
-| `customer_email` | `Nullable<Varchar>` |
-| `customer_id` | `Nullable<Uuid>` |
-| `customer_name` | `Nullable<Varchar>` |
-| `discount_amount` | `Numeric` |
-| `discount_percent` | `Numeric` |
-| `id` | `Uuid` |
-| `issue_date` | `Date` |
-| `items` | `Nullable<Jsonb>` |
-| `notes` | `Nullable<Text>` |
-| `quote_number` | `Varchar` |
-| `rejected_at` | `Nullable<Timestamptz>` |
-| `sent_at` | `Nullable<Timestamptz>` |
-| `status` | `Nullable<Varchar>` |
-| `subtotal` | `Numeric` |
-| `tax_amount` | `Numeric` |
-| `tax_rate` | `Numeric` |
-| `terms` | `Nullable<Text>` |
-| `total` | `Nullable<Numeric>` |
-| `updated_at` | `Timestamptz` |
-| `valid_until` | `Nullable<Date>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbilling/src/schema.rs` | 58 | `id` | 26 |
-
-### `billing_recurring` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `amount` | `Nullable<Numeric>` |
-| `branch_id` | `Uuid` |
-| `cancelled_at` | `Nullable<Timestamptz>` |
-| `created_at` | `Timestamptz` |
-| `currency` | `Nullable<Varchar>` |
-| `current_period_end` | `Nullable<Timestamptz>` |
-| `current_period_start` | `Nullable<Timestamptz>` |
-| `customer_email` | `Nullable<Varchar>` |
-| `customer_id` | `Nullable<Uuid>` |
-| `customer_name` | `Varchar` |
-| `description` | `Nullable<Text>` |
-| `end_date` | `Nullable<Date>` |
-| `frequency` | `Varchar` |
-| `id` | `Uuid` |
-| `interval_count` | `Int4` |
-| `invoices_generated` | `Int4` |
-| `last_invoice_date` | `Nullable<Date>` |
-| `last_invoice_id` | `Nullable<Uuid>` |
-| `next_invoice_date` | `Date` |
-| `plan_name` | `Varchar` |
-| `start_date` | `Date` |
-| `status` | `Nullable<Varchar>` |
-| `trial_end` | `Nullable<Timestamptz>` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbilling/src/schema.rs` | 91 | `id` | 24 |
-
-### `billing_tax_rates` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `country` | `Nullable<Varchar>` |
-| `created_at` | `Timestamptz` |
-| `description` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `is_active` | `Bool` |
-| `is_default` | `Nullable<Bool>` |
-| `name` | `Varchar` |
-| `rate` | `Numeric` |
-| `region` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbilling/src/schema.rs` | 120 | `id` | 11 |
 
 ### `bot_configuration` ×7 (in botschema)
 
@@ -317,7 +43,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `botserver/crates/botcoredirectory/src/provisioning.rs` | 315 | `bot_id, config_key` | 7 |
 | `botserver/crates/botbasic_types/src/schema.rs` | 95 | `id` | 9 |
 | `botserver/crates/botcoreoauth/src/schema.rs` | 4 | `bot_id, config_key` | 7 |
-| `botserver/crates/botcorebot/src/schema.rs` | 65 | `id` | 9 |
+| `botserver/crates/botcorebot/src/schema.rs` | 46 | `id` | 9 |
 | `botserver/crates/botsources/src/schema.rs` | 4 | `id` | 7 |
 | `botserver/crates/botwhatsapp/src/schema.rs` | 7 | `id` | 7 |
 | `botserver/crates/botcoresession/src/schema.rs` | 25 | `id` | 9 |
@@ -340,116 +66,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `botserver/crates/botbasic_types/src/schema.rs` | 19 | `id` | 7 |
 | `botserver/crates/botcorebot/src/schema.rs` | 25 | `id` | 8 |
 
-### `canvases` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `background_color` | `Nullable<Varchar>` |
-| `bot_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `created_by` | `Uuid` |
-| `description` | `Nullable<Text>` |
-| `height` | `Int4` |
-| `id` | `Uuid` |
-| `is_public` | `Bool` |
-| `is_template` | `Bool` |
-| `name` | `Varchar` |
-| `org_id` | `Uuid` |
-| `thumbnail_url` | `Nullable<Text>` |
-| `updated_at` | `Timestamptz` |
-| `width` | `Int4` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcanvas/src/lib.rs` | 24 | `id` | 14 |
-
-### `compliance_checks` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `bot_id` | `Nullable<Uuid>` |
-| `branch_id` | `Uuid` |
-| `check_type` | `Varchar` |
-| `checked_at` | `Nullable<Timestamptz>` |
-| `checked_by` | `Nullable<Uuid>` |
-| `created_at` | `Timestamptz` |
-| `id` | `Uuid` |
-| `org_id` | `Nullable<Uuid>` |
-| `result` | `Nullable<Jsonb>` |
-| `status` | `Nullable<Varchar>` |
-| `target_id` | `Nullable<Uuid>` |
-| `target_type` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcompliance/src/schema.rs` | 4 | `id` | 13 |
-
-### `crm_accounts` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `address_city` | `Nullable<Varchar>` |
-| `address_country` | `Nullable<Varchar>` |
-| `address_line1` | `Nullable<Varchar>` |
-| `address_line2` | `Nullable<Varchar>` |
-| `address_state` | `Nullable<Varchar>` |
-| `address_street` | `Nullable<Varchar>` |
-| `address_zip` | `Nullable<Varchar>` |
-| `annual_revenue` | `Nullable<Float8>` |
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `city` | `Nullable<Varchar>` |
-| `country` | `Nullable<Varchar>` |
-| `created_at` | `Timestamptz` |
-| `custom_fields` | `Jsonb` |
-| `description` | `Nullable<Text>` |
-| `email` | `Nullable<Varchar>` |
-| `employees_count` | `Nullable<Int4>` |
-| `id` | `Uuid` |
-| `industry` | `Nullable<Varchar>` |
-| `name` | `Varchar` |
-| `notes` | `Nullable<Text>` |
-| `org_id` | `Uuid` |
-| `owner_id` | `Nullable<Uuid>` |
-| `phone` | `Nullable<Varchar>` |
-| `postal_code` | `Nullable<Varchar>` |
-| `state` | `Nullable<Varchar>` |
-| `tags` | `Array<Text>, Text` ⚠ |
-| `updated_at` | `Timestamptz` |
-| `website` | `Nullable<Varchar>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botemail/src/schema.rs` | 197 | `id` | 27 |
-| `botserver/crates/botcontacts/src/schema.rs` | 37 | `id` | 23 |
-
-### `crm_activities` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `account_id` | `Nullable<Uuid>` |
-| `activity_type` | `Varchar` |
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `completed_at` | `Nullable<Timestamptz>` |
-| `contact_id` | `Nullable<Uuid>` |
-| `created_at` | `Timestamptz` |
-| `description` | `Nullable<Text>` |
-| `due_date` | `Nullable<Timestamptz>` |
-| `id` | `Uuid` |
-| `lead_id` | `Nullable<Uuid>` |
-| `opportunity_id` | `Nullable<Uuid>` |
-| `org_id` | `Uuid` |
-| `outcome` | `Nullable<Varchar>` |
-| `owner_id` | `Nullable<Uuid>` |
-| `subject` | `Varchar` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcontacts/src/schema.rs` | 110 | `id` | 16 |
-
-### `crm_contacts` ×4 (in botschema)
+### `crm_contacts` ×3 (in botschema)
 
 | column | type(s) |
 |---|---|
@@ -482,366 +99,14 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `source` | `Nullable<Varchar>` |
 | `state` | `Nullable<Varchar>` |
 | `status` | `Nullable<Varchar>, Varchar` ⚠ |
-| `tags` | `Array<Text>, Nullable<Array<Text>>, Nullable<Text>` ⚠ |
+| `tags` | `Nullable<Array<Text>>, Nullable<Text>` ⚠ |
 | `updated_at` | `Timestamptz` |
 
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botcloud/src/schema_ext.rs` | 1 | `id` | 9 |
-| `botserver/crates/botmarketing/src/schema.rs` | 23 | `id` | 23 |
-| `botserver/crates/botemail/src/schema.rs` | 140 | `id` | 29 |
+| `botserver/crates/botemail/src/schema.rs` | 57 | `id` | 29 |
 | `botserver/crates/botcontacts/src/schema.rs` | 6 | `id` | 26 |
-
-### `crm_deals` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `account_id` | `Nullable<Uuid>` |
-| `actual_close_date` | `Nullable<Date>` |
-| `am_id` | `Nullable<Uuid>` |
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `closed_at` | `Nullable<Timestamptz>` |
-| `contact_id` | `Nullable<Uuid>` |
-| `created_at` | `Timestamptz` |
-| `currency` | `Nullable<Varchar>` |
-| `custom_fields` | `Jsonb` |
-| `deal_date` | `Nullable<Date>` |
-| `department_id` | `Nullable<Uuid>` |
-| `description` | `Nullable<Text>` |
-| `expected_close_date` | `Nullable<Date>` |
-| `id` | `Uuid` |
-| `lead_id` | `Nullable<Uuid>` |
-| `lost_reason` | `Nullable<Text>` |
-| `name` | `Varchar` |
-| `notes` | `Nullable<Text>` |
-| `org_id` | `Uuid` |
-| `owner_id` | `Nullable<Uuid>` |
-| `period` | `Nullable<Int4>` |
-| `probability` | `Nullable<Int4>` |
-| `segment_id` | `Nullable<Uuid>` |
-| `source` | `Nullable<Varchar>` |
-| `stage` | `Nullable<Varchar>` |
-| `stage_id` | `Nullable<Uuid>` |
-| `tags` | `Nullable<Array<Text>>` |
-| `title` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-| `value` | `Nullable<Float8>` |
-| `won` | `Nullable<Bool>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcontacts/src/schema.rs` | 150 | `id` | 32 |
-
-### `crm_opportunities` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `account_id` | `Nullable<Uuid>` |
-| `actual_close_date` | `Nullable<Date>` |
-| `branch_id` | `Uuid` |
-| `contact_id` | `Nullable<Uuid>` |
-| `created_at` | `Timestamptz` |
-| `currency` | `Nullable<Varchar>` |
-| `custom_fields` | `Jsonb` |
-| `description` | `Nullable<Text>` |
-| `expected_close_date` | `Nullable<Date>` |
-| `id` | `Uuid` |
-| `lead_id` | `Nullable<Uuid>` |
-| `name` | `Varchar` |
-| `notes` | `Nullable<Text>` |
-| `owner_id` | `Nullable<Uuid>` |
-| `probability` | `Nullable<Int4>` |
-| `source` | `Nullable<Varchar>` |
-| `stage` | `Nullable<Varchar>` |
-| `stage_id` | `Nullable<Uuid>` |
-| `tags` | `Array<Text>` |
-| `updated_at` | `Timestamptz` |
-| `value` | `Nullable<Float8>` |
-| `won` | `Nullable<Bool>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcontacts/src/schema.rs` | 83 | `id` | 22 |
-
-### `crm_pipeline_stages` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `bot_id` | `Uuid` |
-| `branch_id` | `Nullable<Uuid>` |
-| `color` | `Nullable<Varchar>` |
-| `created_at` | `Timestamptz` |
-| `id` | `Uuid` |
-| `is_lost` | `Bool` |
-| `is_won` | `Bool` |
-| `name` | `Varchar` |
-| `org_id` | `Uuid` |
-| `probability` | `Int4` |
-| `stage_order` | `Int4` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcontacts/src/schema.rs` | 65 | `id` | 11 |
-
-### `dashboard_data_sources` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `config` | `Nullable<Jsonb>` |
-| `connection` | `Jsonb` |
-| `created_at` | `Timestamptz` |
-| `description` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `last_sync` | `Nullable<Timestamptz>` |
-| `name` | `Varchar` |
-| `org_id` | `Uuid` |
-| `refresh_schedule` | `Nullable<Varchar>` |
-| `schema_definition` | `Jsonb` |
-| `source_type` | `Varchar` |
-| `status` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botdashboards/src/schema.rs` | 22 | `id` | 14 |
-| `botserver/crates/botanalytics/src/schema.rs` | 75 | `id` | 13 |
-
-### `dashboards` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `config` | `Nullable<Jsonb>` |
-| `created_at` | `Timestamptz` |
-| `description` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `is_default` | `Nullable<Bool>` |
-| `is_public` | `Bool` |
-| `is_template` | `Bool` |
-| `layout` | `Jsonb` |
-| `name` | `Varchar` |
-| `org_id` | `Uuid` |
-| `owner_id` | `Uuid` |
-| `refresh_interval` | `Nullable<Int4>` |
-| `slug` | `Varchar` |
-| `tags` | `Array<Text>, Text` ⚠ |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botdashboards/src/schema.rs` | 3 | `id` | 14 |
-| `botserver/crates/botanalytics/src/schema.rs` | 52 | `id` | 15 |
-
-### `email_auto_responders` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `body` | `Text` |
-| `body_html` | `Text` |
-| `body_plain` | `Nullable<Text>` |
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `end_date` | `Nullable<Timestamptz>` |
-| `exclude_addresses` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `is_active` | `Nullable<Bool>` |
-| `name` | `Varchar` |
-| `responder_type` | `Varchar` |
-| `send_to_internal_only` | `Bool` |
-| `stalwart_sieve_id` | `Nullable<Varchar>` |
-| `start_date` | `Nullable<Timestamptz>` |
-| `subject` | `Nullable<Varchar>` |
-| `trigger_type` | `Varchar` |
-| `trigger_value` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-| `user_id` | `Uuid` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botemail/src/schema.rs` | 64 | `id` | 19 |
-
-### `email_drafts` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `account_id` | `Uuid` |
-| `attachments` | `Nullable<Jsonb>` |
-| `bcc` | `Nullable<Varchar>` |
-| `bcc_address` | `Nullable<Text>` |
-| `body` | `Nullable<Text>` |
-| `branch_id` | `Uuid` |
-| `cc` | `Nullable<Varchar>` |
-| `cc_address` | `Nullable<Text>` |
-| `created_at` | `Timestamptz` |
-| `id` | `Uuid` |
-| `recipient` | `Nullable<Varchar>` |
-| `saved_at` | `Timestamptz` |
-| `subject` | `Nullable<Varchar>` |
-| `to_address` | `Text` |
-| `updated_at` | `Timestamptz` |
-| `user_id` | `Uuid` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botemail/src/schema.rs` | 7 | `id` | 16 |
-
-### `email_rules` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `action_type` | `Varchar` |
-| `action_value` | `Nullable<Varchar>` |
-| `actions_json` | `Text` |
-| `branch_id` | `Uuid` |
-| `condition_field` | `Varchar` |
-| `condition_operator` | `Varchar` |
-| `condition_value` | `Nullable<Varchar>` |
-| `conditions_json` | `Text` |
-| `created_at` | `Timestamptz` |
-| `id` | `Uuid` |
-| `is_active` | `Nullable<Bool>` |
-| `name` | `Varchar` |
-| `priority` | `Int4` |
-| `stalwart_sieve_id` | `Nullable<Varchar>` |
-| `stop_processing` | `Bool` |
-| `updated_at` | `Timestamptz` |
-| `user_id` | `Uuid` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botemail/src/schema.rs` | 88 | `id` | 17 |
-
-### `email_tracking` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `campaign_id` | `Nullable<Uuid>` |
-| `clicked` | `Nullable<Bool>` |
-| `clicked_at` | `Nullable<Timestamptz>` |
-| `created_at` | `Timestamptz` |
-| `email` | `Varchar` |
-| `event_type` | `Varchar` |
-| `id` | `Uuid` |
-| `ip_address` | `Nullable<Varchar>` |
-| `message_id` | `Nullable<Varchar>` |
-| `metadata` | `Nullable<Jsonb>` |
-| `open_token` | `Nullable<Varchar>` |
-| `open_tracking_enabled` | `Nullable<Bool>` |
-| `opened` | `Nullable<Bool>` |
-| `opened_at` | `Nullable<Timestamptz>` |
-| `recipient_id` | `Nullable<Uuid>` |
-| `user_agent` | `Nullable<Text>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botmarketing/src/schema.rs` | 138 | `id` | 17 |
-
-### `marketing_campaigns` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `budget` | `Nullable<Float8>, Nullable<Numeric>` ⚠ |
-| `campaign_type` | `Varchar` |
-| `channel` | `Varchar` |
-| `completed_at` | `Nullable<Timestamptz>` |
-| `content_template` | `Jsonb` |
-| `created_at` | `Timestamptz` |
-| `deal_id` | `Nullable<Uuid>` |
-| `ends_at` | `Nullable<Timestamptz>` |
-| `id` | `Uuid` |
-| `metrics` | `Nullable<Jsonb>` |
-| `name` | `Varchar` |
-| `pause_requested` | `Nullable<Bool>` |
-| `run_offset` | `Nullable<Int4>` |
-| `scheduled_at` | `Nullable<Timestamptz>` |
-| `sent_at` | `Nullable<Timestamptz>` |
-| `started_at` | `Nullable<Timestamptz>` |
-| `starts_at` | `Nullable<Timestamptz>` |
-| `status` | `Nullable<Varchar>` |
-| `stop_requested` | `Nullable<Bool>` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botmarketing/src/schema.rs` | 51 | `id` | 16 |
-| `botserver/crates/botcontacts/src/schema.rs` | 187 | `id` | 17 |
-
-### `marketing_lists` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `contact_count` | `Nullable<Int4>` |
-| `created_at` | `Timestamptz` |
-| `criteria` | `Nullable<Jsonb>` |
-| `description` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `is_dynamic` | `Nullable<Bool>` |
-| `list_type` | `Varchar` |
-| `member_count` | `Nullable<Int4>` |
-| `name` | `Varchar` |
-| `query_text` | `Nullable<Text>` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botmarketing/src/schema.rs` | 86 | `id` | 12 |
-
-### `marketing_recipients` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `campaign_id` | `Nullable<Uuid>` |
-| `channel` | `Nullable<Varchar>` |
-| `clicked_at` | `Nullable<Timestamptz>` |
-| `contact_id` | `Nullable<Uuid>` |
-| `created_at` | `Timestamptz` |
-| `delivered_at` | `Nullable<Timestamptz>` |
-| `email` | `Varchar` |
-| `error_message` | `Nullable<Text>` |
-| `failed_at` | `Nullable<Timestamptz>` |
-| `id` | `Uuid` |
-| `list_id` | `Nullable<Uuid>` |
-| `name` | `Nullable<Varchar>` |
-| `opened_at` | `Nullable<Timestamptz>` |
-| `response` | `Nullable<Text>` |
-| `sent_at` | `Nullable<Timestamptz>` |
-| `status` | `Nullable<Varchar>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botmarketing/src/schema.rs` | 160 | `id` | 17 |
-
-### `marketing_templates` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `ai_prompt` | `Nullable<Text>` |
-| `approved` | `Nullable<Bool>` |
-| `body` | `Nullable<Text>` |
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `channel` | `Varchar` |
-| `created_at` | `Timestamptz` |
-| `id` | `Uuid` |
-| `media_url` | `Nullable<Varchar>` |
-| `meta_template_id` | `Nullable<Varchar>` |
-| `name` | `Varchar` |
-| `org_id` | `Uuid` |
-| `subject` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-| `variables` | `Nullable<Jsonb>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botmarketing/src/schema.rs` | 103 | `id` | 15 |
 
 ### `message_history` ×1 (in botschema)
 
@@ -864,76 +129,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 |---|---|---|---:|
 | `botserver/crates/botwhatsapp/src/schema.rs` | 55 | `id` | 12 |
 
-### `okr_objectives` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `description` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `org_id` | `Uuid` |
-| `owner_id` | `Uuid` |
-| `parent_id` | `Nullable<Uuid>` |
-| `period` | `Varchar` |
-| `period_end` | `Nullable<Date>` |
-| `period_start` | `Nullable<Date>` |
-| `progress` | `Numeric` |
-| `status` | `Varchar` |
-| `tags` | `Array<Text>` |
-| `title` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-| `visibility` | `Varchar` |
-| `weight` | `Numeric` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botanalytics/src/schema.rs` | 8 | `id` | 17 |
-
-### `okr_templates` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `category` | `Nullable<Varchar>` |
-| `created_at` | `Timestamptz` |
-| `created_by` | `Nullable<Uuid>` |
-| `description` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `is_system` | `Bool` |
-| `key_result_templates` | `Jsonb` |
-| `name` | `Varchar` |
-| `objective_template` | `Jsonb` |
-| `org_id` | `Uuid` |
-| `updated_at` | `Timestamptz` |
-| `usage_count` | `Integer` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botanalytics/src/schema.rs` | 34 | `id` | 13 |
-
-### `organization_invitations` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `accepted_at` | `Nullable<Timestamptz>` |
-| `accepted_by` | `Nullable<Uuid>` |
-| `created_at` | `Timestamptz` |
-| `email` | `Varchar` |
-| `expires_at` | `Nullable<Timestamptz>` |
-| `id` | `Uuid` |
-| `invited_by` | `Uuid` |
-| `message` | `Nullable<Text>` |
-| `org_id` | `Uuid` |
-| `role` | `Varchar` |
-| `status` | `Varchar` |
-| `token` | `Nullable<Text>` |
-| `updated_at` | `Nullable<Timestamptz>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcorebot/src/schema.rs` | 151 | `id` | 13 |
-
 ### `organizations` ×4 (in botschema)
 
 | column | type(s) |
@@ -949,8 +144,8 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botbasic_types/src/schema.rs` | 85 | `org_id` | 5 |
-| `botserver/crates/botcorebot/src/schema.rs` | 130 | `org_id` | 5 |
-| `botserver/crates/botbilling/src/schema.rs` | 261 | `id` | 1 |
+| `botserver/crates/botcorebot/src/schema.rs` | 111 | `org_id` | 5 |
+| `botserver/crates/botbilling/src/schema.rs` | 94 | `id` | 1 |
 | `botserver/crates/botproducts/src/schema.rs` | 62 | `id` | 1 |
 
 ### `people` ×2 (in botschema)
@@ -991,7 +186,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botpeople/src/lib_part1.rs` | 11 | `id` | 27 |
-| `botserver/crates/botcontacts/src/schema.rs` | 221 | `id` | 28 |
+| `botserver/crates/botcontacts/src/schema.rs` | 88 | `id` | 28 |
 
 ### `price_lists` ×2 (in botschema)
 
@@ -1013,7 +208,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 
 | file | line | pk | #cols |
 |---|---|---|---:|
-| `botserver/crates/botbilling/src/schema.rs` | 171 | `id` | 13 |
+| `botserver/crates/botbilling/src/schema.rs` | 55 | `id` | 13 |
 | `botserver/crates/botproducts/src/schema.rs` | 36 | `id` | 13 |
 
 ### `products` ×3 (in botschema)
@@ -1048,145 +243,10 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/src/main_module/routes/catalog.rs` | 15 | `id` | 14 |
-| `botserver/crates/botbilling/src/schema.rs` | 136 | `id` | 24 |
+| `botserver/crates/botbilling/src/schema.rs` | 20 | `id` | 24 |
 | `botserver/crates/botproducts/src/schema.rs` | 1 | `id` | 24 |
 
-### `projects` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `container_name` | `Nullable<Varchar>` |
-| `created_at` | `Timestamptz` |
-| `custom_domain` | `Nullable<Varchar>` |
-| `deploy_target` | `Varchar` |
-| `deploy_url` | `Nullable<Text>` |
-| `description` | `Nullable<Text>` |
-| `environment` | `Varchar` |
-| `framework` | `Nullable<Varchar>` |
-| `id` | `Uuid` |
-| `name` | `Varchar` |
-| `org` | `Varchar` |
-| `project_type` | `Varchar` |
-| `repo_url` | `Nullable<Text>` |
-| `status` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botdeployment/src/schema.rs` | 3 | `id` | 15 |
-
-### `scheduled_emails` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `attachments_json` | `Text` |
-| `bcc` | `Nullable<Varchar>` |
-| `bcc_addresses` | `Nullable<Text>` |
-| `body` | `Text` |
-| `body_html` | `Text` |
-| `body_plain` | `Nullable<Text>` |
-| `branch_id` | `Uuid` |
-| `cc` | `Nullable<Varchar>` |
-| `cc_addresses` | `Nullable<Text>` |
-| `created_at` | `Timestamptz` |
-| `error_message` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `recipient` | `Nullable<Varchar>` |
-| `retry_count` | `Int4` |
-| `scheduled_at` | `Timestamptz` |
-| `send_at` | `Timestamptz` |
-| `sent` | `Nullable<Bool>` |
-| `sent_at` | `Nullable<Timestamptz>` |
-| `status` | `Varchar` |
-| `subject` | `Varchar` |
-| `to_addresses` | `Text` |
-| `updated_at` | `Timestamptz` |
-| `user_id` | `Uuid` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botemail/src/schema.rs` | 34 | `id` | 23 |
-
-### `social_communities` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `archived_at` | `Nullable<Timestamptz>` |
-| `bot_id` | `Uuid` |
-| `cover_image` | `Nullable<Text>` |
-| `created_at` | `Timestamptz` |
-| `description` | `Nullable<Text>` |
-| `icon` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `is_featured` | `Bool` |
-| `is_official` | `Bool` |
-| `join_policy` | `Varchar` |
-| `member_count` | `Int4` |
-| `name` | `Varchar` |
-| `org_id` | `Uuid` |
-| `owner_id` | `Uuid` |
-| `post_count` | `Int4` |
-| `settings` | `Jsonb` |
-| `slug` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-| `visibility` | `Varchar` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botsocial/src/lib_part1.rs` | 11 | `id` | 19 |
-
-### `social_posts` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `attachments` | `Jsonb` |
-| `author_id` | `Uuid` |
-| `bot_id` | `Uuid` |
-| `comment_count` | `Int4` |
-| `community_id` | `Nullable<Uuid>` |
-| `content` | `Text` |
-| `content_type` | `Varchar` |
-| `created_at` | `Timestamptz` |
-| `deleted_at` | `Nullable<Timestamptz>` |
-| `edited_at` | `Nullable<Timestamptz>` |
-| `hashtags` | `Array<Nullable<Text>>` |
-| `id` | `Uuid` |
-| `is_announcement` | `Bool` |
-| `is_pinned` | `Bool` |
-| `mentions` | `Jsonb` |
-| `org_id` | `Uuid` |
-| `parent_id` | `Nullable<Uuid>` |
-| `poll_id` | `Nullable<Uuid>` |
-| `reaction_counts` | `Jsonb` |
-| `share_count` | `Int4` |
-| `updated_at` | `Timestamptz` |
-| `view_count` | `Int4` |
-| `visibility` | `Varchar` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botsocial/src/lib_part1.rs` | 37 | `id` | 23 |
-
-### `social_praises` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `badge_type` | `Varchar` |
-| `bot_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `from_user_id` | `Uuid` |
-| `id` | `Uuid` |
-| `is_public` | `Bool` |
-| `message` | `Nullable<Text>` |
-| `org_id` | `Uuid` |
-| `post_id` | `Nullable<Uuid>` |
-| `to_user_id` | `Uuid` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botsocial/src/lib_part1.rs` | 69 | `id` | 10 |
-
-### `system_automations` ×3 (in botschema)
+### `system_automations` ×2 (in botschema)
 
 | column | type(s) |
 |---|---|
@@ -1212,8 +272,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botbasic_types/src/schema.rs` | 37 | `id` | 11 |
-| `botserver/crates/botcorebot/src/schema.rs` | 79 | `id` | 15 |
-| `botserver/crates/botmarketing/src/schema.rs` | 7 | `id` | 11 |
+| `botserver/crates/botcorebot/src/schema.rs` | 60 | `id` | 15 |
 
 ### `tasks` ×3 (in botschema)
 
@@ -1243,20 +302,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 |---|---|---|---:|
 | `botserver/crates/botautotask/src/schema.rs` | 89 | `id` | 19 |
 | `botserver/crates/bottasks/src/schema.rs` | 34 | `id` | 12 |
-| `botserver/crates/botcontacts/src/schema.rs` | 257 | `id` | 19 |
-
-### `tenants` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `created_at` | `Timestamptz` |
-| `id` | `Uuid` |
-| `name` | `Varchar` |
-| `slug` | `Varchar` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcorebot/src/schema.rs` | 140 | `id` | 4 |
+| `botserver/crates/botcontacts/src/schema.rs` | 124 | `id` | 19 |
 
 ### `user_sessions` ×11 (in botschema)
 
@@ -1317,34 +363,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `botserver/crates/botattendance/src/schema.rs` | 23 | `id` | 3 |
 | `botserver/crates/botwhatsapp/src/schema.rs` | 42 | `id` | 8 |
 
-### `website_crawls` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `content` | `Nullable<Text>` |
-| `crawl_status` | `Nullable<Int2>` |
-| `created_at` | `Timestamptz` |
-| `depth` | `Nullable<Int4>` |
-| `error` | `Nullable<Text>` |
-| `error_message` | `Nullable<Text>` |
-| `expires_policy` | `Varchar` |
-| `id` | `Uuid` |
-| `last_crawled` | `Nullable<Timestamptz>` |
-| `max_depth` | `Nullable<Int4>` |
-| `max_pages` | `Nullable<Int4>` |
-| `next_crawl` | `Nullable<Timestamptz>` |
-| `pages_crawled` | `Nullable<Int4>` |
-| `refresh_policy` | `Nullable<Varchar>` |
-| `status` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-| `url` | `Text` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcorebot/src/schema.rs` | 176 | `id` | 19 |
-
 ### `workflow_events` ×2 (in botschema)
 
 | column | type(s) |
@@ -1362,7 +380,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botbasic_types/src/schema.rs` | 70 | `id` | 5 |
-| `botserver/crates/botcorebot/src/schema.rs` | 119 | `id` | 6 |
+| `botserver/crates/botcorebot/src/schema.rs` | 100 | `id` | 6 |
 
 ### `workflow_executions` ×2 (in botschema)
 
@@ -1387,7 +405,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botbasic_types/src/schema.rs` | 59 | `id` | 6 |
-| `botserver/crates/botcorebot/src/schema.rs` | 99 | `id` | 15 |
+| `botserver/crates/botcorebot/src/schema.rs` | 80 | `id` | 15 |
 
 ## Additive tables (0)
 

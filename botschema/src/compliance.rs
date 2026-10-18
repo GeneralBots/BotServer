@@ -122,17 +122,17 @@ diesel::table! {
     compliance_checks (id) {
         id -> Uuid,
         branch_id -> Uuid,
-        framework -> Varchar,
-        control_id -> Varchar,
-        control_name -> Varchar,
-        status -> Varchar,
-        score -> Numeric,
-        checked_at -> Timestamptz,
+        status -> Nullable<Varchar>,
+        checked_at -> Nullable<Timestamptz>,
         checked_by -> Nullable<Uuid>,
-        evidence -> Jsonb,
-        notes -> Nullable<Text>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Nullable<Uuid>,
+        bot_id -> Nullable<Uuid>,
+        check_type -> Varchar,
+        target_type -> Nullable<Varchar>,
+        target_id -> Nullable<Uuid>,
+        result -> Nullable<Jsonb>,
     }
 }
 

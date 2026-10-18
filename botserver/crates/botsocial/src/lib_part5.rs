@@ -56,10 +56,12 @@ pub async fn handle_send_praise(
         let mut conn = pool.get().map_err(|e| SocialError::Database(e.to_string()))?;
         let (bot_id, _) = get_default_bot(&mut conn);
         let org_id = Uuid::nil();
+        let branch_id = crate::branch_for_bot(&mut conn, bot_id);
         let now = Utc::now();
 
         let db_praise = DbPraise {
             id: Uuid::new_v4(),
+            branch_id,
             org_id,
             bot_id,
             from_user_id,

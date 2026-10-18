@@ -41,6 +41,8 @@ pub mod workspaces;
 pub use self::workspaces::*;
 #[cfg(feature = "social")]
 pub mod social;
+#[cfg(feature = "social")]
+pub use self::social::*;
 #[cfg(feature = "analytics")]
 pub mod analytics;
 #[cfg(feature = "compliance")]
@@ -62,8 +64,12 @@ pub mod learn;
 pub use self::learn::*;
 #[cfg(feature = "project")]
 pub mod project;
+#[cfg(feature = "project")]
+pub use self::project::*;
 #[cfg(feature = "dashboards")]
 pub mod dashboards;
+#[cfg(feature = "dashboards")]
+pub use self::dashboards::*;
 pub mod drive;
 pub use self::drive::*;
 pub mod email_integration;

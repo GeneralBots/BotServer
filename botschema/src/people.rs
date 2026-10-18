@@ -51,6 +51,8 @@ diesel::table! {
         owner_id -> Nullable<Uuid>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -259,3 +261,5 @@ diesel::table! {
 
 mod part2;
 pub use part2::*;
+mod part3;
+pub use part3::*;

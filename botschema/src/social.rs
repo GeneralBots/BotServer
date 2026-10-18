@@ -20,6 +20,8 @@ diesel::table! {
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
         archived_at -> Nullable<Timestamptz>,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -59,6 +61,8 @@ diesel::table! {
         updated_at -> Timestamptz,
         edited_at -> Nullable<Timestamptz>,
         deleted_at -> Nullable<Timestamptz>,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -155,6 +159,8 @@ diesel::table! {
         is_public -> Bool,
         post_id -> Nullable<Uuid>,
         created_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 

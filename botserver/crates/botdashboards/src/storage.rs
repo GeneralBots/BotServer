@@ -18,8 +18,6 @@ use super::types::{
 #[diesel(table_name = dashboards)]
 pub struct DbDashboard {
     pub id: Uuid,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
     pub owner_id: Uuid,
     pub name: String,
     pub description: Option<String>,
@@ -30,6 +28,8 @@ pub struct DbDashboard {
     pub tags: Vec<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub branch_id: Uuid,
 }
 
@@ -55,8 +55,6 @@ pub struct DbWidget {
 #[diesel(table_name = dashboard_data_sources)]
 pub struct DbDataSource {
     pub id: Uuid,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
     pub name: String,
     pub description: Option<String>,
     pub source_type: String,
@@ -67,6 +65,8 @@ pub struct DbDataSource {
     pub status: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub branch_id: Uuid,
 }
 

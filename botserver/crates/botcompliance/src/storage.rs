@@ -20,16 +20,16 @@ use crate::types::{
 #[diesel(table_name = compliance_checks)]
 pub struct DbComplianceCheck {
     pub id: Uuid,
-    pub org_id: Option<Uuid>,
-    pub bot_id: Option<Uuid>,
-    pub check_type: String,
-    pub target_type: Option<String>,
+    pub branch_id: Uuid,
     pub status: Option<String>,
     pub checked_at: Option<DateTime<Utc>>,
     pub checked_by: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub branch_id: Uuid,
+    pub org_id: Option<Uuid>,
+    pub bot_id: Option<Uuid>,
+    pub check_type: String,
+    pub target_type: Option<String>,
     pub target_id: Option<Uuid>,
     pub result: Option<serde_json::Value>,
 }

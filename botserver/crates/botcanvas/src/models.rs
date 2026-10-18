@@ -4,8 +4,7 @@ use super::*;
 #[diesel(table_name = canvases)]
 pub struct DbCanvas {
     pub id: Uuid,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Uuid,
     pub name: String,
     pub description: Option<String>,
     pub width: i32,
@@ -17,6 +16,8 @@ pub struct DbCanvas {
     pub created_by: Uuid,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]

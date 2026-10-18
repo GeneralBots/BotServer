@@ -8,85 +8,26 @@ pub struct SocialState {
     pub get_default_bot: GetDefaultBotFn,
 }
 
-diesel::table! {
-    social_communities (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        name -> Varchar,
-        slug -> Varchar,
-        description -> Nullable<Text>,
-        cover_image -> Nullable<Text>,
-        icon -> Nullable<Text>,
-        visibility -> Varchar,
-        join_policy -> Varchar,
-        owner_id -> Uuid,
-        member_count -> Int4,
-        post_count -> Int4,
-        is_official -> Bool,
-        is_featured -> Bool,
-        settings -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        archived_at -> Nullable<Timestamptz>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::social_communities;
 
 pub use botschema::social::social_community_members;
 
-diesel::table! {
-    social_posts (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        author_id -> Uuid,
-        community_id -> Nullable<Uuid>,
-        parent_id -> Nullable<Uuid>,
-        content -> Text,
-        content_type -> Varchar,
-        attachments -> Jsonb,
-        mentions -> Jsonb,
-        hashtags -> Array<Nullable<Text>>,
-        visibility -> Varchar,
-        is_announcement -> Bool,
-        is_pinned -> Bool,
-        poll_id -> Nullable<Uuid>,
-        reaction_counts -> Jsonb,
-        comment_count -> Int4,
-        share_count -> Int4,
-        view_count -> Int4,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        edited_at -> Nullable<Timestamptz>,
-        deleted_at -> Nullable<Timestamptz>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::social_posts;
 
 pub use botschema::social::social_comments;
 
 pub use botschema::social::social_reactions;
 
-diesel::table! {
-    social_praises (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        from_user_id -> Uuid,
-        to_user_id -> Uuid,
-        badge_type -> Varchar,
-        message -> Nullable<Text>,
-        is_public -> Bool,
-        post_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::social_praises;
 
 #[derive(Debug, Clone, Queryable, Insertable, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = social_posts)]
 pub struct DbPost {
     pub id: Uuid,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Uuid,
     pub author_id: Uuid,
     pub community_id: Option<Uuid>,
     pub parent_id: Option<Uuid>,
@@ -107,13 +48,14 @@ pub struct DbPost {
     pub updated_at: DateTime<Utc>,
     pub edited_at: Option<DateTime<Utc>>,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
 }
 #[derive(Debug, Clone, Queryable, Insertable, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = social_communities)]
 pub struct DbCommunity {
     pub id: Uuid,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Uuid,
     pub name: String,
     pub slug: String,
     pub description: Option<String>,
@@ -130,6 +72,8 @@ pub struct DbCommunity {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub archived_at: Option<DateTime<Utc>>,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
 }
 #[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = social_community_members)]
@@ -172,8 +116,7 @@ pub struct DbReaction {
 #[diesel(table_name = social_praises)]
 pub struct DbPraise {
     pub id: Uuid,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Uuid,
     pub from_user_id: Uuid,
     pub to_user_id: Uuid,
     pub badge_type: String,
@@ -181,6 +124,8 @@ pub struct DbPraise {
     pub is_public: bool,
     pub post_id: Option<Uuid>,
     pub created_at: DateTime<Utc>,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Post {

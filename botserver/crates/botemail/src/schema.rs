@@ -111,34 +111,5 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    crm_accounts (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        industry -> Nullable<Varchar>,
-        website -> Nullable<Varchar>,
-        phone -> Nullable<Varchar>,
-        email -> Nullable<Varchar>,
-        address_street -> Nullable<Varchar>,
-        address_city -> Nullable<Varchar>,
-        address_state -> Nullable<Varchar>,
-        address_country -> Nullable<Varchar>,
-        address_zip -> Nullable<Varchar>,
-        notes -> Nullable<Text>,
-        owner_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        employees_count -> Nullable<Int4>,
-        annual_revenue -> Nullable<Float8>,
-        address_line1 -> Nullable<Varchar>,
-        address_line2 -> Nullable<Varchar>,
-        city -> Nullable<Varchar>,
-        state -> Nullable<Varchar>,
-        postal_code -> Nullable<Varchar>,
-        country -> Nullable<Varchar>,
-        description -> Nullable<Text>,
-        tags -> Text,
-        custom_fields -> Jsonb,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::crm_accounts;

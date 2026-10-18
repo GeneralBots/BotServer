@@ -2082,6 +2082,7 @@ dependencies = [
  "axum",
  "botcoresecrets",
  "botlib",
+ "botschema",
  "botsecurity-auth",
  "chrono",
  "diesel",

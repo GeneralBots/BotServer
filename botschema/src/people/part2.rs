@@ -112,16 +112,23 @@ diesel::table! {
         branch_id -> Uuid,
         deal_id -> Nullable<Uuid>,
         name -> Varchar,
-        status -> Varchar,
-        channel -> Varchar,
+        status -> Nullable<Varchar>,
         content_template -> Jsonb,
-        scheduled_at -> Nullable<Timestamptz>,
         sent_at -> Nullable<Timestamptz>,
         completed_at -> Nullable<Timestamptz>,
-        metrics -> Jsonb,
-        budget -> Nullable<Float8>,
+        metrics -> Nullable<Jsonb>,
+        budget -> Nullable<Numeric>,
         created_at -> Timestamptz,
-        updated_at -> Nullable<Timestamptz>,
+        updated_at -> Timestamptz,
+        campaign_type -> Varchar,
+        starts_at -> Nullable<Timestamptz>,
+        ends_at -> Nullable<Timestamptz>,
+        run_offset -> Nullable<Int4>,
+        pause_requested -> Nullable<Bool>,
+        stop_requested -> Nullable<Bool>,
+        started_at -> Nullable<Timestamptz>,
+        org_id -> Nullable<Uuid>,
+        bot_id -> Nullable<Uuid>,
     }
 }
 
@@ -134,7 +141,13 @@ diesel::table! {
         query_text -> Nullable<Text>,
         contact_count -> Nullable<Int4>,
         created_at -> Timestamptz,
-        updated_at -> Nullable<Timestamptz>,
+        updated_at -> Timestamptz,
+        description -> Nullable<Text>,
+        member_count -> Nullable<Int4>,
+        is_dynamic -> Nullable<Bool>,
+        criteria -> Nullable<Jsonb>,
+        org_id -> Nullable<Uuid>,
+        bot_id -> Nullable<Uuid>,
     }
 }
 
@@ -158,8 +171,14 @@ diesel::table! {
         delivered_at -> Nullable<Timestamptz>,
         failed_at -> Nullable<Timestamptz>,
         error_message -> Nullable<Text>,
-        response -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
+        response -> Nullable<Text>,
+        created_at -> Nullable<Timestamptz>,
+        branch_id -> Uuid,
+        list_id -> Nullable<Uuid>,
+        email -> Varchar,
+        name -> Nullable<Varchar>,
+        opened_at -> Nullable<Timestamptz>,
+        clicked_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -173,11 +192,13 @@ diesel::table! {
         body -> Nullable<Text>,
         media_url -> Nullable<Varchar>,
         ai_prompt -> Nullable<Text>,
-        variables -> Jsonb,
+        variables -> Nullable<Jsonb>,
         approved -> Nullable<Bool>,
         meta_template_id -> Nullable<Varchar>,
         created_at -> Timestamptz,
-        updated_at -> Nullable<Timestamptz>,
+        updated_at -> Timestamptz,
+        org_id -> Uuid,
+        bot_id -> Uuid,
     }
 }
 
@@ -223,6 +244,8 @@ diesel::table! {
         escalate_on_breach -> Nullable<Bool>,
         is_active -> Nullable<Bool>,
         created_at -> Timestamptz,
+        org_id -> Nullable<Uuid>,
+        bot_id -> Nullable<Uuid>,
     }
 }
 
@@ -245,10 +268,11 @@ diesel::table! {
         id -> Uuid,
         branch_id -> Uuid,
         webhook_url -> Varchar,
-        events -> Nullable<Array<Text>>,
+        events -> Nullable<Text>,
         is_active -> Nullable<Bool>,
         secret_key -> Nullable<Text>,
         created_at -> Timestamptz,
-        updated_at -> Nullable<Timestamptz>,
+        updated_at -> Timestamptz,
+        org_id -> Nullable<Uuid>,
     }
 }

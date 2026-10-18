@@ -116,12 +116,14 @@ pub(crate) async fn create_canvas(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("DB error: {e}")))?;
 
     let (org_id, bot_id) = (state.get_bot_context)(&state.pool);
+    let branch_id = branch_for_bot(&mut conn, bot_id);
     let id = Uuid::new_v4();
     let now = Utc::now();
     let user_id = Uuid::nil();
 
     let db_canvas = DbCanvas {
         id,
+        branch_id,
         org_id,
         bot_id,
         name: req.name,
@@ -434,4 +436,19 @@ pub(crate) async fn delete_element(
     } else {
         Err((StatusCode::NOT_FOUND, "Element not found".to_string()))
     }
+}
+
+/// Branch that owns `bot`; the branch-scoped canvas/social rows are NOT NULL
+/// against `branches`, so inserts resolve it here (#1517).
+fn branch_for_bot(conn: &mut diesel::PgConnection, bot_id: Uuid) -> Uuid {
+    #[derive(diesel::QueryableByName)]
+    struct Row {
+        #[diesel(sql_type = diesel::sql_types::Uuid)]
+        branch_id: Uuid,
+    }
+    diesel::sql_query("SELECT branch_id FROM bots WHERE id = $1 LIMIT 1")
+        .bind::<diesel::sql_types::Uuid, _>(bot_id)
+        .get_result::<Row>(conn)
+        .map(|r| r.branch_id)
+        .unwrap_or_else(|_| Uuid::nil())
 }

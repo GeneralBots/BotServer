@@ -19,14 +19,16 @@ pub struct MarketingList {
     pub branch_id: Uuid,
     pub name: String,
     pub list_type: String,
-    pub description: Option<String>,
     pub query_text: Option<String>,
-    pub member_count: Option<i32>,
     pub contact_count: Option<i32>,
-    pub is_dynamic: Option<bool>,
-    pub criteria: Option<serde_json::Value>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub description: Option<String>,
+    pub member_count: Option<i32>,
+    pub is_dynamic: Option<bool>,
+    pub criteria: Option<serde_json::Value>,
+    pub org_id: Option<Uuid>,
+    pub bot_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -102,6 +104,8 @@ pub async fn create_list(
         contact_count: Some(0),
         created_at: now,
         updated_at: now,
+        org_id: None,
+        bot_id: None,
     };
 
     diesel::insert_into(marketing_lists::table)

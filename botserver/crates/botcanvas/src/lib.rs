@@ -21,24 +21,8 @@ pub struct CanvasState {
     pub get_bot_context: GetBotContextFn,
 }
 
-diesel::table! {
-    canvases (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        width -> Int4,
-        height -> Int4,
-        background_color -> Nullable<Varchar>,
-        thumbnail_url -> Nullable<Text>,
-        is_public -> Bool,
-        is_template -> Bool,
-        created_by -> Uuid,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::canvases;
 
 pub use botschema::canvas_elements;
 

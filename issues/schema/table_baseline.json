@@ -2,14 +2,12 @@
   "files": [
     "botlib/src/models/session.rs",
     "botserver/crates/botagent/src/schema.rs",
-    "botserver/crates/botanalytics/src/schema.rs",
     "botserver/crates/botattendance/src/schema.rs",
     "botserver/crates/botautomation/src/schema.rs",
     "botserver/crates/botautotask/src/schema.rs",
     "botserver/crates/botbasic_types/src/schema.rs",
     "botserver/crates/botbilling/src/schema.rs",
     "botserver/crates/botbrowserpolicy/src/schema.rs",
-    "botserver/crates/botcanvas/src/lib.rs",
     "botserver/crates/botchannelbindings/src/schema.rs",
     "botserver/crates/botcloud/src/schema_ext.rs",
     "botserver/crates/botcompliance/src/schema.rs",
@@ -21,10 +19,7 @@
     "botserver/crates/botcoredirectory/src/provisioning.rs",
     "botserver/crates/botcoreoauth/src/schema.rs",
     "botserver/crates/botcoresession/src/schema.rs",
-    "botserver/crates/botdashboards/src/schema.rs",
-    "botserver/crates/botdeployment/src/schema.rs",
     "botserver/crates/botemail/src/schema.rs",
-    "botserver/crates/botmarketing/src/schema.rs",
     "botserver/crates/botmarketplace/src/schema.rs",
     "botserver/crates/botmemory/src/schema.rs",
     "botserver/crates/botmsteams/src/schema.rs",
@@ -32,7 +27,6 @@
     "botserver/crates/botpeople/src/lib_part1.rs",
     "botserver/crates/botproducts/src/schema.rs",
     "botserver/crates/botsecurity/src/schema.rs",
-    "botserver/crates/botsocial/src/lib_part1.rs",
     "botserver/crates/botsources/src/schema.rs",
     "botserver/crates/bottasks/src/schema.rs",
     "botserver/crates/bottelegram/src/schema.rs",
@@ -42,5 +36,5 @@
     "botserver/src/main_module/routes/catalog.rs",
     "botserver/src/main_module/routes/workspace_tabs.rs"
   ],
-  "total": 179
+  "total": 127
 }

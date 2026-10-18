@@ -18,13 +18,18 @@ goals = []
 canvas = []
 workspaces = []
 social = []
-analytics = []
+analytics = ["dashboards"]
 compliance = []
 meet = []
 research = []
 learn = []
 project = []
 dashboards = []
+full = [
+    "tasks", "mail", "people", "tickets", "billing", "attendant", "calendar",
+    "goals", "canvas", "workspaces", "social", "analytics", "compliance",
+    "meet", "research", "learn", "project", "dashboards",
+]
 
 [dependencies]
 diesel = { workspace = true, features = ["postgres", "uuid", "chrono", "serde_json", "r2d2", "numeric", "32-column-tables"] }

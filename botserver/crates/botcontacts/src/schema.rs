@@ -34,33 +34,8 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    crm_accounts (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        industry -> Nullable<Varchar>,
-        website -> Nullable<Varchar>,
-        phone -> Nullable<Varchar>,
-        email -> Nullable<Varchar>,
-        owner_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        employees_count -> Nullable<Int4>,
-        annual_revenue -> Nullable<Float8>,
-        address_line1 -> Nullable<Varchar>,
-        address_line2 -> Nullable<Varchar>,
-        city -> Nullable<Varchar>,
-        state -> Nullable<Varchar>,
-        postal_code -> Nullable<Varchar>,
-        country -> Nullable<Varchar>,
-        description -> Nullable<Text>,
-        tags -> Array<Text>,
-        custom_fields -> Jsonb,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::crm_accounts;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::crm_pipeline_stages;
@@ -95,27 +70,8 @@ diesel::table! {
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::crm_deals;
 
-diesel::table! {
-    marketing_campaigns (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        campaign_type -> Varchar,
-        status -> Nullable<Varchar>,
-        starts_at -> Nullable<Timestamptz>,
-        ends_at -> Nullable<Timestamptz>,
-        budget -> Nullable<Float8>,
-        metrics -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        deal_id -> Nullable<Uuid>,
-        channel -> Varchar,
-        content_template -> Jsonb,
-        scheduled_at -> Nullable<Timestamptz>,
-        sent_at -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::marketing_campaigns;
 
 // Canonical definitions live in `botschema` (#1497): `calendars` there is the
 // 14-column shape (the local copy carried a ghost `is_public` and a nullable

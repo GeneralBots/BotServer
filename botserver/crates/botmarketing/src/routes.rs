@@ -79,7 +79,7 @@ pub async fn track_email_open_pixel(
         if let Ok(token_uuid) = uuid::Uuid::parse_str(&token) {
             let now = Utc::now();
             let _ = diesel::update(
-                email_tracking::table.filter(email_tracking::open_token.eq(Some(token_uuid.to_string()))),
+                email_tracking::table.filter(email_tracking::open_token.eq(Some(token_uuid))),
             )
             .set((
                 email_tracking::opened.eq(true),

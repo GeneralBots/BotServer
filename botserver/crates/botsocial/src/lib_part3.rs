@@ -168,10 +168,12 @@ pub async fn handle_create_post(
         let mut conn = pool.get().map_err(|e| SocialError::Database(e.to_string()))?;
         let (bot_id, _) = get_default_bot(&mut conn);
         let org_id = Uuid::nil();
+        let branch_id = crate::branch_for_bot(&mut conn, bot_id);
         let now = Utc::now();
 
         let db_post = DbPost {
             id: Uuid::new_v4(),
+            branch_id,
             org_id,
             bot_id,
             author_id: user_id,
@@ -296,4 +298,19 @@ pub async fn handle_update_post(
     .map_err(|e| SocialError::Internal(e.to_string()))??;
 
     Ok(Json(result))
+}
+
+/// Branch that owns `bot`; the branch-scoped canvas/social rows are NOT NULL
+/// against `branches`, so inserts resolve it here (#1517).
+pub fn branch_for_bot(conn: &mut diesel::PgConnection, bot_id: Uuid) -> Uuid {
+    #[derive(diesel::QueryableByName)]
+    struct Row {
+        #[diesel(sql_type = diesel::sql_types::Uuid)]
+        branch_id: Uuid,
+    }
+    diesel::sql_query("SELECT branch_id FROM bots WHERE id = $1 LIMIT 1")
+        .bind::<diesel::sql_types::Uuid, _>(bot_id)
+        .get_result::<Row>(conn)
+        .map(|r| r.branch_id)
+        .unwrap_or_else(|_| Uuid::nil())
 }

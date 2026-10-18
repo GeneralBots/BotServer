@@ -16,20 +16,20 @@ use crate::state::AppState;
 #[diesel(table_name = marketing_templates)]
 pub struct MarketingTemplate {
     pub id: Uuid,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
     pub branch_id: Uuid,
     pub name: String,
     pub channel: String,
     pub subject: Option<String>,
     pub body: Option<String>,
-    pub variables: Option<serde_json::Value>,
     pub media_url: Option<String>,
     pub ai_prompt: Option<String>,
+    pub variables: Option<serde_json::Value>,
     pub approved: Option<bool>,
     pub meta_template_id: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
 }
 
 #[derive(Debug, Deserialize)]

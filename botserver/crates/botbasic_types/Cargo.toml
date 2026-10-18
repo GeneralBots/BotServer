@@ -11,7 +11,7 @@ database = []
 
 [dependencies]
 botlib = { workspace = true, features = ["database", "http-client"] }
-botschema = { workspace = true }
+botschema = { workspace = true, features = ["full"] }
 diesel = { workspace = true, features = ["postgres", "uuid", "chrono", "serde_json", "r2d2", "numeric", "32-column-tables"] }
 rhai = { workspace = true, features = ["sync"] }
 serde = { workspace = true, features = ["derive"] }

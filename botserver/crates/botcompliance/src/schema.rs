@@ -1,23 +1,8 @@
 // @generated from the actual migrations (6.0.21-01-compliance + 9.23-branch-scope-cleanup).
 // Do not edit by hand; keep in sync with migrations/*/up.sql.
 
-diesel::table! {
-    compliance_checks (id) {
-        id -> Uuid,
-        org_id -> Nullable<Uuid>,
-        bot_id -> Nullable<Uuid>,
-        check_type -> Varchar,
-        target_type -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        checked_at -> Nullable<Timestamptz>,
-        checked_by -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        branch_id -> Uuid,
-        target_id -> Nullable<Uuid>,
-        result -> Nullable<Jsonb>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::compliance_checks;
 
 pub use botschema::compliance_issues;
 
@@ -81,9 +66,5 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(
-    compliance_checks,
-    compliance_frameworks,
-    compliance_controls,
-    compliance_control_evidence,
-);
+
+// The list is unnecessary with Diesel 2.3 once the pairs cross crates (#1497).

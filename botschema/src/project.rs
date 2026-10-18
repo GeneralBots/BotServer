@@ -3,16 +3,20 @@
 diesel::table! {
     projects (id) {
         id -> Uuid,
-        organization_id -> Uuid,
-        name -> Text,
+        name -> Varchar,
         description -> Nullable<Text>,
-        start_date -> Date,
-        end_date -> Nullable<Date>,
-        status -> Text,
-        owner_id -> Uuid,
-        settings -> Jsonb,
+        status -> Varchar,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        org -> Varchar,
+        project_type -> Varchar,
+        deploy_target -> Varchar,
+        repo_url -> Nullable<Text>,
+        deploy_url -> Nullable<Text>,
+        container_name -> Nullable<Varchar>,
+        custom_domain -> Nullable<Varchar>,
+        environment -> Varchar,
+        framework -> Nullable<Varchar>,
     }
 }
 

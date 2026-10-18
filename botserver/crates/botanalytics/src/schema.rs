@@ -5,99 +5,28 @@ pub use botschema::bots;
 pub use botschema::organizations;
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::users;
-diesel::table! {
-    okr_objectives (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        branch_id -> Uuid,
-        owner_id -> Uuid,
-        parent_id -> Nullable<Uuid>,
-        title -> Varchar,
-        description -> Nullable<Text>,
-        period -> Varchar,
-        period_start -> Nullable<Date>,
-        period_end -> Nullable<Date>,
-        status -> Varchar,
-        progress -> Numeric,
-        visibility -> Varchar,
-        weight -> Numeric,
-        tags -> Array<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::okr_objectives;
 
 pub use botschema::okr_key_results;
 
 pub use botschema::okr_checkins;
 
-diesel::table! {
-    okr_templates (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        category -> Nullable<Varchar>,
-        objective_template -> Jsonb,
-        key_result_templates -> Jsonb,
-        is_system -> Bool,
-        usage_count -> Integer,
-        created_by -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::okr_templates;
 
-diesel::table! {
-    dashboards (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        slug -> Varchar,
-        description -> Nullable<Text>,
-        config -> Nullable<Jsonb>,
-        is_default -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        owner_id -> Uuid,
-        layout -> Jsonb,
-        refresh_interval -> Nullable<Int4>,
-        is_public -> Bool,
-        is_template -> Bool,
-        tags -> Text,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::dashboards::dashboards;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::dashboards::dashboard_widgets;
 
-diesel::table! {
-    dashboard_data_sources (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        source_type -> Varchar,
-        config -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        description -> Nullable<Text>,
-        connection -> Jsonb,
-        schema_definition -> Jsonb,
-        refresh_schedule -> Nullable<Varchar>,
-        last_sync -> Nullable<Timestamptz>,
-        status -> Varchar,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::dashboards::dashboard_data_sources;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::dashboards::dashboard_filters;
 
 // `organizations`, `users`, `dashboard_widgets` and `dashboard_filters` are
-// re-exported from `botschema`; their join rules live there (#1497).
-diesel::allow_tables_to_appear_in_same_query!(
-    okr_objectives,
-    okr_templates,
-    dashboards,
-    dashboard_data_sources,
-);
+// The `allow_tables_to_appear_in_same_query!` list is unnecessary with Diesel 2.3
+// once the pairs cross crates (#1497).

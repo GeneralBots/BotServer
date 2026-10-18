@@ -1,70 +1,15 @@
-use crate::core::{branches};
+// The five dashboard tables are declared in `dashboards.rs`; re-export them so
+// the `analytics` feature keeps their paths and a single join rule set (#1497).
+pub use crate::dashboards::{conversational_queries, dashboard_data_sources, dashboard_filters, dashboard_widgets, dashboards};
 
-diesel::table! {
-    dashboards (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        owner_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        layout -> Jsonb,
-        refresh_interval -> Nullable<Int4>,
-        is_public -> Bool,
-        is_template -> Bool,
-        tags -> Array<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
 
-diesel::table! {
-    dashboard_widgets (id) {
-        id -> Uuid,
-        dashboard_id -> Uuid,
-        widget_type -> Varchar,
-        title -> Varchar,
-        position_x -> Int4,
-        position_y -> Int4,
-        width -> Int4,
-        height -> Int4,
-        config -> Jsonb,
-        data_query -> Nullable<Jsonb>,
-        style -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
 
-diesel::table! {
-    dashboard_data_sources (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        source_type -> Varchar,
-        connection -> Jsonb,
-        schema_definition -> Jsonb,
-        refresh_schedule -> Nullable<Varchar>,
-        last_sync -> Nullable<Timestamptz>,
-        status -> Varchar,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
 
-diesel::table! {
-    dashboard_filters (id) {
-        id -> Uuid,
-        dashboard_id -> Uuid,
-        name -> Varchar,
-        field -> Varchar,
-        filter_type -> Varchar,
-        default_value -> Nullable<Jsonb>,
-        options -> Jsonb,
-        linked_widgets -> Jsonb,
-        created_at -> Timestamptz,
-    }
-}
+
+
+
+
+
 
 diesel::table! {
     dashboard_widget_data_sources (id) {
@@ -75,23 +20,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    conversational_queries (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        dashboard_id -> Nullable<Uuid>,
-        user_id -> Uuid,
-        natural_language -> Text,
-        generated_query -> Nullable<Text>,
-        result_widget_config -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-    }
-}
 
-diesel::joinable!(dashboards -> branches (branch_id));
-diesel::joinable!(dashboard_widgets -> dashboards (dashboard_id));
-diesel::joinable!(dashboard_data_sources -> branches (branch_id));
-diesel::joinable!(dashboard_filters -> dashboards (dashboard_id));
+
 diesel::joinable!(dashboard_widget_data_sources -> dashboard_widgets (widget_id));
 diesel::joinable!(dashboard_widget_data_sources -> dashboard_data_sources (data_source_id));
-diesel::joinable!(conversational_queries -> branches (branch_id));
