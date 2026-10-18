@@ -234,7 +234,7 @@ diesel::table! {
         met_at -> Nullable<Timestamptz>,
         breached_at -> Nullable<Timestamptz>,
         status -> Nullable<Varchar>,
-        created_at -> Timestamptz,
+        created_at -> Nullable<Timestamptz>,
     }
 }
 

@@ -27,21 +27,9 @@ diesel::table! {
 
 pub use botschema::email_folders;
 
-diesel::table! {
-    email_signatures (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        content -> Text,
-        is_default -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        user_id -> Uuid,
-        content_html -> Text,
-        content_plain -> Text,
-        is_active -> Bool,
-    }
-}
+// Canonical definition lives in `botschema` (#1497). The local copy carried a
+// ghost `content` column and non-null flags; the database has neither.
+pub use botschema::email_signatures;
 
 diesel::table! {
     scheduled_emails (id) {
@@ -119,54 +107,25 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    email_labels (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        color -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        user_id -> Uuid,
-        parent_id -> Nullable<Uuid>,
-        is_system -> Bool,
-    }
-}
+// Canonical definition lives in `botschema` (#1497). The local copy carried a
+// ghost `updated_at`; `bot_id` was missing.
+pub use botschema::email_labels;
 
 pub use botschema::email_label_assignments;
 
 pub use botschema::distribution_lists;
 
-diesel::table! {
-    shared_mailboxes (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        email -> Varchar,
-        display_name -> Nullable<Varchar>,
-        members -> Nullable<Jsonb>,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        email_address -> Varchar,
-        description -> Nullable<Text>,
-        settings_json -> Text,
-        stalwart_account_id -> Nullable<Varchar>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497). The local copy carried
+// ghost `email`/`members`/`updated_at` columns; `bot_id` was missing.
+pub use botschema::shared_mailboxes;
 
 pub use botschema::shared_mailbox_members;
 
 pub use botschema::email_tracking;
 
-diesel::table! {
-    feature_flags (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        feature -> Varchar,
-        enabled -> Bool,
-        created_at -> Timestamp,
-    }
-}
+// Canonical definition lives in `botschema` (#1497): the database has `org_id`
+// and a nullable `branch_id`, which the local copy was missing.
+pub use botschema::feature_flags;
 
 pub use botschema::email_crm_links;
 

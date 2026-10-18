@@ -73,6 +73,8 @@ diesel::table! {
     }
 }
 
+// `6.5.15.1-consolidated` adds `branch_id`/`bot_id` (nullable) to the 9-column
+// shape created for signatures, and the flags/timestamps are nullable there.
 diesel::table! {
     email_signatures (id) {
         id -> Uuid,
@@ -80,10 +82,12 @@ diesel::table! {
         name -> Varchar,
         content_html -> Text,
         content_plain -> Text,
-        is_default -> Bool,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        is_default -> Nullable<Bool>,
+        is_active -> Nullable<Bool>,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
+        branch_id -> Nullable<Uuid>,
+        bot_id -> Nullable<Uuid>,
     }
 }
 
@@ -164,15 +168,19 @@ diesel::table! {
     }
 }
 
+// `6.5.15.1-consolidated` adds `branch_id`/`bot_id` (nullable) and makes the
+// colour, the system flag and the timestamp nullable.
 diesel::table! {
     email_labels (id) {
         id -> Uuid,
         user_id -> Uuid,
         name -> Varchar,
-        color -> Varchar,
+        color -> Nullable<Varchar>,
         parent_id -> Nullable<Uuid>,
-        is_system -> Bool,
-        created_at -> Timestamptz,
+        is_system -> Nullable<Bool>,
+        created_at -> Nullable<Timestamptz>,
+        branch_id -> Nullable<Uuid>,
+        bot_id -> Nullable<Uuid>,
     }
 }
 
@@ -203,16 +211,21 @@ diesel::table! {
     }
 }
 
+// `6.5.15.1-consolidated` adds `branch_id`/`bot_id` (nullable); `display_name`
+// is nullable in the database and `settings_json`/`is_active`/`created_at` are
+// nullable there too (the table is created by the mail bootstrap first).
 diesel::table! {
     shared_mailboxes (id) {
         id -> Uuid,
         email_address -> Varchar,
-        display_name -> Varchar,
+        display_name -> Nullable<Varchar>,
         description -> Nullable<Text>,
-        settings_json -> Text,
+        settings_json -> Nullable<Text>,
         stalwart_account_id -> Nullable<Varchar>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
+        is_active -> Nullable<Bool>,
+        created_at -> Nullable<Timestamptz>,
+        branch_id -> Nullable<Uuid>,
+        bot_id -> Nullable<Uuid>,
     }
 }
 

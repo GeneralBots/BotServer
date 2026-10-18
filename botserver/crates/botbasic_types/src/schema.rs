@@ -28,16 +28,11 @@ pub mod tables {
         }
     }
 
-    diesel::table! {
-        bot_shared_memory (id) {
-            id -> Uuid,
-            bot_id -> Uuid,
-            key -> Varchar,
-            value -> Text,
-            created_at -> Timestamptz,
-            updated_at -> Timestamptz,
-        }
-    }
+    // Canonical definition lives in `botschema` (#1497). The local copy carried
+    // the `6.5.15.1` shape (`bot_id`/`key`/`value`/`created_at`/`updated_at`),
+    // none of which the database has; it stores `source_bot_id`, `target_bot_id`,
+    // `memory_key`, `memory_value`, `shared_at`.
+    pub use botschema::bot_shared_memory;
 
     diesel::table! {
         system_automations (id) {
@@ -55,14 +50,9 @@ pub mod tables {
         }
     }
 
-    diesel::table! {
-        session_tool_associations (id) {
-            id -> Uuid,
-            session_id -> Uuid,
-            tool_name -> Varchar,
-            created_at -> Timestamptz,
-        }
-    }
+    // Canonical definition lives in `botschema` (#1497). The database stores
+    // `id`/`session_id`/`tool_name`/`added_at` as `TEXT`, not `UUID`/`VARCHAR`.
+    pub use botschema::session_tool_associations;
 
     // Canonical definition lives in `botschema` (#1497).
     pub use botschema::message_history;
@@ -87,25 +77,8 @@ pub mod tables {
         }
     }
 
-    diesel::table! {
-        calendar_events (id) {
-            id -> Uuid,
-            branch_id -> Uuid,
-            calendar_id -> Uuid,
-            owner_id -> Uuid,
-            title -> Varchar,
-            description -> Nullable<Text>,
-            location -> Nullable<Varchar>,
-            start_time -> Timestamptz,
-            end_time -> Timestamptz,
-            all_day -> Bool,
-            recurrence_rule -> Nullable<Text>,
-            recurrence_id -> Nullable<Uuid>,
-            status -> Varchar,
-            created_at -> Timestamptz,
-            updated_at -> Timestamptz,
-        }
-    }
+    // Canonical definition lives in `botschema` (#1497).
+    pub use botschema::calendar_events;
 
     // Needed to turn `bots.org_id` into the tenant slug that names the
 // `.gborg` Drive bucket — buckets are slug-based, not UUID-based.

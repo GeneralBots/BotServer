@@ -61,15 +61,6 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    attendance_sla_events (id) {
-        id -> Uuid,
-        session_id -> Uuid,
-        sla_policy_id -> Uuid,
-        event_type -> Varchar,
-        due_at -> Timestamptz,
-        status -> Varchar,
-        breached_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497): the database also has
+// `met_at`, a nullable `status` and a nullable `created_at`.
+pub use botschema::attendance_sla_events;

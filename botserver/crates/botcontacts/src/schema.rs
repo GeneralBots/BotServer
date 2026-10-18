@@ -206,53 +206,11 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    calendars (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        color -> Nullable<Varchar>,
-        is_public -> Nullable<Bool>,
-        owner_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        description -> Nullable<Text>,
-        timezone -> Nullable<Varchar>,
-        is_primary -> Bool,
-        is_visible -> Bool,
-        is_shared -> Bool,
-    }
-}
-
-diesel::table! {
-    calendar_events (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        calendar_id -> Uuid,
-        title -> Varchar,
-        description -> Nullable<Text>,
-        starts_at -> Timestamptz,
-        ends_at -> Timestamptz,
-        is_all_day -> Nullable<Bool>,
-        location -> Nullable<Text>,
-        attendees -> Nullable<Text>,
-        recurrence_rule -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        owner_id -> Uuid,
-        start_time -> Timestamptz,
-        end_time -> Timestamptz,
-        all_day -> Bool,
-        recurrence_id -> Nullable<Uuid>,
-        color -> Nullable<Varchar>,
-        visibility -> Varchar,
-        busy_status -> Varchar,
-        reminders -> Jsonb,
-        conference_data -> Nullable<Jsonb>,
-        metadata -> Jsonb,
-    }
-}
+// Canonical definitions live in `botschema` (#1497): `calendars` there is the
+// 14-column shape (the local copy carried a ghost `is_public` and a nullable
+// `owner_id`), `calendar_events` the 24-column one (the local copy carried ghost
+// `starts_at`/`ends_at`/`is_all_day` and typed `attendees` as text).
+pub use botschema::{calendar_events, calendars};
 
 pub use botschema::calendar_event_attendees;
 
