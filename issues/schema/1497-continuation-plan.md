@@ -2,23 +2,23 @@
 
 **Write this plan's state numbers from `schema_guard.py` + `schema_drift_inventory.py`, not by hand.**
 
-Current tree is committed and green: `git status` clean, HEAD `5a69f2eae`,
-`cargo check -p botserver` exit 0, `python3 scripts/schema_guard.py` → OK at 86.
+Current tree is committed and green: `git status` clean,
+`cargo check -p botserver` exit 0, `python3 scripts/schema_guard.py` → OK at **73**.
 
 ## Where the numbers went
 
-302 → 240 → 221 → 179 → **86** non-canonical `table!` declarations, driven by:
+302 → 240 → 221 → 179 → 86 → **73** non-canonical `table!` declarations, driven by:
 - **#1513** canonical crate `botschema` (closed)
 - **#1514** inventory script + `issues/schema/schema_drift.md` (closed)
 - **#1515** byte-identical dedupe, 49 → 0 (closed)
-- **#1516** additive adoption, 18 → 0 (open, work landed — close it)
+- **#1516** additive adoption, 18 → 0 (closed)
 - **#1517** conflicting reconcile, 65 → 14 (open, in progress)
 - **#1520** CI guard `scripts/schema_guard.py` (closed)
 - **#1521** docs (closed)
 - **#1518** ten `UserSession` models (open, not started)
 - **#1519** DB truth audit `issues/schema/db_audit.md` (open, artifact exists)
 
-## Remaining: 86 declarations / 51 tables / 23 files
+## Remaining: 73 declarations / 38 tables / 22 files
 
 ```
  10  botproducts/src/schema.rs         3 conflicting + 7 unique
@@ -42,22 +42,30 @@ Current tree is committed and green: `git status` clean, HEAD `5a69f2eae`,
 Declared exactly once, outside `botschema`. Move the block verbatim into the
 right `botschema/src/*.rs`, re-export it, done.
 
-- **botcloud (8)**: `billing_customers`, `billing_payment_methods`, `bot_domains`,
-  `cloud_audit_log`, `cloud_voucher_redemptions`, `cloud_vouchers`,
-  `cloud_workspaces`, `workspace_resources`
-- **botautotask (6)**: `audit_log`, `auto_tasks`, `compiled_intents`,
-  `designer_changes`, `designer_pending_changes`, `intent_classifications`,
-  `safety_constraints`
-- **botsources (5)**: `bank_transactions`, `connectors`, `delivery_transactions`,
-  `reconciliation_rules`, `reconciliation_runs`
-- **botpeople (5)**: `hr_clock_entries`, `hr_holidays`, `hr_overtime_rules`,
-  `hr_schedules`, `hr_work_periods`
-- **botproducts (7)**: `pos_sales`, `pos_sessions`, `product_price_lists`,
-  `product_prices`, `product_promotions`, `product_stock`, `product_variations`
-- **botcompliance (3)**: `compliance_controls`, `compliance_frameworks`,
-  `compliance_control_evidence`
-- **bottasks (1)**: `auto_tasks`; **botcontacts (1)**: `crm_audit_logs`;
-  **botemail (1)**: `email_messages`
+> **Scope corrected after execution (#1522 closed).** "Declared once" ≠
+> "correct". Cross-checking all 37 against `issues/schema/db_audit.md` (#1519)
+> showed only **13** matched the database: **22** disagree with it and **2**
+> (`compiled_intents`, `safety_constraints`) are ghosts no migration creates.
+> Only the 13 were safe to move; they are done (86 → 73). The other 24 are
+> reconciliation work and belong to #1517/#1519, not here. **Always cross-check
+> `db_audit.md` before calling a move mechanical.**
+
+Moved (13, exact match): **botcloud (8)** `billing_customers`,
+`billing_payment_methods`, `bot_domains`, `cloud_audit_log`,
+`cloud_voucher_redemptions`, `cloud_vouchers`, `cloud_workspaces`,
+`workspace_resources` · **botcompliance (3)** `compliance_controls`,
+`compliance_frameworks`, `compliance_control_evidence` ·
+**botcontacts (1)** `crm_audit_logs` · **botproducts (1)** `product_prices`.
+
+Not moved (22 mismatched + 2 ghosts): **botautotask** `audit_log`, `auto_tasks`,
+`compiled_intents`, `designer_changes`, `designer_pending_changes`,
+`intent_classifications`, `safety_constraints` · **botsources**
+`bank_transactions`, `connectors`, `delivery_transactions`,
+`reconciliation_rules`, `reconciliation_runs` · **botpeople** `hr_clock_entries`,
+`hr_holidays`, `hr_overtime_rules`, `hr_schedules`, `hr_work_periods` ·
+**botproducts** `pos_sales`, `pos_sessions`, `product_price_lists`,
+`product_promotions`, `product_stock`, `product_variations` · **bottasks**
+`auto_tasks` · **botemail** `email_messages`.
 
 A unique move is a *byte-identical* move → positional `Queryable` mapping is
 unchanged → the lowest-risk batch available. Do botcloud + botcompliance first.
