@@ -45,6 +45,10 @@ pub async fn create_price_list(
 
     let price_list = PriceList {
     id,
+    // `price_lists.org_id`/`bot_id` are NOT NULL since `6.0.10-01-products`;
+    // the branch they belong to owns both.
+    org_id: org_for_branch(&state.pool, branch_id),
+    bot_id: bot_for_branch(&state.pool, branch_id),
     branch_id,
     name: req.name,
     currency: Some(req.currency.unwrap_or_else(|| "USD".to_string())),

@@ -11,16 +11,16 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 37 |
-| Total `table!` declarations | 72 |
-| Tables declared more than once | 14 |
+| Distinct tables (outside botschema) | 35 |
+| Total `table!` declarations | 69 |
+| Tables declared more than once | 12 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 14 |
+| — conflicting drift | 12 |
 | Tables already in `botschema` | 273 |
 | Distinct tables NOT yet in `botschema` | 23 |
 
-## Conflicting tables (14)
+## Conflicting tables (12)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
 
@@ -108,27 +108,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `botserver/crates/botemail/src/schema.rs` | 57 | `id` | 29 |
 | `botserver/crates/botcontacts/src/schema.rs` | 6 | `id` | 26 |
 
-### `message_history` ×1 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `content_encrypted` | `Text` |
-| `created_at` | `Timestamptz` |
-| `id` | `Uuid` |
-| `llm_model` | `Nullable<Varchar>` |
-| `media_url` | `Nullable<Text>` |
-| `message_index` | `Integer` |
-| `message_type` | `Integer` |
-| `processing_time_ms` | `Nullable<Integer>` |
-| `role` | `Integer` |
-| `session_id` | `Uuid` |
-| `token_count` | `Integer` |
-| `user_id` | `Uuid` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botwhatsapp/src/schema.rs` | 55 | `id` | 12 |
-
 ### `organizations` ×4 (in botschema)
 
 | column | type(s) |
@@ -145,8 +124,8 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 |---|---|---|---:|
 | `botserver/crates/botbasic_types/src/schema.rs` | 85 | `org_id` | 5 |
 | `botserver/crates/botcorebot/src/schema.rs` | 111 | `org_id` | 5 |
-| `botserver/crates/botbilling/src/schema.rs` | 94 | `id` | 1 |
-| `botserver/crates/botproducts/src/schema.rs` | 62 | `id` | 1 |
+| `botserver/crates/botbilling/src/schema.rs` | 78 | `id` | 1 |
+| `botserver/crates/botproducts/src/schema.rs` | 46 | `id` | 1 |
 
 ### `people` ×2 (in botschema)
 
@@ -187,29 +166,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 |---|---|---|---:|
 | `botserver/crates/botpeople/src/lib_part1.rs` | 11 | `id` | 27 |
 | `botserver/crates/botcontacts/src/schema.rs` | 75 | `id` | 28 |
-
-### `price_lists` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `currency` | `Nullable<Varchar>` |
-| `customer_group` | `Nullable<Varchar>` |
-| `description` | `Nullable<Text>` |
-| `discount_percent` | `Numeric` |
-| `id` | `Uuid` |
-| `is_active` | `Nullable<Bool>` |
-| `is_default` | `Bool` |
-| `name` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-| `valid_from` | `Nullable<Date>` |
-| `valid_until` | `Nullable<Date>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbilling/src/schema.rs` | 55 | `id` | 13 |
-| `botserver/crates/botproducts/src/schema.rs` | 36 | `id` | 13 |
 
 ### `products` ×3 (in botschema)
 

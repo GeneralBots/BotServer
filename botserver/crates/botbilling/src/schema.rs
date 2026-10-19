@@ -52,23 +52,7 @@ pub use botschema::services;
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::product_categories;
 
-diesel::table! {
-    price_lists (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        currency -> Nullable<Varchar>,
-        is_active -> Nullable<Bool>,
-        valid_from -> Nullable<Date>,
-        valid_until -> Nullable<Date>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        description -> Nullable<Text>,
-        is_default -> Bool,
-        customer_group -> Nullable<Varchar>,
-        discount_percent -> Numeric,
-    }
-}
+pub use botschema::price_lists;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::price_list_items;

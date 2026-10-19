@@ -133,6 +133,9 @@ pub struct PriceList {
     pub is_default: bool,
     pub customer_group: Option<String>,
     pub discount_percent: BigDecimal,
+    // Added by `6.0.10-01-products`; the branch owns both.
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]

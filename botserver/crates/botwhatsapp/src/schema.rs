@@ -52,26 +52,10 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    message_history (id) {
-        id -> Uuid,
-        session_id -> Uuid,
-        user_id -> Uuid,
-        role -> Integer,
-        content_encrypted -> Text,
-        message_type -> Integer,
-        media_url -> Nullable<Text>,
-        token_count -> Integer,
-        processing_time_ms -> Nullable<Integer>,
-        llm_model -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        message_index -> Integer,
-    }
-}
+pub use botschema::message_history;
 
 diesel::allow_tables_to_appear_in_same_query!(
     bot_configuration,
     user_sessions,
     users,
-    message_history,
 );

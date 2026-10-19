@@ -173,8 +173,12 @@ diesel::table! {
         role -> Int4,
         content_encrypted -> Text,
         message_type -> Int4,
-        message_index -> Int4,
+        media_url -> Nullable<Text>,
+        token_count -> Int4,
+        processing_time_ms -> Nullable<Int4>,
+        llm_model -> Nullable<Varchar>,
         created_at -> Timestamptz,
+        message_index -> Int4,
     }
 }
 
