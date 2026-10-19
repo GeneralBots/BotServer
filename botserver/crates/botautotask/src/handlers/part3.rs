@@ -130,7 +130,8 @@ pub async fn create_and_execute_for(
         Ok(c) => c,
         Err(e) => return error_create(&req.intent, &*e).0,
     };
-    let compiled = match compiler_for(api)
+    let mut compiler = compiler_for(api);
+    let compiled = match compiler
         .compile_from_classification(bot_id, &classification, None, None)
         .await
     {

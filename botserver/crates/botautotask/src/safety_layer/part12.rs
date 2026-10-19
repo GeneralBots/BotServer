@@ -41,7 +41,13 @@ impl SafetyLayer {
             #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Text>)] applies_to: Option<String>,
         }
 
-        let rows: Vec<ConstraintRow> = query.load(&mut *conn).unwrap_or_default();
+        // A failed load must not look like "this bot has no constraints": that
+        // silently disabled every check. This used to be `unwrap_or_default()`,
+        // which also hid the table being missing entirely — see migration
+        // `6.7.8-safety-constraints`, which creates it.
+        let rows: Vec<ConstraintRow> = query
+            .load(&mut *conn)
+            .map_err(|e| format!("Failed to load safety constraints for bot {bot_id}: {e}"))?;
 
         self.constraints = rows.into_iter().map(|row| Constraint {
             id: row.id,

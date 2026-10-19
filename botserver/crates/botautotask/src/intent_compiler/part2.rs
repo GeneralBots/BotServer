@@ -38,12 +38,18 @@ impl IntentCompiler {
     }
 
     pub async fn compile_from_classification(
-        &self,
+        &mut self,
         bot_id: Uuid,
         classification: &ClassifiedIntent,
         execution_mode: Option<ExecutionMode>,
         priority: Option<TaskPriority>,
     ) -> Result<CompiledIntent, Box<dyn std::error::Error + Send + Sync>> {
+        // Load this bot's constraints up front. `load_constraints` propagates a
+        // database error instead of defaulting to an empty list, so a broken
+        // or unmigrated `safety_constraints` table fails the compile rather
+        // than silently compiling with nothing enforced.
+        self.safety.load_constraints(&bot_id)?;
+
         let intent_text = &classification.original_text;
         let mut compiled = self.compile(bot_id, intent_text, execution_mode, priority).await?;
         compiled.intent_type = classification.intent_type;

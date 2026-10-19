@@ -1,22 +1,23 @@
 pub mod safety_constraints {
+    // Canonical shape created by migration `6.7.8-safety-constraints`. Only the
+    // columns `SafetyLayer::load_constraints` reads are declared; `pattern`,
+    // `action` and `is_active` were present in the previous declaration but
+    // never queried and duplicated `expression`/`threshold`/`enabled`.
     diesel::table! {
         safety_constraints (id) {
             id -> Uuid,
             branch_id -> Uuid,
             bot_id -> Uuid,
-            constraint_type -> Varchar,
-            pattern -> Text,
-            action -> Varchar,
-            is_active -> Nullable<Bool>,
-            created_at -> Timestamptz,
-            updated_at -> Timestamptz,
             name -> Text,
+            constraint_type -> Varchar,
             description -> Nullable<Text>,
             expression -> Nullable<Text>,
             threshold -> Nullable<Text>,
             severity -> Text,
             enabled -> Bool,
             applies_to -> Nullable<Text>,
+            created_at -> Timestamptz,
+            updated_at -> Timestamptz,
         }
     }
 }

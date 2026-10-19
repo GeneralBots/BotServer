@@ -69,7 +69,8 @@ pub(super) async fn auto_process_classification(
     bot_id: Uuid,
     classification: &ClassifiedIntent,
 ) -> Option<crate::api::IntentResultResponse> {
-    let compiled = match compiler_for(api)
+    let mut compiler = compiler_for(api);
+    let compiled = match compiler
         .compile_from_classification(bot_id, classification, None, None)
         .await
     {
@@ -127,7 +128,8 @@ pub async fn compile_intent(
         Err(e) => return error_compile(&req.intent, &*e),
     };
     let fallback_body = script_for(&classification, None).1;
-    let compiled = match compiler_for(&api)
+    let mut compiler = compiler_for(&api);
+    let compiled = match compiler
         .compile_from_classification(bot_id, &classification, None, None)
         .await
     {
