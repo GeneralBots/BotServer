@@ -433,3 +433,17 @@ diesel::joinable!(billing_usage_alerts -> branches (branch_id));
 diesel::joinable!(billing_alert_history -> branches (branch_id));
 diesel::joinable!(billing_notification_preferences -> branches (branch_id));
 diesel::joinable!(billing_grace_periods -> branches (branch_id));
+
+// Moved verbatim from `botproducts/src/schema.rs` (#1497) — column order
+// preserved, so the consuming crate's `Queryable` structs are unaffected.
+// Verified against the database by `scripts/schema_db_audit.py` (#1519).
+diesel::table! {
+    product_prices (id) {
+        id -> Uuid,
+        price_list_id -> Uuid,
+        product_id -> Uuid,
+        variation_id -> Nullable<Uuid>,
+        price -> Numeric,
+        min_quantity -> Numeric,
+    }
+}

@@ -75,7 +75,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     product_variations,
     product_stock,
     product_price_lists,
-    product_prices,
     product_promotions,
     pos_sessions,
     pos_sales,
@@ -131,16 +130,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    product_prices (id) {
-        id -> Uuid,
-        price_list_id -> Uuid,
-        product_id -> Uuid,
-        variation_id -> Nullable<Uuid>,
-        price -> Numeric,
-        min_quantity -> Numeric,
-    }
-}
+pub use botschema::product_prices;
 
 diesel::table! {
     product_promotions (id) {

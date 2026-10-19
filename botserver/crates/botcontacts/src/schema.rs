@@ -52,20 +52,7 @@ pub use botschema::crm_notes;
 
 // #1441 P2 — append-only audit trail for destructive/state-changing CRM
 // operations (migration 6.7.3-crm-audit-trail).
-diesel::table! {
-    crm_audit_logs (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        entity -> Varchar,
-        entity_id -> Nullable<Uuid>,
-        action -> Varchar,
-        actor_email -> Nullable<Varchar>,
-        before -> Nullable<Jsonb>,
-        after -> Nullable<Jsonb>,
-        detail -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-    }
-}
+pub use botschema::crm_audit_logs;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::crm_deals;

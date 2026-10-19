@@ -23,5 +23,5 @@
     "botserver/crates/botwhatsapp/src/schema.rs",
     "botserver/src/main_module/routes/catalog.rs"
   ],
-  "total": 75
+  "total": 73
 }

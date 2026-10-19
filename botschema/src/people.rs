@@ -170,6 +170,27 @@ diesel::table! {
     }
 }
 
+// Moved verbatim from `botcontacts/src/schema.rs` (#1497) — column order
+// preserved, so the consuming crate's `Queryable` structs are unaffected.
+// Audit trail for CRM entity changes (migration `6.7.3-crm-audit-trail`).
+diesel::table! {
+    crm_audit_logs (id) {
+        id -> Uuid,
+        branch_id -> Uuid,
+        entity -> Varchar,
+        entity_id -> Nullable<Uuid>,
+        action -> Varchar,
+        actor_email -> Nullable<Varchar>,
+        before -> Nullable<Jsonb>,
+        after -> Nullable<Jsonb>,
+        detail -> Nullable<Jsonb>,
+        created_at -> Timestamptz,
+    }
+}
+
+diesel::joinable!(crm_notes -> branches (branch_id));
+diesel::joinable!(crm_audit_logs -> branches (branch_id));
+
 diesel::table! {
     people (id) {
         id -> Uuid,
