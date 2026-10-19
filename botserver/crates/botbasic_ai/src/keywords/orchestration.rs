@@ -118,22 +118,27 @@ async fn create_workflow(
         on_error_strategy: "abort".to_string(),
     };
 
-    let state_json = serde_json::to_value(&initial_state)?;
+    let state_json = serde_json::to_string(&initial_state)?;
     let workflow_id = Uuid::new_v4();
     let now = chrono::Utc::now();
+    let branch_id: Uuid = botschema::bots::table
+        .filter(botschema::bots::id.eq(bot_uuid))
+        .select(botschema::bots::branch_id)
+        .first(&mut conn)?;
 
     diesel::sql_query(
-        "INSERT INTO workflow_executions (id, bot_id, workflow_name, current_step, state_json, status, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
+        "INSERT INTO workflow_executions (id, bot_id, workflow_name, current_step, state_json, status, created_at, updated_at, branch_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
     )
         .bind::<diesel::sql_types::Uuid, _>(&workflow_id)
         .bind::<diesel::sql_types::Uuid, _>(&bot_uuid)
         .bind::<diesel::sql_types::Text, _>(workflow_name)
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Int4>, _>(&Some(1i32))
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Jsonb>, _>(&Some(state_json))
+        .bind::<diesel::sql_types::Int4, _>(1i32)
+        .bind::<diesel::sql_types::Text, _>(&state_json)
         .bind::<diesel::sql_types::Text, _>("running")
         .bind::<diesel::sql_types::Timestamptz, _>(&now)
         .bind::<diesel::sql_types::Timestamptz, _>(&now)
+        .bind::<diesel::sql_types::Uuid, _>(&branch_id)
         .execute(&mut conn)
         .map_err(|e| WorkflowError::Database(e.to_string()))?;
 
@@ -278,8 +283,8 @@ async fn execute_workflow_step(
     struct WorkflowRow {
         #[diesel(sql_type = diesel::sql_types::Uuid)]
         id: Uuid,
-        #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Jsonb>)]
-        state_json: Option<serde_json::Value>,
+        #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Text>)]
+        state_json: Option<String>,
     }
 
     let workflow = diesel::sql_query(
@@ -292,7 +297,7 @@ async fn execute_workflow_step(
         .ok_or_else(|| WorkflowError::NotFound("No running workflow found".to_string()))?;
 
     let workflow_state: WorkflowState = match &workflow.state_json {
-        Some(v) => serde_json::from_value(v.clone())
+        Some(v) => serde_json::from_str(v)
             .map_err(|e| WorkflowError::Serialization(e.to_string()))?,
         None => WorkflowState::default(),
     };
@@ -338,13 +343,13 @@ fn save_workflow_state(
     state: &WorkflowState,
     conn: &mut PgConnection,
 ) -> Result<(), WorkflowError> {
-    let state_json: Option<serde_json::Value> = Some(serde_json::to_value(state)
-        .map_err(|e| WorkflowError::Serialization(e.to_string()))?);
+    let state_json = serde_json::to_string(state)
+        .map_err(|e| WorkflowError::Serialization(e.to_string()))?;
 
     diesel::update(workflow_executions::table.filter(workflow_executions::id.eq(workflow_id)))
         .set((
             workflow_executions::state_json.eq(state_json),
-            workflow_executions::current_step.eq(Some(state.current_step)),
+            workflow_executions::current_step.eq(state.current_step),
             workflow_executions::updated_at.eq(chrono::Utc::now()),
         ))
         .execute(conn)
@@ -363,8 +368,8 @@ pub async fn resume_workflows_on_startup(
     struct WorkflowRowList {
         #[diesel(sql_type = diesel::sql_types::Uuid)]
         id: Uuid,
-        #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Jsonb>)]
-        state_json: Option<serde_json::Value>,
+        #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Text>)]
+        state_json: Option<String>,
         #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Text>)]
         workflow_name: Option<String>,
     }
@@ -377,7 +382,7 @@ pub async fn resume_workflows_on_startup(
 
     for workflow in running_workflows {
         let workflow_state: WorkflowState = match &workflow.state_json {
-            Some(v) => serde_json::from_value(v.clone())
+            Some(v) => serde_json::from_str(v)
                 .map_err(|e| WorkflowError::Serialization(e.to_string()))?,
             None => {
                 log::warn!("Workflow {} has no state JSON, skipping", workflow.id);

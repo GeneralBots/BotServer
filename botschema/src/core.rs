@@ -11,12 +11,17 @@ diesel::table! {
 }
 
 diesel::table! {
+    // Physical order follows `6.0.0-01-core`; `tenant_id` was appended by
+    // `6.5.15-org-branches` and `domain` by `6.5.19-org-domain`. `tenant_id`
+    // is nullable (the migration adds it without NOT NULL).
     organizations (org_id) {
         org_id -> Uuid,
-        tenant_id -> Uuid,
-        name -> Text,
-        slug -> Text,
+        name -> Varchar,
+        slug -> Varchar,
         created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        tenant_id -> Nullable<Uuid>,
+        domain -> Nullable<Varchar>,
     }
 }
 
@@ -86,16 +91,23 @@ diesel::joinable!(bots -> branches (branch_id));
 diesel::joinable!(bots -> organizations (org_id));
 
 diesel::table! {
+    // Column order is the consuming order of `botcore::Automation` /
+    // `botmarketing::Automation`; `created_at` (from `6.0.0-01-core`) and
+    // `name` (appended by a later ALTER in the same migration) are appended
+    // last so the existing positional mappings keep their field positions.
+    // `schedule` is `bpchar(20)` and `param`/`target` `varchar(32)` in the DB.
     system_automations (id) {
         id -> Uuid,
-        bot_id -> Nullable<Uuid>,
+        bot_id -> Uuid,
         kind -> Int4,
-        target -> Nullable<Text>,
-        schedule -> Nullable<Text>,
-        param -> Text,
+        target -> Nullable<Varchar>,
+        schedule -> Nullable<Bpchar>,
+        param -> Varchar,
         is_active -> Bool,
         last_triggered -> Nullable<Timestamptz>,
         branch_id -> Uuid,
+        created_at -> Timestamptz,
+        name -> Nullable<Varchar>,
     }
 }
 
@@ -128,27 +140,31 @@ diesel::table! {
 }
 
 diesel::table! {
+    // Physical order follows `6.2.0-01-automation` (which drops and recreates
+    // the table); `branch_id` was appended by `6.5.23-branch-scope-cleanup`.
+    // `current_step`/`state_json` are NOT NULL in the DB; `state_json` is TEXT,
+    // not JSONB.
     workflow_executions (id) {
         id -> Uuid,
-        bot_id -> Nullable<Uuid>,
+        bot_id -> Uuid,
         workflow_name -> Text,
-        current_step -> Nullable<Int4>,
-        state_json -> Nullable<Jsonb>,
+        current_step -> Int4,
+        state_json -> Text,
         status -> Text,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 
 diesel::table! {
+    // Shape and order from `6.2.0-01-automation`: `event_data_json` is TEXT
+    // (callers serialize the payload themselves).
     workflow_events (id) {
         id -> Uuid,
-        execution_id -> Uuid,
-        workflow_id -> Uuid,
+        workflow_id -> Nullable<Uuid>,
         event_name -> Text,
-        event_type -> Text,
-        payload -> Jsonb,
-        event_data_json -> Nullable<Jsonb>,
+        event_data_json -> Nullable<Text>,
         processed -> Bool,
         created_at -> Timestamptz,
     }

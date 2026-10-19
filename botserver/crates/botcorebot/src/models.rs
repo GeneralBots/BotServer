@@ -59,6 +59,7 @@ pub struct Automation {
     pub param: String,
     pub is_active: bool,
     pub last_triggered: Option<DateTime<Utc>>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable, Selectable)]
@@ -128,15 +129,17 @@ pub struct Tenant {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable)]
+#[derive(Debug, Queryable, Serialize, Deserialize, Identifiable)]
 #[diesel(table_name = organizations)]
 #[diesel(primary_key(org_id))]
 pub struct Organization {
     pub org_id: Uuid,
-    pub tenant_id: Uuid,
     pub name: String,
     pub slug: String,
     pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub tenant_id: Option<Uuid>,
+    pub domain: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable)]

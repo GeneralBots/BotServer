@@ -108,13 +108,7 @@ impl AutomationService {
         &self,
         automation: &Automation,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let bot_id = match automation.bot_id {
-            Some(id) => id,
-            None => {
-                log::error!("Automation {} has no bot_id assigned", automation.id);
-                return Ok(());
-            }
-        };
+        let bot_id = automation.bot_id;
         let bot_name: String = {
             use crate::shared::models::schema::bots::dsl::*;
             let mut conn = self

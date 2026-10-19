@@ -53,7 +53,7 @@ impl TriggerKind {
 #[diesel(table_name = system_automations)]
 pub struct Automation {
     pub id: Uuid,
-    pub bot_id: Option<Uuid>,
+    pub bot_id: Uuid,
     pub kind: i32,
     pub target: Option<String>,
     pub schedule: Option<String>,
@@ -61,6 +61,8 @@ pub struct Automation {
     pub is_active: bool,
     pub last_triggered: Option<DateTime<Utc>>,
     pub branch_id: Uuid,
+    pub created_at: DateTime<Utc>,
+    pub name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable, Selectable)]

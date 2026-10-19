@@ -24,7 +24,7 @@ pub enum TriggerKind {
 #[diesel(table_name = system_automations)]
 pub struct Automation {
     pub id: Uuid,
-    pub bot_id: Option<Uuid>,
+    pub bot_id: Uuid,
     pub kind: i32,
     pub target: Option<String>,
     pub schedule: Option<String>,
@@ -32,6 +32,8 @@ pub struct Automation {
     pub is_active: bool,
     pub last_triggered: Option<DateTime<Utc>>,
     pub branch_id: Uuid,
+    pub created_at: DateTime<Utc>,
+    pub name: Option<String>,
 }
 
 pub fn trigger_deal_stage_change(
@@ -44,7 +46,7 @@ pub fn trigger_deal_stage_change(
     let automations: Vec<Automation> = system_automations::table
         .filter(system_automations::kind.eq(TriggerKind::DealStageChange as i32))
         .filter(system_automations::is_active.eq(true))
-        .filter(system_automations::bot_id.eq(Some(_bot_id)))
+        .filter(system_automations::bot_id.eq(_bot_id))
         .load(conn)
         .unwrap_or_default();
 
@@ -70,7 +72,7 @@ pub fn trigger_contact_change(
     let automations: Vec<Automation> = system_automations::table
         .filter(system_automations::kind.eq(TriggerKind::ContactChange as i32))
         .filter(system_automations::is_active.eq(true))
-        .filter(system_automations::bot_id.eq(Some(_bot_id)))
+        .filter(system_automations::bot_id.eq(_bot_id))
         .load(conn)
         .unwrap_or_default();
 
@@ -96,7 +98,7 @@ pub fn trigger_email_opened(
     let automations: Vec<Automation> = system_automations::table
         .filter(system_automations::kind.eq(TriggerKind::EmailOpened as i32))
         .filter(system_automations::is_active.eq(true))
-        .filter(system_automations::bot_id.eq(Some(_bot_id)))
+        .filter(system_automations::bot_id.eq(_bot_id))
         .load(conn)
         .unwrap_or_default();
 

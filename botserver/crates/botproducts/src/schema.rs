@@ -43,18 +43,11 @@ pub use botschema::inventory_movements;
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::product_variants;
 
-diesel::table! {
-    organizations (id) {
-        id -> Uuid,
-    }
-}
-
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::bots;
 
 diesel::allow_tables_to_appear_in_same_query!(
     products,
-    organizations,
     product_variations,
     product_stock,
     product_price_lists,

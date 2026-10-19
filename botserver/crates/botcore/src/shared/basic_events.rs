@@ -87,7 +87,7 @@ pub fn register_handler_on(
     let branch_id = botcore_schema::system_automation_branch_id(conn, bot_id)
         .map_err(|e| format!("branch for bot {bot_id}: {e}"))?;
     let updated = diesel::update(system_automations::table)
-        .filter(system_automations::bot_id.eq(Some(bot_id)))
+        .filter(system_automations::bot_id.eq(bot_id))
         .filter(system_automations::kind.eq(kind as i32))
         .filter(system_automations::target.eq(event_name))
         .set((
@@ -99,14 +99,14 @@ pub fn register_handler_on(
     if updated == 0 {
         diesel::sql_query(
             "INSERT INTO system_automations (id, bot_id, branch_id, kind, target, param, is_active) \
-             VALUES ($1, $2, $3, $4, $5, $6, TRUE)",
+             VALUES ($1, $2, $3, $4, $5, $6, TRUE) RETURNING id",
         )
         .bind::<diesel::sql_types::Uuid, _>(Uuid::new_v4())
         .bind::<diesel::sql_types::Uuid, _>(bot_id)
         .bind::<diesel::sql_types::Uuid, _>(branch_id)
         .bind::<diesel::sql_types::Integer, _>(kind as i32)
-        .bind::<diesel::sql_types::Text, _>(event_name)
-        .bind::<diesel::sql_types::Text, _>(tool_name)
+        .bind::<diesel::sql_types::Varchar, _>(event_name)
+        .bind::<diesel::sql_types::Varchar, _>(tool_name)
         .execute(conn)
         .map_err(|e| format!("insert {event_name}: {e}"))?;
     }
@@ -122,7 +122,7 @@ pub fn handlers_for(pool: &DbPool, bot_id: Uuid, event_name: &str) -> Vec<String
         return Vec::new();
     };
     system_automations::table
-        .filter(system_automations::bot_id.eq(Some(bot_id)))
+        .filter(system_automations::bot_id.eq(bot_id))
         .filter(system_automations::kind.eq(kind as i32))
         .filter(system_automations::target.eq(event_name))
         .filter(system_automations::is_active.eq(true))
@@ -145,13 +145,13 @@ pub fn publish(
     let mut conn = pool.get().map_err(|e| format!("pool: {e}"))?;
     diesel::sql_query(
         "INSERT INTO workflow_events \
-           (id, execution_id, workflow_id, event_name, event_type, payload, processed, created_at) \
-         VALUES ($1, $2, $2, $3, 'channel', $4, FALSE, NOW()) RETURNING id",
+           (id, workflow_id, event_name, event_data_json, processed, created_at) \
+         VALUES ($1, $2, $3, $4, FALSE, NOW()) RETURNING id",
     )
     .bind::<diesel::sql_types::Uuid, _>(Uuid::new_v4())
     .bind::<diesel::sql_types::Uuid, _>(bot_id)
     .bind::<diesel::sql_types::Text, _>(event_name)
-    .bind::<diesel::sql_types::Jsonb, _>(payload)
+    .bind::<diesel::sql_types::Text, _>(serde_json::to_string(payload).unwrap_or_else(|_| "{}".to_string()))
     .get_result::<EventId>(&mut conn)
     .map(|row| row.id)
     .map_err(|e| format!("publish {event_name}: {e}"))
@@ -183,28 +183,31 @@ pub fn pending_events(pool: &DbPool, limit: i64) -> Vec<PendingEvent> {
         workflow_id: Uuid,
         #[diesel(sql_type = diesel::sql_types::Text)]
         event_name: String,
-        #[diesel(sql_type = diesel::sql_types::Jsonb)]
-        payload: serde_json::Value,
+        #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Text>)]
+        event_data_json: Option<String>,
     }
     let Ok(mut conn) = pool.get() else {
         return Vec::new();
     };
     diesel::sql_query(
-        "SELECT id, workflow_id, event_name, payload FROM workflow_events \
-         WHERE processed = FALSE AND event_type = 'channel' \
+        "SELECT id, workflow_id, event_name, event_data_json FROM workflow_events \
+         WHERE processed = FALSE \
          ORDER BY created_at ASC LIMIT $1",
     )
     .bind::<diesel::sql_types::BigInt, _>(limit)
     .load::<Row>(&mut conn)
     .unwrap_or_default()
     .into_iter()
-    .map(|row| PendingEvent {
-        id: row.id,
-        // `publish` stores the bot in `workflow_id` (see the INSERT above).
-        bot_id: row.workflow_id,
-        event_name: row.event_name,
-        payload: row.payload,
-    })
+        .map(|row| PendingEvent {
+            id: row.id,
+            // `publish` stores the bot in `workflow_id` (see the INSERT above).
+            bot_id: row.workflow_id,
+            event_name: row.event_name,
+            payload: row
+                .event_data_json
+                .and_then(|s| serde_json::from_str(&s).ok())
+                .unwrap_or_else(|| serde_json::Value::Object(Default::default())),
+        })
     .collect()
 }
 

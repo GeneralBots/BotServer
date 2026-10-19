@@ -24,21 +24,8 @@ pub mod tables {
     // `memory_key`, `memory_value`, `shared_at`.
     pub use botschema::bot_shared_memory;
 
-    diesel::table! {
-        system_automations (id) {
-            id -> Uuid,
-            branch_id -> Uuid,
-            bot_id -> Uuid,
-            trigger_kind -> Varchar,
-            trigger_data -> Jsonb,
-            script_path -> Varchar,
-            is_active -> Bool,
-            schedule -> Nullable<Varchar>,
-            param -> Varchar,
-            last_triggered -> Nullable<Timestamptz>,
-            created_at -> Timestamptz,
-        }
-    }
+    // Canonical definition lives in `botschema` (#1497).
+    pub use botschema::system_automations;
 
     // Canonical definition lives in `botschema` (#1497). The database stores
     // `id`/`session_id`/`tool_name`/`added_at` as `TEXT`, not `UUID`/`VARCHAR`.
@@ -46,41 +33,16 @@ pub mod tables {
 
     // Canonical definition lives in `botschema` (#1497).
     pub use botschema::message_history;
-    diesel::table! {
-        workflow_executions (id) {
-            id -> Uuid,
-            branch_id -> Uuid,
-            bot_id -> Uuid,
-            workflow_name -> Varchar,
-            status -> Varchar,
-            created_at -> Timestamptz,
-        }
-    }
+    pub use botschema::workflow_executions;
 
-    diesel::table! {
-        workflow_events (id) {
-            id -> Uuid,
-            execution_id -> Uuid,
-            event_type -> Varchar,
-            payload -> Jsonb,
-            created_at -> Timestamptz,
-        }
-    }
+    pub use botschema::workflow_events;
 
     // Canonical definition lives in `botschema` (#1497).
     pub use botschema::calendar_events;
 
     // Needed to turn `bots.org_id` into the tenant slug that names the
-// `.gborg` Drive bucket — buckets are slug-based, not UUID-based.
-diesel::table! {
-    organizations (org_id) {
-            org_id -> Uuid,
-            name -> Varchar,
-            slug -> Varchar,
-            created_at -> Nullable<Timestamptz>,
-            updated_at -> Nullable<Timestamptz>,
-        }
-    }
+    // `.gborg` Drive bucket — buckets are slug-based, not UUID-based.
+    pub use botschema::organizations;
 
     diesel::table! {
         bot_configuration (id) {

@@ -93,12 +93,9 @@ async fn publish_event(
     
     let new_event = WorkflowEvent {
         id: Uuid::new_v4(),
-        execution_id: Uuid::nil(),
-        workflow_id: Uuid::nil(),
+        workflow_id: None,
         event_name: event_name.to_string(),
-        event_type: "custom".to_string(),
-        payload: event_data.clone(),
-        event_data_json: Some(event_data.clone()),
+        event_data_json: Some(event_data.to_string()),
         processed: false,
         created_at: chrono::Utc::now(),
     };

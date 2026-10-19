@@ -75,11 +75,5 @@ pub use botschema::billing_grace_periods;
 // The `allow_tables_to_appear_in_same_query!` list moved to `botschema::billing`:
 // both sides of every pair are foreign types here, so the orphan rule blocks it.
 
-diesel::table! {
-    organizations (id) {
-        id -> Uuid,
-    }
-}
-
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::bots;

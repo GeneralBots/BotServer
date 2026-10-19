@@ -1,31 +1,32 @@
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Queryable, Selectable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = crate::shared::schema::core::workflow_executions, check_for_backend(diesel::pg::Pg))]
 pub struct WorkflowExecution {
     pub id: Uuid,
-    pub bot_id: Option<Uuid>,
+    pub bot_id: Uuid,
     pub workflow_name: String,
-    pub current_step: Option<i32>,
-    pub state_json: Option<JsonValue>,
+    pub current_step: i32,
+    pub state_json: String,
     pub status: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
+    /// NOT NULL since `6.5.23-branch-scope-cleanup`.
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Queryable, Selectable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = crate::shared::schema::core::workflow_events, check_for_backend(diesel::pg::Pg))]
 pub struct WorkflowEvent {
     pub id: Uuid,
-    pub execution_id: Uuid,
-    pub workflow_id: Uuid,
+    /// Channel events carry the publishing bot here (see
+    /// `basic_events::publish`); workflow-scoped events leave it `None`.
+    pub workflow_id: Option<Uuid>,
     pub event_name: String,
-    pub event_type: String,
-    pub payload: JsonValue,
-    pub event_data_json: Option<JsonValue>,
+    /// Serialized JSON — the column is TEXT.
+    pub event_data_json: Option<String>,
     pub processed: bool,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }

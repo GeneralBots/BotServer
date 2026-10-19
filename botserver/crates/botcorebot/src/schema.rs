@@ -45,66 +45,17 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    system_automations (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        name -> Varchar,
-        event_type -> Varchar,
-        action_type -> Varchar,
-        config -> Nullable<Jsonb>,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        kind -> Int4,
-        target -> Nullable<Text>,
-        schedule -> Nullable<Text>,
-        param -> Text,
-        last_triggered -> Nullable<Timestamptz>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::system_automations;
 
-diesel::table! {
-    workflow_executions (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        workflow_id -> Uuid,
-        status -> Varchar,
-        input -> Nullable<Jsonb>,
-        output -> Nullable<Jsonb>,
-        started_at -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        error -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        workflow_name -> Text,
-        current_step -> Nullable<Int4>,
-        state_json -> Nullable<Jsonb>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::workflow_executions;
 
-diesel::table! {
-    workflow_events (id) {
-        id -> Uuid,
-        workflow_id -> Nullable<Uuid>,
-        event_name -> Text,
-        event_data_json -> Nullable<Text>,
-        processed -> Bool,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::workflow_events;
 
-diesel::table! {
-    organizations (org_id) {
-        org_id -> Uuid,
-        tenant_id -> Uuid,
-        name -> Varchar,
-        slug -> Varchar,
-        created_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::organizations;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::tenants;

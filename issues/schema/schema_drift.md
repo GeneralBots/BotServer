@@ -11,16 +11,16 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 34 |
-| Total `table!` declarations | 67 |
-| Tables declared more than once | 11 |
+| Distinct tables (outside botschema) | 30 |
+| Total `table!` declarations | 57 |
+| Tables declared more than once | 7 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 11 |
+| — conflicting drift | 7 |
 | Tables already in `botschema` | 273 |
 | Distinct tables NOT yet in `botschema` | 23 |
 
-## Conflicting tables (11)
+## Conflicting tables (7)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
 
@@ -41,7 +41,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botcoredirectory/src/provisioning.rs` | 315 | `bot_id, config_key` | 7 |
-| `botserver/crates/botbasic_types/src/schema.rs` | 85 | `id` | 9 |
+| `botserver/crates/botbasic_types/src/schema.rs` | 47 | `id` | 9 |
 | `botserver/crates/botcoreoauth/src/schema.rs` | 4 | `bot_id, config_key` | 7 |
 | `botserver/crates/botcorebot/src/schema.rs` | 34 | `id` | 9 |
 | `botserver/crates/botsources/src/schema.rs` | 4 | `id` | 7 |
@@ -89,25 +89,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `botserver/crates/botcloud/src/schema_ext.rs` | 1 | `id` | 9 |
 | `botserver/crates/botemail/src/schema.rs` | 57 | `id` | 29 |
 | `botserver/crates/botcontacts/src/schema.rs` | 6 | `id` | 26 |
-
-### `organizations` ×4 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `created_at` | `Nullable<Timestamptz>, Timestamptz` ⚠ |
-| `id` | `Uuid` |
-| `name` | `Varchar` |
-| `org_id` | `Uuid` |
-| `slug` | `Varchar` |
-| `tenant_id` | `Uuid` |
-| `updated_at` | `Nullable<Timestamptz>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbasic_types/src/schema.rs` | 75 | `org_id` | 5 |
-| `botserver/crates/botcorebot/src/schema.rs` | 99 | `org_id` | 5 |
-| `botserver/crates/botbilling/src/schema.rs` | 78 | `id` | 1 |
-| `botserver/crates/botproducts/src/schema.rs` | 46 | `id` | 1 |
 
 ### `people` ×2 (in botschema)
 
@@ -183,34 +164,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `botserver/src/main_module/routes/catalog.rs` | 15 | `id` | 14 |
 | `botserver/crates/botbilling/src/schema.rs` | 20 | `id` | 24 |
 | `botserver/crates/botproducts/src/schema.rs` | 1 | `id` | 24 |
-
-### `system_automations` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `action_type` | `Varchar` |
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `config` | `Nullable<Jsonb>` |
-| `created_at` | `Timestamptz` |
-| `event_type` | `Varchar` |
-| `id` | `Uuid` |
-| `is_active` | `Bool, Nullable<Bool>` ⚠ |
-| `kind` | `Int4` |
-| `last_triggered` | `Nullable<Timestamptz>` |
-| `name` | `Varchar` |
-| `param` | `Text, Varchar` ⚠ |
-| `schedule` | `Nullable<Text>, Nullable<Varchar>` ⚠ |
-| `script_path` | `Varchar` |
-| `target` | `Nullable<Text>` |
-| `trigger_data` | `Jsonb` |
-| `trigger_kind` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbasic_types/src/schema.rs` | 27 | `id` | 11 |
-| `botserver/crates/botcorebot/src/schema.rs` | 48 | `id` | 15 |
 
 ### `tasks` ×3 (in botschema)
 
@@ -300,50 +253,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `botserver/crates/botcoreoauth/src/schema.rs` | 16 | `id` | 8 |
 | `botserver/crates/botattendance/src/schema.rs` | 23 | `id` | 3 |
 | `botserver/crates/botwhatsapp/src/schema.rs` | 42 | `id` | 8 |
-
-### `workflow_events` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `created_at` | `Timestamptz` |
-| `event_data_json` | `Nullable<Text>` |
-| `event_name` | `Text` |
-| `event_type` | `Varchar` |
-| `execution_id` | `Uuid` |
-| `id` | `Uuid` |
-| `payload` | `Jsonb` |
-| `processed` | `Bool` |
-| `workflow_id` | `Nullable<Uuid>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbasic_types/src/schema.rs` | 60 | `id` | 5 |
-| `botserver/crates/botcorebot/src/schema.rs` | 88 | `id` | 6 |
-
-### `workflow_executions` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `completed_at` | `Nullable<Timestamptz>` |
-| `created_at` | `Timestamptz` |
-| `current_step` | `Nullable<Int4>` |
-| `error` | `Nullable<Text>` |
-| `id` | `Uuid` |
-| `input` | `Nullable<Jsonb>` |
-| `output` | `Nullable<Jsonb>` |
-| `started_at` | `Nullable<Timestamptz>` |
-| `state_json` | `Nullable<Jsonb>` |
-| `status` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-| `workflow_id` | `Uuid` |
-| `workflow_name` | `Text, Varchar` ⚠ |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbasic_types/src/schema.rs` | 49 | `id` | 6 |
-| `botserver/crates/botcorebot/src/schema.rs` | 68 | `id` | 15 |
 
 ## Additive tables (0)
 

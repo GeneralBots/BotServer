@@ -376,7 +376,8 @@ async fn upsert_dag_node(
     .bind::<diesel::sql_types::Uuid, _>(workflow_id)
     .get_result::<StateJsonRow>(&mut conn)
     .optional()?
-    .and_then(|r| r.state_json);
+    .and_then(|r| r.state_json)
+    .and_then(|s| serde_json::from_str(&s).ok());
 
     let mut dag: DagState = match state_json {
         Some(v) => serde_json::from_value(v)?,
@@ -414,8 +415,8 @@ async fn upsert_dag_node(
 
 #[derive(QueryableByName)]
 struct StateJsonRow {
-    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Jsonb>)]
-    state_json: Option<serde_json::Value>,
+    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Text>)]
+    state_json: Option<String>,
 }
 
 fn save_dag_state(
@@ -423,7 +424,7 @@ fn save_dag_state(
     dag: &DagState,
     conn: &mut PgConnection,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let state_json: Option<serde_json::Value> = Some(serde_json::to_value(dag)?);
+    let state_json = serde_json::to_string(dag)?;
     diesel::update(workflow_executions::table.filter(workflow_executions::id.eq(workflow_id)))
         .set((
             workflow_executions::state_json.eq(state_json),

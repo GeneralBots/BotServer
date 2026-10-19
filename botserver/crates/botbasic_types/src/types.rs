@@ -56,16 +56,20 @@ pub struct WorkflowExecution {
     pub id: Uuid,
     pub bot_id: Uuid,
     pub workflow_name: String,
+    pub current_step: i32,
+    pub state_json: String,
     pub status: String,
     pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowEvent {
     pub id: Uuid,
-    pub execution_id: Uuid,
-    pub event_type: String,
-    pub payload: serde_json::Value,
+    pub workflow_id: Option<Uuid>,
+    pub event_name: String,
+    pub event_data_json: Option<String>,
+    pub processed: bool,
     pub created_at: DateTime<Utc>,
 }
 
