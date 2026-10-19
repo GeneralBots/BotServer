@@ -11,14 +11,14 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 38 |
-| Total `table!` declarations | 73 |
+| Distinct tables (outside botschema) | 37 |
+| Total `table!` declarations | 72 |
 | Tables declared more than once | 14 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
 | — conflicting drift | 14 |
 | Tables already in `botschema` | 273 |
-| Distinct tables NOT yet in `botschema` | 24 |
+| Distinct tables NOT yet in `botschema` | 23 |
 
 ## Conflicting tables (14)
 
@@ -300,7 +300,7 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 
 | file | line | pk | #cols |
 |---|---|---|---:|
-| `botserver/crates/botautotask/src/schema.rs` | 89 | `id` | 19 |
+| `botserver/crates/botautotask/src/schema.rs` | 68 | `id` | 19 |
 | `botserver/crates/bottasks/src/schema.rs` | 34 | `id` | 12 |
 | `botserver/crates/botcontacts/src/schema.rs` | 111 | `id` | 19 |
 

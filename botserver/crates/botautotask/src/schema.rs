@@ -64,28 +64,6 @@ pub mod intent_classifications {
     }
 }
 
-pub mod compiled_intents {
-    diesel::table! {
-        compiled_intents (id) {
-            id -> Uuid,
-            branch_id -> Uuid,
-            bot_id -> Uuid,
-            name -> Varchar,
-            patterns -> Jsonb,
-            response -> Nullable<Text>,
-            is_active -> Nullable<Bool>,
-            created_at -> Timestamptz,
-            updated_at -> Timestamptz,
-            session_id -> Text,
-            original_intent -> Text,
-            basic_program -> Text,
-            confidence -> Float8,
-            compiled_at -> Timestamptz,
-            data -> Text,
-        }
-    }
-}
-
 pub mod tasks {
     diesel::table! {
         tasks (id) {
