@@ -106,6 +106,10 @@ pub use self::memory::*;
 pub mod channels;
 #[cfg(feature = "channels")]
 pub use self::channels::*;
+#[cfg(feature = "cloud")]
+pub mod cloud;
+#[cfg(feature = "cloud")]
+pub use self::cloud::*;
 pub mod drive;
 pub use self::drive::*;
 pub mod email_integration;

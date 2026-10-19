@@ -6,7 +6,6 @@
     "botserver/crates/botbasic_types/src/schema.rs",
     "botserver/crates/botbilling/src/schema.rs",
     "botserver/crates/botcloud/src/schema_ext.rs",
-    "botserver/crates/botcompliance/src/schema.rs",
     "botserver/crates/botcontacts/src/schema.rs",
     "botserver/crates/botcorebot/src/schema.rs",
     "botserver/crates/botcoredirectory/src/api.rs",
@@ -24,5 +23,5 @@
     "botserver/crates/botwhatsapp/src/schema.rs",
     "botserver/src/main_module/routes/catalog.rs"
   ],
-  "total": 86
+  "total": 75
 }

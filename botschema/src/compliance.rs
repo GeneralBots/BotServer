@@ -298,3 +298,63 @@ diesel::joinable!(compliance_risk_assessments -> branches (branch_id));
 diesel::joinable!(compliance_risks -> compliance_risk_assessments (assessment_id));
 diesel::joinable!(compliance_training_records -> branches (branch_id));
 diesel::joinable!(compliance_access_reviews -> branches (branch_id));
+
+// Moved verbatim from `botcompliance/src/schema.rs` (#1497) — the column order
+// is preserved, so every `Queryable` struct in the consuming crate still maps
+// to the same columns. Verified against the database by
+// `scripts/schema_db_audit.py` (`issues/schema/db_audit.md`, #1519).
+diesel::table! {
+    compliance_frameworks (id) {
+        id -> Uuid,
+        branch_id -> Uuid,
+        name -> Varchar,
+        version -> Varchar,
+        description -> Nullable<Text>,
+        framework_key -> Varchar,
+        status -> Varchar,
+        created_by -> Nullable<Uuid>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    compliance_controls (id) {
+        id -> Uuid,
+        branch_id -> Uuid,
+        framework_id -> Uuid,
+        control_id -> Varchar,
+        title -> Varchar,
+        description -> Nullable<Text>,
+        category -> Nullable<Varchar>,
+        is_mandatory -> Bool,
+        version -> Varchar,
+        status -> Varchar,
+        created_by -> Nullable<Uuid>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    compliance_control_evidence (id) {
+        id -> Uuid,
+        branch_id -> Uuid,
+        control_id -> Uuid,
+        file_path -> Varchar,
+        description -> Nullable<Text>,
+        evidence_type -> Varchar,
+        status -> Varchar,
+        owner_id -> Nullable<Uuid>,
+        approved_by -> Nullable<Uuid>,
+        approved_at -> Nullable<Timestamptz>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+    }
+}
+
+diesel::joinable!(compliance_frameworks -> branches (branch_id));
+diesel::joinable!(compliance_controls -> branches (branch_id));
+diesel::joinable!(compliance_controls -> compliance_frameworks (framework_id));
+diesel::joinable!(compliance_control_evidence -> branches (branch_id));
+diesel::joinable!(compliance_control_evidence -> compliance_controls (control_id));
