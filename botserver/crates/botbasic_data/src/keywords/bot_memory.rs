@@ -83,6 +83,18 @@ pub fn set_bot_memory_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, e
                             }
                         }
                     } else {
+                        // `bot_memories.branch_id` is NOT NULL since
+                        // `6.5.23-branch-scope-cleanup`; it is the branch that
+                        // owns the bot. The nil UUID is the same fallback that
+                        // migration used when backfilling existing rows.
+                        let branch_id: Uuid = botbasic_types::schema::bots::table
+                            .filter(botbasic_types::schema::bots::id.eq(bot_uuid))
+                            .select(botbasic_types::schema::bots::branch_id)
+                            .first::<Uuid>(&mut *conn)
+                            .optional()
+                            .unwrap_or(None)
+                            .unwrap_or_else(Uuid::nil);
+
                         let new_memory = botbasic_types::types::BotMemory {
                             id: Uuid::new_v4(),
                             bot_id: bot_uuid,
@@ -90,12 +102,14 @@ pub fn set_bot_memory_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, e
                             value: value_clone.clone(),
                             created_at: now,
                             updated_at: now,
+                            branch_id,
                         };
 
     let insert_result = diesel::sql_query(
-        "INSERT INTO bot_memories (id, bot_id, key, value, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)"
+        "INSERT INTO bot_memories (id, branch_id, bot_id, key, value, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)"
     )
     .bind::<diesel::sql_types::Uuid, _>(new_memory.id)
+    .bind::<diesel::sql_types::Uuid, _>(new_memory.branch_id)
     .bind::<diesel::sql_types::Uuid, _>(new_memory.bot_id)
     .bind::<diesel::sql_types::Text, _>(&new_memory.key)
     .bind::<diesel::sql_types::Text, _>(&new_memory.value)
@@ -280,6 +294,16 @@ pub fn set_bot_memory_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, e
                     }
                 }
             } else {
+                // See the sibling `SET_BOT_MEMORY` path above: `branch_id` is
+                // NOT NULL and the insert must carry it.
+                let branch_id: Uuid = botbasic_types::schema::bots::table
+                    .filter(botbasic_types::schema::bots::id.eq(bot_uuid))
+                    .select(botbasic_types::schema::bots::branch_id)
+                    .first::<Uuid>(&mut *conn)
+                    .optional()
+                    .unwrap_or(None)
+                    .unwrap_or_else(Uuid::nil);
+
                 let new_memory = botbasic_types::types::BotMemory {
                     id: Uuid::new_v4(),
                     bot_id: bot_uuid,
@@ -287,12 +311,14 @@ pub fn set_bot_memory_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, e
                     value: value_clone.clone(),
                     created_at: now,
                     updated_at: now,
+                    branch_id,
                 };
 
                 let insert_result = diesel::sql_query(
-                    "INSERT INTO bot_memories (id, bot_id, key, value, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)"
+                    "INSERT INTO bot_memories (id, branch_id, bot_id, key, value, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7)"
                 )
                 .bind::<diesel::sql_types::Uuid, _>(new_memory.id)
+                .bind::<diesel::sql_types::Uuid, _>(new_memory.branch_id)
                 .bind::<diesel::sql_types::Uuid, _>(new_memory.bot_id)
                 .bind::<diesel::sql_types::Text, _>(&new_memory.key)
                 .bind::<diesel::sql_types::Text, _>(&new_memory.value)

@@ -26,6 +26,8 @@ pub struct BotMemory {
     pub value: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    /// NOT NULL since `6.5.23-branch-scope-cleanup`; every insert must supply it.
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

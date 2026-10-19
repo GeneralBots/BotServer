@@ -16,17 +16,7 @@ pub mod tables {
         }
     }
 
-    diesel::table! {
-        bot_memories (id) {
-            id -> Uuid,
-            branch_id -> Uuid,
-            bot_id -> Uuid,
-            key -> Varchar,
-            value -> Text,
-            created_at -> Timestamptz,
-            updated_at -> Timestamptz,
-        }
-    }
+    pub use botschema::bot_memories;
 
     // Canonical definition lives in `botschema` (#1497). The local copy carried
     // the `6.5.15.1` shape (`bot_id`/`key`/`value`/`created_at`/`updated_at`),

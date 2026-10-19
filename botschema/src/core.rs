@@ -207,11 +207,15 @@ diesel::table! {
 diesel::table! {
     bot_memories (id) {
         id -> Uuid,
-        bot_id -> Nullable<Uuid>,
+        bot_id -> Uuid,
         key -> Text,
         value -> Text,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        // NOT NULL since `6.5.23-branch-scope-cleanup`; appended last so the six
+        // columns the consuming `BotMemory` structs already mapped keep their
+        // positions.
+        branch_id -> Uuid,
     }
 }
 

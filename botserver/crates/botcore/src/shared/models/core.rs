@@ -116,6 +116,8 @@ pub struct BotMemory {
     pub value: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    /// NOT NULL since `6.5.23-branch-scope-cleanup`.
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable)]

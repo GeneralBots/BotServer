@@ -11,16 +11,16 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 35 |
-| Total `table!` declarations | 69 |
-| Tables declared more than once | 12 |
+| Distinct tables (outside botschema) | 34 |
+| Total `table!` declarations | 67 |
+| Tables declared more than once | 11 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 12 |
+| — conflicting drift | 11 |
 | Tables already in `botschema` | 273 |
 | Distinct tables NOT yet in `botschema` | 23 |
 
-## Conflicting tables (12)
+## Conflicting tables (11)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
 
@@ -41,30 +41,12 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | file | line | pk | #cols |
 |---|---|---|---:|
 | `botserver/crates/botcoredirectory/src/provisioning.rs` | 315 | `bot_id, config_key` | 7 |
-| `botserver/crates/botbasic_types/src/schema.rs` | 95 | `id` | 9 |
+| `botserver/crates/botbasic_types/src/schema.rs` | 85 | `id` | 9 |
 | `botserver/crates/botcoreoauth/src/schema.rs` | 4 | `bot_id, config_key` | 7 |
-| `botserver/crates/botcorebot/src/schema.rs` | 46 | `id` | 9 |
+| `botserver/crates/botcorebot/src/schema.rs` | 34 | `id` | 9 |
 | `botserver/crates/botsources/src/schema.rs` | 4 | `id` | 7 |
 | `botserver/crates/botwhatsapp/src/schema.rs` | 7 | `id` | 7 |
 | `botserver/crates/botcoresession/src/schema.rs` | 25 | `id` | 9 |
-
-### `bot_memories` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `id` | `Uuid` |
-| `key` | `Varchar` |
-| `memory_type` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-| `value` | `Text` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botbasic_types/src/schema.rs` | 19 | `id` | 7 |
-| `botserver/crates/botcorebot/src/schema.rs` | 25 | `id` | 8 |
 
 ### `crm_contacts` ×3 (in botschema)
 
@@ -122,8 +104,8 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 
 | file | line | pk | #cols |
 |---|---|---|---:|
-| `botserver/crates/botbasic_types/src/schema.rs` | 85 | `org_id` | 5 |
-| `botserver/crates/botcorebot/src/schema.rs` | 111 | `org_id` | 5 |
+| `botserver/crates/botbasic_types/src/schema.rs` | 75 | `org_id` | 5 |
+| `botserver/crates/botcorebot/src/schema.rs` | 99 | `org_id` | 5 |
 | `botserver/crates/botbilling/src/schema.rs` | 78 | `id` | 1 |
 | `botserver/crates/botproducts/src/schema.rs` | 46 | `id` | 1 |
 
@@ -227,8 +209,8 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 
 | file | line | pk | #cols |
 |---|---|---|---:|
-| `botserver/crates/botbasic_types/src/schema.rs` | 37 | `id` | 11 |
-| `botserver/crates/botcorebot/src/schema.rs` | 60 | `id` | 15 |
+| `botserver/crates/botbasic_types/src/schema.rs` | 27 | `id` | 11 |
+| `botserver/crates/botcorebot/src/schema.rs` | 48 | `id` | 15 |
 
 ### `tasks` ×3 (in botschema)
 
@@ -335,8 +317,8 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 
 | file | line | pk | #cols |
 |---|---|---|---:|
-| `botserver/crates/botbasic_types/src/schema.rs` | 70 | `id` | 5 |
-| `botserver/crates/botcorebot/src/schema.rs` | 100 | `id` | 6 |
+| `botserver/crates/botbasic_types/src/schema.rs` | 60 | `id` | 5 |
+| `botserver/crates/botcorebot/src/schema.rs` | 88 | `id` | 6 |
 
 ### `workflow_executions` ×2 (in botschema)
 
@@ -360,8 +342,8 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 
 | file | line | pk | #cols |
 |---|---|---|---:|
-| `botserver/crates/botbasic_types/src/schema.rs` | 59 | `id` | 6 |
-| `botserver/crates/botcorebot/src/schema.rs` | 80 | `id` | 15 |
+| `botserver/crates/botbasic_types/src/schema.rs` | 49 | `id` | 6 |
+| `botserver/crates/botcorebot/src/schema.rs` | 68 | `id` | 15 |
 
 ## Additive tables (0)
 

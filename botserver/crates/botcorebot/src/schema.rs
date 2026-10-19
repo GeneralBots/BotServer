@@ -22,19 +22,7 @@ diesel::table! {
 pub use botschema::message_history;
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::users;
-diesel::table! {
-    bot_memories (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        key -> Varchar,
-        value -> Text,
-        #[sql_name = "type"]
-        memory_type -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+pub use botschema::bot_memories;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::bot_shared_memory;
