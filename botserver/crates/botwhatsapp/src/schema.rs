@@ -4,17 +4,8 @@
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::bots;
 
-diesel::table! {
-    bot_configuration (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        config_key -> Varchar,
-        config_value -> Text,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::bot_configuration;
 
 diesel::table! {
     user_sessions (id) {
@@ -39,23 +30,9 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    users (id) {
-        id -> Uuid,
-        username -> Varchar,
-        email -> Varchar,
-        password_hash -> Varchar,
-        phone_number -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        is_active -> Nullable<Bool>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::users;
 
 pub use botschema::message_history;
 
-diesel::allow_tables_to_appear_in_same_query!(
-    bot_configuration,
-    user_sessions,
-    users,
-);
+diesel::allow_tables_to_appear_in_same_query!(user_sessions,);

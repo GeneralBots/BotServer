@@ -22,23 +22,10 @@ pub use botschema::users;
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::bots;
 
-diesel::table! {
-    bot_configuration (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        config_key -> Varchar,
-        config_value -> Text,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        is_encrypted -> Bool,
-        config_type -> Text,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::bot_configuration;
 
-// `message_history` and `users` are re-exported from `botschema`; their join
-// rules live there (#1497).
-diesel::allow_tables_to_appear_in_same_query!(
-    user_sessions,
-    bot_configuration,
-);
+// `message_history`, `users` and `bot_configuration` are re-exported from
+// `botschema`; their join rules live there (#1497) — a cross-table join between
+// two foreign types would violate the orphan rule.
+diesel::allow_tables_to_appear_in_same_query!(user_sessions,);

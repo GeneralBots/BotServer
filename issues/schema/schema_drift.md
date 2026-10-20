@@ -11,42 +11,18 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 30 |
-| Total `table!` declarations | 57 |
-| Tables declared more than once | 7 |
+| Distinct tables (outside botschema) | 28 |
+| Total `table!` declarations | 45 |
+| Tables declared more than once | 5 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 7 |
+| — conflicting drift | 5 |
 | Tables already in `botschema` | 273 |
 | Distinct tables NOT yet in `botschema` | 23 |
 
-## Conflicting tables (7)
+## Conflicting tables (5)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
-
-### `bot_configuration` ×7 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `config_key` | `Varchar` |
-| `config_type` | `Text, Varchar` ⚠ |
-| `config_value` | `Text` |
-| `created_at` | `Timestamptz` |
-| `id` | `Uuid` |
-| `is_encrypted` | `Bool` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcoredirectory/src/provisioning.rs` | 315 | `bot_id, config_key` | 7 |
-| `botserver/crates/botbasic_types/src/schema.rs` | 47 | `id` | 9 |
-| `botserver/crates/botcoreoauth/src/schema.rs` | 4 | `bot_id, config_key` | 7 |
-| `botserver/crates/botcorebot/src/schema.rs` | 34 | `id` | 9 |
-| `botserver/crates/botsources/src/schema.rs` | 4 | `id` | 7 |
-| `botserver/crates/botwhatsapp/src/schema.rs` | 7 | `id` | 7 |
-| `botserver/crates/botcoresession/src/schema.rs` | 25 | `id` | 9 |
 
 ### `crm_contacts` ×3 (in botschema)
 
@@ -222,37 +198,15 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 |---|---|---|---:|
 | `botserver/crates/bottelegram/src/schema.rs` | 1 | `id` | 12 |
 | `botserver/crates/botbasic_types/src/schema.rs` | 5 | `id` | 9 |
-| `botserver/crates/botcoreoauth/src/schema.rs` | 29 | `id` | 9 |
+| `botserver/crates/botcoreoauth/src/schema.rs` | 10 | `id` | 9 |
 | `botserver/crates/botpaper/src/schema.rs` | 4 | `id` | 9 |
 | `botserver/crates/bottasks/src/schema.rs` | 20 | `id` | 9 |
 | `botserver/crates/botattendance/src/schema.rs` | 1 | `id` | 12 |
 | `botserver/crates/botcorebot/src/schema.rs` | 4 | `id` | 12 |
 | `botserver/crates/botmsteams/src/schema.rs` | 1 | `id` | 12 |
-| `botserver/crates/botwhatsapp/src/schema.rs` | 19 | `id` | 18 |
+| `botserver/crates/botwhatsapp/src/schema.rs` | 10 | `id` | 18 |
 | `botserver/crates/botcoresession/src/schema.rs` | 4 | `id` | 9 |
 | `botlib/src/models/session.rs` | 55 | `id` | 9 |
-
-### `users` ×5 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `created_at` | `Timestamptz` |
-| `email` | `Varchar` |
-| `id` | `Uuid` |
-| `is_active` | `Bool, Nullable<Bool>` ⚠ |
-| `is_admin` | `Bool` |
-| `password_hash` | `Text, Varchar` ⚠ |
-| `phone_number` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-| `username` | `Varchar` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcoredirectory/src/provisioning.rs` | 304 | `id` | 6 |
-| `botserver/crates/botcoredirectory/src/api.rs` | 270 | `id` | 6 |
-| `botserver/crates/botcoreoauth/src/schema.rs` | 16 | `id` | 8 |
-| `botserver/crates/botattendance/src/schema.rs` | 23 | `id` | 3 |
-| `botserver/crates/botwhatsapp/src/schema.rs` | 42 | `id` | 8 |
 
 ## Additive tables (0)
 

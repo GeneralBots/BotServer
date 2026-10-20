@@ -20,13 +20,8 @@ pub use botschema::message_history;
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::bots;
 
-diesel::table! {
-    users (id) {
-        id -> Uuid,
-        username -> Varchar,
-        email -> Varchar,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::users;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::attendance_webhooks;

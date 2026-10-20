@@ -265,16 +265,7 @@ pub async fn check_services_status(State(state): State<Arc<DirectoryApiState>>) 
 }
 
 mod schema {
-  use diesel::table;
-
-  table! {
-    users (id) {
-      id -> Uuid,
-      username -> Varchar,
-      email -> Varchar,
-      password_hash -> Text,
-      is_admin -> Bool,
-      created_at -> Timestamptz,
-    }
-  }
+  // Canonical definition lives in `botschema` (#1497); the local copy had a
+  // ghost `is_admin` and omitted the account columns.
+  pub use botschema::users;
 }

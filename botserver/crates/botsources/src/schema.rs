@@ -1,17 +1,8 @@
 // @generated automatically by script from migration SQL for issue #707.
 // Diesel table definitions for branch-scope cleanup.
 
-diesel::table! {
-    bot_configuration (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        config_key -> Varchar,
-        config_value -> Text,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::bot_configuration;
 
 diesel::table! {
     connectors (id) {
@@ -89,7 +80,6 @@ diesel::table! {
 
 
 diesel::allow_tables_to_appear_in_same_query!(
-    bot_configuration,
     connectors,
     delivery_transactions,
     bank_transactions,

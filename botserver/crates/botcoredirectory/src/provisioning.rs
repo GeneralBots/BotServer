@@ -298,31 +298,10 @@ impl UserProvisioningService {
 }
 
 mod schema {
-  use diesel::table;
-  use diesel::allow_tables_to_appear_in_same_query;
-
-  table! {
-    users (id) {
-      id -> Uuid,
-      username -> Varchar,
-      email -> Varchar,
-      password_hash -> Text,
-      is_admin -> Bool,
-      created_at -> Timestamptz,
-    }
-  }
-
-  table! {
-    bot_configuration (bot_id, config_key) {
-      bot_id -> Uuid,
-      config_key -> Varchar,
-      config_value -> Text,
-      is_encrypted -> Bool,
-      config_type -> Varchar,
-      created_at -> Timestamptz,
-      updated_at -> Timestamptz,
-    }
-  }
+  // Canonical definition lives in `botschema` (#1497). The local copy
+  // disagreed with the database (it had a ghost `is_admin` and omitted the
+  // account columns).
+  pub use botschema::users;
 
   // Canonical declaration lives in `botschema`; the local copy here declared the
   // primary key as `user_id` while the table's real key is `id`
@@ -332,5 +311,7 @@ mod schema {
   #[cfg(feature = "mail")]
   pub use botschema::user_email_accounts;
 
-  allow_tables_to_appear_in_same_query!(users, bot_configuration,);
+  // `users` and `bot_configuration` are canonical in `botschema` now, so a
+  // cross-table join between two foreign types would violate the orphan rule
+  // (#1497); no query below joins them.
 }

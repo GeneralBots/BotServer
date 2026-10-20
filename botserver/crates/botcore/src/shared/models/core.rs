@@ -129,10 +129,11 @@ pub struct User {
     pub username: String,
     pub email: String,
     pub password_hash: String,
-    pub is_active: bool,
-    pub is_admin: bool,
+    pub phone_number: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub is_active: Option<bool>,
+    pub is_admin: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable)]
@@ -221,10 +222,9 @@ pub struct BotConfiguration {
     pub bot_id: Uuid,
     pub config_key: String,
     pub config_value: String,
-    pub is_encrypted: bool,
-    pub config_type: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable)]

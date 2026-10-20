@@ -44,19 +44,8 @@ pub mod tables {
     // `.gborg` Drive bucket — buckets are slug-based, not UUID-based.
     pub use botschema::organizations;
 
-    diesel::table! {
-        bot_configuration (id) {
-            id -> Uuid,
-            branch_id -> Uuid,
-            bot_id -> Uuid,
-            config_key -> Varchar,
-            config_value -> Text,
-            is_encrypted -> Bool,
-            config_type -> Varchar,
-            created_at -> Timestamptz,
-            updated_at -> Timestamptz,
-        }
-    }
+    // Canonical definition lives in `botschema` (#1497).
+    pub use botschema::bot_configuration;
 }
 
 // The org lookup joins `bots` to `organizations` on `org_id`. Both tables are

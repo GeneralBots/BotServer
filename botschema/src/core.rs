@@ -199,15 +199,20 @@ diesel::table! {
 }
 
 diesel::table! {
+    // Physical order from `6.0.0-01-core`; `is_admin` was added by migration
+    // `6.7.10-users-is-admin` (the consolidated migration's copy never applied
+    // because `CREATE TABLE IF NOT EXISTS` is a no-op once `6.0.0-01-core` has
+    // created the table). `is_active` is nullable in the DB.
     users (id) {
         id -> Uuid,
-        username -> Text,
-        email -> Text,
-        password_hash -> Text,
-        is_active -> Bool,
-        is_admin -> Bool,
+        username -> Varchar,
+        email -> Varchar,
+        password_hash -> Varchar,
+        phone_number -> Nullable<Varchar>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        is_active -> Nullable<Bool>,
+        is_admin -> Bool,
     }
 }
 
@@ -262,15 +267,17 @@ diesel::table! {
 }
 
 diesel::table! {
+    // Physical order from `6.0.0-01-core`; `branch_id` appended by
+    // `6.5.23-branch-scope-cleanup`. `config_key` is TEXT (not VARCHAR), and the
+    // table has no `is_encrypted`/`config_type` columns.
     bot_configuration (id) {
         id -> Uuid,
-        bot_id -> Nullable<Uuid>,
+        bot_id -> Uuid,
         config_key -> Text,
         config_value -> Text,
-        is_encrypted -> Bool,
-        config_type -> Text,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        branch_id -> Uuid,
     }
 }
 

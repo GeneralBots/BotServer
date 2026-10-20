@@ -31,19 +31,8 @@ pub use botschema::basic_tools;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::session_tool_associations;
-diesel::table! {
-    bot_configuration (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        config_key -> Varchar,
-        config_value -> Text,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        is_encrypted -> Bool,
-        config_type -> Text,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::bot_configuration;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::system_automations;
