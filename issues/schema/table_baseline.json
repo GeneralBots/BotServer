@@ -4,7 +4,6 @@
     "botserver/crates/botattendance/src/schema.rs",
     "botserver/crates/botautotask/src/schema.rs",
     "botserver/crates/botbasic_types/src/schema.rs",
-    "botserver/crates/botbilling/src/schema.rs",
     "botserver/crates/botcloud/src/schema_ext.rs",
     "botserver/crates/botcontacts/src/schema.rs",
     "botserver/crates/botcorebot/src/schema.rs",
@@ -18,8 +17,7 @@
     "botserver/crates/botsources/src/schema.rs",
     "botserver/crates/bottasks/src/schema.rs",
     "botserver/crates/bottelegram/src/schema.rs",
-    "botserver/crates/botwhatsapp/src/schema.rs",
-    "botserver/src/main_module/routes/catalog.rs"
+    "botserver/crates/botwhatsapp/src/schema.rs"
   ],
-  "total": 42
+  "total": 39
 }

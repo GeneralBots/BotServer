@@ -17,35 +17,6 @@ pub use botschema::billing_recurring;
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::billing_tax_rates;
 
-diesel::table! {
-    products (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        sku -> Varchar,
-        description -> Nullable<Text>,
-        price -> Nullable<Numeric>,
-        currency -> Nullable<Varchar>,
-        stock_quantity -> Nullable<Int4>,
-        category_id -> Nullable<Uuid>,
-        attributes -> Nullable<Jsonb>,
-        is_public -> Nullable<Bool>,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        category -> Nullable<Varchar>,
-        product_type -> Varchar,
-        cost -> Nullable<Numeric>,
-        tax_rate -> Numeric,
-        unit -> Varchar,
-        low_stock_threshold -> Int4,
-        images -> Jsonb,
-        weight -> Nullable<Numeric>,
-        dimensions -> Nullable<Jsonb>,
-        barcode -> Nullable<Varchar>,
-    }
-}
-
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::services;
 

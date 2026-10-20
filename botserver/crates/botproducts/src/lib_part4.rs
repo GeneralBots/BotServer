@@ -20,7 +20,7 @@ pub async fn adjust_stock(
         .first(&mut conn)
         .map_err(|_| (StatusCode::NOT_FOUND, "Product not found".to_string()))?;
 
-    let current_stock = product.stock_quantity.unwrap_or(0);
+    let current_stock = product.stock_quantity;
     let new_quantity = match req.movement_type.as_str() {
         "in" | "purchase" | "return" | "adjustment_add" => current_stock + req.quantity,
         "out" | "sale" | "adjustment_remove" | "damage" => current_stock - req.quantity,

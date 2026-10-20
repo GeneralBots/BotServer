@@ -42,7 +42,7 @@ full = [
 ]
 
 [dependencies]
-diesel = { workspace = true, features = ["postgres", "uuid", "chrono", "serde_json", "r2d2", "numeric", "32-column-tables"] }
+diesel = { workspace = true, features = ["postgres", "uuid", "chrono", "serde_json", "r2d2", "numeric", "64-column-tables"] }
 chrono = { workspace = true, features = ["serde", "clock"] }
 uuid = { workspace = true, features = ["serde", "v4"] }
 serde = { workspace = true, features = ["derive"] }

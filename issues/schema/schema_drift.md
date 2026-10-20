@@ -11,16 +11,16 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 27 |
-| Total `table!` declarations | 42 |
-| Tables declared more than once | 4 |
+| Distinct tables (outside botschema) | 26 |
+| Total `table!` declarations | 39 |
+| Tables declared more than once | 3 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 4 |
+| — conflicting drift | 3 |
 | Tables already in `botschema` | 273 |
 | Distinct tables NOT yet in `botschema` | 23 |
 
-## Conflicting tables (4)
+## Conflicting tables (3)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
 
@@ -105,41 +105,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 |---|---|---|---:|
 | `botserver/crates/botpeople/src/lib_part1.rs` | 11 | `id` | 27 |
 | `botserver/crates/botcontacts/src/schema.rs` | 75 | `id` | 28 |
-
-### `products` ×3 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `attributes` | `Jsonb, Nullable<Jsonb>` ⚠ |
-| `barcode` | `Nullable<Varchar>` |
-| `branch_id` | `Uuid` |
-| `category` | `Nullable<Varchar>` |
-| `category_id` | `Nullable<Uuid>` |
-| `cost` | `Nullable<Numeric>` |
-| `created_at` | `Timestamptz` |
-| `currency` | `Nullable<Varchar>, Varchar` ⚠ |
-| `description` | `Nullable<Text>` |
-| `dimensions` | `Nullable<Jsonb>` |
-| `id` | `Uuid` |
-| `images` | `Jsonb` |
-| `is_active` | `Bool, Nullable<Bool>` ⚠ |
-| `is_public` | `Bool, Nullable<Bool>` ⚠ |
-| `low_stock_threshold` | `Int4` |
-| `name` | `Varchar` |
-| `price` | `Nullable<Numeric>, Numeric` ⚠ |
-| `product_type` | `Varchar` |
-| `sku` | `Varchar` |
-| `stock_quantity` | `Int4, Nullable<Int4>` ⚠ |
-| `tax_rate` | `Numeric` |
-| `unit` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-| `weight` | `Nullable<Numeric>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/src/main_module/routes/catalog.rs` | 15 | `id` | 14 |
-| `botserver/crates/botbilling/src/schema.rs` | 20 | `id` | 24 |
-| `botserver/crates/botproducts/src/schema.rs` | 1 | `id` | 24 |
 
 ### `user_sessions` ×11 (in botschema)
 

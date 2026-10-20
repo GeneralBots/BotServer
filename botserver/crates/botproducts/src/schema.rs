@@ -1,31 +1,5 @@
-diesel::table! {
-    products (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        sku -> Varchar,
-        description -> Nullable<Text>,
-        price -> Nullable<Numeric>,
-        currency -> Nullable<Varchar>,
-        stock_quantity -> Nullable<Int4>,
-        category_id -> Nullable<Uuid>,
-        attributes -> Nullable<Jsonb>,
-        is_public -> Nullable<Bool>,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        category -> Nullable<Varchar>,
-        product_type -> Varchar,
-        cost -> Nullable<Numeric>,
-        tax_rate -> Numeric,
-        unit -> Varchar,
-        low_stock_threshold -> Int4,
-        images -> Jsonb,
-        weight -> Nullable<Numeric>,
-        dimensions -> Nullable<Jsonb>,
-        barcode -> Nullable<Varchar>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::products;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::services;
@@ -47,7 +21,6 @@ pub use botschema::product_variants;
 pub use botschema::bots;
 
 diesel::allow_tables_to_appear_in_same_query!(
-    products,
     product_variations,
     product_stock,
     product_price_lists,

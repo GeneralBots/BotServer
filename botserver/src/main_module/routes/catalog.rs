@@ -12,24 +12,8 @@ use std::sync::Arc;
 use botcore::shared::state::AppState;
 
 mod prod_schema {
-    diesel::table! {
-        products (id) {
-            id -> Uuid,
-            branch_id -> Uuid,
-            name -> Varchar,
-            sku -> Varchar,
-            description -> Nullable<Text>,
-            price -> Numeric,
-            currency -> Varchar,
-            stock_quantity -> Int4,
-            category_id -> Nullable<Uuid>,
-            attributes -> Jsonb,
-            is_public -> Bool,
-            is_active -> Bool,
-            created_at -> Timestamptz,
-            updated_at -> Timestamptz,
-        }
-    }
+    // Canonical definition lives in `botschema` (#1497).
+    pub use botschema::products;
 }
 
 #[derive(Debug, Clone, Serialize, Queryable, Selectable)]
@@ -37,7 +21,7 @@ mod prod_schema {
 struct CatalogProduct {
     id: uuid::Uuid,
     name: String,
-    sku: String,
+    sku: Option<String>,
     description: Option<String>,
     price: bigdecimal::BigDecimal,
     currency: String,
@@ -66,7 +50,7 @@ impl From<CatalogProduct> for CatalogProductResponse {
         let price_f64 = p.price.to_f64().unwrap_or(0.0);
         Self {
             id: p.id,
-            sku: p.sku,
+            sku: p.sku.unwrap_or_default(),
             name: p.name,
             description: p.description,
             price_cents: (price_f64 * 100.0).round() as i64,
@@ -238,7 +222,7 @@ pub async fn prices_json(
                     json_type: "Product".to_string(),
                     name: p.name,
                     description: p.description.unwrap_or_default(),
-                    sku: p.sku,
+                    sku: p.sku.unwrap_or_default(),
                     offers: JsonLdOffer {
                         json_type: "Offer".to_string(),
                         price: format!("{:.2}", price_usd),

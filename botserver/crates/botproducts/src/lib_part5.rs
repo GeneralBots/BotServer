@@ -132,7 +132,7 @@ pub async fn get_product_stats(
         .filter(products::branch_id.eq(branch_id))
         
         .filter(products::is_active.eq(true))
-        .filter(products::stock_quantity.le(products::low_stock_threshold.nullable()))
+        .filter(products::stock_quantity.le(products::low_stock_threshold))
         .count()
         .get_result(&mut conn)
         .unwrap_or(0);
@@ -162,7 +162,7 @@ pub async fn get_product_stats(
 
     let total_stock_value: f64 = all_products
         .iter()
-        .map(|p| bd_to_f64(p.price.as_ref().unwrap_or(&BigDecimal::from(0))) * p.stock_quantity.unwrap_or(0) as f64)
+        .map(|p| bd_to_f64(&p.price) * p.stock_quantity as f64)
         .sum();
 
     let stats = ProductStats {
@@ -193,7 +193,7 @@ pub async fn list_low_stock(
         .filter(products::branch_id.eq(branch_id))
         
         .filter(products::is_active.eq(true))
-        .filter(products::stock_quantity.le(products::low_stock_threshold.nullable()))
+        .filter(products::stock_quantity.le(products::low_stock_threshold))
         .order(products::stock_quantity.asc())
         .load(&mut conn)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, { log::error!("botproducts Query error: {e}"); "Internal server error".to_string() }))?;

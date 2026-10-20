@@ -164,9 +164,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    // Physical order: `6.0.10-01-products` creates the core columns, later
+    // ALTERs append the tax/inventory/e-commerce columns, `6.5.23` appends
+    // `branch_id`. `price`/`currency`/`stock_quantity`/`attributes`/`is_active`
+    // are NOT NULL; `sku` is nullable.
     products (id) {
         id -> Uuid,
-        branch_id -> Uuid,
+        org_id -> Nullable<Uuid>,
+        bot_id -> Nullable<Uuid>,
         sku -> Nullable<Varchar>,
         name -> Varchar,
         description -> Nullable<Text>,
@@ -187,6 +192,33 @@ diesel::table! {
         barcode -> Nullable<Varchar>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        tax_code -> Nullable<Varchar>,
+        tax_class -> Nullable<Varchar>,
+        global_trade_number -> Nullable<Varchar>,
+        net_weight -> Nullable<Numeric>,
+        gross_weight -> Nullable<Numeric>,
+        width -> Nullable<Numeric>,
+        height -> Nullable<Numeric>,
+        length -> Nullable<Numeric>,
+        brand -> Nullable<Varchar>,
+        model -> Nullable<Varchar>,
+        color -> Nullable<Varchar>,
+        size -> Nullable<Varchar>,
+        material -> Nullable<Varchar>,
+        gender -> Nullable<Varchar>,
+        expiration_date -> Nullable<Date>,
+        min_stock -> Nullable<Int4>,
+        max_stock -> Nullable<Int4>,
+        reorder_point -> Nullable<Int4>,
+        shipping_cost -> Nullable<Numeric>,
+        external_id -> Nullable<Varchar>,
+        external_metadata -> Nullable<Jsonb>,
+        slug -> Nullable<Varchar>,
+        meta_description -> Nullable<Text>,
+        tags -> Nullable<Array<Nullable<Text>>>,
+        branch_id -> Uuid,
+        category_id -> Nullable<Uuid>,
+        is_public -> Bool,
     }
 }
 

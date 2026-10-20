@@ -227,7 +227,7 @@ pub(super) async fn handle_products_search(
                 products::price,
                 products::currency,
             ))
-            .load::<(Uuid, String, String, Option<String>, Option<BigDecimal>, Option<String>)>(&mut conn)
+            .load::<(Uuid, Option<String>, String, Option<String>, BigDecimal, String)>(&mut conn)
             .ok()?;
 
         if items.is_empty() {
@@ -236,9 +236,7 @@ pub(super) async fn handle_products_search(
 
         let mut html = String::new();
         for (id, sku, name, category, price, currency) in items {
-            let price = price.unwrap_or_default();
-            let currency = currency.unwrap_or_default();
-            let sku_str = if sku.is_empty() { "-".to_string() } else { sku };
+            let sku_str = sku.as_deref().filter(|s| !s.is_empty()).unwrap_or("-").to_string();
             let cat_id = category.unwrap_or_default();
             let cat_str = cat_map.get(&cat_id).cloned().unwrap_or_else(|| {
                 if cat_id.is_empty() { "Uncategorized".to_string() } else { cat_id }

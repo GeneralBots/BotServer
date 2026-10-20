@@ -16,7 +16,7 @@ bigdecimal = { workspace = true, features = ["serde"] }
 bottax = { workspace = true }
 chrono = { workspace = true, features = ["serde", "clock"] }
 log = { workspace = true }
-diesel = { workspace = true, features = ["postgres", "r2d2", "uuid", "chrono", "serde_json", "numeric", "32-column-tables"] }
+diesel = { workspace = true, features = ["postgres", "r2d2", "uuid", "chrono", "serde_json", "numeric", "64-column-tables"] }
 r2d2 = { workspace = true }
 rust_decimal = { workspace = true, features = ["serde-with-str", "db-diesel2-postgres"] }
 serde = { workspace = true, features = ["derive"] }

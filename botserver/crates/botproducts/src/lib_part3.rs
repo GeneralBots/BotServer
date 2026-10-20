@@ -15,31 +15,57 @@ pub async fn create_product(
     let now = Utc::now();
 
     let product = Product {
-    id,
-    branch_id,
-    name: req.name,
-        sku: req.sku.unwrap_or_default(),
-    description: req.description,
-    price: Some(bd(req.price)),
-    currency: Some(req.currency.unwrap_or_else(|| "USD".to_string())),
-    stock_quantity: Some(req.stock_quantity.unwrap_or(0)),
-    category_id: None,
-    attributes: Some(serde_json::json!({})),
-    is_public: None,
-    is_active: Some(true),
-    created_at: now,
-    updated_at: now,
-    category: req.category,
-    product_type: req.product_type.unwrap_or_else(|| "physical".to_string()),
-    cost: req.cost.map(bd),
-    tax_rate: bd(req.tax_rate.unwrap_or(0.0)),
-    unit: req.unit.unwrap_or_else(|| "unit".to_string()),
-    low_stock_threshold: req.low_stock_threshold.unwrap_or(10),
-    images: serde_json::json!(req.images.unwrap_or_default()),
-    weight: req.weight.map(bd),
-    dimensions: None,
-    barcode: req.barcode,
-};
+        id,
+        org_id: None,
+        bot_id: None,
+        sku: req.sku,
+        name: req.name,
+        description: req.description,
+        category: req.category,
+        product_type: req.product_type.unwrap_or_else(|| "physical".to_string()),
+        price: bd(req.price),
+        cost: req.cost.map(bd),
+        currency: req.currency.unwrap_or_else(|| "USD".to_string()),
+        tax_rate: bd(req.tax_rate.unwrap_or(0.0)),
+        unit: req.unit.unwrap_or_else(|| "unit".to_string()),
+        stock_quantity: req.stock_quantity.unwrap_or(0),
+        low_stock_threshold: req.low_stock_threshold.unwrap_or(10),
+        is_active: true,
+        images: serde_json::json!(req.images.unwrap_or_default()),
+        attributes: serde_json::json!({}),
+        weight: req.weight.map(bd),
+        dimensions: None,
+        barcode: req.barcode,
+        created_at: now,
+        updated_at: now,
+        tax_code: None,
+        tax_class: None,
+        global_trade_number: None,
+        net_weight: None,
+        gross_weight: None,
+        width: None,
+        height: None,
+        length: None,
+        brand: None,
+        model: None,
+        color: None,
+        size: None,
+        material: None,
+        gender: None,
+        expiration_date: None,
+        min_stock: None,
+        max_stock: None,
+        reorder_point: None,
+        shipping_cost: None,
+        external_id: None,
+        external_metadata: None,
+        slug: None,
+        meta_description: None,
+        tags: None,
+        branch_id,
+        category_id: None,
+        is_public: false,
+    };
 
     diesel::insert_into(products::table)
         .values(&product)
@@ -92,7 +118,7 @@ pub async fn list_products(
     }
 
     if let Some(true) = query.low_stock {
-        q = q.filter(products::stock_quantity.le(products::low_stock_threshold.nullable()));
+        q = q.filter(products::stock_quantity.le(products::low_stock_threshold));
     }
 
     if let Some(search) = query.search {

@@ -17,17 +17,17 @@ pub(super) async fn handle_product_detail_view(
         Err(_) => return Html("<div class=\"error\">Product not found</div>".to_string()),
     };
 
-    let price_str = format_currency(bd_to_f64(product.price.as_ref().unwrap_or(&BigDecimal::from(0))), product.currency.as_deref().unwrap_or("USD"));
-    let cost_str = product.cost.as_ref().map(|c| format_currency(bd_to_f64(c), product.currency.as_deref().unwrap_or("USD"))).unwrap_or_else(|| "-".to_string());
-    let stock_str = if product.stock_quantity == Some(-1) { "Unlimited".to_string() } else { product.stock_quantity.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()) };
-    let status_badge = if product.is_active.unwrap_or(false) {
+    let price_str = format_currency(bd_to_f64(&product.price), &product.currency);
+    let cost_str = product.cost.as_ref().map(|c| format_currency(bd_to_f64(c), &product.currency)).unwrap_or_else(|| "-".to_string());
+    let stock_str = if product.stock_quantity == -1 { "Unlimited".to_string() } else { product.stock_quantity.to_string() };
+    let status_badge = if product.is_active {
         "<span class=\"status-active\">Active</span>"
     } else {
         "<span class=\"status-inactive\">Inactive</span>"
     };
     let cat_str = product.category.as_deref().unwrap_or("Uncategorized");
     let desc_str = product.description.as_deref().unwrap_or("No description");
-    let sku_str = if product.sku.is_empty() { "-" } else { &product.sku };
+    let sku_str = product.sku.as_deref().unwrap_or("");
     let tax_rate = bd_to_f64(&product.tax_rate);
     let created = product.created_at.format("%Y-%m-%d %H:%M UTC");
     let updated = product.updated_at.format("%Y-%m-%d %H:%M UTC");
@@ -89,7 +89,7 @@ pub(super) async fn handle_product_edit_form(
         Err(_) => return Html("<div class=\"error\">Product not found</div>".to_string()),
     };
 
-    let price_str = product.price.as_ref().map(|p| p.to_string()).unwrap_or_else(|| "0".to_string());
+    let price_str = product.price.to_string();
     let cost_str = product.cost.as_ref().map(|c| c.to_string()).unwrap_or_default();
     let tax_rate_str = product.tax_rate.to_string();
     let active_sel = |v: bool, expected: bool| {
@@ -169,7 +169,7 @@ pub(super) async fn handle_product_edit_form(
         </form>",
         id = id,
         name = html_escape(&product.name),
-        sku = html_escape(&product.sku),
+        sku = html_escape(product.sku.as_deref().unwrap_or("")),
         desc = html_escape(product.description.as_deref().unwrap_or("")),
         price = price_str,
         cost = cost_str,
@@ -186,10 +186,10 @@ pub(super) async fn handle_product_edit_form(
         unit_h = unit_sel("hour"),
         unit_m = unit_sel("month"),
         unit_y = unit_sel("year"),
-        status_a = active_sel(product.is_active.unwrap_or(false), true),
-        status_i = active_sel(product.is_active.unwrap_or(false), false),
+        status_a = active_sel(product.is_active, true),
+        status_i = active_sel(product.is_active, false),
         tax_rate = tax_rate_str,
-        stock = product.stock_quantity.map(|v| v.to_string()).unwrap_or_else(|| "0".to_string()),
+        stock = product.stock_quantity.to_string(),
         barcode = html_escape(product.barcode.as_deref().unwrap_or("")),
     ))
 }

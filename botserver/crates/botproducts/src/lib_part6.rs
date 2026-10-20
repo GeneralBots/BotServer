@@ -52,7 +52,7 @@ pub(super) async fn handle_products_items(
                 products::stock_quantity,
                 products::is_active,
             ))
-            .load::<(Uuid, String, String, Option<String>, Option<String>, Option<BigDecimal>, Option<String>, Option<i32>, Option<bool>)>(&mut conn)
+            .load::<(Uuid, Option<String>, String, Option<String>, Option<String>, BigDecimal, String, i32, bool)>(&mut conn)
             .ok()?;
 
         if items.is_empty() {
@@ -61,16 +61,12 @@ pub(super) async fn handle_products_items(
 
         let mut html = String::new();
         for (id, sku, name, desc, category, price, currency, stock, is_active) in items {
-            let sku_str = if sku.is_empty() { "-".to_string() } else { sku };
+            let sku_str = sku.as_deref().filter(|s| !s.is_empty()).unwrap_or("-").to_string();
             let desc_str = desc.unwrap_or_default();
             let cat_id = category.unwrap_or_default();
             let cat_str = cat_map.get(&cat_id).cloned().unwrap_or_else(|| {
                 if cat_id.is_empty() { "Uncategorized".to_string() } else { cat_id }
             });
-            let price = price.unwrap_or_default();
-            let currency = currency.unwrap_or_default();
-            let stock = stock.unwrap_or(0);
-            let is_active = is_active.unwrap_or(true);
             let price_str = format_currency(bd_to_f64(&price), &currency);
             let stock_str = if stock == -1 { "Unlimited".to_string() } else { stock.to_string() };
             let status_class = if is_active { "status-active" } else { "status-inactive" };
