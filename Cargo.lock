@@ -3515,6 +3515,7 @@ version = "6.7.0"
 dependencies = [
  "axum",
  "botlib",
+ "botschema",
  "botsecurity-core",
  "chrono",
  "cron",

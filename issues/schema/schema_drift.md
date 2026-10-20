@@ -11,16 +11,16 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 28 |
-| Total `table!` declarations | 45 |
-| Tables declared more than once | 5 |
+| Distinct tables (outside botschema) | 27 |
+| Total `table!` declarations | 42 |
+| Tables declared more than once | 4 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 5 |
+| — conflicting drift | 4 |
 | Tables already in `botschema` | 273 |
 | Distinct tables NOT yet in `botschema` | 23 |
 
-## Conflicting tables (5)
+## Conflicting tables (4)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
 
@@ -140,36 +140,6 @@ Columns or types disagree across declarations; #1517 must pick the canonical sha
 | `botserver/src/main_module/routes/catalog.rs` | 15 | `id` | 14 |
 | `botserver/crates/botbilling/src/schema.rs` | 20 | `id` | 24 |
 | `botserver/crates/botproducts/src/schema.rs` | 1 | `id` | 24 |
-
-### `tasks` ×3 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `actual_hours` | `Nullable<Float8>` |
-| `assignee_id` | `Nullable<Uuid>` |
-| `branch_id` | `Uuid` |
-| `completed_at` | `Nullable<Timestamptz>` |
-| `created_at` | `Timestamptz` |
-| `dependencies` | `Text` |
-| `description` | `Nullable<Text>` |
-| `due_date` | `Nullable<Timestamptz>` |
-| `estimated_hours` | `Nullable<Float8>` |
-| `id` | `Uuid` |
-| `parent_id` | `Nullable<Uuid>` |
-| `priority` | `Nullable<Int4>` |
-| `progress` | `Int4` |
-| `project_id` | `Nullable<Uuid>` |
-| `reporter_id` | `Nullable<Uuid>` |
-| `status` | `Nullable<Varchar>` |
-| `tags` | `Text` |
-| `title` | `Varchar` |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botautotask/src/schema.rs` | 68 | `id` | 19 |
-| `botserver/crates/bottasks/src/schema.rs` | 34 | `id` | 12 |
-| `botserver/crates/botcontacts/src/schema.rs` | 111 | `id` | 19 |
 
 ### `user_sessions` ×11 (in botschema)
 

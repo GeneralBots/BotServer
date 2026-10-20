@@ -35,8 +35,8 @@ impl TaskEngine {
             branch_id: task_branch_id,
             title: task_title.to_string(),
             description: task_description.map(|s| s.to_string()),
-            status: Some("pending".to_string()),
-            priority: None,
+            status: "todo".to_string(),
+            priority: "medium".to_string(),
             assignee_id: None,
             due_date: None,
             completed_at: None,
@@ -100,7 +100,7 @@ impl TaskEngine {
             .map_err(|e| format!("Pool error: {}", e))?;
 
         diesel::update(tasks.filter(id.eq(task_id).and(branch_id.eq(task_branch_id))))
-            .set((status.eq(Some(new_status.to_string())), updated_at.eq(Utc::now())))
+            .set((status.eq(new_status.to_string()), updated_at.eq(Utc::now())))
             .execute(&mut conn)
             .map_err(|e| format!("Update error: {}", e))?;
 
@@ -140,7 +140,7 @@ impl TaskEngine {
             None => current.description.clone(),
             Some(inner) => inner.clone(),
         };
-        let new_priority = update.priority.or(current.priority);
+        let new_priority = update.priority.clone().unwrap_or_else(|| current.priority.clone());
         let new_assignee_id = match &update.assignee_id {
             None => current.assignee_id,
             Some(inner) => *inner,
@@ -186,7 +186,7 @@ impl TaskEngine {
         let now = Utc::now();
         diesel::update(tasks.filter(id.eq(task_id).and(branch_id.eq(task_branch_id))))
             .set((
-                status.eq(Some("completed".to_string())),
+                status.eq("completed".to_string()),
                 completed_at.eq(Some(now)),
                 updated_at.eq(now),
             ))
@@ -211,7 +211,7 @@ impl TaskEngine {
 
         diesel::update(tasks.filter(id.eq(task_id).and(branch_id.eq(task_branch_id))))
             .set((
-                status.eq(Some("pending".to_string())),
+                status.eq("pending".to_string()),
                 completed_at.eq(None::<DateTime<Utc>>),
                 updated_at.eq(Utc::now()),
             ))

@@ -157,6 +157,10 @@ diesel::table! {
 }
 
 diesel::table! {
+    // Physical order from `6.0.0-01-core`; `branch_id` appended by
+    // `6.5.23-branch-scope-cleanup` and `stage` by a later ALTER. `status`,
+    // `priority` and `stage` are TEXT (not Int/Varchar); `tags` and
+    // `dependencies` are nullable arrays; there is no `parent_id` column.
     tasks (id) {
         id -> Uuid,
         title -> Text,
@@ -167,14 +171,18 @@ diesel::table! {
         reporter_id -> Nullable<Uuid>,
         project_id -> Nullable<Uuid>,
         due_date -> Nullable<Timestamptz>,
-        tags -> Array<Text>,
-        dependencies -> Array<Uuid>,
+        tags -> Nullable<Array<Nullable<Text>>>,
+        dependencies -> Nullable<Array<Nullable<Uuid>>>,
         estimated_hours -> Nullable<Float8>,
         actual_hours -> Nullable<Float8>,
-        progress -> Int4,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+        progress -> Nullable<Int4>,
+        created_at -> Nullable<Timestamptz>,
+        updated_at -> Nullable<Timestamptz>,
         completed_at -> Nullable<Timestamptz>,
+        branch_id -> Uuid,
+        stage -> Text,
+        // Subtask hierarchy (issue #878); added by migration 6.7.11-tasks-parent-id.
+        parent_id -> Nullable<Uuid>,
     }
 }
 

@@ -108,27 +108,6 @@ diesel::table! {
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::people_departments;
 
-diesel::table! {
-    tasks (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        title -> Varchar,
-        description -> Nullable<Text>,
-        status -> Nullable<Varchar>,
-        priority -> Nullable<Int4>,
-        assignee_id -> Nullable<Uuid>,
-        due_date -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        parent_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        reporter_id -> Nullable<Uuid>,
-        project_id -> Nullable<Uuid>,
-        tags -> Text,
-        dependencies -> Text,
-        estimated_hours -> Nullable<Float8>,
-        actual_hours -> Nullable<Float8>,
-        progress -> Int4,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::tasks;
 

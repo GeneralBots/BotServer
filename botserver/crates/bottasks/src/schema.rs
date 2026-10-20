@@ -31,26 +31,11 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    tasks (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        title -> Varchar,
-        description -> Nullable<Text>,
-        status -> Nullable<Varchar>,
-        priority -> Nullable<Int4>,
-        assignee_id -> Nullable<Uuid>,
-        due_date -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        parent_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::tasks;
 
 
 diesel::allow_tables_to_appear_in_same_query!(
     auto_tasks,
     user_sessions,
-    tasks,
 );
