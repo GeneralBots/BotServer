@@ -12,7 +12,6 @@ pub struct CrmContact {
     pub id: Uuid,
     pub org_id: Uuid,
     pub bot_id: Uuid,
-    pub branch_id: Uuid,
     /// Nullable in the DB (migration 6.0.7-01-people created it as
     /// `first_name VARCHAR(255)` without NOT NULL); contacts from external
     /// syncs or legacy rows can carry NULL, which must not fail deserialization.
@@ -24,20 +23,21 @@ pub struct CrmContact {
     pub company: Option<String>,
     pub job_title: Option<String>,
     pub source: Option<String>,
-    pub status: Option<String>,
-    pub tags: Option<Vec<String>>,
+    pub status: String,
+    pub tags: Option<Vec<Option<String>>>,
     pub custom_fields: Option<serde_json::Value>,
-    pub notes: Option<String>,
-    pub owner_id: Option<Uuid>,
-    pub pass_hash: Option<String>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
     pub address_line1: Option<String>,
     pub address_line2: Option<String>,
     pub city: Option<String>,
     pub state: Option<String>,
     pub postal_code: Option<String>,
     pub country: Option<String>,
+    pub notes: Option<String>,
+    pub owner_id: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
+    pub pass_hash: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]

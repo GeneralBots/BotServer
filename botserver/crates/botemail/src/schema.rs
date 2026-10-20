@@ -54,39 +54,8 @@ pub use botschema::email_flags;
 
 pub use botschema::email_nudges;
 
-diesel::table! {
-    crm_contacts (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        first_name -> Varchar,
-        last_name -> Nullable<Varchar>,
-        email -> Nullable<Varchar>,
-        phone -> Nullable<Varchar>,
-        mobile -> Nullable<Varchar>,
-        company -> Nullable<Varchar>,
-        job_title -> Nullable<Varchar>,
-        source -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        tags -> Nullable<Text>,
-        custom_fields -> Nullable<Jsonb>,
-        address_street -> Nullable<Varchar>,
-        address_city -> Nullable<Varchar>,
-        address_state -> Nullable<Varchar>,
-        address_country -> Nullable<Varchar>,
-        address_zip -> Nullable<Varchar>,
-        notes -> Nullable<Text>,
-        owner_id -> Nullable<Uuid>,
-        pass_hash -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        address_line1 -> Nullable<Varchar>,
-        address_line2 -> Nullable<Varchar>,
-        city -> Nullable<Varchar>,
-        state -> Nullable<Varchar>,
-        postal_code -> Nullable<Varchar>,
-        country -> Nullable<Varchar>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::crm_contacts;
 
 diesel::table! {
     email_messages (id) {

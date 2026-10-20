@@ -66,7 +66,7 @@ pub async fn export_contacts_csv(
             csv_opt(&r.mobile),
             csv_opt(&r.company),
             csv_opt(&r.job_title),
-            csv_opt(&r.status),
+            csv_opt(&Some(r.status.clone())),
             csv_opt(&r.source),
             csv_opt(&r.city),
             csv_opt(&r.country),
@@ -164,7 +164,7 @@ pub async fn import_contacts_csv(
             company: row.company.clone(),
             job_title: row.job_title.clone(),
             source: row.source.clone(),
-            status: Some("lead".to_string()),
+            status: "lead".to_string(),
             tags: None,
             custom_fields: Some(serde_json::json!({
                 "imported_by": actor,

@@ -146,7 +146,7 @@ pub(crate) async fn handle_login(
     let contact_opt = crm_contacts
         .filter(email.eq(&body.email))
         .select((id, first_name, last_name, email, branch_id))
-        .first::<(Uuid, Option<String>, Option<String>, String, Uuid)>(&mut conn)
+        .first::<(Uuid, Option<String>, Option<String>, Option<String>, Uuid)>(&mut conn)
         .optional()
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Query: {e}")))?;
 

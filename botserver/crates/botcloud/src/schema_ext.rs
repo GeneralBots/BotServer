@@ -1,16 +1,5 @@
-diesel::table! {
-    crm_contacts (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        first_name -> Nullable<Varchar>,
-        last_name -> Nullable<Varchar>,
-        email -> Varchar,
-        pass_hash -> Nullable<Varchar>,
-        status -> Varchar,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::crm_contacts;
 
 // `billing_subscriptions` used to be declared here; no migration ever created
 // it and no code referenced it (the live subscription table is

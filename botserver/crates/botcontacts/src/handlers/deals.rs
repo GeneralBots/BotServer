@@ -87,7 +87,7 @@ pub async fn create_lead_form(
                         company: req.company.clone(),
                         job_title: req.job_title.clone(),
                         source: req.source.clone(),
-                        status: Some("lead".to_string()),
+                        status: "lead".to_string(),
                         tags: None,
                         custom_fields: None,
                         notes: None,

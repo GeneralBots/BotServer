@@ -11,100 +11,18 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 26 |
-| Total `table!` declarations | 39 |
-| Tables declared more than once | 3 |
+| Distinct tables (outside botschema) | 24 |
+| Total `table!` declarations | 34 |
+| Tables declared more than once | 1 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 3 |
+| — conflicting drift | 1 |
 | Tables already in `botschema` | 273 |
 | Distinct tables NOT yet in `botschema` | 23 |
 
-## Conflicting tables (3)
+## Conflicting tables (1)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
-
-### `crm_contacts` ×3 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `address_city` | `Nullable<Varchar>` |
-| `address_country` | `Nullable<Varchar>` |
-| `address_line1` | `Nullable<Varchar>` |
-| `address_line2` | `Nullable<Varchar>` |
-| `address_state` | `Nullable<Varchar>` |
-| `address_street` | `Nullable<Varchar>` |
-| `address_zip` | `Nullable<Varchar>` |
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `city` | `Nullable<Varchar>` |
-| `company` | `Nullable<Varchar>` |
-| `country` | `Nullable<Varchar>` |
-| `created_at` | `Timestamptz` |
-| `custom_fields` | `Nullable<Jsonb>` |
-| `email` | `Nullable<Varchar>, Varchar` ⚠ |
-| `first_name` | `Nullable<Varchar>, Varchar` ⚠ |
-| `id` | `Uuid` |
-| `job_title` | `Nullable<Varchar>` |
-| `last_name` | `Nullable<Varchar>` |
-| `mobile` | `Nullable<Varchar>` |
-| `notes` | `Nullable<Text>` |
-| `org_id` | `Uuid` |
-| `owner_id` | `Nullable<Uuid>` |
-| `pass_hash` | `Nullable<Text>, Nullable<Varchar>` ⚠ |
-| `phone` | `Nullable<Varchar>` |
-| `postal_code` | `Nullable<Varchar>` |
-| `source` | `Nullable<Varchar>` |
-| `state` | `Nullable<Varchar>` |
-| `status` | `Nullable<Varchar>, Varchar` ⚠ |
-| `tags` | `Nullable<Array<Text>>, Nullable<Text>` ⚠ |
-| `updated_at` | `Timestamptz` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botcloud/src/schema_ext.rs` | 1 | `id` | 9 |
-| `botserver/crates/botemail/src/schema.rs` | 57 | `id` | 29 |
-| `botserver/crates/botcontacts/src/schema.rs` | 6 | `id` | 26 |
-
-### `people` ×2 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `avatar_url` | `Nullable<Text>` |
-| `bio` | `Nullable<Text>` |
-| `birthday` | `Nullable<Date>` |
-| `bot_id` | `Uuid` |
-| `branch_id` | `Uuid` |
-| `created_at` | `Timestamptz` |
-| `custom_fields` | `Jsonb` |
-| `department` | `Nullable<Varchar>` |
-| `department_id` | `Nullable<Uuid>` |
-| `email` | `Nullable<Varchar>` |
-| `first_name` | `Varchar` |
-| `hire_date` | `Nullable<Date>` |
-| `id` | `Uuid` |
-| `is_active` | `Bool` |
-| `job_title` | `Nullable<Varchar>` |
-| `last_name` | `Nullable<Varchar>` |
-| `last_seen_at` | `Nullable<Timestamptz>` |
-| `locale` | `Nullable<Varchar>` |
-| `manager_id` | `Nullable<Uuid>` |
-| `metadata` | `Nullable<Jsonb>` |
-| `mobile` | `Nullable<Varchar>` |
-| `office_location` | `Nullable<Varchar>` |
-| `org_id` | `Uuid` |
-| `phone` | `Nullable<Varchar>` |
-| `skills` | `Array<Text>, Text` ⚠ |
-| `social_links` | `Jsonb` |
-| `status` | `Nullable<Varchar>` |
-| `timezone` | `Nullable<Varchar>` |
-| `updated_at` | `Timestamptz` |
-| `user_id` | `Nullable<Uuid>` |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/botpeople/src/lib_part1.rs` | 11 | `id` | 27 |
-| `botserver/crates/botcontacts/src/schema.rs` | 75 | `id` | 28 |
 
 ### `user_sessions` ×11 (in botschema)
 

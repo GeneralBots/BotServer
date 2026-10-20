@@ -151,7 +151,7 @@ fn contact_detail(conn: &mut diesel::PgConnection, branch_id: Uuid, id: Uuid) ->
     fields.push_str(&field("Job title", &html_escape(contact.job_title.as_deref().unwrap_or("-"))));
     fields.push_str(&field("City", &html_escape(contact.city.as_deref().unwrap_or("-"))));
     fields.push_str(&field("Country", &html_escape(contact.country.as_deref().unwrap_or("-"))));
-    fields.push_str(&field("Status", &html_escape(contact.status.as_deref().unwrap_or("-"))));
+    fields.push_str(&field("Status", &html_escape(&contact.status)));
     fields.push_str(&field("Source", &html_escape(contact.source.as_deref().unwrap_or("-"))));
     fields.push_str(&field("Notes", &html_escape(contact.notes.as_deref().unwrap_or("-"))));
 

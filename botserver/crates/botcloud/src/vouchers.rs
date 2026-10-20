@@ -196,14 +196,14 @@ pub async fn redeem_voucher(
                 if let Ok(payload) = serde_json::from_slice::<serde_json::Value>(&decoded_bytes) {
                     if let Some(user_email) = payload.get("email").and_then(|v| v.as_str()) {
                         use crate::schema_ext::crm_contacts::dsl::{crm_contacts as cc_tbl, email as ce, id as cid, branch_id as c_branch_id, first_name as cfn, last_name as cln};
-                        let c: (Uuid, Uuid, Option<String>, Option<String>, String) = cc_tbl
+                        let c: (Uuid, Uuid, Option<String>, Option<String>, Option<String>) = cc_tbl
                             .filter(ce.eq(user_email))
                             .select((cid, c_branch_id, cfn, cln, ce))
                             .first(&mut conn)
                             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Lookup user contact: {e}")))?;
 
                         let name = format!("{} {}", c.2.as_deref().unwrap_or(""), c.3.as_deref().unwrap_or("")).trim().to_string();
-                        (c.0, c.1, if name.is_empty() { "SaaS User".to_string() } else { name }, c.4)
+                        (c.0, c.1, if name.is_empty() { "SaaS User".to_string() } else { name }, c.4.unwrap_or_default())
                     } else { return Err((StatusCode::UNAUTHORIZED, "Invalid claims".to_string())); }
                 } else { return Err((StatusCode::UNAUTHORIZED, "Invalid JWT".to_string())); }
             } else { return Err((StatusCode::UNAUTHORIZED, "Invalid payload encoding".to_string())); }

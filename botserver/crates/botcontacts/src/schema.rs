@@ -3,36 +3,8 @@ pub use botschema::bots;
 
 pub use botschema::organizations;
 
-diesel::table! {
-    crm_contacts (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        branch_id -> Uuid,
-        first_name -> Nullable<Varchar>,
-        last_name -> Nullable<Varchar>,
-        email -> Nullable<Varchar>,
-        phone -> Nullable<Varchar>,
-        mobile -> Nullable<Varchar>,
-        company -> Nullable<Varchar>,
-        job_title -> Nullable<Varchar>,
-        source -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        tags -> Nullable<Array<Text>>,
-        custom_fields -> Nullable<Jsonb>,
-        notes -> Nullable<Text>,
-        owner_id -> Nullable<Uuid>,
-        pass_hash -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        address_line1 -> Nullable<Varchar>,
-        address_line2 -> Nullable<Varchar>,
-        city -> Nullable<Varchar>,
-        state -> Nullable<Varchar>,
-        postal_code -> Nullable<Varchar>,
-        country -> Nullable<Varchar>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::crm_contacts;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::crm_accounts;
@@ -72,38 +44,8 @@ pub use botschema::calendar_event_reminders;
 
 pub use botschema::calendar_shares;
 
-diesel::table! {
-    people (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        first_name -> Varchar,
-        last_name -> Nullable<Varchar>,
-        email -> Nullable<Varchar>,
-        phone -> Nullable<Varchar>,
-        job_title -> Nullable<Varchar>,
-        department_id -> Nullable<Uuid>,
-        manager_id -> Nullable<Uuid>,
-        status -> Nullable<Varchar>,
-        hire_date -> Nullable<Date>,
-        metadata -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        user_id -> Nullable<Uuid>,
-        mobile -> Nullable<Varchar>,
-        department -> Nullable<Varchar>,
-        office_location -> Nullable<Varchar>,
-        birthday -> Nullable<Date>,
-        avatar_url -> Nullable<Text>,
-        bio -> Nullable<Text>,
-        skills -> Text,
-        social_links -> Jsonb,
-        custom_fields -> Jsonb,
-        timezone -> Nullable<Varchar>,
-        locale -> Nullable<Varchar>,
-        is_active -> Bool,
-        last_seen_at -> Nullable<Timestamptz>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::people::people;
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::people_departments;

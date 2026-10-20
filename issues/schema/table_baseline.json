@@ -4,8 +4,6 @@
     "botserver/crates/botattendance/src/schema.rs",
     "botserver/crates/botautotask/src/schema.rs",
     "botserver/crates/botbasic_types/src/schema.rs",
-    "botserver/crates/botcloud/src/schema_ext.rs",
-    "botserver/crates/botcontacts/src/schema.rs",
     "botserver/crates/botcorebot/src/schema.rs",
     "botserver/crates/botcoreoauth/src/schema.rs",
     "botserver/crates/botcoresession/src/schema.rs",
@@ -19,5 +17,5 @@
     "botserver/crates/bottelegram/src/schema.rs",
     "botserver/crates/botwhatsapp/src/schema.rs"
   ],
-  "total": 39
+  "total": 34
 }

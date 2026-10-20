@@ -1,9 +1,12 @@
 use crate::core::{branches};
 
 diesel::table! {
+    // Physical order: `org_id`/`bot_id` first (tenant scope), address columns
+    // before `notes`, `branch_id` and `pass_hash` last. `status` is NOT NULL.
     crm_contacts (id) {
         id -> Uuid,
-        branch_id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         first_name -> Nullable<Varchar>,
         last_name -> Nullable<Varchar>,
         email -> Nullable<Varchar>,
@@ -13,8 +16,8 @@ diesel::table! {
         job_title -> Nullable<Varchar>,
         source -> Nullable<Varchar>,
         status -> Varchar,
-        tags -> Array<Text>,
-        custom_fields -> Jsonb,
+        tags -> Nullable<Array<Nullable<Text>>>,
+        custom_fields -> Nullable<Jsonb>,
         address_line1 -> Nullable<Varchar>,
         address_line2 -> Nullable<Varchar>,
         city -> Nullable<Varchar>,
@@ -25,6 +28,8 @@ diesel::table! {
         owner_id -> Nullable<Uuid>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        branch_id -> Uuid,
+        pass_hash -> Nullable<Varchar>,
     }
 }
 
@@ -192,8 +197,12 @@ diesel::joinable!(crm_notes -> branches (branch_id));
 diesel::joinable!(crm_audit_logs -> branches (branch_id));
 
 diesel::table! {
+    // Physical order: `org_id`/`bot_id` first (tenant scope), `skills` is
+    // `TEXT[]` (nullable elements).
     people (id) {
         id -> Uuid,
+        org_id -> Uuid,
+        bot_id -> Uuid,
         branch_id -> Uuid,
         user_id -> Nullable<Uuid>,
         first_name -> Varchar,
@@ -209,7 +218,7 @@ diesel::table! {
         birthday -> Nullable<Date>,
         avatar_url -> Nullable<Text>,
         bio -> Nullable<Text>,
-        skills -> Array<Text>,
+        skills -> Array<Nullable<Text>>,
         social_links -> Jsonb,
         custom_fields -> Jsonb,
         timezone -> Nullable<Varchar>,

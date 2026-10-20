@@ -8,37 +8,8 @@ pub struct PeopleState {
     pub get_default_bot: GetDefaultBotFn,
 }
 
-diesel::table! {
-    people (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        bot_id -> Uuid,
-        branch_id -> Uuid,
-        user_id -> Nullable<Uuid>,
-        first_name -> Varchar,
-        last_name -> Nullable<Varchar>,
-        email -> Nullable<Varchar>,
-        phone -> Nullable<Varchar>,
-        mobile -> Nullable<Varchar>,
-        job_title -> Nullable<Varchar>,
-        department -> Nullable<Varchar>,
-        manager_id -> Nullable<Uuid>,
-        office_location -> Nullable<Varchar>,
-        hire_date -> Nullable<Date>,
-        birthday -> Nullable<Date>,
-        avatar_url -> Nullable<Text>,
-        bio -> Nullable<Text>,
-        skills -> Array<Text>,
-        social_links -> Jsonb,
-        custom_fields -> Jsonb,
-        timezone -> Nullable<Varchar>,
-        locale -> Nullable<Varchar>,
-        is_active -> Bool,
-        last_seen_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::people::people;
 
 pub use botschema::people_teams;
 
@@ -55,10 +26,11 @@ pub use botschema::people_person_skills;
 
 pub use botschema::people_time_off;
 
-diesel::joinable!(people_team_members -> people (person_id));
-diesel::joinable!(people_person_skills -> people (person_id));
+// `people`, `people_team_members` and `people_person_skills` are canonical in
+// `botschema`, whose `joinable!`/`allow_tables_to_appear_in_same_query!` rules
+// already cover them (#1497); repeating them between two foreign types breaks
+// the orphan rule (E0117).
 diesel::allow_tables_to_appear_in_same_query!(
-    people,
     hr_clock_entries,
     hr_work_periods,
     hr_overtime_rules,
@@ -161,7 +133,7 @@ pub struct Person {
     pub birthday: Option<NaiveDate>,
     pub avatar_url: Option<String>,
     pub bio: Option<String>,
-    pub skills: Vec<String>,
+    pub skills: Vec<Option<String>>,
     pub social_links: serde_json::Value,
     pub custom_fields: serde_json::Value,
     pub timezone: Option<String>,

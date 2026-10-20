@@ -246,7 +246,7 @@ pub async fn create_person(
         birthday,
         avatar_url: req.avatar_url,
         bio: req.bio,
-        skills: req.skills.unwrap_or_default(),
+        skills: req.skills.map(|v| v.into_iter().map(Some).collect()).unwrap_or_default(),
         social_links: serde_json::json!({}),
         custom_fields: serde_json::json!({}),
         timezone: req.timezone,
