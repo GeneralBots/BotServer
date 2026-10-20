@@ -35,6 +35,7 @@ toml = { workspace = true }
 tokio = { workspace = true, features = ["sync", "time"] }
 dirs = { workspace = true }
 diesel = { workspace = true, features = ["postgres", "r2d2", "chrono", "uuid", "serde_json"], optional = true }
+botschema = { workspace = true }
 
 # Optional: HTTP Client
 reqwest = { workspace = true, features = ["json", "rustls-tls"], optional = true }

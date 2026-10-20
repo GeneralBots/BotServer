@@ -54,7 +54,7 @@ pub struct UserSession {
     pub last_activity: DateTime<Utc>,
     pub tenant_id: Option<Uuid>,
     pub active_email_account_id: Option<Uuid>,
-    pub branch_id: Option<Uuid>,
+    pub branch_id: Uuid,
     pub session_id: Option<String>,
     pub data: Option<serde_json::Value>,
     pub expires_at: Option<DateTime<Utc>>,

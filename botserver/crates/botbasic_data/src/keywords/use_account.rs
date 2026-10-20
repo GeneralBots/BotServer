@@ -55,7 +55,7 @@ pub fn register_use_account_keyword(
 
             let session_id = session_clone.id;
             let bot_id = session_clone.bot_id;
-            let user_id = session_clone.user_id;
+            let user_id = Uuid::parse_str(&session_clone.user_id).unwrap_or(Uuid::nil());
             let conn = state_clone.db_pool().clone();
             let email_clone = email.clone();
 

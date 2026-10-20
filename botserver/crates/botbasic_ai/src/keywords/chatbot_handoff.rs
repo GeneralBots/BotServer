@@ -70,7 +70,7 @@ fn bot_id_from_session(user: &UserSession) -> Uuid {
 }
 
 fn user_id_from_session(user: &UserSession) -> Option<Uuid> {
-    Some(user.user_id)
+    Uuid::parse_str(&user.user_id).ok()
 }
 
 fn priority_int(priority: &str) -> i32 {

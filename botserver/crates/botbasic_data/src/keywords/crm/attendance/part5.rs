@@ -188,7 +188,7 @@ pub fn get_customer_history_impl(state: &Arc<dyn BasicRuntime>, user_id: &str) -
         use botbasic_types::schema::user_sessions;
 
         let sessions: Vec<UserSession> = user_sessions::table
-            .filter(user_sessions::user_id.eq(user_uuid))
+            .filter(user_sessions::user_id.eq(user_uuid.to_string()))
             .order(user_sessions::created_at.desc())
             .limit(10)
             .load(&mut db_conn)

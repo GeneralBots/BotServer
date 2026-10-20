@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::shared::schema::{
     branches, kb_collections, kb_group_associations,
     bot_configuration, bot_memories, bots, clicks, message_history, organizations,
-    system_automations, tenants, user_login_tokens, user_preferences, user_sessions, users,
+    system_automations, tenants, user_login_tokens, user_preferences, users,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -65,11 +65,11 @@ pub struct Automation {
     pub name: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable, Selectable)]
-#[diesel(table_name = user_sessions)]
+// Plain DTO: never loaded through Diesel (channel crates own their row types).
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserSession {
     pub id: Uuid,
-    pub user_id: Uuid,
+    pub user_id: String,
     pub bot_id: Uuid,
     pub title: String,
     pub context_data: serde_json::Value,
@@ -83,13 +83,22 @@ impl From<UserSession> for botbasic_types::UserSession {
         Self {
             id: s.id,
             user_id: s.user_id,
-            branch_id: Uuid::nil(),
             bot_id: s.bot_id,
             title: s.title,
+            answer_mode: 0,
             context_data: s.context_data,
             current_tool: s.current_tool,
+            message_count: 0,
+            total_tokens: 0,
             created_at: s.created_at,
             updated_at: s.updated_at,
+            last_activity: s.updated_at,
+            tenant_id: None,
+            active_email_account_id: None,
+            branch_id: Uuid::nil(),
+            session_id: None,
+            data: None,
+            expires_at: None,
         }
     }
 }

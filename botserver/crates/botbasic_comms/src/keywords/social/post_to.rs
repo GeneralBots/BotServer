@@ -161,6 +161,8 @@ fn save_social_post(
 
     let post_id = Uuid::new_v4().to_string();
     let now = Utc::now();
+    let user_uuid = Uuid::parse_str(&user.user_id)
+        .map_err(|e| format!("Invalid user id: {}", e))?;
 
     let query = diesel::sql_query(
         "INSERT INTO social_posts (id, bot_id, user_id, platform, content, media_url, status, created_at)
@@ -168,7 +170,7 @@ fn save_social_post(
     )
     .bind::<diesel::sql_types::Text, _>(&post_id)
     .bind::<diesel::sql_types::Uuid, _>(user.bot_id)
-    .bind::<diesel::sql_types::Uuid, _>(user.user_id)
+    .bind::<diesel::sql_types::Uuid, _>(user_uuid)
     .bind::<diesel::sql_types::Text, _>(platform)
     .bind::<diesel::sql_types::Text, _>(caption)
     .bind::<diesel::sql_types::Text, _>(media)

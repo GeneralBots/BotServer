@@ -347,7 +347,7 @@ impl BasicRuntime for AppStateBasicRuntime {
     fn execute_script(&self, user: botbasic_types::UserSession, script: &str) -> Result<String, String> {
         let lib_user = botcore::shared::UserSession {
             id: user.id,
-            user_id: user.user_id,
+            user_id: Uuid::parse_str(&user.user_id).unwrap_or(Uuid::nil()),
             branch_id: user.branch_id,
             bot_id: user.bot_id,
             title: user.title.clone(),

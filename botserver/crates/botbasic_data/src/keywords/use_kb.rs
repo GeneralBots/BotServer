@@ -53,7 +53,7 @@ pub fn register_use_kb_keyword(
 
         let session_id = session_clone_for_syntax.id;
         let bot_id = session_clone_for_syntax.bot_id;
-        let user_id = session_clone_for_syntax.user_id;
+        let user_id = Uuid::parse_str(&session_clone_for_syntax.user_id).unwrap_or(Uuid::nil());
         let conn = state_clone_for_syntax.db_pool().clone();
         let kb_name_clone = kb_name.clone();
 
@@ -94,7 +94,7 @@ pub fn register_use_kb_keyword(
 
         let session_id = session_clone2.id;
         let bot_id = session_clone2.bot_id;
-        let user_id = session_clone2.user_id;
+        let user_id = Uuid::parse_str(&session_clone2.user_id).unwrap_or(Uuid::nil());
         let conn = state_clone2.db_pool().clone();
         let kb_name_clone = kb_name.to_string();
 
@@ -131,7 +131,7 @@ pub fn register_use_kb_keyword(
 
         let session_id = session_clone.id;
         let bot_id = session_clone.bot_id;
-        let user_id = session_clone.user_id;
+        let user_id = Uuid::parse_str(&session_clone.user_id).unwrap_or(Uuid::nil());
         let conn = state_clone.db_pool().clone();
         let kb_name_clone = kb_name.to_string();
 

@@ -16,7 +16,7 @@ pub fn register_user_memory_keywords(state: Arc<dyn BasicRuntime>, user: UserSes
 
 pub fn set_user_memory_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, engine: &mut Engine) {
     let state_clone = Arc::clone(&state);
-    let user_id = user.user_id;
+    let user_id = Uuid::parse_str(&user.user_id).unwrap_or(Uuid::nil());
 
     if let Err(e) = engine
         .register_custom_syntax(
@@ -56,7 +56,7 @@ pub fn set_user_memory_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, 
 
 pub fn get_user_memory_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, engine: &mut Engine) {
     let state_clone = Arc::clone(&state);
-    let user_id = user.user_id;
+    let user_id = Uuid::parse_str(&user.user_id).unwrap_or(Uuid::nil());
 
     engine.register_fn("GET USER MEMORY", move |key_param: String| -> String {
         let state = Arc::clone(&state_clone);
@@ -72,7 +72,7 @@ pub fn get_user_memory_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, 
 
 pub fn remember_user_fact_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, engine: &mut Engine) {
     let state_clone = Arc::clone(&state);
-    let user_id = user.user_id;
+    let user_id = Uuid::parse_str(&user.user_id).unwrap_or(Uuid::nil());
 
     if let Err(e) = engine
         .register_custom_syntax(
@@ -101,7 +101,7 @@ pub fn remember_user_fact_keyword(state: Arc<dyn BasicRuntime>, user: UserSessio
 
 pub fn get_user_facts_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, engine: &mut Engine) {
     let state_clone = Arc::clone(&state);
-    let user_id = user.user_id;
+    let user_id = Uuid::parse_str(&user.user_id).unwrap_or(Uuid::nil());
 
     engine.register_fn("GET USER FACTS", move || -> rhai::Array {
         let state = Arc::clone(&state_clone);
@@ -121,7 +121,7 @@ pub fn get_user_facts_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, e
 
 pub fn clear_user_memory_keyword(state: Arc<dyn BasicRuntime>, user: UserSession, engine: &mut Engine) {
     let state_clone = Arc::clone(&state);
-    let user_id = user.user_id;
+    let user_id = Uuid::parse_str(&user.user_id).unwrap_or(Uuid::nil());
 
     if let Err(e) = engine
         .register_custom_syntax(

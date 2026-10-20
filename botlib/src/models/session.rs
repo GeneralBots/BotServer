@@ -1,5 +1,4 @@
 use chrono::{DateTime, Utc};
-use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -52,23 +51,12 @@ impl Session {
     }
 }
 
-diesel::table! {
-    user_sessions (id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        branch_id -> Uuid,
-        bot_id -> Uuid,
-        title -> Varchar,
-        context_data -> Jsonb,
-        current_tool -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::user_sessions;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Selectable, Identifiable, Insertable)]
-#[diesel(table_name = user_sessions)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+// Plain DTO: this type is never loaded through Diesel (the channel crates
+// own their own row types), so it must not be coupled to the table shape.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserSession {
     pub id: Uuid,
     pub user_id: Uuid,

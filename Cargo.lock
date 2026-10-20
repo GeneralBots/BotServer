@@ -2514,6 +2514,7 @@ version = "6.7.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "botschema",
  "chrono",
  "diesel",
  "dirs 5.0.1",
@@ -2779,6 +2780,7 @@ version = "6.7.0"
 dependencies = [
  "axum",
  "botlib",
+ "botschema",
  "chrono",
  "diesel",
  "log",

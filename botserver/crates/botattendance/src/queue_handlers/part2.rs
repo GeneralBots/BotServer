@@ -132,7 +132,7 @@ pub async fn get_kanban(
             let user_name = session.context_data.get("user_name").and_then(|v| v.as_str()).unwrap_or("Anonymous").to_string();
             let user_email = session.context_data.get("user_email").and_then(|v| v.as_str()).map(String::from);
             let item = QueueItem {
-                session_id: session.id, user_id: session.user_id.and_then(|u| Uuid::parse_str(&u).ok()).unwrap_or(Uuid::nil()), bot_id: session.bot_id,
+                session_id: session.id, user_id: Uuid::parse_str(&session.user_id).unwrap_or(Uuid::nil()), bot_id: session.bot_id,
                 channel, user_name, user_email, last_message, last_message_time,
                 waiting_time_seconds: waiting_time, priority,
                 status: match status.as_str() {

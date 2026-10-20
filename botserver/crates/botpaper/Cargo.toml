@@ -8,6 +8,7 @@ repository = "https://github.com/generalbots/generalbots"
 
 [dependencies]
 botlib = { workspace = true, features = ["database"] }
+botschema = { workspace = true }
 axum = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 diesel = { workspace = true, features = ["postgres", "r2d2", "chrono", "serde_json", "uuid"] }

@@ -65,7 +65,7 @@ fn bot_id_from_session(user: &UserSession) -> Uuid {
 }
 
 fn user_id_from_session(user: &UserSession) -> Option<Uuid> {
-    Some(user.user_id)
+    Uuid::parse_str(&user.user_id).ok()
 }
 
 fn llm_content(state: &Arc<dyn BasicRuntime>, prompt: &str, fallback: &str) -> String {

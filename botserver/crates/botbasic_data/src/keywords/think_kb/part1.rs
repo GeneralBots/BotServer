@@ -18,7 +18,7 @@ pub fn register_think_kb_keyword(
 
         let session_id = session_clone.id;
         let bot_id = session_clone.bot_id;
-        let user_id = session_clone.user_id;
+        let user_id = uuid::Uuid::parse_str(&session_clone.user_id).unwrap_or(uuid::Uuid::nil());
         let db_pool = state_clone.db_pool().clone();
         let query_clone = query.clone();
 

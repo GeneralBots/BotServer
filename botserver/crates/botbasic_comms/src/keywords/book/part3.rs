@@ -229,12 +229,14 @@ pub(super) fn log_booking(
     title: &str,
 ) -> Result<(), String> {
     let mut conn = state.db_pool().get().map_err(|e| format!("DB error: {}", e))?;
+    let user_uuid = Uuid::parse_str(&user.user_id)
+        .map_err(|e| format!("Invalid user id: {}", e))?;
 
     diesel::sql_query(
         "INSERT INTO booking_logs (id, user_id, bot_id, event_id, event_title, booked_at)
          VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW())",
     )
-    .bind::<diesel::sql_types::Uuid, _>(&user.user_id)
+    .bind::<diesel::sql_types::Uuid, _>(user_uuid)
     .bind::<diesel::sql_types::Uuid, _>(&user.bot_id)
     .bind::<diesel::sql_types::Text, _>(event_id)
     .bind::<diesel::sql_types::Text, _>(title)

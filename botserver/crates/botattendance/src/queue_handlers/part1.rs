@@ -16,7 +16,7 @@ pub async fn list_queue(
                 .map_err(|e| format!("Failed to load sessions: {}", e))?;
             let mut queue_items = Vec::new();
             for session_data in sessions_data {
-                let user_uuid = session_data.user_id.as_deref().and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
+                let user_uuid = Uuid::parse_str(&session_data.user_id).unwrap_or(Uuid::nil());
                 let user_info: Option<(String, String)> = users::table
                     .filter(users::id.eq(user_uuid))
                     .select((users::username, users::email))
@@ -24,14 +24,14 @@ pub async fn list_queue(
                     .optional()
                     .map_err(|e| format!("Failed to load user: {}", e))?;
                 let (uname, uemail) = user_info.unwrap_or_else(|| {
-                    let uid = session_data.user_id.as_deref().unwrap_or("unknown");
+                    let uid = session_data.user_id.as_str();
                     (format!("user_{}", uid), format!("{}@unknown.local", uid))
                 });
                 let channel = session_data.context_data.get("channel").and_then(|c| c.as_str()).unwrap_or("web").to_string();
                 let waiting_time = (Utc::now() - session_data.updated_at).num_seconds();
                 queue_items.push(QueueItem {
                     session_id: session_data.id,
-                    user_id: session_data.user_id.and_then(|u| Uuid::parse_str(&u).ok()).unwrap_or(Uuid::nil()),
+                    user_id: Uuid::parse_str(&session_data.user_id).unwrap_or(Uuid::nil()),
                     bot_id: session_data.bot_id,
                     channel,
                     user_name: uname,

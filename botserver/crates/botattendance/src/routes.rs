@@ -110,7 +110,7 @@ pub async fn attendant_respond(
         let response = crate::models::BotResponse {
             bot_id: session.bot_id.to_string(),
             session_id: session.id.to_string(),
-            user_id: session.user_id.clone().unwrap_or_default(),
+            user_id: session.user_id.clone(),
             channel: session.context_data.get("channel").and_then(|v| v.as_str()).unwrap_or("web").to_string(),
             content: request.message.clone(),
             ..Default::default()
@@ -124,7 +124,7 @@ pub async fn attendant_respond(
         let notification = crate::models::AttendantNotification {
             notification_type: "attendant_response".to_string(),
             session_id: session.id.to_string(),
-            user_id: session.user_id.clone().unwrap_or_default(),
+            user_id: session.user_id.clone(),
             user_name: session.context_data.get("name").and_then(|v| v.as_str()).map(String::from),
             user_phone: session.context_data.get("phone").and_then(|v| v.as_str()).map(String::from),
             channel: session.context_data.get("channel").and_then(|v| v.as_str()).unwrap_or("web").to_string(),

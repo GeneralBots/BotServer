@@ -31,14 +31,13 @@ pub fn get_user_id_from_headers(
         .get()
         .map_err(|e| format!("Pool error: {}", e))?;
 
-    let user_id_str: Option<String> = user_sessions
+    let user_id_str: String = user_sessions
         .find(sid)
         .select(user_id)
-        .first::<Option<String>>(&mut conn)
+        .first::<String>(&mut conn)
         .map_err(|e| format!("Session lookup error: {}", e))?;
 
     user_id_str
-        .ok_or_else(|| "No user ID in session".to_string())?
         .parse::<Uuid>()
         .map_err(|_| "Invalid user ID format".to_string())
 }

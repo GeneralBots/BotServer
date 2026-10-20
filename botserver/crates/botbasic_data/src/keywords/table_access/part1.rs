@@ -64,7 +64,7 @@ impl UserRoles {
 
         Self {
             roles,
-            user_id: Some(session.user_id),
+            user_id: uuid::Uuid::parse_str(&session.user_id).ok(),
         }
     }
 

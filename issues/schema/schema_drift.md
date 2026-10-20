@@ -11,55 +11,18 @@ The canonical source is the `botschema` crate. Everything below is a `table!` de
 
 | Metric | Value |
 |---|---:|
-| Distinct tables (outside botschema) | 24 |
-| Total `table!` declarations | 34 |
-| Tables declared more than once | 1 |
+| Distinct tables (outside botschema) | 23 |
+| Total `table!` declarations | 23 |
+| Tables declared more than once | 0 |
 | — byte-identical duplicates | 0 |
 | — additive drift (superset) | 0 |
-| — conflicting drift | 1 |
+| — conflicting drift | 0 |
 | Tables already in `botschema` | 273 |
 | Distinct tables NOT yet in `botschema` | 23 |
 
-## Conflicting tables (1)
+## Conflicting tables (0)
 
 Columns or types disagree across declarations; #1517 must pick the canonical shape (⚠ marks a column typed differently in different crates).
-
-### `user_sessions` ×11 (in botschema)
-
-| column | type(s) |
-|---|---|
-| `active_email_account_id` | `Nullable<Uuid>` |
-| `answer_mode` | `Integer` |
-| `bot_id` | `Uuid` |
-| `branch_id` | `Nullable<Uuid>, Uuid` ⚠ |
-| `context_data` | `Jsonb` |
-| `created_at` | `Timestamptz` |
-| `current_tool` | `Nullable<Text>, Nullable<Varchar>` ⚠ |
-| `data` | `Nullable<Jsonb>` |
-| `expires_at` | `Nullable<Timestamptz>` |
-| `id` | `Uuid` |
-| `last_activity` | `Timestamptz` |
-| `message_count` | `Int4` |
-| `session_id` | `Nullable<Varchar>, Varchar` ⚠ |
-| `tenant_id` | `Nullable<Uuid>` |
-| `title` | `Text, Varchar` ⚠ |
-| `total_tokens` | `Int4` |
-| `updated_at` | `Timestamptz` |
-| `user_id` | `Nullable<Varchar>, Uuid, Varchar` ⚠ |
-
-| file | line | pk | #cols |
-|---|---|---|---:|
-| `botserver/crates/bottelegram/src/schema.rs` | 1 | `id` | 12 |
-| `botserver/crates/botbasic_types/src/schema.rs` | 5 | `id` | 9 |
-| `botserver/crates/botcoreoauth/src/schema.rs` | 10 | `id` | 9 |
-| `botserver/crates/botpaper/src/schema.rs` | 4 | `id` | 9 |
-| `botserver/crates/bottasks/src/schema.rs` | 20 | `id` | 9 |
-| `botserver/crates/botattendance/src/schema.rs` | 1 | `id` | 12 |
-| `botserver/crates/botcorebot/src/schema.rs` | 4 | `id` | 12 |
-| `botserver/crates/botmsteams/src/schema.rs` | 1 | `id` | 12 |
-| `botserver/crates/botwhatsapp/src/schema.rs` | 10 | `id` | 18 |
-| `botserver/crates/botcoresession/src/schema.rs` | 4 | `id` | 9 |
-| `botlib/src/models/session.rs` | 55 | `id` | 9 |
 
 ## Additive tables (0)
 

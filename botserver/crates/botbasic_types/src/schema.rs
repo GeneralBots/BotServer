@@ -2,19 +2,8 @@ pub mod tables {
     // Canonical definition lives in `botschema` (#1497).
     pub use botschema::bots;
 
-    diesel::table! {
-        user_sessions (id) {
-            id -> Uuid,
-            user_id -> Uuid,
-            branch_id -> Uuid,
-            bot_id -> Uuid,
-            title -> Varchar,
-            context_data -> Jsonb,
-            current_tool -> Nullable<Varchar>,
-            created_at -> Timestamptz,
-            updated_at -> Timestamptz,
-        }
-    }
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::user_sessions;
 
     pub use botschema::bot_memories;
 

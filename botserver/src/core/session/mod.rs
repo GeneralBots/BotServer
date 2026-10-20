@@ -8,9 +8,7 @@ pub async fn create_session() -> String { String::new() }
 fn to_lib_session(s: botcoresession::UserSession) -> botlib::models::UserSession {
     botlib::models::UserSession {
         id: s.id,
-        user_id: s.user_id
-            .and_then(|uid| uuid::Uuid::parse_str(&uid).ok())
-            .unwrap_or(uuid::Uuid::nil()),
+        user_id: uuid::Uuid::parse_str(&s.user_id).unwrap_or(uuid::Uuid::nil()),
         branch_id: s.branch_id,
         bot_id: s.bot_id,
         title: String::new(),
