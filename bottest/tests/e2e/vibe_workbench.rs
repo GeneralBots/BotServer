@@ -109,12 +109,14 @@ async fn test_vibe_command_bar_layout() {
         }
     };
 
-    // 1. New Project is the first command button in the first command row.
+    // 1. New Project is the first command button in its command group.
     check(
         "New Project is the first command button",
         js_bool(browser, "(() => {
-            const btn = document.querySelector('#vibeShellToolbar .vibe-shell-tb-cmdrow .vibe-shell-tb-btn');
-            return !!(btn && /new\\s*project/i.test(btn.getAttribute('title') || ''));
+            const newBtn = document.querySelector('#vibeShellToolbar .vibe-shell-tb-new');
+            const group = newBtn && newBtn.closest('.vibe-shell-tb-group');
+            const first = group && group.querySelector('.vibe-shell-tb-btn');
+            return !!(newBtn && first === newBtn);
         })()")
         .await,
     );
@@ -178,19 +180,17 @@ async fn test_vibe_command_bar_layout() {
         .await,
     );
 
-    // 6. Window control buttons are aligned to the LEFT of the header.
+    // 6. Window control buttons sit at the RIGHT end of the titlebar
+    //    (product spec #1318: Windows/Delphi style, title first with flex:1).
     check(
-        "Window control buttons are left-aligned",
+        "Window control buttons are right-aligned",
         js_bool(browser, "(() => {
             const win = document.getElementById('window-vibe');
             if (!win) return false;
             const ctrl = win.querySelector('.window-dot-controls');
             const title = win.querySelector('.window-title');
             if (!ctrl || !title) return false;
-            const computedOrder = getComputedStyle(ctrl).order;
-            const ctlL = ctrl.getBoundingClientRect().left;
-            const titleL = title.getBoundingClientRect().left;
-            return Number(computedOrder) < 0 && ctlL < titleL;
+            return ctrl.getBoundingClientRect().left > title.getBoundingClientRect().left;
         })()")
         .await,
     );
