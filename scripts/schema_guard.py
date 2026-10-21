@@ -61,6 +61,25 @@ def scan():
     return per_file
 
 
+def canonical_duplicates():
+    """Return {table: [files]} for tables declared more than once in botschema."""
+    import glob as _glob
+
+    pattern = re.compile(r"table!\s*\{\s*(\w+)\s*\(")
+    seen = {}
+    base = os.path.join(ROOT, "botschema", "src")
+    for path in _glob.glob(os.path.join(base, "**", "*.rs"), recursive=True):
+        try:
+            text = open(path, encoding="utf-8", errors="replace").read()
+        except OSError:
+            continue
+        text = re.sub(r"^\s*//.*$", "", text, flags=re.M)
+        rel = os.path.relpath(path, ROOT)
+        for table in pattern.findall(text):
+            seen.setdefault(table, []).append(rel)
+    return {t: f for t, f in seen.items() if len(f) > 1}
+
+
 def load_baseline():
     if not os.path.exists(BASELINE_PATH):
         return None
@@ -81,6 +100,15 @@ def main():
             )
         print(f"baseline updated: total={total} files={len(files)}")
         return 0
+
+    duplicates = canonical_duplicates()
+    if duplicates:
+        print(
+            "schema_guard: FAIL — tables declared more than once inside botschema:"
+        )
+        for table, files in sorted(duplicates.items()):
+            print(f"  {table}: {', '.join(files)}")
+        return 1
 
     baseline = load_baseline()
     if baseline is None:
