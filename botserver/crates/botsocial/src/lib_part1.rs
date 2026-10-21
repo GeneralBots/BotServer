@@ -116,7 +116,8 @@ pub struct DbReaction {
 #[diesel(table_name = social_praises)]
 pub struct DbPraise {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub from_user_id: Uuid,
     pub to_user_id: Uuid,
     pub badge_type: String,
@@ -124,8 +125,7 @@ pub struct DbPraise {
     pub is_public: bool,
     pub post_id: Option<Uuid>,
     pub created_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Uuid,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Post {
