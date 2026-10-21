@@ -44,61 +44,70 @@ diesel::table! {
 
 diesel::table! {
     video_layers (id) {
-        id -> Uuid,
-        project_id -> Uuid,
-        name -> Text,
-        layer_type -> Text,
-        track_index -> Int4,
-        start_ms -> Int8,
-        end_ms -> Int8,
-        x -> Float4,
-        y -> Float4,
-        width -> Float4,
-        height -> Float4,
-        rotation -> Float4,
-        opacity -> Float4,
-        properties_json -> Jsonb,
-        animation_in -> Nullable<Text>,
-        animation_out -> Nullable<Text>,
-        locked -> Bool,
-        keyframes_json -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    project_id -> Uuid,
+    name -> Text,
+    layer_type -> Text,
+    track_index -> Int4,
+    start_ms -> Int8,
+    end_ms -> Int8,
+    x -> Float4,
+    y -> Float4,
+    width -> Float4,
+    height -> Float4,
+    rotation -> Float4,
+    opacity -> Float4,
+    properties_json -> Jsonb,
+    animation_in -> Nullable<Text>,
+    animation_out -> Nullable<Text>,
+    locked -> Bool,
+    created_at -> Timestamptz,
+    keyframes_json -> Nullable<Jsonb>,
     }
 }
+
+
 
 diesel::table! {
     video_audio_tracks (id) {
-        id -> Uuid,
-        project_id -> Uuid,
-        name -> Text,
-        source_url -> Text,
-        track_type -> Text,
-        start_ms -> Int8,
-        duration_ms -> Int8,
-        volume -> Float4,
-        fade_in_ms -> Int8,
-        fade_out_ms -> Int8,
-        waveform_json -> Nullable<Jsonb>,
-        beat_markers_json -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    project_id -> Uuid,
+    name -> Text,
+    source_url -> Text,
+    track_type -> Text,
+    start_ms -> Int8,
+    duration_ms -> Int8,
+    volume -> Float4,
+    fade_in_ms -> Int8,
+    fade_out_ms -> Int8,
+    created_at -> Timestamptz,
+    waveform_json -> Nullable<Jsonb>,
+    beat_markers_json -> Nullable<Jsonb>,
     }
 }
 
+
+
 diesel::table! {
     video_exports (id) {
-        id -> Uuid,
-        project_id -> Uuid,
-        format -> Text,
-        quality -> Text,
-        status -> Text,
-        progress -> Int4,
-        output_url -> Nullable<Text>,
-        gbdrive_path -> Nullable<Text>,
-        error_message -> Nullable<Text>,
-        created_at -> Timestamptz,
-        completed_at -> Nullable<Timestamptz>,
+
+    id -> Uuid,
+    project_id -> Uuid,
+    format -> Text,
+    quality -> Text,
+    status -> Text,
+    progress -> Int4,
+    output_url -> Nullable<Text>,
+    error_message -> Nullable<Text>,
+    created_at -> Timestamptz,
+    completed_at -> Nullable<Timestamptz>,
+    gbdrive_path -> Nullable<Text>,
     }
 }
+
+
 
 diesel::table! {
     video_command_history (id) {

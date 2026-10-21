@@ -69,7 +69,7 @@ pub async fn handle_crm_search(
     if !deals.is_empty() {
         html.push_str(r#"<div class="search-group"><div class="search-group-title">Deals</div>"#);
         for deal in deals {
-            let title = deal.title.as_deref().unwrap_or(&deal.name);
+            let title = deal.title.as_deref().or(deal.name.as_deref()).unwrap_or("");
             let meta = deal
                 .value
                 .map(|v| format_money(v, deal.currency.as_deref()))
@@ -222,7 +222,7 @@ pub async fn handle_crm_opportunities_search(
     if let Some(term) = query.q.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
         let needle = term.to_lowercase();
         opportunities.retain(|o| {
-            [o.title.as_deref().unwrap_or(""), o.name.as_str()]
+            [o.title.as_deref().unwrap_or(""), o.name.as_deref().unwrap_or("")]
                 .iter()
                 .any(|v| v.to_lowercase().contains(&needle))
         });
@@ -233,7 +233,7 @@ pub async fn handle_crm_opportunities_search(
 
     let mut html = String::new();
     for opp in opportunities {
-        let label = opp.title.as_deref().unwrap_or(&opp.name);
+        let label = opp.title.as_deref().or(opp.name.as_deref()).unwrap_or("");
         html.push_str(&format!(
             r#"<option value="{id}">{label}</option>"#,
             id = opp.id,

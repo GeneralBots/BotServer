@@ -15,9 +15,20 @@ pub(crate) fn get_bot_context(config: &crate::AttendantConfig) -> Uuid {
     (config.get_default_bot)(&mut conn)
 }
 
+pub(crate) fn org_and_bot(config: &crate::AttendantConfig, branch_id: Uuid) -> (Uuid, Uuid) {
+    let Ok(mut conn) = config.pool.get() else {
+        return (Uuid::nil(), Uuid::nil());
+    };
+    botschema::bots::table
+        .filter(botschema::bots::branch_id.eq(branch_id))
+        .select((botschema::bots::org_id, botschema::bots::id))
+        .first(&mut conn)
+        .unwrap_or((Uuid::nil(), Uuid::nil()))
+}
+
 pub(crate) fn generate_session_number(conn: &mut diesel::PgConnection, branch_id: Uuid) -> String {
     let count: i64 = attendant_sessions::table
-        .filter(attendant_sessions::branch_id.eq(branch_id))
+        .filter(attendant_sessions::branch_id.eq(Some(branch_id)))
         .count()
         .get_result(conn)
         .unwrap_or(0);

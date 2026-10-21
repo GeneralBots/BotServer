@@ -276,9 +276,11 @@ pub async fn create_canned_response(
     let id = Uuid::new_v4();
     let now = Utc::now();
 
+    let (org_id, bot_id) = org_and_bot(&mut conn, branch_id);
     let response = TicketCannedResponse {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         title: req.title,
         content: req.content,
         category: req.category,
@@ -287,6 +289,7 @@ pub async fn create_canned_response(
         is_active: true,
         created_at: now,
         updated_at: now,
+        branch_id: Some(branch_id),
     };
 
     diesel::insert_into(ticket_canned_responses::table)

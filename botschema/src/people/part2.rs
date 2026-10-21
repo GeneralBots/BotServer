@@ -4,15 +4,21 @@ use super::*;
 
 diesel::table! {
     people_skills (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        category -> Nullable<Varchar>,
-        description -> Nullable<Text>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 255]
+    name -> Varchar,
+    #[max_length = 100]
+    category -> Nullable<Varchar>,
+    description -> Nullable<Text>,
+    is_active -> Bool,
+    created_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     people_person_skills (id) {
@@ -29,22 +35,28 @@ diesel::table! {
 
 diesel::table! {
     people_time_off (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        person_id -> Uuid,
-        time_off_type -> Varchar,
-        status -> Varchar,
-        start_date -> Date,
-        end_date -> Date,
-        hours_requested -> Nullable<Numeric>,
-        reason -> Nullable<Text>,
-        approved_by -> Nullable<Uuid>,
-        approved_at -> Nullable<Timestamptz>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    person_id -> Uuid,
+    #[max_length = 50]
+    time_off_type -> Varchar,
+    #[max_length = 50]
+    status -> Varchar,
+    start_date -> Date,
+    end_date -> Date,
+    hours_requested -> Nullable<Numeric>,
+    reason -> Nullable<Text>,
+    approved_by -> Nullable<Uuid>,
+    approved_at -> Nullable<Timestamptz>,
+    notes -> Nullable<Text>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::joinable!(people -> branches (branch_id));
 diesel::joinable!(people_teams -> branches (branch_id));
@@ -61,193 +73,245 @@ diesel::joinable!(attendance_sla_events -> attendance_sla_policies (sla_policy_i
 
 diesel::table! {
     crm_deals (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        contact_id -> Nullable<Uuid>,
-        account_id -> Nullable<Uuid>,
-        am_id -> Nullable<Uuid>,
-        owner_id -> Nullable<Uuid>,
-        lead_id -> Nullable<Uuid>,
-        title -> Nullable<Varchar>,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        value -> Nullable<Float8>,
-        currency -> Nullable<Varchar>,
-        stage_id -> Nullable<Uuid>,
-        stage -> Nullable<Varchar>,
-        probability -> Nullable<Int4>,
-        source -> Nullable<Varchar>,
-        segment_id -> Nullable<Uuid>,
-        department_id -> Nullable<Uuid>,
-        expected_close_date -> Nullable<Date>,
-        actual_close_date -> Nullable<Date>,
-        period -> Nullable<Int4>,
-        deal_date -> Nullable<Date>,
-        closed_at -> Nullable<Timestamptz>,
-        lost_reason -> Nullable<Text>,
-        won -> Nullable<Bool>,
-        notes -> Nullable<Text>,
-        tags -> Nullable<Array<Text>>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        custom_fields -> Jsonb,
-        org_id -> Uuid,
-        bot_id -> Uuid,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    contact_id -> Nullable<Uuid>,
+    account_id -> Nullable<Uuid>,
+    am_id -> Nullable<Uuid>,
+    owner_id -> Nullable<Uuid>,
+    lead_id -> Nullable<Uuid>,
+    #[max_length = 100]
+    title -> Nullable<Varchar>,
+    #[max_length = 100]
+    name -> Nullable<Varchar>,
+    description -> Nullable<Text>,
+    value -> Nullable<Float8>,
+    #[max_length = 10]
+    currency -> Nullable<Varchar>,
+    stage_id -> Nullable<Uuid>,
+    #[max_length = 30]
+    stage -> Nullable<Varchar>,
+    probability -> Nullable<Int4>,
+    won -> Nullable<Bool>,
+    #[max_length = 50]
+    source -> Nullable<Varchar>,
+    segment_id -> Nullable<Uuid>,
+    expected_close_date -> Nullable<Date>,
+    actual_close_date -> Nullable<Date>,
+    period -> Nullable<Int4>,
+    deal_date -> Nullable<Date>,
+    closed_at -> Nullable<Timestamptz>,
+    created_at -> Nullable<Timestamptz>,
+    updated_at -> Nullable<Timestamptz>,
+    notes -> Nullable<Text>,
+    tags -> Nullable<Array<Nullable<Text>>>,
+    custom_fields -> Nullable<Jsonb>,
+    department_id -> Nullable<Uuid>,
+    #[max_length = 255]
+    lost_reason -> Nullable<Varchar>,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     crm_deal_segments (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Varchar>,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 50]
+    name -> Varchar,
+    #[max_length = 255]
+    description -> Nullable<Varchar>,
+    created_at -> Nullable<Timestamptz>,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     marketing_campaigns (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        deal_id -> Nullable<Uuid>,
-        name -> Varchar,
-        status -> Nullable<Varchar>,
-        content_template -> Jsonb,
-        sent_at -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        metrics -> Nullable<Jsonb>,
-        budget -> Nullable<Numeric>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        campaign_type -> Varchar,
-        starts_at -> Nullable<Timestamptz>,
-        ends_at -> Nullable<Timestamptz>,
-        run_offset -> Nullable<Int4>,
-        pause_requested -> Nullable<Bool>,
-        stop_requested -> Nullable<Bool>,
-        started_at -> Nullable<Timestamptz>,
-        org_id -> Nullable<Uuid>,
-        bot_id -> Nullable<Uuid>,
+
+    id -> Uuid,
+    org_id -> Nullable<Uuid>,
+    bot_id -> Nullable<Uuid>,
+    #[max_length = 100]
+    name -> Varchar,
+    #[max_length = 20]
+    status -> Nullable<Varchar>,
+    #[max_length = 20]
+    campaign_type -> Varchar,
+    content_template -> Nullable<Jsonb>,
+    starts_at -> Nullable<Timestamptz>,
+    sent_at -> Nullable<Timestamptz>,
+    ends_at -> Nullable<Timestamptz>,
+    metrics -> Nullable<Jsonb>,
+    budget -> Nullable<Numeric>,
+    created_at -> Nullable<Timestamptz>,
+    updated_at -> Nullable<Timestamptz>,
+    deal_id -> Nullable<Uuid>,
+    branch_id -> Uuid,
+    run_offset -> Nullable<Int4>,
+    pause_requested -> Nullable<Bool>,
+    stop_requested -> Nullable<Bool>,
+    started_at -> Nullable<Timestamptz>,
+    completed_at -> Nullable<Timestamptz>,
     }
 }
 
+
 diesel::table! {
     marketing_lists (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        list_type -> Varchar,
-        query_text -> Nullable<Text>,
-        contact_count -> Nullable<Int4>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        description -> Nullable<Text>,
-        member_count -> Nullable<Int4>,
-        is_dynamic -> Nullable<Bool>,
-        criteria -> Nullable<Jsonb>,
-        org_id -> Nullable<Uuid>,
-        bot_id -> Nullable<Uuid>,
+
+    id -> Uuid,
+    org_id -> Nullable<Uuid>,
+    bot_id -> Nullable<Uuid>,
+    #[max_length = 100]
+    name -> Varchar,
+    #[max_length = 20]
+    list_type -> Varchar,
+    query_text -> Nullable<Text>,
+    contact_count -> Nullable<Int4>,
+    created_at -> Nullable<Timestamptz>,
+    updated_at -> Nullable<Timestamptz>,
+    branch_id -> Uuid,
+    description -> Nullable<Text>,
+    member_count -> Nullable<Int4>,
+    is_dynamic -> Nullable<Bool>,
+    criteria -> Nullable<Jsonb>,
     }
 }
+
 
 diesel::table! {
     marketing_list_contacts (list_id, contact_id) {
         list_id -> Uuid,
         contact_id -> Uuid,
-        added_at -> Timestamptz,
+        added_at -> Nullable<Timestamptz>,
     }
 }
 
 diesel::table! {
     marketing_recipients (id) {
-        id -> Uuid,
-        campaign_id -> Nullable<Uuid>,
-        contact_id -> Nullable<Uuid>,
-        deal_id -> Nullable<Uuid>,
-        channel -> Varchar,
-        status -> Varchar,
-        sent_at -> Nullable<Timestamptz>,
-        delivered_at -> Nullable<Timestamptz>,
-        failed_at -> Nullable<Timestamptz>,
-        error_message -> Nullable<Text>,
-        response -> Nullable<Text>,
-        created_at -> Nullable<Timestamptz>,
-        branch_id -> Uuid,
-        list_id -> Nullable<Uuid>,
-        email -> Varchar,
-        name -> Nullable<Varchar>,
-        opened_at -> Nullable<Timestamptz>,
-        clicked_at -> Nullable<Timestamptz>,
+
+    id -> Uuid,
+    campaign_id -> Nullable<Uuid>,
+    contact_id -> Nullable<Uuid>,
+    deal_id -> Nullable<Uuid>,
+    #[max_length = 20]
+    channel -> Nullable<Varchar>,
+    #[max_length = 20]
+    status -> Nullable<Varchar>,
+    sent_at -> Nullable<Timestamptz>,
+    delivered_at -> Nullable<Timestamptz>,
+    failed_at -> Nullable<Timestamptz>,
+    error_message -> Nullable<Text>,
+    response -> Nullable<Jsonb>,
+    created_at -> Nullable<Timestamptz>,
+    branch_id -> Uuid,
+    list_id -> Nullable<Uuid>,
+    #[max_length = 255]
+    email -> Nullable<Varchar>,
+    #[max_length = 255]
+    name -> Nullable<Varchar>,
+    opened_at -> Nullable<Timestamptz>,
+    clicked_at -> Nullable<Timestamptz>,
     }
 }
+
 
 diesel::table! {
     marketing_templates (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        channel -> Varchar,
-        subject -> Nullable<Varchar>,
-        body -> Nullable<Text>,
-        media_url -> Nullable<Varchar>,
-        ai_prompt -> Nullable<Text>,
-        variables -> Nullable<Jsonb>,
-        approved -> Nullable<Bool>,
-        meta_template_id -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        org_id -> Uuid,
-        bot_id -> Uuid,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 100]
+    name -> Varchar,
+    #[max_length = 20]
+    channel -> Varchar,
+    #[max_length = 200]
+    subject -> Nullable<Varchar>,
+    body -> Nullable<Text>,
+    #[max_length = 500]
+    media_url -> Nullable<Varchar>,
+    ai_prompt -> Nullable<Text>,
+    variables -> Nullable<Jsonb>,
+    approved -> Nullable<Bool>,
+    #[max_length = 100]
+    meta_template_id -> Nullable<Varchar>,
+    created_at -> Nullable<Timestamptz>,
+    updated_at -> Nullable<Timestamptz>,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     email_tracking (id) {
-        id -> Uuid,
-        recipient_id -> Nullable<Uuid>,
-        campaign_id -> Nullable<Uuid>,
-        message_id -> Nullable<Varchar>,
-        open_token -> Nullable<Uuid>,
-        open_tracking_enabled -> Nullable<Bool>,
-        opened -> Nullable<Bool>,
-        opened_at -> Nullable<Timestamptz>,
-        clicked -> Nullable<Bool>,
-        clicked_at -> Nullable<Timestamptz>,
-        ip_address -> Nullable<Varchar>,
-        user_agent -> Nullable<Text>,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    recipient_id -> Nullable<Uuid>,
+    campaign_id -> Nullable<Uuid>,
+    #[max_length = 100]
+    message_id -> Nullable<Varchar>,
+    open_token -> Nullable<Uuid>,
+    open_tracking_enabled -> Nullable<Bool>,
+    opened -> Nullable<Bool>,
+    opened_at -> Nullable<Timestamptz>,
+    clicked -> Nullable<Bool>,
+    clicked_at -> Nullable<Timestamptz>,
+    #[max_length = 45]
+    ip_address -> Nullable<Varchar>,
+    #[max_length = 500]
+    user_agent -> Nullable<Varchar>,
+    created_at -> Nullable<Timestamptz>,
     }
 }
+
 
 diesel::table! {
     whatsapp_business (id) {
-        id -> Uuid,
-        phone_number_id -> Nullable<Varchar>,
-        business_account_id -> Nullable<Varchar>,
-        access_token -> Nullable<Text>,
-        webhooks_verified -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Nullable<Timestamptz>,
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 50]
+    phone_number_id -> Nullable<Varchar>,
+    #[max_length = 50]
+    business_account_id -> Nullable<Varchar>,
+    #[max_length = 500]
+    access_token -> Nullable<Varchar>,
+    webhooks_verified -> Nullable<Bool>,
+    created_at -> Nullable<Timestamptz>,
+    updated_at -> Nullable<Timestamptz>,
     }
 }
 
+
 diesel::table! {
     attendance_sla_policies (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        channel -> Nullable<Varchar>,
-        priority -> Nullable<Varchar>,
-        first_response_minutes -> Nullable<Int4>,
-        resolution_minutes -> Nullable<Int4>,
-        escalate_on_breach -> Nullable<Bool>,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        org_id -> Nullable<Uuid>,
-        bot_id -> Nullable<Uuid>,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 100]
+    name -> Varchar,
+    #[max_length = 20]
+    channel -> Nullable<Varchar>,
+    #[max_length = 20]
+    priority -> Nullable<Varchar>,
+    first_response_minutes -> Nullable<Int4>,
+    resolution_minutes -> Nullable<Int4>,
+    escalate_on_breach -> Nullable<Bool>,
+    is_active -> Nullable<Bool>,
+    created_at -> Nullable<Timestamptz>,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     attendance_sla_events (id) {
@@ -265,17 +329,20 @@ diesel::table! {
 
 diesel::table! {
     attendance_webhooks (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        webhook_url -> Varchar,
-        events -> Nullable<Text>,
-        is_active -> Nullable<Bool>,
-        secret_key -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        org_id -> Nullable<Uuid>,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    branch_id -> Uuid,
+    #[max_length = 255]
+    webhook_url -> Varchar,
+    events -> Nullable<Array<Nullable<Text>>>,
+    is_active -> Nullable<Bool>,
+    secret_key -> Nullable<Text>,
+    created_at -> Timestamptz,
+    updated_at -> Nullable<Timestamptz>,
     }
 }
+
 
 // HR / time-clock tables (canonical, #1497).
 

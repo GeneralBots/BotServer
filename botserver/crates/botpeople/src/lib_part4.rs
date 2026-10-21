@@ -116,9 +116,11 @@ pub async fn create_department(
     let id = Uuid::new_v4();
     let now = Utc::now();
 
+    let (org_id, bot_id) = org_and_bot(&mut conn, branch_id);
     let department = Department {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         name: req.name,
         description: req.description,
         code: req.code,
@@ -128,6 +130,7 @@ pub async fn create_department(
         is_active: true,
         created_at: now,
         updated_at: now,
+        branch_id,
     };
 
     diesel::insert_into(people_departments::table)
@@ -188,14 +191,17 @@ pub async fn create_skill(
     let id = Uuid::new_v4();
     let now = Utc::now();
 
+    let (org_id, bot_id) = org_and_bot(&mut conn, branch_id);
     let skill = Skill {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         name: req.name,
         category: req.category,
         description: req.description,
         is_active: true,
         created_at: now,
+        branch_id,
     };
 
     diesel::insert_into(people_skills::table)
@@ -254,9 +260,11 @@ pub async fn create_time_off(
     let end_date = NaiveDate::parse_from_str(&req.end_date, "%Y-%m-%d")
         .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid end_date".to_string()))?;
 
+    let (org_id, bot_id) = org_and_bot(&mut conn, branch_id);
     let time_off = TimeOff {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         person_id: req.person_id,
         time_off_type: req.time_off_type,
         status: "pending".to_string(),
@@ -269,6 +277,7 @@ pub async fn create_time_off(
         notes: None,
         created_at: now,
         updated_at: now,
+        branch_id,
     };
 
     diesel::insert_into(people_time_off::table)

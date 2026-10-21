@@ -99,14 +99,17 @@ diesel::joinable!(organization_invitations -> branches (branch_id));
 
 diesel::table! {
     user_organizations (id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        org_id -> Uuid,
-        role -> Varchar,
-        is_default -> Bool,
-        joined_at -> Timestamptz,
+
+    id -> Uuid,
+    user_id -> Uuid,
+    org_id -> Uuid,
+    #[max_length = 50]
+    role -> Nullable<Varchar>,
+    is_default -> Nullable<Bool>,
+    joined_at -> Timestamptz,
     }
 }
+
 
 diesel::joinable!(user_organizations -> users (user_id));
 diesel::joinable!(user_organizations -> organizations (org_id));
@@ -138,23 +141,27 @@ diesel::table! {
 
 diesel::table! {
     website_crawls (id) {
-        id -> Uuid,
-        bot_id -> Uuid,
-        url -> Text,
-        last_crawled -> Nullable<Timestamptz>,
-        next_crawl -> Nullable<Timestamptz>,
-        expires_policy -> Varchar,
-        max_depth -> Nullable<Int4>,
-        max_pages -> Nullable<Int4>,
-        crawl_status -> Nullable<Int2>,
-        pages_crawled -> Nullable<Int4>,
-        error_message -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        refresh_policy -> Nullable<Varchar>,
-        branch_id -> Uuid,
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    url -> Text,
+    last_crawled -> Nullable<Timestamptz>,
+    next_crawl -> Nullable<Timestamptz>,
+    #[max_length = 20]
+    expires_policy -> Varchar,
+    max_depth -> Nullable<Int4>,
+    max_pages -> Nullable<Int4>,
+    crawl_status -> Nullable<Int2>,
+    pages_crawled -> Nullable<Int4>,
+    error_message -> Nullable<Text>,
+    created_at -> Nullable<Timestamptz>,
+    updated_at -> Nullable<Timestamptz>,
+    #[max_length = 20]
+    refresh_policy -> Nullable<Varchar>,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     // Physical order from `6.0.0-01-core`; `branch_id` appended by
@@ -189,28 +196,30 @@ diesel::table! {
 diesel::table! {
     kb_collections (id) {
         id -> Uuid,
-        bot_id -> Nullable<Uuid>,
-        name -> Varchar,
-        description -> Nullable<Varchar>,
-        folder_path -> Nullable<Text>,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
+        bot_id -> Uuid,
+        name -> Text,
+        folder_path -> Text,
+        qdrant_collection -> Text,
+        document_count -> Int4,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
     }
 }
 
 diesel::table! {
     kb_group_associations (id) {
-        id -> Uuid,
-        collection_id -> Uuid,
-        group_id -> Uuid,
-        kb_id -> Uuid,
-        granted_at -> Timestamptz,
-        created_at -> Timestamp,
+
+    id -> Uuid,
+    kb_id -> Uuid,
+    group_id -> Uuid,
+    granted_by -> Nullable<Uuid>,
+    granted_at -> Timestamptz,
     }
 }
 
+
 diesel::joinable!(kb_collections -> bots (bot_id));
-diesel::joinable!(kb_group_associations -> kb_collections (collection_id));
+diesel::joinable!(kb_group_associations -> kb_collections (kb_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     rbac_roles,

@@ -79,16 +79,16 @@ pub(crate) async fn list_services(
     }
 
     let subs = query
-        .load::<(Uuid, String, Option<String>, String, Option<String>, Option<bigdecimal::BigDecimal>, Option<String>, i32, chrono::NaiveDate, chrono::DateTime<chrono::Utc>)>(&mut conn)
+        .load::<(Uuid, String, Option<String>, String, String, bigdecimal::BigDecimal, String, i32, chrono::NaiveDate, chrono::DateTime<chrono::Utc>)>(&mut conn)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Query: {e}")))?;
 
     let result: Vec<serde_json::Value> = subs.into_iter().map(|(sid, cname, desc, freq, stat, amt, cur, _interval, sdate, cdate)| {
         let plan_label = desc.as_deref().unwrap_or(&cname);
-        let friendly_desc = if stat.as_deref() == Some("active") && amt.as_ref().map(botbilling::api_models::bd_to_f64) == Some(0.0) {
+        let friendly_desc = if stat == "active" && botbilling::api_models::bd_to_f64(&amt) == 0.0 {
             "GBO Free Service".to_string()
-        } else if stat.as_deref() == Some("trialing") {
+        } else if stat == "trialing" {
             format!("GBO {} Service (Trial)", plan_label)
-        } else if stat.as_deref() == Some("active") {
+        } else if stat == "active" {
             format!("GBO {} Service", plan_label)
         } else {
             plan_label.to_string()
@@ -98,7 +98,7 @@ pub(crate) async fn list_services(
             "name": friendly_desc,
             "description": desc,
             "status": stat,
-            "amount": amt.as_ref().map(|a| a.to_string()),
+            "amount": amt.to_string(),
             "currency": cur,
             "period": if _interval > 1 { format!("every {} {}", _interval, freq) } else { freq.to_string() },
             "created_at": cdate.to_rfc3339(),
@@ -191,7 +191,7 @@ pub(crate) async fn list_invoices(
     let invs = query
         .order(issue_date.desc())
         .limit(50)
-        .load::<(Uuid, String, Option<String>, Option<bigdecimal::BigDecimal>, Option<String>, chrono::NaiveDate, Option<chrono::NaiveDate>)>(&mut conn)
+        .load::<(Uuid, String, String, bigdecimal::BigDecimal, String, chrono::NaiveDate, chrono::NaiveDate)>(&mut conn)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Query: {e}")))?;
 
     let result: Vec<serde_json::Value> = invs.into_iter().map(|(iid, inum, cname, tot, stat, idate, ddate)| {
@@ -199,10 +199,10 @@ pub(crate) async fn list_invoices(
             "id": iid,
             "number": inum,
             "customer": cname,
-            "total": tot.map(|t| t.to_string()),
+            "total": tot.to_string(),
             "status": stat,
             "issue_date": idate.to_string(),
-            "due_date": ddate.map(|d| d.to_string()),
+            "due_date": ddate.to_string(),
         })
     }).collect();
 

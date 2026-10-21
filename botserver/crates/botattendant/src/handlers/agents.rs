@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use crate::models::*;
 use crate::schema::*;
-use crate::handlers::{db_conn, get_bot_context};
+use crate::handlers::{db_conn, get_bot_context, org_and_bot};
 
 pub async fn update_agent_status(
     State(config): State<Arc<crate::AttendantConfig>>,
@@ -23,7 +23,7 @@ pub async fn update_agent_status(
     let now = Utc::now();
 
     let existing: Option<AgentStatus> = attendant_agent_status::table
-        .filter(attendant_agent_status::branch_id.eq(branch_id))
+        .filter(attendant_agent_status::branch_id.eq(Some(branch_id)))
         .filter(attendant_agent_status::agent_id.eq(agent_id))
         .first(&mut conn)
         .ok();
@@ -43,7 +43,7 @@ pub async fn update_agent_status(
     if existing.is_some() {
         diesel::update(
             attendant_agent_status::table
-                .filter(attendant_agent_status::branch_id.eq(branch_id))
+                .filter(attendant_agent_status::branch_id.eq(Some(branch_id)))
                 .filter(attendant_agent_status::agent_id.eq(agent_id)),
         )
         .set((
@@ -58,9 +58,11 @@ pub async fn update_agent_status(
         .execute(&mut conn)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Update error: {e}")))?;
     } else {
+        let (org_id, bot_id) = org_and_bot(&config, branch_id);
         let status = AgentStatus {
             id: Uuid::new_v4(),
-            branch_id,
+            org_id,
+            bot_id,
             agent_id,
             status: req.status.clone(),
             status_message: req.status_message.clone(),
@@ -72,6 +74,7 @@ pub async fn update_agent_status(
             available_since,
             created_at: now,
             updated_at: now,
+            branch_id: Some(branch_id),
         };
 
         diesel::insert_into(attendant_agent_status::table)
@@ -81,7 +84,7 @@ pub async fn update_agent_status(
     }
 
     let agent_status: AgentStatus = attendant_agent_status::table
-        .filter(attendant_agent_status::branch_id.eq(branch_id))
+        .filter(attendant_agent_status::branch_id.eq(Some(branch_id)))
         .filter(attendant_agent_status::agent_id.eq(agent_id))
         .first(&mut conn)
         .map_err(|_| (StatusCode::NOT_FOUND, "Agent status not found".to_string()))?;
@@ -97,7 +100,7 @@ pub async fn list_agent_statuses(
     let branch_id = get_bot_context(&config);
 
     let statuses: Vec<AgentStatus> = attendant_agent_status::table
-        .filter(attendant_agent_status::branch_id.eq(branch_id))
+        .filter(attendant_agent_status::branch_id.eq(Some(branch_id)))
         .order(attendant_agent_status::status.asc())
         .load(&mut conn)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Query error: {e}")))?;
@@ -119,35 +122,35 @@ pub async fn get_attendant_stats(
     let today_utc = chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(today, chrono::Utc);
 
     let total_sessions_today: i64 = attendant_sessions::table
-        .filter(attendant_sessions::branch_id.eq(branch_id))
+        .filter(attendant_sessions::branch_id.eq(Some(branch_id)))
         .filter(attendant_sessions::created_at.ge(today_utc))
         .count()
         .get_result(&mut conn)
         .unwrap_or(0);
 
     let active_sessions: i64 = attendant_sessions::table
-        .filter(attendant_sessions::branch_id.eq(branch_id))
+        .filter(attendant_sessions::branch_id.eq(Some(branch_id)))
         .filter(attendant_sessions::status.eq("active"))
         .count()
         .get_result(&mut conn)
         .unwrap_or(0);
 
     let waiting_sessions: i64 = attendant_sessions::table
-        .filter(attendant_sessions::branch_id.eq(branch_id))
+        .filter(attendant_sessions::branch_id.eq(Some(branch_id)))
         .filter(attendant_sessions::status.eq("waiting"))
         .count()
         .get_result(&mut conn)
         .unwrap_or(0);
 
     let agents_online: i64 = attendant_agent_status::table
-        .filter(attendant_agent_status::branch_id.eq(branch_id))
+        .filter(attendant_agent_status::branch_id.eq(Some(branch_id)))
         .filter(attendant_agent_status::status.eq("online"))
         .count()
         .get_result(&mut conn)
         .unwrap_or(0);
 
     let agents_on_break: i64 = attendant_agent_status::table
-        .filter(attendant_agent_status::branch_id.eq(branch_id))
+        .filter(attendant_agent_status::branch_id.eq(Some(branch_id)))
         .filter(attendant_agent_status::status.eq("break"))
         .count()
         .get_result(&mut conn)

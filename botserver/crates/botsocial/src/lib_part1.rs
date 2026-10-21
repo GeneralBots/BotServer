@@ -27,7 +27,8 @@ pub use botschema::social_praises;
 #[diesel(table_name = social_posts)]
 pub struct DbPost {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub author_id: Uuid,
     pub community_id: Option<Uuid>,
     pub parent_id: Option<Uuid>,
@@ -48,14 +49,14 @@ pub struct DbPost {
     pub updated_at: DateTime<Utc>,
     pub edited_at: Option<DateTime<Utc>>,
     pub deleted_at: Option<DateTime<Utc>>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Option<Uuid>,
 }
 #[derive(Debug, Clone, Queryable, Insertable, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = social_communities)]
 pub struct DbCommunity {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub slug: String,
     pub description: Option<String>,
@@ -72,8 +73,7 @@ pub struct DbCommunity {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub archived_at: Option<DateTime<Utc>>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Option<Uuid>,
 }
 #[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = social_community_members)]

@@ -236,9 +236,11 @@ pub async fn handle_record_consent(
         let mut consents = req.consents;
         consents.insert(CookieCategory::Necessary, true);
 
+        let (org_id, bot_id) = org_and_bot(&mut conn, branch_id);
         let db_consent = DbCookieConsent {
             id: Uuid::new_v4(),
-            branch_id,
+            org_id,
+            bot_id,
             user_id: None,
             session_id: req.session_id,
             ip_address: None,
@@ -254,6 +256,7 @@ pub async fn handle_record_consent(
             consent_updated_at: now,
             consent_withdrawn_at: None,
             created_at: now,
+            branch_id,
         };
 
         diesel::insert_into(cookie_consents::table)

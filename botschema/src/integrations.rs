@@ -2,18 +2,24 @@
 
 diesel::table! {
     connector_connections (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        kind -> Text,
-        display_name -> Nullable<Text>,
-        vault_token_ref -> Text,
-        status -> Text,
-        cursors -> Jsonb,
-        last_sync_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    #[max_length = 32]
+    kind -> Varchar,
+    #[max_length = 160]
+    display_name -> Nullable<Varchar>,
+    #[max_length = 200]
+    vault_token_ref -> Varchar,
+    #[max_length = 24]
+    status -> Varchar,
+    cursors -> Jsonb,
+    last_sync_at -> Nullable<Timestamptz>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
     }
 }
+
 
 diesel::table! {
     indexed_items (id) {

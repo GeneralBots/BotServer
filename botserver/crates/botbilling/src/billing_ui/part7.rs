@@ -39,7 +39,7 @@ pub(super) async fn handle_quotes(
                 billing_quotes::total,
                 billing_quotes::currency,
             ))
-            .load::<(Uuid, String, Option<String>, Option<String>, Option<String>, NaiveDate, Option<NaiveDate>, Option<BigDecimal>, Option<String>)>(&mut conn)
+            .load::<(Uuid, String, String, Option<String>, String, NaiveDate, NaiveDate, BigDecimal, String)>(&mut conn)
             .ok()
     })
     .await
@@ -50,12 +50,12 @@ pub(super) async fn handle_quotes(
         Some(quotes) if !quotes.is_empty() => {
             let mut html = String::new();
             for (id, number, customer_name, customer_email, status, issue_date, valid_until, total, currency) in quotes {
-                let name = customer_email.or(customer_name).unwrap_or_else(|| "Unknown".to_string());
-                let total_str = format_currency(bd_to_f64(&total.unwrap_or_default()), currency.as_deref().unwrap_or("USD"));
+                let name = if customer_name.is_empty() { customer_email.unwrap_or_else(|| "Unknown".to_string()) } else { customer_name };
+                let total_str = format_currency(bd_to_f64(&total), &currency);
                 let issue_str = issue_date.format("%Y-%m-%d").to_string();
-                let valid_str = valid_until.map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_else(|| "-".to_string());
+                let valid_str = valid_until.format("%Y-%m-%d").to_string();
 
-                let status_class = match status.as_deref().unwrap_or("draft") {
+                let status_class = match status.as_str() {
                     "accepted" => "status-accepted",
                     "sent" => "status-sent",
                     "rejected" => "status-rejected",
@@ -72,7 +72,7 @@ pub(super) async fn handle_quotes(
                     valid_str,
                     total_str,
                     status_class,
-                    html_escape(status.as_deref().unwrap_or(""))
+                    html_escape(&status)
                 ));
             }
             Html(html)
@@ -119,14 +119,14 @@ pub(super) async fn handle_revenue_month(State(state): State<Arc<BillingApiState
         let now = Utc::now();
         let month_start = now.date_naive().with_day(1)?.and_hms_opt(0, 0, 0)?;
 
-        let totals: Vec<Option<BigDecimal>> = billing_invoices::table
+        let totals: Vec<BigDecimal> = billing_invoices::table
             .filter(billing_invoices::branch_id.eq(branch_id))
             .filter(billing_invoices::created_at.ge(month_start))
             .select(billing_invoices::total)
             .load(&mut conn)
             .ok()?;
 
-        let sum: f64 = totals.iter().map(|t| t.as_ref().map_or(0.0, bd_to_f64)).sum();
+        let sum: f64 = totals.iter().map(bd_to_f64).sum();
         Some(sum)
     })
     .await
@@ -228,7 +228,7 @@ pub(super) async fn handle_billing_search(
                 billing_invoices::total,
                 billing_invoices::currency,
             ))
-            .load::<(Uuid, String, Option<String>, Option<String>, Option<BigDecimal>, Option<String>)>(&mut conn)
+            .load::<(Uuid, String, String, String, BigDecimal, String)>(&mut conn)
             .ok()
     })
     .await
@@ -239,13 +239,13 @@ pub(super) async fn handle_billing_search(
         Some(items) if !items.is_empty() => {
             let mut html = String::new();
             for (id, number, customer, status, total, currency) in items {
-                let total_str = format_currency(bd_to_f64(&total.unwrap_or_default()), currency.as_deref().unwrap_or("USD"));
+                let total_str = format_currency(bd_to_f64(&total), &currency);
 
                 html.push_str(&format!(
                     r##"<div class="search-result-item" hx-get="/api/billing/invoices/{id}" hx-target="#invoice-detail"><span class="result-number">{}</span><span class="result-customer">{}</span><span class="result-status">{}</span><span class="result-total">{}</span></div>"##,
                     html_escape(&number),
-                    html_escape(customer.as_deref().unwrap_or("")),
-                    html_escape(status.as_deref().unwrap_or("")),
+                    html_escape(&customer),
+                    html_escape(&status),
                     total_str
                 ));
             }

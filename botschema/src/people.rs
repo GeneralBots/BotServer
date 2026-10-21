@@ -35,145 +35,176 @@ diesel::table! {
 
 diesel::table! {
     crm_accounts (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        website -> Nullable<Varchar>,
-        industry -> Nullable<Varchar>,
-        employees_count -> Nullable<Int4>,
-        annual_revenue -> Nullable<Float8>,
-        phone -> Nullable<Varchar>,
-        email -> Nullable<Varchar>,
-        address_line1 -> Nullable<Varchar>,
-        address_line2 -> Nullable<Varchar>,
-        city -> Nullable<Varchar>,
-        state -> Nullable<Varchar>,
-        postal_code -> Nullable<Varchar>,
-        country -> Nullable<Varchar>,
-        description -> Nullable<Text>,
-        tags -> Array<Text>,
-        custom_fields -> Jsonb,
-        owner_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        org_id -> Uuid,
-        bot_id -> Uuid,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 255]
+    name -> Varchar,
+    #[max_length = 500]
+    website -> Nullable<Varchar>,
+    #[max_length = 100]
+    industry -> Nullable<Varchar>,
+    employees_count -> Nullable<Int4>,
+    annual_revenue -> Nullable<Float8>,
+    #[max_length = 50]
+    phone -> Nullable<Varchar>,
+    #[max_length = 255]
+    email -> Nullable<Varchar>,
+    #[max_length = 500]
+    address_line1 -> Nullable<Varchar>,
+    #[max_length = 500]
+    address_line2 -> Nullable<Varchar>,
+    #[max_length = 255]
+    city -> Nullable<Varchar>,
+    #[max_length = 255]
+    state -> Nullable<Varchar>,
+    #[max_length = 50]
+    postal_code -> Nullable<Varchar>,
+    #[max_length = 100]
+    country -> Nullable<Varchar>,
+    description -> Nullable<Text>,
+    tags -> Nullable<Array<Nullable<Text>>>,
+    custom_fields -> Nullable<Jsonb>,
+    owner_id -> Nullable<Uuid>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     crm_pipeline_stages (id) {
-        id -> Uuid,
-        branch_id -> Nullable<Uuid>,
-        name -> Varchar,
-        stage_order -> Int4,
-        probability -> Int4,
-        is_won -> Bool,
-        is_lost -> Bool,
-        color -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        org_id -> Uuid,
-        bot_id -> Uuid,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 100]
+    name -> Varchar,
+    stage_order -> Int4,
+    probability -> Int4,
+    is_won -> Bool,
+    is_lost -> Bool,
+    #[max_length = 7]
+    color -> Nullable<Varchar>,
+    created_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     crm_leads (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        first_name -> Varchar,
-        last_name -> Nullable<Varchar>,
-        email -> Nullable<Varchar>,
-        phone -> Nullable<Varchar>,
-        company -> Nullable<Varchar>,
-        source -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        score -> Nullable<Int4>,
-        notes -> Nullable<Text>,
-        assigned_to -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        contact_id -> Nullable<Uuid>,
-        account_id -> Nullable<Uuid>,
-        title -> Varchar,
-        description -> Nullable<Text>,
-        value -> Nullable<Float8>,
-        currency -> Nullable<Varchar>,
-        stage_id -> Nullable<Uuid>,
-        stage -> Varchar,
-        probability -> Int4,
-        expected_close_date -> Nullable<Date>,
-        owner_id -> Nullable<Uuid>,
-        lost_reason -> Nullable<Varchar>,
-        tags -> Array<Text>,
-        custom_fields -> Jsonb,
-        closed_at -> Nullable<Timestamptz>,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    contact_id -> Nullable<Uuid>,
+    account_id -> Nullable<Uuid>,
+    #[max_length = 500]
+    title -> Varchar,
+    description -> Nullable<Text>,
+    value -> Nullable<Numeric>,
+    #[max_length = 3]
+    currency -> Nullable<Varchar>,
+    stage_id -> Nullable<Uuid>,
+    #[max_length = 100]
+    stage -> Varchar,
+    probability -> Int4,
+    #[max_length = 100]
+    source -> Nullable<Varchar>,
+    expected_close_date -> Nullable<Date>,
+    owner_id -> Nullable<Uuid>,
+    #[max_length = 500]
+    lost_reason -> Nullable<Varchar>,
+    tags -> Nullable<Array<Nullable<Text>>>,
+    custom_fields -> Nullable<Jsonb>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    closed_at -> Nullable<Timestamptz>,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     crm_opportunities (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        lead_id -> Nullable<Uuid>,
-        account_id -> Nullable<Uuid>,
-        contact_id -> Nullable<Uuid>,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        value -> Nullable<Float8>,
-        currency -> Nullable<Varchar>,
-        stage_id -> Nullable<Uuid>,
-        stage -> Nullable<Varchar>,
-        probability -> Nullable<Int4>,
-        source -> Nullable<Varchar>,
-        expected_close_date -> Nullable<Date>,
-        actual_close_date -> Nullable<Date>,
-        won -> Nullable<Bool>,
-        owner_id -> Nullable<Uuid>,
-        tags -> Array<Text>,
-        custom_fields -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        org_id -> Uuid,
-        bot_id -> Uuid,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    lead_id -> Nullable<Uuid>,
+    account_id -> Nullable<Uuid>,
+    contact_id -> Nullable<Uuid>,
+    #[max_length = 500]
+    name -> Varchar,
+    description -> Nullable<Text>,
+    value -> Nullable<Numeric>,
+    #[max_length = 3]
+    currency -> Nullable<Varchar>,
+    stage_id -> Nullable<Uuid>,
+    #[max_length = 100]
+    stage -> Varchar,
+    probability -> Int4,
+    #[max_length = 100]
+    source -> Nullable<Varchar>,
+    expected_close_date -> Nullable<Date>,
+    actual_close_date -> Nullable<Date>,
+    won -> Nullable<Bool>,
+    owner_id -> Nullable<Uuid>,
+    tags -> Nullable<Array<Nullable<Text>>>,
+    custom_fields -> Nullable<Jsonb>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     crm_activities (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        contact_id -> Nullable<Uuid>,
-        lead_id -> Nullable<Uuid>,
-        opportunity_id -> Nullable<Uuid>,
-        account_id -> Nullable<Uuid>,
-        activity_type -> Varchar,
-        subject -> Varchar,
-        description -> Nullable<Text>,
-        due_date -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        outcome -> Nullable<Varchar>,
-        owner_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        org_id -> Uuid,
-        bot_id -> Uuid,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    contact_id -> Nullable<Uuid>,
+    lead_id -> Nullable<Uuid>,
+    opportunity_id -> Nullable<Uuid>,
+    account_id -> Nullable<Uuid>,
+    #[max_length = 50]
+    activity_type -> Varchar,
+    #[max_length = 500]
+    subject -> Nullable<Varchar>,
+    description -> Nullable<Text>,
+    due_date -> Nullable<Timestamptz>,
+    completed_at -> Nullable<Timestamptz>,
+    #[max_length = 255]
+    outcome -> Nullable<Varchar>,
+    owner_id -> Nullable<Uuid>,
+    created_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
 
+
 diesel::table! {
     crm_notes (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        contact_id -> Nullable<Uuid>,
-        lead_id -> Nullable<Uuid>,
-        opportunity_id -> Nullable<Uuid>,
-        account_id -> Nullable<Uuid>,
-        content -> Text,
-        author_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    contact_id -> Nullable<Uuid>,
+    lead_id -> Nullable<Uuid>,
+    opportunity_id -> Nullable<Uuid>,
+    account_id -> Nullable<Uuid>,
+    content -> Text,
+    author_id -> Nullable<Uuid>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Nullable<Uuid>,
     }
 }
+
 
 // Moved verbatim from `botcontacts/src/schema.rs` (#1497) — column order
 // preserved, so the consuming crate's `Queryable` structs are unaffected.
@@ -232,19 +263,26 @@ diesel::table! {
 
 diesel::table! {
     people_teams (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        leader_id -> Nullable<Uuid>,
-        parent_team_id -> Nullable<Uuid>,
-        color -> Nullable<Varchar>,
-        icon -> Nullable<Varchar>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 255]
+    name -> Varchar,
+    description -> Nullable<Text>,
+    leader_id -> Nullable<Uuid>,
+    parent_team_id -> Nullable<Uuid>,
+    #[max_length = 20]
+    color -> Nullable<Varchar>,
+    #[max_length = 50]
+    icon -> Nullable<Varchar>,
+    is_active -> Bool,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     people_team_members (id) {
@@ -259,35 +297,47 @@ diesel::table! {
 
 diesel::table! {
     people_org_chart (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        person_id -> Uuid,
-        reports_to_id -> Nullable<Uuid>,
-        position_title -> Nullable<Varchar>,
-        position_level -> Int4,
-        position_order -> Int4,
-        effective_from -> Nullable<Date>,
-        effective_until -> Nullable<Date>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    person_id -> Uuid,
+    reports_to_id -> Nullable<Uuid>,
+    #[max_length = 255]
+    position_title -> Nullable<Varchar>,
+    position_level -> Int4,
+    position_order -> Int4,
+    effective_from -> Nullable<Date>,
+    effective_until -> Nullable<Date>,
+    is_active -> Bool,
+    created_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
 
+
 diesel::table! {
     people_departments (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        code -> Nullable<Varchar>,
-        parent_id -> Nullable<Uuid>,
-        head_id -> Nullable<Uuid>,
-        cost_center -> Nullable<Varchar>,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 255]
+    name -> Varchar,
+    description -> Nullable<Text>,
+    #[max_length = 50]
+    code -> Nullable<Varchar>,
+    parent_id -> Nullable<Uuid>,
+    head_id -> Nullable<Uuid>,
+    #[max_length = 50]
+    cost_center -> Nullable<Varchar>,
+    is_active -> Bool,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 mod part2;
 pub use part2::*;

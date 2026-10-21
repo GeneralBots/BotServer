@@ -239,9 +239,11 @@ pub async fn create_team(
     let id = Uuid::new_v4();
     let now = Utc::now();
 
+    let (org_id, bot_id) = org_and_bot(&mut conn, branch_id);
     let team = Team {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         name: req.name,
         description: req.description,
         leader_id: req.leader_id,
@@ -251,6 +253,7 @@ pub async fn create_team(
         is_active: true,
         created_at: now,
         updated_at: now,
+        branch_id,
     };
 
     diesel::insert_into(people_teams::table)

@@ -12,6 +12,7 @@ external_sync = []
 tasks = []
 
 [dependencies]
+bigdecimal = { workspace = true }
 botlib = { workspace = true, features = ["database"] }
 botschema = { workspace = true, features = ["people", "calendar"] }
 botsecurity-core = { workspace = true }

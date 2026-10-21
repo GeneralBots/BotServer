@@ -99,8 +99,8 @@ pub async fn create_account(
         postal_code: req.postal_code,
         country: req.country,
         description: req.description,
-        tags: req.tags.unwrap_or_default(),
-        custom_fields: serde_json::json!({}),
+        tags: req.tags.map(|v| v.into_iter().map(Some).collect()),
+        custom_fields: Some(serde_json::json!({})),
     };
 
     diesel::insert_into(crm_accounts::table)

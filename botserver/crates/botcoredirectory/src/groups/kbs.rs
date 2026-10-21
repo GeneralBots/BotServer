@@ -37,7 +37,7 @@ pub async fn get_group_kbs(
                 kb_collections::name,
                 kb_collections::folder_path,
             ))
-            .load::<(Uuid, String, Option<String>)>(&mut db_conn)
+            .load::<(Uuid, String, String)>(&mut db_conn)
             .map_err(|e| format!("KB query error: {e}"))?;
 
         // 2. Get associated KB IDs for this group
@@ -124,7 +124,7 @@ pub async fn get_group_kbs(
                         id = id,
                         id_short = id.to_string().chars().take(8).collect::<String>(),
                         name = name,
-                        path = path.as_deref().unwrap_or("(none)"),
+                        path = path,
                         checked_attr = checked_attr,
                         group_id_str = group_id_str,
                         status_badge = status_badge,

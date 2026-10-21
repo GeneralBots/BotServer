@@ -162,14 +162,14 @@ impl CampaignWorker {
                 .optional()
                 .map_err(|e| format!("Query error: {e}"))?;
 
-        let recipients: Vec<(Uuid, String, Option<String>)> = marketing_recipients::table
+        let recipients: Vec<(Uuid, Option<String>, Option<String>)> = marketing_recipients::table
             .filter(marketing_recipients::campaign_id.eq(campaign_id))
             .select((
                 marketing_recipients::id,
                 marketing_recipients::email,
                 marketing_recipients::name,
             ))
-            .load::<(Uuid, String, Option<String>)>(&mut conn)
+            .load::<(Uuid, Option<String>, Option<String>)>(&mut conn)
             .map_err(|e| format!("Query error: {e}"))?;
 
         drop(conn);
@@ -207,6 +207,7 @@ impl CampaignWorker {
             }
 
             let name = name.as_deref().unwrap_or("");
+            let email = email.as_deref().unwrap_or("");
             let personalized = raw_body
                 .replace("{{name}}", name)
                 .replace("{{email}}", email);
@@ -217,7 +218,7 @@ impl CampaignWorker {
                 }
             } else {
                 let payload = EmailCampaignPayload {
-                    to: email.clone(),
+                    to: email.to_string(),
                     subject: subject.clone(),
                     body_html: Some(personalized),
                     body_text: None,

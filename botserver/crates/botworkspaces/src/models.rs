@@ -4,7 +4,8 @@ use super::*;
 #[diesel(table_name = aiworkspaces)]
 pub struct DbWorkspace {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub description: Option<String>,
     pub icon_type: Option<String>,
@@ -14,6 +15,7 @@ pub struct DbWorkspace {
     pub created_by: Uuid,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]

@@ -42,14 +42,18 @@ diesel::table! {
 
 diesel::table! {
     email_flags (id) {
-        id -> Uuid,
-        email_id -> Uuid,
-        follow_up_date -> Nullable<Date>,
-        flag_type -> Nullable<Varchar>,
-        completed -> Bool,
-        created_at -> Timestamp,
+
+    id -> Uuid,
+    email_id -> Uuid,
+    #[max_length = 255]
+    follow_up_date -> Nullable<Varchar>,
+    #[max_length = 255]
+    flag_type -> Nullable<Varchar>,
+    completed -> Bool,
+    created_at -> Timestamp,
     }
 }
+
 
 diesel::table! {
     email_nudges (id) {

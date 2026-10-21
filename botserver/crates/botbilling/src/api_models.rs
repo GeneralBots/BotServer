@@ -15,24 +15,25 @@ use crate::schema::{
 #[diesel(table_name = billing_invoices)]
 pub struct BillingInvoice {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub invoice_number: String,
     pub customer_id: Option<Uuid>,
-    pub customer_name: Option<String>,
+    pub customer_name: String,
     pub customer_email: Option<String>,
     pub customer_address: Option<String>,
-    pub status: Option<String>,
+    pub status: String,
     pub issue_date: NaiveDate,
-    pub due_date: Option<NaiveDate>,
+    pub due_date: NaiveDate,
     pub subtotal: BigDecimal,
     pub tax_rate: BigDecimal,
     pub tax_amount: BigDecimal,
     pub discount_percent: BigDecimal,
     pub discount_amount: BigDecimal,
-    pub total: Option<BigDecimal>,
+    pub total: BigDecimal,
     pub amount_paid: BigDecimal,
     pub amount_due: BigDecimal,
-    pub currency: Option<String>,
+    pub currency: String,
     pub notes: Option<String>,
     pub terms: Option<String>,
     pub footer: Option<String>,
@@ -41,9 +42,7 @@ pub struct BillingInvoice {
     pub voided_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
-
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
@@ -66,46 +65,46 @@ pub struct BillingInvoiceItem {
 #[diesel(table_name = billing_payments)]
 pub struct BillingPayment {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub invoice_id: Option<Uuid>,
     pub payment_number: String,
     pub amount: BigDecimal,
-    pub currency: Option<String>,
-    pub payment_method: Option<String>,
+    pub currency: String,
+    pub payment_method: String,
     pub payment_reference: Option<String>,
-    pub status: Option<String>,
+    pub status: String,
     pub payer_name: Option<String>,
     pub payer_email: Option<String>,
     pub notes: Option<String>,
-    pub paid_at: Option<DateTime<Utc>>,
+    pub paid_at: DateTime<Utc>,
     pub refunded_at: Option<DateTime<Utc>>,
     pub refund_amount: Option<BigDecimal>,
     pub created_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
-
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = billing_quotes)]
 pub struct BillingQuote {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub quote_number: String,
     pub customer_id: Option<Uuid>,
-    pub customer_name: Option<String>,
+    pub customer_name: String,
     pub customer_email: Option<String>,
     pub customer_address: Option<String>,
-    pub status: Option<String>,
+    pub status: String,
     pub issue_date: NaiveDate,
-    pub valid_until: Option<NaiveDate>,
+    pub valid_until: NaiveDate,
     pub subtotal: BigDecimal,
     pub tax_rate: BigDecimal,
     pub tax_amount: BigDecimal,
     pub discount_percent: BigDecimal,
     pub discount_amount: BigDecimal,
-    pub total: Option<BigDecimal>,
-    pub currency: Option<String>,
+    pub total: BigDecimal,
+    pub currency: String,
     pub notes: Option<String>,
     pub terms: Option<String>,
     pub accepted_at: Option<DateTime<Utc>>,
@@ -114,9 +113,7 @@ pub struct BillingQuote {
     pub sent_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
-
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
@@ -139,15 +136,16 @@ pub struct BillingQuoteItem {
 #[diesel(table_name = billing_recurring)]
 pub struct BillingRecurring {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub customer_id: Option<Uuid>,
     pub customer_name: String,
     pub customer_email: Option<String>,
-    pub status: Option<String>,
+    pub status: String,
     pub frequency: String,
     pub interval_count: i32,
-    pub amount: Option<BigDecimal>,
-    pub currency: Option<String>,
+    pub amount: BigDecimal,
+    pub currency: String,
     pub description: Option<String>,
     pub next_invoice_date: NaiveDate,
     pub last_invoice_date: Option<NaiveDate>,
@@ -157,26 +155,23 @@ pub struct BillingRecurring {
     pub invoices_generated: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
-
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = billing_tax_rates)]
 pub struct BillingTaxRate {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub rate: BigDecimal,
     pub description: Option<String>,
     pub region: Option<String>,
-    pub is_default: Option<bool>,
+    pub is_default: bool,
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
-
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Deserialize)]

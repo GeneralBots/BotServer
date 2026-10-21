@@ -183,9 +183,11 @@ pub async fn handle_create_document(
         let branch_id = get_branch_id(&mut conn);
         let now = Utc::now();
 
+        let (org_id, bot_id) = org_and_bot(&mut conn, branch_id);
         let db_doc = DbLegalDocument {
             id: Uuid::new_v4(),
-            branch_id,
+            org_id,
+            bot_id,
             slug: req.slug,
             title: req.title,
             content: req.content,
@@ -198,6 +200,7 @@ pub async fn handle_create_document(
             created_by: None,
             created_at: now,
             updated_at: now,
+            branch_id,
         };
 
         diesel::insert_into(legal_documents::table)

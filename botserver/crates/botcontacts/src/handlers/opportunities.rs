@@ -70,7 +70,7 @@ pub async fn create_opportunity(
         contact_id: req.contact_id,
         am_id: None,
         title: None,
-        name,
+        name: Some(name),
         description: req.description,
         value: req.value,
         currency: req.currency.or(Some("USD".to_string())),
@@ -90,9 +90,9 @@ pub async fn create_opportunity(
         closed_at: None,
         notes: None,
         tags: None,
-        custom_fields: serde_json::json!({}),
-        created_at: now,
-        updated_at: now,
+        custom_fields: Some(serde_json::json!({})),
+        created_at: Some(now),
+        updated_at: Some(now),
     };
 
     diesel::insert_into(crm_deals::table)

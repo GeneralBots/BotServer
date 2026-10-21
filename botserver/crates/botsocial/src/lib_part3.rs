@@ -173,7 +173,6 @@ pub async fn handle_create_post(
 
         let db_post = DbPost {
             id: Uuid::new_v4(),
-            branch_id,
             org_id,
             bot_id,
             author_id: user_id,
@@ -196,6 +195,7 @@ pub async fn handle_create_post(
             updated_at: now,
             edited_at: None,
             deleted_at: None,
+            branch_id: Some(branch_id),
         };
 
         diesel::insert_into(social_posts::table)

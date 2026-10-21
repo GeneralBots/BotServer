@@ -33,19 +33,23 @@ diesel::table! {
 
 diesel::table! {
     advisor_recommendations (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        campaign_id -> Nullable<Uuid>,
-        recommendation -> Text,
-        reason -> Nullable<Text>,
-        check_name -> Varchar,
-        severity -> Varchar,
-        message -> Text,
-        details -> Nullable<Text>,
-        dismissed -> Nullable<Bool>,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    branch_id -> Uuid,
+    campaign_id -> Nullable<Uuid>,
+    recommendation -> Text,
+    reason -> Nullable<Text>,
+    #[max_length = 100]
+    check_name -> Varchar,
+    #[max_length = 20]
+    severity -> Varchar,
+    message -> Text,
+    details -> Nullable<Text>,
+    dismissed -> Bool,
+    created_at -> Timestamptz,
     }
 }
+
 
 diesel::table! {
     campaign_metrics (id) {

@@ -101,10 +101,11 @@ pub async fn create_check_in(
     .ok()
     .flatten();
 
+    let bot_id = bot_for_branch(&pool, branch_id);
     let new_checkin = CheckInRecord {
         id: Uuid::new_v4(),
         org_id,
-        branch_id,
+        bot_id,
         key_result_id,
         user_id,
         previous_value,
@@ -113,6 +114,7 @@ pub async fn create_check_in(
         confidence: req.confidence.as_ref().map(|c| c.to_str().to_string()),
         blockers: req.blockers.clone(),
         created_at: now,
+        branch_id,
     };
 
     let record = new_checkin.clone();

@@ -2,19 +2,25 @@ use crate::core::{branches};
 
 diesel::table! {
     workspaces (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        icon_type -> Nullable<Varchar>,
-        icon_value -> Nullable<Varchar>,
-        cover_image -> Nullable<Text>,
-        settings -> Jsonb,
-        created_by -> Uuid,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    branch_id -> Nullable<Uuid>,
+    #[max_length = 255]
+    name -> Varchar,
+    description -> Nullable<Text>,
+    #[max_length = 255]
+    icon_type -> Nullable<Varchar>,
+    #[max_length = 255]
+    icon_value -> Nullable<Varchar>,
+    cover_image -> Nullable<Text>,
+    settings -> Jsonb,
+    created_by -> Uuid,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
     }
 }
+
 
 diesel::table! {
     workspace_members (id) {
@@ -103,22 +109,29 @@ diesel::table! {
 
 diesel::table! {
     workspace_templates (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        category -> Nullable<Varchar>,
-        icon_type -> Nullable<Varchar>,
-        icon_value -> Nullable<Varchar>,
-        cover_image -> Nullable<Text>,
-        content -> Jsonb,
-        is_system -> Bool,
-        usage_count -> Int4,
-        created_by -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    branch_id -> Nullable<Uuid>,
+    #[max_length = 255]
+    name -> Varchar,
+    description -> Nullable<Text>,
+    #[max_length = 255]
+    category -> Nullable<Varchar>,
+    #[max_length = 255]
+    icon_type -> Nullable<Varchar>,
+    #[max_length = 255]
+    icon_value -> Nullable<Varchar>,
+    cover_image -> Nullable<Text>,
+    content -> Jsonb,
+    is_system -> Bool,
+    usage_count -> Int4,
+    created_by -> Nullable<Uuid>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
     }
 }
+
 
 diesel::joinable!(workspaces -> branches (branch_id));
 diesel::joinable!(workspace_members -> workspaces (workspace_id));
@@ -133,19 +146,26 @@ diesel::joinable!(workspace_templates -> branches (branch_id));
 
 diesel::table! {
     aiworkspaces (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        icon_type -> Nullable<Varchar>,
-        icon_value -> Nullable<Varchar>,
-        cover_image -> Nullable<Text>,
-        settings -> Jsonb,
-        created_by -> Uuid,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 255]
+    name -> Varchar,
+    description -> Nullable<Text>,
+    #[max_length = 20]
+    icon_type -> Nullable<Varchar>,
+    #[max_length = 100]
+    icon_value -> Nullable<Varchar>,
+    cover_image -> Nullable<Text>,
+    settings -> Jsonb,
+    created_by -> Uuid,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     aiworkspace_members (id) {

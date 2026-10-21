@@ -37,10 +37,11 @@ pub async fn handle_lead_detail(
         return Html("<div class='crm-detail-empty'>Deal not found</div>".to_string());
     };
 
-    let title = deal.name.clone();
+    let title = deal.name.clone().unwrap_or_default();
     let folder = deal
         .custom_fields
-        .get("folder")
+        .as_ref()
+        .and_then(|v| v.get("folder"))
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
 
@@ -84,7 +85,7 @@ pub async fn handle_lead_detail(
             html.push_str(&format!(
                 r#"<li class="lead-timeline-item"><span class="lead-timeline-type">{}</span><span class="lead-timeline-subject">{}</span><span class="lead-timeline-date">{}</span></li>"#,
                 crate::models::html_escape(&a.activity_type),
-                crate::models::html_escape(&a.subject),
+                crate::models::html_escape(a.subject.as_deref().unwrap_or("")),
                 crate::models::html_escape(&due),
             ));
         }

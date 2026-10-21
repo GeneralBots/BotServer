@@ -68,7 +68,6 @@ pub async fn handle_create_community(
 
         let db_community = DbCommunity {
             id: Uuid::new_v4(),
-            branch_id,
             org_id,
             bot_id,
             name: req.name,
@@ -87,6 +86,7 @@ pub async fn handle_create_community(
             created_at: now,
             updated_at: now,
             archived_at: None,
+            branch_id: Some(branch_id),
         };
 
         diesel::insert_into(social_communities::table)

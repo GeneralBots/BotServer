@@ -22,7 +22,8 @@ pub use botschema::data_export_requests;
 #[diesel(table_name = legal_documents)]
 pub struct DbLegalDocument {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub slug: String,
     pub title: String,
     pub content: String,
@@ -35,6 +36,7 @@ pub struct DbLegalDocument {
     pub created_by: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 #[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = legal_document_versions)]
@@ -51,7 +53,8 @@ pub struct DbDocumentVersion {
 #[diesel(table_name = cookie_consents)]
 pub struct DbCookieConsent {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub user_id: Option<Uuid>,
     pub session_id: Option<String>,
     pub ip_address: Option<String>,
@@ -67,6 +70,7 @@ pub struct DbCookieConsent {
     pub consent_updated_at: DateTime<Utc>,
     pub consent_withdrawn_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 #[derive(Debug, Clone, Queryable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = consent_history)]
@@ -178,4 +182,12 @@ pub struct CookieCategoryInfo {
     pub description: String,
     pub is_required: bool,
     pub cookies: Vec<CookieInfo>,
+}
+
+pub fn org_and_bot(conn: &mut diesel::PgConnection, branch_id: Uuid) -> (Uuid, Uuid) {
+    botschema::bots::table
+        .filter(botschema::bots::branch_id.eq(branch_id))
+        .select((botschema::bots::org_id, botschema::bots::id))
+        .first(conn)
+        .unwrap_or((Uuid::nil(), Uuid::nil()))
 }

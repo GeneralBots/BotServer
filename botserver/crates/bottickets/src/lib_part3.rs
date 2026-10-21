@@ -32,9 +32,11 @@ pub async fn create_category(
         .first(&mut conn)
         .unwrap_or(None);
 
+    let (org_id, bot_id) = org_and_bot(&mut conn, branch_id);
     let category = TicketCategory {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         name: req.name,
         description: req.description,
         parent_id: req.parent_id,
@@ -43,6 +45,7 @@ pub async fn create_category(
         sort_order: max_order.unwrap_or(0) + 1,
         is_active: true,
         created_at: now,
+        branch_id: Some(branch_id),
     };
 
     diesel::insert_into(ticket_categories::table)

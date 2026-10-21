@@ -127,7 +127,7 @@ pub async fn convert_lead_to_opportunity(
         contact_id: lead.contact_id,
         am_id: None,
         title: lead.title.clone(),
-        name: lead.title.clone().unwrap_or_default(),
+        name: lead.title.clone(),
         description: lead.description.clone(),
         value: lead.value,
         currency: lead.currency.clone(),
@@ -148,8 +148,8 @@ pub async fn convert_lead_to_opportunity(
         notes: None,
         tags: lead.tags.clone(),
         custom_fields: lead.custom_fields.clone(),
-        created_at: now,
-        updated_at: now,
+        created_at: Some(now),
+        updated_at: Some(now),
     };
 
     diesel::insert_into(crm_deals::table)

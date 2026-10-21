@@ -81,9 +81,19 @@ pub(crate) async fn create_workspace(
     let settings = WorkspaceSettings::default();
     let settings_json = serde_json::to_value(&settings).unwrap_or_else(|_| serde_json::json!({}));
 
+    let mut ctx_conn = state
+        .pool
+        .get()
+        .map_err(|e| WorkspacesError::DbError(e.to_string()))?;
+    let (org_id, bot_id) = botschema::bots::table
+        .filter(botschema::bots::branch_id.eq(branch_id))
+        .select((botschema::bots::org_id, botschema::bots::id))
+        .first::<(Uuid, Uuid)>(&mut ctx_conn)
+        .unwrap_or((Uuid::nil(), Uuid::nil()));
     let db_workspace = DbWorkspace {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         name: req.name,
         description: req.description,
         icon_type: None,
@@ -93,6 +103,7 @@ pub(crate) async fn create_workspace(
         created_by: user_id,
         created_at: now,
         updated_at: now,
+        branch_id,
     };
 
     diesel::insert_into(aiworkspaces::table)

@@ -106,7 +106,7 @@ impl AdvisorEngine {
                 severity: severity_str.to_string(),
                 message: rec.message.clone(),
                 details: rec.details.clone(),
-                dismissed: Some(false),
+                dismissed: false,
                 created_at: now,
             };
 

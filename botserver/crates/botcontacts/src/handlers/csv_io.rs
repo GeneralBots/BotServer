@@ -293,7 +293,7 @@ pub async fn import_leads_csv(
             am_id: None,
             lead_id: None,
             title: Some(title.clone()),
-            name: title,
+            name: Some(title),
             description: None,
             value: row.value,
             currency: row.currency.clone(),
@@ -313,12 +313,12 @@ pub async fn import_leads_csv(
             closed_at: None,
             notes: None,
             tags: None,
-            custom_fields: serde_json::json!({
+            custom_fields: Some(serde_json::json!({
                 "imported_by": actor,
                 "import_row": idx + 1,
-            }),
-            created_at: now,
-            updated_at: now,
+            })),
+            created_at: Some(now),
+            updated_at: Some(now),
         };
         match diesel::insert_into(crm_deals::table)
             .values(&lead)

@@ -111,7 +111,7 @@ pub async fn handle_create_dashboard(
             refresh_interval: None,
             is_public: req.is_public.unwrap_or(false),
             is_template: false,
-            tags: req.tags.unwrap_or_default(),
+            tags: req.tags.unwrap_or_default().into_iter().map(Some).collect(),
             created_at: now,
             updated_at: now,
             branch_id,
@@ -206,7 +206,7 @@ pub async fn handle_update_dashboard(
             db_dash.refresh_interval = Some(refresh_interval);
         }
         if let Some(tags) = req.tags {
-            db_dash.tags = tags;
+            db_dash.tags = tags.into_iter().map(Some).collect();
         }
         db_dash.updated_at = Utc::now();
 

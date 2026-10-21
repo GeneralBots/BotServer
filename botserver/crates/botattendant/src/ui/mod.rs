@@ -32,7 +32,7 @@ pub async fn sessions_count(State(config): State<Arc<AttendantConfig>>) -> Html<
         let branch_id = get_default_bot(&mut conn);
 
         attendant_sessions::table
-            .filter(attendant_sessions::branch_id.eq(branch_id))
+            .filter(attendant_sessions::branch_id.eq(Some(branch_id)))
             .count()
             .get_result::<i64>(&mut conn)
             .ok()
@@ -53,7 +53,7 @@ pub async fn waiting_count(State(config): State<Arc<AttendantConfig>>) -> Html<S
         let branch_id = get_default_bot(&mut conn);
 
         attendant_sessions::table
-            .filter(attendant_sessions::branch_id.eq(branch_id))
+            .filter(attendant_sessions::branch_id.eq(Some(branch_id)))
             .filter(attendant_sessions::status.eq("waiting"))
             .count()
             .get_result::<i64>(&mut conn)
@@ -75,7 +75,7 @@ pub async fn active_count(State(config): State<Arc<AttendantConfig>>) -> Html<St
         let branch_id = get_default_bot(&mut conn);
 
         attendant_sessions::table
-            .filter(attendant_sessions::branch_id.eq(branch_id))
+            .filter(attendant_sessions::branch_id.eq(Some(branch_id)))
             .filter(attendant_sessions::status.eq("active"))
             .count()
             .get_result::<i64>(&mut conn)
@@ -97,7 +97,7 @@ pub async fn agents_online_count(State(config): State<Arc<AttendantConfig>>) -> 
         let branch_id = get_default_bot(&mut conn);
 
         attendant_agent_status::table
-            .filter(attendant_agent_status::branch_id.eq(branch_id))
+            .filter(attendant_agent_status::branch_id.eq(Some(branch_id)))
             .filter(attendant_agent_status::status.eq("online"))
             .count()
             .get_result::<i64>(&mut conn)

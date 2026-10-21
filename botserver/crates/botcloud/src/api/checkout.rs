@@ -66,20 +66,20 @@ pub(crate) async fn handle_checkout(
     let invoice = botbilling::api_models::BillingInvoice {
         id: invoice_id, branch_id: effective_branch_id, invoice_number,
         customer_id: None,
-        customer_name: Some(customer_name.clone()),
+        customer_name: customer_name.clone(),
         customer_email: Some(customer_email.clone()),
-        customer_address: None, status: Some("draft".to_string()),
+        customer_address: None, status: "draft".to_string(),
         issue_date: now.date_naive(),
-        due_date: Some((now + chrono::Duration::days(30)).date_naive()),
+        due_date: (now + chrono::Duration::days(30)).date_naive(),
         subtotal: botbilling::api_models::bd(total_value),
         tax_rate: botbilling::api_models::bd(0.0),
         tax_amount: botbilling::api_models::bd(0.0),
         discount_percent: botbilling::api_models::bd(0.0),
         discount_amount: botbilling::api_models::bd(0.0),
-        total: Some(botbilling::api_models::bd(total_value)),
+        total: botbilling::api_models::bd(total_value),
         amount_paid: botbilling::api_models::bd(0.0),
         amount_due: botbilling::api_models::bd(total_value),
-        currency: Some(payload.currency.clone()),
+        currency: payload.currency.clone(),
         notes: Some(format!("SaaS: plan={}, period={}, storage={}GB", payload.plan, payload.period, payload.storage)),
         terms: None, footer: None, paid_at: None, sent_at: None, voided_at: None,
         created_at: now, updated_at: now,
@@ -246,10 +246,10 @@ pub(crate) async fn checkout_success(
                 .map_err(|_| (StatusCode::NOT_FOUND, "Invoice not found".to_string()))?
         };
 
-        let total = invoice.total.as_ref().map(botbilling::api_models::bd_to_f64).unwrap_or(0.0);
+        let total = botbilling::api_models::bd_to_f64(&invoice.total);
 
         // 1. CRM: marca deal como ganho
-        let deal_name = format!("Assinatura - {}", invoice.customer_name.as_deref().unwrap_or(""));
+        let deal_name = format!("Assinatura - {}", invoice.customer_name.as_str());
         let _ = integration::win_crm_deal(
             service.pool(),
             invoice.branch_id,
@@ -261,7 +261,7 @@ pub(crate) async fn checkout_success(
             service.pool(),
             invoice_id,
             total,
-            invoice.customer_name.as_deref().unwrap_or(""),
+            invoice.customer_name.as_str(),
         ).map_err(|e| tracing::warn!("GL entry creation failed: {e}"));
 
         // 3. Subscription: cria registro de assinatura recorrente
@@ -275,11 +275,11 @@ pub(crate) async fn checkout_success(
         let _ = integration::create_billing_subscription(integration::NewSubscription {
             pool: service.pool(),
             branch_id: invoice.branch_id,
-            customer_name: invoice.customer_name.as_deref().unwrap_or(""),
+            customer_name: invoice.customer_name.as_str(),
             customer_email: invoice.customer_email.as_deref().unwrap_or(""),
             plan: &plan_label,
             total,
-            currency: invoice.currency.as_deref().unwrap_or(""),
+            currency: invoice.currency.as_str(),
             invoice_id,
             period: "monthly",
         })
@@ -287,11 +287,11 @@ pub(crate) async fn checkout_success(
 
         // --- Post-payment notifications ---
         let mut vars = notifier::EmailVars::new(
-            invoice.customer_name.as_deref().unwrap_or(""),
+            invoice.customer_name.as_str(),
             invoice.customer_email.as_deref().unwrap_or(""),
             &plan_label,
             total,
-            invoice.currency.as_deref().unwrap_or(""),
+            invoice.currency.as_str(),
         );
         vars.invoice_id = invoice_id.to_string();
         notifier::notify_payment_success(&vars);

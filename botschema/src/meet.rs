@@ -2,23 +2,30 @@ use crate::core::{branches};
 
 diesel::table! {
     meeting_rooms (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        room_code -> Varchar,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        created_by -> Uuid,
-        max_participants -> Int4,
-        is_recording -> Bool,
-        is_transcribing -> Bool,
-        status -> Varchar,
-        settings -> Jsonb,
-        started_at -> Nullable<Timestamptz>,
-        ended_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 50]
+    room_code -> Varchar,
+    #[max_length = 255]
+    name -> Varchar,
+    description -> Nullable<Text>,
+    created_by -> Uuid,
+    max_participants -> Int4,
+    is_recording -> Bool,
+    is_transcribing -> Bool,
+    #[max_length = 20]
+    status -> Varchar,
+    settings -> Jsonb,
+    started_at -> Nullable<Timestamptz>,
+    ended_at -> Nullable<Timestamptz>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     meeting_participants (id) {
@@ -40,59 +47,77 @@ diesel::table! {
 
 diesel::table! {
     meeting_recordings (id) {
-        id -> Uuid,
-        room_id -> Uuid,
-        branch_id -> Uuid,
-        recording_type -> Varchar,
-        file_url -> Nullable<Text>,
-        file_size -> Nullable<Int8>,
-        duration_seconds -> Nullable<Int4>,
-        status -> Varchar,
-        started_at -> Timestamptz,
-        stopped_at -> Nullable<Timestamptz>,
-        processed_at -> Nullable<Timestamptz>,
-        metadata -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    room_id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 20]
+    recording_type -> Varchar,
+    file_url -> Nullable<Text>,
+    file_size -> Nullable<Int8>,
+    duration_seconds -> Nullable<Int4>,
+    #[max_length = 20]
+    status -> Varchar,
+    started_at -> Timestamptz,
+    stopped_at -> Nullable<Timestamptz>,
+    processed_at -> Nullable<Timestamptz>,
+    metadata -> Jsonb,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     meeting_transcriptions (id) {
-        id -> Uuid,
-        room_id -> Uuid,
-        recording_id -> Nullable<Uuid>,
-        branch_id -> Uuid,
-        participant_id -> Nullable<Uuid>,
-        speaker_name -> Nullable<Varchar>,
-        content -> Text,
-        start_time -> Numeric,
-        end_time -> Numeric,
-        confidence -> Nullable<Numeric>,
-        language -> Nullable<Varchar>,
-        is_final -> Bool,
-        metadata -> Jsonb,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    room_id -> Uuid,
+    recording_id -> Nullable<Uuid>,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    participant_id -> Nullable<Uuid>,
+    #[max_length = 255]
+    speaker_name -> Nullable<Varchar>,
+    content -> Text,
+    start_time -> Numeric,
+    end_time -> Numeric,
+    confidence -> Nullable<Numeric>,
+    #[max_length = 10]
+    language -> Nullable<Varchar>,
+    is_final -> Bool,
+    metadata -> Jsonb,
+    created_at -> Timestamptz,
+    branch_id -> Nullable<Uuid>,
     }
 }
 
+
 diesel::table! {
     meeting_whiteboards (id) {
-        id -> Uuid,
-        room_id -> Nullable<Uuid>,
-        branch_id -> Uuid,
-        name -> Varchar,
-        background_color -> Nullable<Varchar>,
-        grid_enabled -> Bool,
-        grid_size -> Nullable<Int4>,
-        elements -> Jsonb,
-        version -> Int4,
-        created_by -> Uuid,
-        last_modified_by -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    room_id -> Nullable<Uuid>,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 255]
+    name -> Varchar,
+    #[max_length = 20]
+    background_color -> Nullable<Varchar>,
+    grid_enabled -> Bool,
+    grid_size -> Nullable<Int4>,
+    elements -> Jsonb,
+    version -> Int4,
+    created_by -> Uuid,
+    last_modified_by -> Nullable<Uuid>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     whiteboard_elements (id) {
@@ -114,19 +139,24 @@ diesel::table! {
 
 diesel::table! {
     whiteboard_exports (id) {
-        id -> Uuid,
-        whiteboard_id -> Uuid,
-        branch_id -> Uuid,
-        export_format -> Varchar,
-        file_url -> Nullable<Text>,
-        file_size -> Nullable<Int8>,
-        status -> Varchar,
-        error_message -> Nullable<Text>,
-        requested_by -> Uuid,
-        created_at -> Timestamptz,
-        completed_at -> Nullable<Timestamptz>,
+
+    id -> Uuid,
+    whiteboard_id -> Uuid,
+    org_id -> Uuid,
+    #[max_length = 20]
+    export_format -> Varchar,
+    file_url -> Nullable<Text>,
+    file_size -> Nullable<Int8>,
+    #[max_length = 20]
+    status -> Varchar,
+    error_message -> Nullable<Text>,
+    requested_by -> Uuid,
+    created_at -> Timestamptz,
+    completed_at -> Nullable<Timestamptz>,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     meeting_chat_messages (id) {
@@ -145,25 +175,32 @@ diesel::table! {
 
 diesel::table! {
     scheduled_meetings (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        room_id -> Nullable<Uuid>,
-        title -> Varchar,
-        description -> Nullable<Text>,
-        organizer_id -> Uuid,
-        scheduled_start -> Timestamptz,
-        scheduled_end -> Timestamptz,
-        timezone -> Varchar,
-        recurrence_rule -> Nullable<Text>,
-        attendees -> Jsonb,
-        settings -> Jsonb,
-        status -> Varchar,
-        reminder_sent -> Bool,
-        calendar_event_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    room_id -> Nullable<Uuid>,
+    #[max_length = 255]
+    title -> Varchar,
+    description -> Nullable<Text>,
+    organizer_id -> Uuid,
+    scheduled_start -> Timestamptz,
+    scheduled_end -> Timestamptz,
+    #[max_length = 50]
+    timezone -> Varchar,
+    recurrence_rule -> Nullable<Text>,
+    attendees -> Jsonb,
+    settings -> Jsonb,
+    #[max_length = 20]
+    status -> Varchar,
+    reminder_sent -> Bool,
+    calendar_event_id -> Nullable<Uuid>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::joinable!(meeting_rooms -> branches (branch_id));
 diesel::joinable!(meeting_participants -> meeting_rooms (room_id));

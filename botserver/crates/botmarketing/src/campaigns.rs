@@ -16,26 +16,26 @@ use crate::state::AppState;
 #[diesel(table_name = marketing_campaigns)]
 pub struct CrmCampaign {
     pub id: Uuid,
-    pub branch_id: Uuid,
-    pub deal_id: Option<Uuid>,
+    pub org_id: Option<Uuid>,
+    pub bot_id: Option<Uuid>,
     pub name: String,
     pub status: Option<String>,
-    pub content_template: serde_json::Value,
+    pub campaign_type: String,
+    pub content_template: Option<serde_json::Value>,
+    pub starts_at: Option<DateTime<Utc>>,
     pub sent_at: Option<DateTime<Utc>>,
-    pub completed_at: Option<DateTime<Utc>>,
+    pub ends_at: Option<DateTime<Utc>>,
     pub metrics: Option<serde_json::Value>,
     pub budget: Option<bigdecimal::BigDecimal>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub campaign_type: String,
-    pub starts_at: Option<DateTime<Utc>>,
-    pub ends_at: Option<DateTime<Utc>>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
+    pub deal_id: Option<Uuid>,
+    pub branch_id: Uuid,
     pub run_offset: Option<i32>,
     pub pause_requested: Option<bool>,
     pub stop_requested: Option<bool>,
     pub started_at: Option<DateTime<Utc>>,
-    pub org_id: Option<Uuid>,
-    pub bot_id: Option<Uuid>,
+    pub completed_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -137,7 +137,7 @@ pub async fn create_campaign(
         deal_id: None,
         name: req.name,
         status: Some("draft".to_string()),
-        content_template: serde_json::json!({}),
+        content_template: Some(serde_json::json!({})),
         sent_at: None,
         campaign_type: req.campaign_type.unwrap_or_else(|| "email".to_string()),
         starts_at,
@@ -149,8 +149,8 @@ pub async fn create_campaign(
         stop_requested: Some(false),
         started_at: None,
         completed_at: None,
-        created_at: now,
-        updated_at: now,
+        created_at: Some(now),
+        updated_at: Some(now),
         org_id: None,
         bot_id: None,
     };
@@ -320,11 +320,11 @@ pub async fn send_campaign(
                 marketing_recipients::email,
                 marketing_recipients::name,
             ))
-            .load::<(Option<Uuid>, String, Option<String>)>(&mut conn)
+            .load::<(Option<Uuid>, Option<String>, Option<String>)>(&mut conn)
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Query error: {e}")))?;
         query
             .into_iter()
-            .map(|(rcid, email, name)| (rcid.unwrap_or_else(Uuid::new_v4), email, name.unwrap_or_default()))
+            .map(|(rcid, email, name)| (rcid.unwrap_or_else(Uuid::new_v4), email.unwrap_or_default(), name.unwrap_or_default()))
             .collect()
     };
 

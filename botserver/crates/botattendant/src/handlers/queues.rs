@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use crate::models::*;
 use crate::schema::*;
-use crate::handlers::{db_conn, get_bot_context};
+use crate::handlers::{db_conn, get_bot_context, org_and_bot};
 
 pub async fn create_queue(
     State(config): State<Arc<crate::AttendantConfig>>,
@@ -22,9 +22,11 @@ pub async fn create_queue(
     let id = Uuid::new_v4();
     let now = Utc::now();
 
+    let (org_id, bot_id) = org_and_bot(&config, branch_id);
     let queue = AttendantQueue {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         name: req.name,
         description: req.description,
         priority: req.priority.unwrap_or(0),
@@ -34,6 +36,7 @@ pub async fn create_queue(
         is_active: true,
         created_at: now,
         updated_at: now,
+        branch_id: Some(branch_id),
     };
 
     diesel::insert_into(attendant_queues::table)
@@ -52,7 +55,7 @@ pub async fn list_queues(
     let branch_id = get_bot_context(&config);
 
     let queues: Vec<AttendantQueue> = attendant_queues::table
-        .filter(attendant_queues::branch_id.eq(branch_id))
+        .filter(attendant_queues::branch_id.eq(Some(branch_id)))
         .filter(attendant_queues::is_active.eq(true))
         .order(attendant_queues::priority.desc())
         .load(&mut conn)
@@ -168,7 +171,7 @@ pub async fn list_canned_responses(
     let branch_id = get_bot_context(&config);
 
     let responses: Vec<CannedResponse> = attendant_canned_responses::table
-        .filter(attendant_canned_responses::branch_id.eq(branch_id))
+        .filter(attendant_canned_responses::branch_id.eq(Some(branch_id)))
         .filter(attendant_canned_responses::is_active.eq(true))
         .order(attendant_canned_responses::title.asc())
         .load(&mut conn)
@@ -187,9 +190,11 @@ pub async fn create_canned_response(
     let id = Uuid::new_v4();
     let now = Utc::now();
 
+    let (org_id, bot_id) = org_and_bot(&config, branch_id);
     let response = CannedResponse {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         title: req.title,
         content: req.content,
         shortcut: req.shortcut,
@@ -200,6 +205,7 @@ pub async fn create_canned_response(
         created_by: None,
         created_at: now,
         updated_at: now,
+        branch_id: Some(branch_id),
     };
 
     diesel::insert_into(attendant_canned_responses::table)
@@ -218,7 +224,7 @@ pub async fn list_tags(
     let branch_id = get_bot_context(&config);
 
     let tags: Vec<AttendantTag> = attendant_tags::table
-        .filter(attendant_tags::branch_id.eq(branch_id))
+        .filter(attendant_tags::branch_id.eq(Some(branch_id)))
         .filter(attendant_tags::is_active.eq(true))
         .order(attendant_tags::name.asc())
         .load(&mut conn)
@@ -235,7 +241,7 @@ pub async fn list_wrap_up_codes(
     let branch_id = get_bot_context(&config);
 
     let codes: Vec<WrapUpCode> = attendant_wrap_up_codes::table
-        .filter(attendant_wrap_up_codes::branch_id.eq(branch_id))
+        .filter(attendant_wrap_up_codes::branch_id.eq(Some(branch_id)))
         .filter(attendant_wrap_up_codes::is_active.eq(true))
         .order(attendant_wrap_up_codes::name.asc())
         .load(&mut conn)

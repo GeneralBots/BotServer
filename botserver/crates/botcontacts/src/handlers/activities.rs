@@ -76,7 +76,7 @@ pub async fn create_activity(
         branch_id,
         contact_id: req.contact_id,
         activity_type: req.activity_type,
-        subject: req.subject.unwrap_or_default(),
+        subject: req.subject,
         description: req.description,
         due_date,
         completed_at: None,

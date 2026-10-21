@@ -72,7 +72,8 @@ pub struct Person {
 #[diesel(table_name = people_teams)]
 pub struct Team {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub description: Option<String>,
     pub leader_id: Option<Uuid>,
@@ -82,6 +83,7 @@ pub struct Team {
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = people_team_members)]

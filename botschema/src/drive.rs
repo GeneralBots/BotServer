@@ -4,19 +4,30 @@ use uuid::Uuid;
 
 diesel::table! {
     drive_files (id) {
-        id -> Uuid,
-        file_path -> Text,
-        file_type -> Varchar,
-        etag -> Nullable<Text>,
-        last_modified -> Nullable<Timestamptz>,
-        file_size -> Nullable<Int8>,
-        indexed -> Bool,
-        fail_count -> Int4,
-        last_failed_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    file_path -> Text,
+    #[max_length = 20]
+    file_type -> Varchar,
+    etag -> Nullable<Text>,
+    last_modified -> Nullable<Timestamptz>,
+    file_size -> Nullable<Int8>,
+    indexed -> Bool,
+    fail_count -> Int4,
+    last_failed_at -> Nullable<Timestamptz>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    user_id -> Nullable<Uuid>,
+    #[max_length = 20]
+    scope -> Nullable<Varchar>,
+    branch_id -> Uuid,
+    path -> Nullable<Text>,
+    name -> Nullable<Text>,
+    #[max_length = 50]
+    mime_type -> Nullable<Varchar>,
     }
 }
+
 
 // Query-only struct (no defaults needed)
 #[derive(Queryable, Debug, Clone)]
@@ -32,6 +43,12 @@ pub struct DriveFile {
     pub last_failed_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub user_id: Option<Uuid>,
+    pub scope: Option<String>,
+    pub branch_id: Uuid,
+    pub path: Option<String>,
+    pub name: Option<String>,
+    pub mime_type: Option<String>,
 }
 
 // Insert struct - uses diesel defaults
@@ -87,18 +104,23 @@ diesel::table! {
 
 diesel::table! {
     drive_share_links (id) {
-        id -> Uuid,
-        created_by -> Uuid,
-        bucket -> Varchar,
-        path -> Text,
-        token -> Varchar,
-        permission -> Varchar,
-        expires_at -> Nullable<Timestamptz>,
-        max_downloads -> Nullable<Int4>,
-        download_count -> Int4,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    created_by -> Uuid,
+    #[max_length = 255]
+    bucket -> Varchar,
+    path -> Text,
+    #[max_length = 64]
+    token -> Varchar,
+    #[max_length = 20]
+    permission -> Varchar,
+    expires_at -> Nullable<Timestamptz>,
+    max_downloads -> Nullable<Int4>,
+    download_count -> Nullable<Int4>,
+    created_at -> Timestamptz,
     }
 }
+
 
 #[derive(Queryable, Debug, Clone, Selectable)]
 #[diesel(table_name = drive_user_permissions)]

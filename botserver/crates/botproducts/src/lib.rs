@@ -150,21 +150,21 @@ pub struct ProductCategory {
 #[diesel(table_name = price_lists)]
 pub struct PriceList {
     pub id: Uuid,
-    pub branch_id: Uuid,
-    pub name: String,
-    pub currency: Option<String>,
-    pub is_active: Option<bool>,
-    pub valid_from: Option<NaiveDate>,
-    pub valid_until: Option<NaiveDate>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub description: Option<String>,
-    pub is_default: bool,
-    pub customer_group: Option<String>,
-    pub discount_percent: BigDecimal,
     // Added by `6.0.10-01-products`; the branch owns both.
     pub org_id: Uuid,
     pub bot_id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+    pub currency: String,
+    pub is_default: bool,
+    pub valid_from: Option<NaiveDate>,
+    pub valid_until: Option<NaiveDate>,
+    pub customer_group: Option<String>,
+    pub discount_percent: BigDecimal,
+    pub is_active: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
@@ -183,17 +183,17 @@ pub struct PriceListItem {
 #[diesel(table_name = inventory_movements)]
 pub struct InventoryMovement {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub product_id: Uuid,
-    pub quantity: i32,
     pub movement_type: String,
-    pub reference: Option<String>,
-    pub notes: Option<String>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub quantity: i32,
     pub reference_type: Option<String>,
     pub reference_id: Option<Uuid>,
+    pub notes: Option<String>,
     pub created_by: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]

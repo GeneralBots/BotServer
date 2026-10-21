@@ -336,7 +336,7 @@ pub async fn handle_crm_pipeline(
 </div>
 </div>"##,
             id = lead.id,
-            title = or_dash(lead.title.as_deref().or(Some(lead.name.as_str()))),
+            title = or_dash(lead.title.as_deref().or(lead.name.as_deref())),
             value = value,
             contact = contact,
             probability = lead.probability.unwrap_or(0),

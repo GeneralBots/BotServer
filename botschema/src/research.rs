@@ -2,49 +2,61 @@ use crate::core::{branches};
 
 diesel::table! {
     kb_documents (id) {
-        id -> Uuid,
-        collection_name -> Text,
-        file_path -> Text,
-        file_size -> Int8,
-        file_hash -> Text,
-        first_published_at -> Timestamptz,
-        last_modified_at -> Timestamptz,
-        indexed_at -> Nullable<Timestamptz>,
-        fail_count -> Int4,
-        last_failed_at -> Nullable<Timestamptz>,
-        metadata -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    collection_name -> Text,
+    file_path -> Text,
+    file_size -> Int8,
+    file_hash -> Text,
+    first_published_at -> Timestamptz,
+    last_modified_at -> Timestamptz,
+    indexed_at -> Nullable<Timestamptz>,
+    fail_count -> Int4,
+    last_failed_at -> Nullable<Timestamptz>,
+    metadata -> Nullable<Jsonb>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
     }
 }
+
 
 diesel::table! {
     user_kb_associations (id) {
-        id -> Text,
-        user_id -> Text,
-        bot_id -> Nullable<Text>,
-        kb_name -> Text,
-        is_website -> Int4,
-        website_url -> Nullable<Text>,
-        created_at -> Text,
-        updated_at -> Text,
+
+    id -> Text,
+    user_id -> Text,
+    bot_id -> Text,
+    kb_name -> Text,
+    is_website -> Int4,
+    website_url -> Nullable<Text>,
+    created_at -> Text,
+    updated_at -> Text,
+    branch_id -> Uuid,
     }
 }
 
+
 diesel::table! {
     research_projects (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        description -> Nullable<Text>,
-        status -> Varchar,
-        owner_id -> Uuid,
-        tags -> Array<Nullable<Text>>,
-        settings -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 255]
+    name -> Varchar,
+    description -> Nullable<Text>,
+    #[max_length = 50]
+    status -> Varchar,
+    owner_id -> Uuid,
+    tags -> Array<Nullable<Text>>,
+    settings -> Jsonb,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     research_sources (id) {

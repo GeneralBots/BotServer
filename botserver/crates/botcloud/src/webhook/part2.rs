@@ -27,7 +27,7 @@ pub(super) async fn process_invoice_paid(
         .first::<botbilling::api_models::BillingRecurring>(&mut conn)
         .map_err(|_| format!("billing_recurring not found for email {customer_email}"))?;
 
-    let total = recurring.amount.as_ref().map(botbilling::api_models::bd_to_f64).unwrap_or(0.0);
+    let total = botbilling::api_models::bd_to_f64(&recurring.amount);
 
     // Generate new invoice for the period
     let new_invoice_id = Uuid::new_v4();
@@ -41,19 +41,19 @@ pub(super) async fn process_invoice_paid(
         branch_id: recurring.branch_id,
         invoice_number,
         customer_id: None,
-        customer_name: Some(recurring.customer_name.clone()),
+        customer_name: recurring.customer_name.clone(),
         customer_email: recurring.customer_email.clone(),
         customer_address: None,
-        status: Some("paid".to_string()),
+        status: "paid".to_string(),
         issue_date: now.date_naive(),
-        due_date: Some((now + chrono::Duration::days(30)).date_naive()),
-        subtotal: recurring.amount.clone().unwrap_or_else(|| botbilling::api_models::bd(0.0)),
+        due_date: (now + chrono::Duration::days(30)).date_naive(),
+        subtotal: recurring.amount.clone(),
         tax_rate: botbilling::api_models::bd(0.0),
         tax_amount: botbilling::api_models::bd(0.0),
         discount_percent: botbilling::api_models::bd(0.0),
         discount_amount: botbilling::api_models::bd(0.0),
         total: recurring.amount.clone(),
-        amount_paid: recurring.amount.clone().unwrap_or_else(|| botbilling::api_models::bd(0.0)),
+        amount_paid: recurring.amount.clone(),
         amount_due: botbilling::api_models::bd(0.0),
         currency: recurring.currency.clone(),
         notes: Some(format!("Recurring charge - {}", recurring.description.as_deref().unwrap_or("subscription"))),
@@ -78,10 +78,10 @@ pub(super) async fn process_invoice_paid(
         product_id: None,
         description: recurring.description.clone().unwrap_or_else(|| "Subscription".to_string()),
         quantity: botbilling::api_models::bd(1.0),
-        unit_price: recurring.amount.clone().unwrap_or_else(|| botbilling::api_models::bd(0.0)),
+        unit_price: recurring.amount.clone(),
         discount_percent: botbilling::api_models::bd(0.0),
         tax_rate: botbilling::api_models::bd(0.0),
-        amount: recurring.amount.clone().unwrap_or_else(|| botbilling::api_models::bd(0.0)),
+        amount: recurring.amount.clone(),
         sort_order: 0,
         created_at: now,
     };
@@ -128,7 +128,7 @@ pub(super) async fn process_invoice_paid(
         recurring.customer_email.as_deref().unwrap_or(""),
         &recurring.description.clone().unwrap_or_else(|| "subscription".to_string()),
         total,
-        recurring.currency.as_deref().unwrap_or(""),
+        recurring.currency.as_str(),
     );
     vars.invoice_id = new_invoice_id.to_string();
     notifier::notify_recurring_charge(&vars);
@@ -190,13 +190,13 @@ pub(super) async fn process_invoice_payment_failed(
     ))
     .execute(&mut conn);
 
-    let amount_f64 = recurring.amount.as_ref().map(botbilling::api_models::bd_to_f64).unwrap_or(0.0);
+    let amount_f64 = botbilling::api_models::bd_to_f64(&recurring.amount);
     let mut vars = notifier::EmailVars::new(
         &recurring.customer_name,
         recurring.customer_email.as_deref().unwrap_or(""),
         &recurring.description.clone().unwrap_or_else(|| "subscription".to_string()),
         amount_f64,
-        recurring.currency.as_deref().unwrap_or(""),
+        recurring.currency.as_str(),
     );
     vars.invoice_id = recurring.last_invoice_id.unwrap_or(Uuid::nil()).to_string();
     notifier::notify_payment_failed(&vars);

@@ -2,8 +2,16 @@
 
 **Write this plan's state numbers from `schema_guard.py` + `schema_drift_inventory.py`, not by hand.**
 
-Current tree is committed and green: `git status` clean,
-`cargo check -p botserver` exit 0, `python3 scripts/schema_guard.py` → OK at **73**.
+## Current status
+
+- `python3 scripts/schema_guard.py` → **OK at 0** (baseline 0, CI blocks any new `table!`)
+- `python3 scripts/schema_drift_inventory.py` → **0 declarations outside `botschema`**
+- `python3 scripts/schema_db_audit.py --print-schema /tmp/print_schema.rs` →
+  **0 mismatched canonical, 0 ghosts**; 183 DB tables have no declaration and
+  stay raw-SQL/legacy (outside this epic's definition of done)
+- `cargo check -p botserver --bin botserver` → exit 0
+
+The sections below are the historical plan that produced these numbers.
 
 ## Where the numbers went
 
@@ -165,5 +173,5 @@ git commit -m "refactor(#1517): …"
 - `schema_drift_inventory.py` reports `identical 0 · additive 0 · conflicting 0`
   — every table declared once, in `botschema`.
 - `db_audit.md` reports 0 mismatched canonical tables and 0 ghosts
-  (currently: 171 mismatched, 128 canonical, 9 ghosts).
+  (**reached**: 0 mismatched, 0 canonical mismatches, 0 ghosts).
 - #1516 / #1517 / #1518 / #1519 closed; #1497 epic closed.

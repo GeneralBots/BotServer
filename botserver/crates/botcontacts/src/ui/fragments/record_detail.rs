@@ -99,7 +99,7 @@ fn timeline_html(rows: Vec<CrmActivity>) -> String {
         html.push_str(&format!(
             r#"<li class="lead-timeline-item"><span class="lead-timeline-type">{kind}</span><span class="lead-timeline-subject">{subject}</span><span class="lead-timeline-date">{when}</span></li>"#,
             kind = html_escape(&a.activity_type),
-            subject = html_escape(&a.subject),
+            subject = html_escape(a.subject.as_deref().unwrap_or("")),
             when = html_escape(&when),
         ));
     }
@@ -161,7 +161,7 @@ fn contact_detail(conn: &mut diesel::PgConnection, branch_id: Uuid, id: Uuid) ->
     } else {
         related.push_str(r#"<ul class="lead-timeline-list">"#);
         for d in deals {
-            let label = d.title.as_deref().unwrap_or(&d.name);
+            let label = d.title.as_deref().or(d.name.as_deref()).unwrap_or("");
             let value = d
                 .value
                 .map(|v| format_money(v, d.currency.as_deref()))
@@ -237,7 +237,7 @@ fn account_detail(conn: &mut diesel::PgConnection, branch_id: Uuid, id: Uuid) ->
 
     let mut related = String::from(r#"<div class="record-related"><h4 class="lead-detail-subtitle">Deals &amp; contacts</h4><ul class="lead-timeline-list">"#);
     for d in &deals {
-        let label = d.title.as_deref().unwrap_or(&d.name);
+        let label = d.title.as_deref().or(d.name.as_deref()).unwrap_or("");
         let value = d
             .value
             .map(|v| format_money(v, d.currency.as_deref()))
@@ -305,7 +305,7 @@ fn deal_detail(
                 .ok()
         });
 
-    let label = deal.title.clone().unwrap_or_else(|| deal.name.clone());
+    let label = deal.title.clone().or(deal.name.clone()).unwrap_or_default();
     let mut fields = String::new();
     fields.push_str(&field(
         "Value",
@@ -340,7 +340,7 @@ fn deal_detail(
     ));
     fields.push_str(&field(
         "Created",
-        &html_escape(&deal.created_at.format("%Y-%m-%d").to_string()),
+        &html_escape(&deal.created_at.map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_else(|| "-".to_string())),
     ));
     fields.push_str(&field("Notes", &html_escape(deal.notes.as_deref().unwrap_or("-"))));
     fields.push_str(&field(

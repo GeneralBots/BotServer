@@ -1,3 +1,4 @@
+use bigdecimal::BigDecimal;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -44,7 +45,8 @@ pub struct CrmContact {
 #[diesel(table_name = crm_accounts)]
 pub struct CrmAccount {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub website: Option<String>,
     pub industry: Option<String>,
@@ -59,13 +61,12 @@ pub struct CrmAccount {
     pub postal_code: Option<String>,
     pub country: Option<String>,
     pub description: Option<String>,
-    pub tags: Vec<String>,
-    pub custom_fields: serde_json::Value,
+    pub tags: Option<Vec<Option<String>>>,
+    pub custom_fields: Option<serde_json::Value>,
     pub owner_id: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
@@ -73,7 +74,8 @@ pub struct CrmAccount {
 pub struct CrmPipelineStage {
     #[serde(default)]
     pub id: Uuid,
-    pub branch_id: Option<Uuid>,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub stage_order: i32,
     pub probability: i32,
@@ -81,92 +83,93 @@ pub struct CrmPipelineStage {
     pub is_lost: bool,
     pub color: Option<String>,
     pub created_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = crm_deals)]
 pub struct CrmDeal {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub contact_id: Option<Uuid>,
     pub account_id: Option<Uuid>,
     pub am_id: Option<Uuid>,
     pub owner_id: Option<Uuid>,
     pub lead_id: Option<Uuid>,
     pub title: Option<String>,
-    pub name: String,
+    pub name: Option<String>,
     pub description: Option<String>,
     pub value: Option<f64>,
     pub currency: Option<String>,
     pub stage_id: Option<Uuid>,
     pub stage: Option<String>,
     pub probability: Option<i32>,
+    pub won: Option<bool>,
     pub source: Option<String>,
     pub segment_id: Option<Uuid>,
-    pub department_id: Option<Uuid>,
     pub expected_close_date: Option<chrono::NaiveDate>,
     pub actual_close_date: Option<chrono::NaiveDate>,
     pub period: Option<i32>,
     pub deal_date: Option<chrono::NaiveDate>,
     pub closed_at: Option<DateTime<Utc>>,
-    pub lost_reason: Option<String>,
-    pub won: Option<bool>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
     pub notes: Option<String>,
-    pub tags: Option<Vec<String>>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    pub custom_fields: serde_json::Value,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub tags: Option<Vec<Option<String>>>,
+    pub custom_fields: Option<serde_json::Value>,
+    pub department_id: Option<Uuid>,
+    pub lost_reason: Option<String>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = crm_opportunities)]
 pub struct CrmOpportunity {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub lead_id: Option<Uuid>,
     pub account_id: Option<Uuid>,
     pub contact_id: Option<Uuid>,
     pub name: String,
     pub description: Option<String>,
-    pub value: Option<f64>,
+    pub value: Option<BigDecimal>,
     pub currency: Option<String>,
     pub stage_id: Option<Uuid>,
-    pub stage: Option<String>,
-    pub probability: Option<i32>,
+    pub stage: String,
+    pub probability: i32,
     pub source: Option<String>,
     pub expected_close_date: Option<chrono::NaiveDate>,
     pub actual_close_date: Option<chrono::NaiveDate>,
     pub won: Option<bool>,
     pub owner_id: Option<Uuid>,
-    pub tags: Vec<String>,
-    pub custom_fields: serde_json::Value,
+    pub tags: Option<Vec<Option<String>>>,
+    pub custom_fields: Option<serde_json::Value>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = crm_activities)]
 pub struct CrmActivity {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub contact_id: Option<Uuid>,
     pub lead_id: Option<Uuid>,
     pub opportunity_id: Option<Uuid>,
     pub account_id: Option<Uuid>,
     pub activity_type: String,
-    pub subject: String,
+    pub subject: Option<String>,
     pub description: Option<String>,
     pub due_date: Option<DateTime<Utc>>,
     pub completed_at: Option<DateTime<Utc>>,
     pub outcome: Option<String>,
     pub owner_id: Option<Uuid>,
     pub created_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
+    pub branch_id: Uuid,
 }
 
 /// #1441 P2 — one row per destructive/state-changing CRM operation. Rows are
@@ -191,7 +194,7 @@ pub struct CrmAuditLog {
 #[diesel(table_name = crm_notes)]
 pub struct CrmNote {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
     pub contact_id: Option<Uuid>,
     pub lead_id: Option<Uuid>,
     pub opportunity_id: Option<Uuid>,
@@ -200,6 +203,7 @@ pub struct CrmNote {
     pub author_id: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 // #1441 — `CrmCampaign` (a second diesel model for `marketing_campaigns`) was

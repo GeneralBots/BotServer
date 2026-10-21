@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use crate::models::*;
 use crate::schema::*;
-use crate::handlers::{db_conn, generate_session_number, get_bot_context};
+use crate::handlers::{db_conn, generate_session_number, get_bot_context, org_and_bot};
 
 pub async fn create_session(
     State(config): State<Arc<crate::AttendantConfig>>,
@@ -23,9 +23,11 @@ pub async fn create_session(
     let now = Utc::now();
     let session_number = generate_session_number(&mut conn, branch_id);
 
+    let (org_id, bot_id) = org_and_bot(&config, branch_id);
     let session = AttendantSession {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         session_number,
         channel: req.channel,
         customer_id: req.customer_id,
@@ -51,6 +53,7 @@ pub async fn create_session(
         notes: None,
         transfer_count: 0,
         created_at: now,
+        branch_id: Some(branch_id),
     };
 
     diesel::insert_into(attendant_sessions::table)
@@ -72,7 +75,7 @@ pub async fn list_sessions(
     let offset = query.offset.unwrap_or(0);
 
     let mut q = attendant_sessions::table
-        .filter(attendant_sessions::branch_id.eq(branch_id))
+        .filter(attendant_sessions::branch_id.eq(Some(branch_id)))
         .into_boxed();
 
     if let Some(status) = query.status {

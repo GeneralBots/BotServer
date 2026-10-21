@@ -48,7 +48,7 @@ pub struct AdvisorRecommendation {
     pub severity: String,
     pub message: String,
     pub details: Option<String>,
-    pub dismissed: Option<bool>,
+    pub dismissed: bool,
     pub created_at: DateTime<Utc>,
 }
 

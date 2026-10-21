@@ -4,7 +4,8 @@ use super::*;
 #[diesel(table_name = people_org_chart)]
 pub struct OrgChartEntry {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub person_id: Uuid,
     pub reports_to_id: Option<Uuid>,
     pub position_title: Option<String>,
@@ -14,12 +15,14 @@ pub struct OrgChartEntry {
     pub effective_until: Option<NaiveDate>,
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = people_departments)]
 pub struct Department {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub description: Option<String>,
     pub code: Option<String>,
@@ -29,17 +32,20 @@ pub struct Department {
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = people_skills)]
 pub struct Skill {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub category: Option<String>,
     pub description: Option<String>,
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = people_person_skills)]
@@ -57,7 +63,8 @@ pub struct PersonSkill {
 #[diesel(table_name = people_time_off)]
 pub struct TimeOff {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub person_id: Uuid,
     pub time_off_type: String,
     pub status: String,
@@ -70,6 +77,7 @@ pub struct TimeOff {
     pub notes: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 #[derive(Debug, Deserialize)]
 pub struct CreatePersonRequest {
@@ -200,6 +208,13 @@ pub(super) fn get_bot_context(state: &PeopleState) -> Uuid {
         return Uuid::nil();
     };
     (state.get_default_bot)(&mut conn)
+}
+pub(super) fn org_and_bot(conn: &mut diesel::PgConnection, branch_id: Uuid) -> (Uuid, Uuid) {
+    botschema::bots::table
+        .filter(botschema::bots::branch_id.eq(branch_id))
+        .select((botschema::bots::org_id, botschema::bots::id))
+        .first(conn)
+        .unwrap_or((Uuid::nil(), Uuid::nil()))
 }
 pub(super) fn bd(val: f64) -> BigDecimal {
     use std::str::FromStr;

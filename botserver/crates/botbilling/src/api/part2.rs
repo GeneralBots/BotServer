@@ -21,10 +21,10 @@ pub async fn record_payment(
         branch_id,
         invoice_id: req.invoice_id,
         amount: bd(req.amount),
-        currency: Some("USD".to_string()),
-        payment_method: Some(req.payment_method.clone().unwrap_or_else(|| "other".to_string())),
-        status: Some("completed".to_string()),
-        paid_at: Some(now),
+        currency: "USD".to_string(),
+        payment_method: req.payment_method.clone().unwrap_or_else(|| "other".to_string()),
+        status: "completed".to_string(),
+        paid_at: now,
         created_at: now,
         payment_number,
         payment_reference: req.payment_reference.clone(),
@@ -47,7 +47,7 @@ pub async fn record_payment(
             .map_err(|_| (StatusCode::NOT_FOUND, "Invoice not found".to_string()))?;
 
         let new_paid = &invoice.amount_paid + bd(req.amount);
-        let total_val = invoice.total.unwrap_or_else(|| bd(0.0));
+        let total_val = invoice.total.clone();
         let new_due = &total_val - &new_paid;
 
         let new_status = if bd_to_f64(&new_due) <= 0.0 {
@@ -55,7 +55,7 @@ pub async fn record_payment(
         } else if bd_to_f64(&new_paid) > 0.0 {
             "partial"
         } else {
-            invoice.status.as_deref().unwrap_or("")
+            invoice.status.as_str()
         };
 
         let paid_at = if new_status == "paid" { Some(now) } else { invoice.paid_at };
@@ -166,12 +166,12 @@ pub async fn create_quote(
         bot_id,
         branch_id,
         quote_number,
-        customer_name: req.customer_name.clone(),
+        customer_name: req.customer_name.clone().unwrap_or_default(),
         customer_email: req.customer_email.clone(),
-        total: Some(total),
-        currency: Some(req.currency.clone().unwrap_or_else(|| "USD".to_string())),
-        status: Some("draft".to_string()),
-        valid_until: Some(valid_until),
+        total,
+        currency: req.currency.clone().unwrap_or_else(|| "USD".to_string()),
+        status: "draft".to_string(),
+        valid_until,
         notes: req.notes.clone(),
         created_at: now,
         updated_at: now,

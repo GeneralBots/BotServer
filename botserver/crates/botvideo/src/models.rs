@@ -67,8 +67,8 @@ pub struct VideoLayer {
     pub animation_in: Option<String>,
     pub animation_out: Option<String>,
     pub locked: bool,
-    pub keyframes_json: Option<serde_json::Value>,
     pub created_at: DateTime<Utc>,
+    pub keyframes_json: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable, Insertable)]
@@ -84,9 +84,9 @@ pub struct VideoAudioTrack {
     pub volume: f32,
     pub fade_in_ms: i64,
     pub fade_out_ms: i64,
+    pub created_at: DateTime<Utc>,
     pub waveform_json: Option<serde_json::Value>,
     pub beat_markers_json: Option<serde_json::Value>,
-    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable, Insertable)]
@@ -99,10 +99,10 @@ pub struct VideoExport {
     pub status: String,
     pub progress: i32,
     pub output_url: Option<String>,
-    pub gbdrive_path: Option<String>,
     pub error_message: Option<String>,
     pub created_at: DateTime<Utc>,
     pub completed_at: Option<DateTime<Utc>>,
+    pub gbdrive_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable, Insertable)]

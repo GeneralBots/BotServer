@@ -167,15 +167,15 @@ pub async fn get_campaign_email_metrics(
     let opened = results.iter().filter(|pair| pair.0.unwrap_or(false)).count() as i64;
     let clicked = results.iter().filter(|pair| pair.1.unwrap_or(false)).count() as i64;
 
-    let recipients: Vec<(String, Option<DateTime<Utc>>)> = marketing_recipients::table
+    let recipients: Vec<(Option<String>, Option<DateTime<Utc>>)> = marketing_recipients::table
         .filter(marketing_recipients::campaign_id.eq(campaign_id))
         .filter(marketing_recipients::channel.eq("email"))
         .select((marketing_recipients::status, marketing_recipients::sent_at))
         .load(&mut conn)
         .map_err(|e| format!("Query error: {}", e))?;
 
-    let sent = recipients.iter().filter(|(s, _)| s == "sent").count() as i64;
-    let failed = recipients.iter().filter(|(s, _)| s == "failed").count() as i64;
+    let sent = recipients.iter().filter(|(s, _)| s.as_deref() == Some("sent")).count() as i64;
+    let failed = recipients.iter().filter(|(s, _)| s.as_deref() == Some("failed")).count() as i64;
     let delivered = sent;
 
     Ok(CampaignMetrics {

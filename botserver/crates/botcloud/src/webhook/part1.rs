@@ -175,11 +175,11 @@ pub(super) async fn process_checkout_completed(
             .map_err(|e| format!("invoice not found: {e}"))?
     };
 
-    let total = invoice.total.as_ref().map(botbilling::api_models::bd_to_f64).unwrap_or(0.0);
+    let total = botbilling::api_models::bd_to_f64(&invoice.total);
     let plan_label = metadata.get("plan").cloned().unwrap_or_else(|| "unknown".to_string());
 
     // 2. CRM: mark deal as won
-    let deal_name = format!("Subscription {} - {}", plan_label, invoice.customer_name.as_deref().unwrap_or(""));
+    let deal_name = format!("Subscription {} - {}", plan_label, invoice.customer_name.as_str());
     let _ = integration::win_crm_deal(service.pool(), invoice.branch_id, &deal_name)
         .map_err(|e| tracing::warn!("CRM win deal failed: {e}"));
 
@@ -188,7 +188,7 @@ pub(super) async fn process_checkout_completed(
         service.pool(),
         invoice_id,
         total,
-        invoice.customer_name.as_deref().unwrap_or(""),
+        invoice.customer_name.as_str(),
     )
     .map_err(|e| tracing::warn!("GL entry failed: {e}"));
 
@@ -197,11 +197,11 @@ pub(super) async fn process_checkout_completed(
     let _ = integration::create_billing_subscription(integration::NewSubscription {
         pool: service.pool(),
         branch_id: invoice.branch_id,
-        customer_name: invoice.customer_name.as_deref().unwrap_or(""),
+        customer_name: invoice.customer_name.as_str(),
         customer_email: &email_ref,
         plan: &plan_label,
         total,
-        currency: invoice.currency.as_deref().unwrap_or(""),
+        currency: invoice.currency.as_str(),
         invoice_id,
         period: "monthly",
     })
@@ -209,11 +209,11 @@ pub(super) async fn process_checkout_completed(
 
     // --- Notifications ---
     let mut vars = notifier::EmailVars::new(
-        invoice.customer_name.as_deref().unwrap_or(""),
+        invoice.customer_name.as_str(),
         invoice.customer_email.as_deref().unwrap_or(""),
         &plan_label,
         total,
-        invoice.currency.as_deref().unwrap_or(""),
+        invoice.currency.as_str(),
     );
     vars.invoice_id = invoice_id.to_string();
     notifier::notify_payment_success(&vars);

@@ -15,14 +15,14 @@ type HmacSha256 = Hmac<Sha256>;
 #[diesel(table_name = attendance_webhooks)]
 pub struct AttendanceWebhook {
     pub id: Uuid,
+    pub org_id: Uuid,
     pub branch_id: Uuid,
     pub webhook_url: String,
-    pub events: Option<String>,
+    pub events: Option<Vec<Option<String>>>,
     pub is_active: Option<bool>,
     pub secret_key: Option<String>,
     pub created_at: chrono::DateTime<Utc>,
-    pub updated_at: chrono::DateTime<Utc>,
-    pub org_id: Option<Uuid>,
+    pub updated_at: Option<chrono::DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -86,9 +86,8 @@ pub fn emit_webhook_event(
 
     for webhook in webhooks {
         let event_str = event.to_string();
-        if let Some(ref events_str) = webhook.events {
-            let events_list: Vec<&str> = events_str.split(',').map(|s| s.trim()).collect();
-            if !events_list.contains(&event_str.as_str()) {
+        if let Some(ref events) = webhook.events {
+            if !events.iter().flatten().any(|e| e == &event_str) {
                 continue;
             }
         }
@@ -128,6 +127,17 @@ fn get_bot_context(config: &AttendanceConfig) -> Uuid {
     (config.get_default_bot)(&mut conn)
 }
 
+fn org_for_branch(config: &AttendanceConfig, branch_id: Uuid) -> Uuid {
+    let Ok(mut conn) = config.pool.get() else {
+        return Uuid::nil();
+    };
+    crate::schema::bots::table
+        .filter(crate::schema::bots::branch_id.eq(branch_id))
+        .select(crate::schema::bots::org_id)
+        .first(&mut conn)
+        .unwrap_or(Uuid::nil())
+}
+
 pub async fn list_webhooks(
     State(config): State<Arc<AttendanceConfig>>,
 ) -> Result<Json<Vec<AttendanceWebhook>>, (StatusCode, String)> {
@@ -154,11 +164,11 @@ pub async fn create_webhook(
         branch_id,
         is_active: Some(true),
         created_at: now,
-        updated_at: now,
+        updated_at: Some(now),
         webhook_url: req.webhook_url,
-        events: Some(req.events.join(",")),
+        events: Some(req.events.into_iter().map(Some).collect()),
         secret_key: req.secret_key,
-        org_id: None,
+        org_id: org_for_branch(&config, branch_id),
     };
     diesel::insert_into(attendance_webhooks::table)
         .values(&webhook)
@@ -192,9 +202,9 @@ pub async fn update_webhook(
             .execute(&mut conn).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Update error: {e}")))?;
     }
     if let Some(new_events) = req.events {
-        let events_str = new_events.join(",");
+        let events_value: Vec<Option<String>> = new_events.into_iter().map(Some).collect();
         diesel::update(attendance_webhooks::table.filter(attendance_webhooks::id.eq(id)))
-            .set(attendance_webhooks::events.eq(Some(events_str)))
+            .set(attendance_webhooks::events.eq(Some(events_value)))
             .execute(&mut conn).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Update error: {e}")))?;
     }
     if let Some(active) = req.is_active {

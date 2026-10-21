@@ -2,22 +2,30 @@ use crate::core::{branches};
 
 diesel::table! {
     legal_documents (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        slug -> Varchar,
-        title -> Varchar,
-        content -> Text,
-        document_type -> Varchar,
-        version -> Varchar,
-        effective_date -> Timestamptz,
-        is_active -> Bool,
-        requires_acceptance -> Bool,
-        metadata -> Jsonb,
-        created_by -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 100]
+    slug -> Varchar,
+    #[max_length = 255]
+    title -> Varchar,
+    content -> Text,
+    #[max_length = 50]
+    document_type -> Varchar,
+    #[max_length = 50]
+    version -> Varchar,
+    effective_date -> Timestamptz,
+    is_active -> Bool,
+    requires_acceptance -> Bool,
+    metadata -> Jsonb,
+    created_by -> Nullable<Uuid>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     legal_document_versions (id) {
@@ -33,25 +41,33 @@ diesel::table! {
 
 diesel::table! {
     cookie_consents (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        user_id -> Nullable<Uuid>,
-        session_id -> Nullable<Varchar>,
-        ip_address -> Nullable<Varchar>,
-        user_agent -> Nullable<Text>,
-        country_code -> Nullable<Varchar>,
-        consent_necessary -> Bool,
-        consent_analytics -> Bool,
-        consent_marketing -> Bool,
-        consent_preferences -> Bool,
-        consent_functional -> Bool,
-        consent_version -> Varchar,
-        consent_given_at -> Timestamptz,
-        consent_updated_at -> Timestamptz,
-        consent_withdrawn_at -> Nullable<Timestamptz>,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    user_id -> Nullable<Uuid>,
+    #[max_length = 255]
+    session_id -> Nullable<Varchar>,
+    #[max_length = 45]
+    ip_address -> Nullable<Varchar>,
+    user_agent -> Nullable<Text>,
+    #[max_length = 2]
+    country_code -> Nullable<Varchar>,
+    consent_necessary -> Bool,
+    consent_analytics -> Bool,
+    consent_marketing -> Bool,
+    consent_preferences -> Bool,
+    consent_functional -> Bool,
+    #[max_length = 50]
+    consent_version -> Varchar,
+    consent_given_at -> Timestamptz,
+    consent_updated_at -> Timestamptz,
+    consent_withdrawn_at -> Nullable<Timestamptz>,
+    created_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     consent_history (id) {
@@ -68,55 +84,74 @@ diesel::table! {
 
 diesel::table! {
     legal_acceptances (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        user_id -> Uuid,
-        document_id -> Uuid,
-        document_version -> Varchar,
-        accepted_at -> Timestamptz,
-        ip_address -> Nullable<Varchar>,
-        user_agent -> Nullable<Text>,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    user_id -> Uuid,
+    document_id -> Uuid,
+    #[max_length = 50]
+    document_version -> Varchar,
+    accepted_at -> Timestamptz,
+    #[max_length = 45]
+    ip_address -> Nullable<Varchar>,
+    user_agent -> Nullable<Text>,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     data_deletion_requests (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        user_id -> Uuid,
-        request_type -> Varchar,
-        status -> Varchar,
-        reason -> Nullable<Text>,
-        requested_at -> Timestamptz,
-        scheduled_for -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        confirmation_token -> Varchar,
-        confirmed_at -> Nullable<Timestamptz>,
-        processed_by -> Nullable<Uuid>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    user_id -> Uuid,
+    #[max_length = 50]
+    request_type -> Varchar,
+    #[max_length = 50]
+    status -> Varchar,
+    reason -> Nullable<Text>,
+    requested_at -> Timestamptz,
+    scheduled_for -> Nullable<Timestamptz>,
+    completed_at -> Nullable<Timestamptz>,
+    #[max_length = 255]
+    confirmation_token -> Varchar,
+    confirmed_at -> Nullable<Timestamptz>,
+    processed_by -> Nullable<Uuid>,
+    notes -> Nullable<Text>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
 
+
 diesel::table! {
     data_export_requests (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        user_id -> Uuid,
-        status -> Varchar,
-        format -> Varchar,
-        include_sections -> Jsonb,
-        requested_at -> Timestamptz,
-        started_at -> Nullable<Timestamptz>,
-        completed_at -> Nullable<Timestamptz>,
-        file_url -> Nullable<Text>,
-        file_size -> Nullable<Int4>,
-        expires_at -> Nullable<Timestamptz>,
-        error_message -> Nullable<Text>,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    bot_id -> Uuid,
+    user_id -> Uuid,
+    #[max_length = 50]
+    status -> Varchar,
+    #[max_length = 50]
+    format -> Varchar,
+    include_sections -> Jsonb,
+    requested_at -> Timestamptz,
+    started_at -> Nullable<Timestamptz>,
+    completed_at -> Nullable<Timestamptz>,
+    file_url -> Nullable<Text>,
+    file_size -> Nullable<Int4>,
+    expires_at -> Nullable<Timestamptz>,
+    error_message -> Nullable<Text>,
+    created_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     compliance_checks (id) {

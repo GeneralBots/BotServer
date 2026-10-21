@@ -12,6 +12,13 @@ pub(super) fn get_bot_context(state: &Arc<TicketsState>) -> Uuid {
         .unwrap_or(Uuid::nil());
     bid
 }
+pub(super) fn org_and_bot(conn: &mut diesel::PgConnection, branch_id: Uuid) -> (Uuid, Uuid) {
+    bots::table
+        .filter(bots::branch_id.eq(branch_id))
+        .select((bots::org_id, bots::id))
+        .first(conn)
+        .unwrap_or((Uuid::nil(), Uuid::nil()))
+}
 pub(super) fn generate_ticket_number(conn: &mut diesel::PgConnection, branch_id: Uuid) -> String {
     let count: i64 = support_tickets::table
         .filter(support_tickets::branch_id.eq(branch_id))
@@ -53,6 +60,7 @@ pub async fn create_ticket(
     let id = Uuid::new_v4();
     let now = Utc::now();
     let ticket_number = generate_ticket_number(&mut conn, branch_id);
+    let (org_id, bot_id) = org_and_bot(&mut conn, branch_id);
 
     let due_date = req
         .due_date
@@ -61,7 +69,8 @@ pub async fn create_ticket(
 
     let ticket = SupportTicket {
         id,
-        branch_id,
+        org_id,
+        bot_id,
         ticket_number,
         subject: req.subject,
         description: req.description,
@@ -80,10 +89,11 @@ pub async fn create_ticket(
         closed_at: None,
         satisfaction_rating: None,
         record_type: req.record_type.clone().unwrap_or_else(|| "ticket".to_string()),
-        tags: req.tags.unwrap_or_default(),
+        tags: req.tags.unwrap_or_default().into_iter().map(Some).collect(),
         custom_fields: serde_json::json!({}),
         created_at: now,
         updated_at: now,
+        branch_id: Some(branch_id),
     };
 
     diesel::insert_into(support_tickets::table)

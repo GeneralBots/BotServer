@@ -18,6 +18,8 @@ use super::types::{
 #[diesel(table_name = dashboards)]
 pub struct DbDashboard {
     pub id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub owner_id: Uuid,
     pub name: String,
     pub description: Option<String>,
@@ -25,11 +27,9 @@ pub struct DbDashboard {
     pub refresh_interval: Option<i32>,
     pub is_public: bool,
     pub is_template: bool,
-    pub tags: Vec<String>,
+    pub tags: Vec<Option<String>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Uuid,
     pub branch_id: Uuid,
 }
 
@@ -105,7 +105,7 @@ pub fn db_dashboard_to_dashboard(
     filters: Vec<DashboardFilter>,
 ) -> Dashboard {
     let layout: DashboardLayout = serde_json::from_value(db.layout).unwrap_or_default();
-    let tags: Vec<String> = db.tags;
+    let tags: Vec<String> = db.tags.into_iter().flatten().collect();
 
     Dashboard {
         id: db.id,

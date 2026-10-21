@@ -4,16 +4,18 @@ use crate::core::users;
 
 diesel::table! {
     kb_collections (id) {
-        id -> Uuid,
-        bot_id -> Nullable<Uuid>,
-        name -> Text,
-        folder_path -> Text,
-        qdrant_collection -> Text,
-        document_count -> Int4,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    name -> Text,
+    folder_path -> Text,
+    qdrant_collection -> Text,
+    document_count -> Int4,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
     }
 }
+
 
 diesel::table! {
     kb_group_associations (id) {

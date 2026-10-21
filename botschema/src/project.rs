@@ -22,62 +22,78 @@ diesel::table! {
 
 diesel::table! {
     project_tasks (id) {
-        id -> Uuid,
-        project_id -> Uuid,
-        parent_id -> Nullable<Uuid>,
-        name -> Text,
-        description -> Nullable<Text>,
-        task_type -> Text,
-        start_date -> Date,
-        end_date -> Date,
-        duration_days -> Int4,
-        percent_complete -> Int4,
-        status -> Text,
-        priority -> Text,
-        assigned_to -> Array<Nullable<Uuid>>,
-        estimated_hours -> Nullable<Float4>,
-        actual_hours -> Nullable<Float4>,
-        cost -> Nullable<Float8>,
-        notes -> Nullable<Text>,
-        wbs -> Text,
-        outline_level -> Int4,
-        is_milestone -> Bool,
-        is_summary -> Bool,
-        is_critical -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    project_id -> Uuid,
+    parent_id -> Nullable<Uuid>,
+    name -> Text,
+    description -> Nullable<Text>,
+    task_type -> Text,
+    #[max_length = 255]
+    start_date -> Varchar,
+    #[max_length = 255]
+    end_date -> Varchar,
+    duration_days -> Int4,
+    percent_complete -> Int4,
+    status -> Text,
+    priority -> Text,
+    #[max_length = 255]
+    assigned_to -> Varchar,
+    #[max_length = 255]
+    estimated_hours -> Nullable<Varchar>,
+    #[max_length = 255]
+    actual_hours -> Nullable<Varchar>,
+    cost -> Nullable<Float8>,
+    notes -> Nullable<Text>,
+    wbs -> Text,
+    outline_level -> Int4,
+    is_milestone -> Bool,
+    is_summary -> Bool,
+    is_critical -> Bool,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
     }
 }
+
 
 diesel::table! {
     project_resources (id) {
-        id -> Uuid,
-        project_id -> Uuid,
-        user_id -> Nullable<Uuid>,
-        name -> Text,
-        resource_type -> Text,
-        email -> Nullable<Text>,
-        max_units -> Float4,
-        standard_rate -> Nullable<Float8>,
-        overtime_rate -> Nullable<Float8>,
-        cost_per_use -> Nullable<Float8>,
-        calendar_id -> Nullable<Uuid>,
-        created_at -> Timestamptz,
+
+    id -> Uuid,
+    project_id -> Uuid,
+    user_id -> Nullable<Uuid>,
+    name -> Text,
+    resource_type -> Text,
+    email -> Nullable<Text>,
+    #[max_length = 255]
+    max_units -> Varchar,
+    standard_rate -> Nullable<Float8>,
+    overtime_rate -> Nullable<Float8>,
+    cost_per_use -> Nullable<Float8>,
+    calendar_id -> Nullable<Uuid>,
+    created_at -> Timestamptz,
     }
 }
 
+
 diesel::table! {
     project_assignments (id) {
-        id -> Uuid,
-        task_id -> Uuid,
-        resource_id -> Uuid,
-        units -> Float4,
-        work_hours -> Float4,
-        start_date -> Date,
-        end_date -> Date,
-        cost -> Float8,
+
+    id -> Uuid,
+    task_id -> Uuid,
+    resource_id -> Uuid,
+    #[max_length = 255]
+    units -> Varchar,
+    #[max_length = 255]
+    work_hours -> Varchar,
+    #[max_length = 255]
+    start_date -> Varchar,
+    #[max_length = 255]
+    end_date -> Varchar,
+    cost -> Float8,
     }
 }
+
 
 diesel::table! {
     project_dependencies (id) {

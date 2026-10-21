@@ -178,7 +178,7 @@ pub(super) async fn handle_invoices(
                 billing_invoices::amount_due,
                 billing_invoices::currency,
             ))
-            .load::<(Uuid, String, Option<String>, Option<String>, Option<String>, NaiveDate, Option<NaiveDate>, Option<BigDecimal>, BigDecimal, Option<String>)>(&mut conn)
+            .load::<(Uuid, String, String, Option<String>, String, NaiveDate, NaiveDate, BigDecimal, BigDecimal, String)>(&mut conn)
             .ok()
     })
     .await
@@ -189,13 +189,13 @@ pub(super) async fn handle_invoices(
         Some(invoices) if !invoices.is_empty() => {
             let mut html = String::new();
             for (id, number, customer_name, customer_email, status, issue_date, due_date, total, amount_due, currency) in invoices {
-                let name = customer_email.or(customer_name).unwrap_or_else(|| "Unknown".to_string());
-                let total_str = format_currency(bd_to_f64(&total.unwrap_or_default()), currency.as_deref().unwrap_or("USD"));
-                let due_str = format_currency(bd_to_f64(&amount_due), currency.as_deref().unwrap_or("USD"));
+                let name = if customer_name.is_empty() { customer_email.unwrap_or_else(|| "Unknown".to_string()) } else { customer_name };
+                let total_str = format_currency(bd_to_f64(&total), &currency);
+                let due_str = format_currency(bd_to_f64(&amount_due), &currency);
                 let issue_str = issue_date.format("%Y-%m-%d").to_string();
-                let due_date_str = due_date.map(|d| d.format("%Y-%m-%d").to_string()).unwrap_or_else(|| "-".to_string());
+                let due_date_str = due_date.format("%Y-%m-%d").to_string();
 
-                let status_class = match status.as_deref().unwrap_or("draft") {
+                let status_class = match status.as_str() {
                     "paid" => "status-paid",
                     "sent" => "status-sent",
                     "overdue" => "status-overdue",
@@ -212,7 +212,7 @@ pub(super) async fn handle_invoices(
                     total_str,
                     due_str,
                     status_class,
-                    html_escape(status.as_deref().unwrap_or(""))
+                    html_escape(&status)
                 ));
             }
             Html(html)
@@ -259,7 +259,7 @@ pub(super) async fn handle_payments(
                 billing_payments::status,
                 billing_payments::paid_at,
             ))
-            .load::<(Uuid, String, BigDecimal, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<DateTime<Utc>>)>(&mut conn)
+            .load::<(Uuid, String, BigDecimal, String, String, Option<String>, Option<String>, String, DateTime<Utc>)>(&mut conn)
             .ok()
     })
     .await
@@ -270,11 +270,11 @@ pub(super) async fn handle_payments(
         Some(payments) if !payments.is_empty() => {
             let mut html = String::new();
             for (id, number, amount, currency, method, payer_name, payer_email, status, paid_at) in payments {
-                let amount_str = format_currency(bd_to_f64(&amount), currency.as_deref().unwrap_or("USD"));
+                let amount_str = format_currency(bd_to_f64(&amount), &currency);
                 let payer = payer_name.or(payer_email).unwrap_or_else(|| "Unknown".to_string());
-                let date_str = paid_at.map(|d| d.format("%Y-%m-%d %H:%M").to_string()).unwrap_or_else(|| "-".to_string());
+                let date_str = paid_at.format("%Y-%m-%d %H:%M").to_string();
 
-                let status_class = match status.as_deref().unwrap_or("draft") {
+                let status_class = match status.as_str() {
                     "completed" => "status-completed",
                     "pending" => "status-pending",
                     "refunded" => "status-refunded",
@@ -287,10 +287,10 @@ pub(super) async fn handle_payments(
                     html_escape(&number),
                     html_escape(&payer),
                     amount_str,
-                    html_escape(method.as_deref().unwrap_or("")),
+                    html_escape(&method),
                     date_str,
                     status_class,
-                    html_escape(status.as_deref().unwrap_or(""))
+                    html_escape(&status)
                 ));
             }
             Html(html)

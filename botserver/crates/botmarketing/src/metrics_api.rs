@@ -103,7 +103,7 @@ async fn get_channel_breakdown(
     let mut breakdown = Vec::new();
 
     for channel in channels {
-        let recipients: Vec<String> = marketing_recipients::table
+        let recipients: Vec<Option<String>> = marketing_recipients::table
             .filter(marketing_recipients::campaign_id.eq_any(campaign_ids))
             .filter(marketing_recipients::channel.eq(channel))
             .select(marketing_recipients::status)
@@ -115,8 +115,8 @@ async fn get_channel_breakdown(
         }
 
         let total = recipients.len() as i64;
-        let sent = recipients.iter().filter(|s| s.as_str() == "sent").count() as i64;
-        let delivered = recipients.iter().filter(|s| s.as_str() == "delivered" || s.as_str() == "read").count() as i64;
+        let sent = recipients.iter().filter(|s| s.as_deref() == Some("sent")).count() as i64;
+        let delivered = recipients.iter().filter(|s| s.as_deref() == Some("delivered") || s.as_deref() == Some("read")).count() as i64;
 
         let opened = if channel == "email" {
             email_tracking::table
@@ -182,15 +182,15 @@ pub async fn get_aggregate_metrics(
 
     let campaign_ids: Vec<Uuid> = campaigns.iter().map(|c| c.id).collect();
 
-    let recipients: Vec<(String, String)> = marketing_recipients::table
+    let recipients: Vec<(Option<String>, Option<String>)> = marketing_recipients::table
         .filter(marketing_recipients::campaign_id.eq_any(campaign_ids.clone()))
         .select((marketing_recipients::channel, marketing_recipients::status))
         .load(&mut conn)
         .unwrap_or_default();
 
     let total_recipients = recipients.len() as i64;
-    let total_sent = recipients.iter().filter(|(_, s)| s.as_str() == "sent").count() as i64;
-    let total_delivered = recipients.iter().filter(|(_, s)| s.as_str() == "delivered" || s.as_str() == "read").count() as i64;
+    let total_sent = recipients.iter().filter(|(_, s)| s.as_deref() == Some("sent")).count() as i64;
+    let total_delivered = recipients.iter().filter(|(_, s)| s.as_deref() == Some("delivered") || s.as_deref() == Some("read")).count() as i64;
 
     let total_opened: i64 = email_tracking::table
         .filter(email_tracking::campaign_id.eq_any(campaign_ids.clone()))

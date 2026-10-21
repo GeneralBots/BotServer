@@ -9,7 +9,8 @@ pub(crate) use crate::schema::{okr_checkins, okr_key_results, okr_objectives, ok
 #[diesel(table_name = okr_objectives)]
 pub struct ObjectiveRecord {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub owner_id: Uuid,
     pub parent_id: Option<Uuid>,
     pub title: String,
@@ -24,8 +25,7 @@ pub struct ObjectiveRecord {
     pub tags: Vec<Option<String>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Option<Uuid>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Selectable, Insertable, AsChangeset)]
@@ -33,7 +33,7 @@ pub struct ObjectiveRecord {
 pub struct KeyResultRecord {
     pub id: Uuid,
     pub org_id: Uuid,
-    pub branch_id: Uuid,
+    pub bot_id: Uuid,
     pub objective_id: Uuid,
     pub owner_id: Uuid,
     pub title: String,
@@ -49,6 +49,7 @@ pub struct KeyResultRecord {
     pub scoring_type: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Selectable, Insertable)]
@@ -56,7 +57,7 @@ pub struct KeyResultRecord {
 pub struct CheckInRecord {
     pub id: Uuid,
     pub org_id: Uuid,
-    pub branch_id: Uuid,
+    pub bot_id: Uuid,
     pub key_result_id: Uuid,
     pub user_id: Uuid,
     pub previous_value: Option<BigDecimal>,
@@ -65,13 +66,15 @@ pub struct CheckInRecord {
     pub confidence: Option<String>,
     pub blockers: Option<String>,
     pub created_at: DateTime<Utc>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Selectable)]
 #[diesel(table_name = okr_templates)]
 pub struct TemplateRecord {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub description: Option<String>,
     pub category: Option<String>,
@@ -82,8 +85,7 @@ pub struct TemplateRecord {
     pub created_by: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    pub org_id: Uuid,
-    pub bot_id: Option<Uuid>,
+    pub branch_id: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

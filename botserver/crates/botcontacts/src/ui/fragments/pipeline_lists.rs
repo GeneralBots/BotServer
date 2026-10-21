@@ -25,7 +25,7 @@ use crate::schema::crm_deals;
 use crate::CrateState;
 
 fn title_of(d: &CrmDeal) -> Option<&str> {
-    d.title.as_deref().or(Some(d.name.as_str()))
+    d.title.as_deref().or(d.name.as_deref())
 }
 
 fn money(value: Option<f64>, currency: Option<&str>) -> String {

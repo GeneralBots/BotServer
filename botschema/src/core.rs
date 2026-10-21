@@ -1,14 +1,16 @@
 diesel::table! {
     tenants (id) {
-        id -> Uuid,
-        name -> Varchar,
-        slug -> Varchar,
-        created_at -> Timestamptz,
-        is_active -> Bool,
-        metadata -> Nullable<Jsonb>,
-        updated_at -> Timestamptz,
+
+    id -> Uuid,
+    name -> Text,
+    slug -> Text,
+    is_active -> Bool,
+    metadata -> Nullable<Jsonb>,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
     }
 }
+
 
 diesel::table! {
     // Physical order follows `6.0.0-01-core`; `tenant_id` was appended by
@@ -29,24 +31,31 @@ diesel::joinable!(organizations -> tenants (tenant_id));
 
 diesel::table! {
     organization_invitations (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        branch_id -> Nullable<Uuid>,
-        email -> Varchar,
-        role -> Varchar,
-        status -> Varchar,
-        message -> Nullable<Text>,
-        invited_by -> Uuid,
-        token -> Nullable<Text>,
-        created_at -> Timestamptz,
-        updated_at -> Nullable<Timestamptz>,
-        expires_at -> Nullable<Timestamptz>,
-        accepted_at -> Nullable<Timestamptz>,
-        accepted_by -> Nullable<Uuid>,
-        groups -> Jsonb,
-        invited_by_name -> Nullable<Varchar>,
+
+    id -> Uuid,
+    org_id -> Uuid,
+    #[max_length = 255]
+    email -> Varchar,
+    #[max_length = 50]
+    role -> Varchar,
+    #[max_length = 20]
+    status -> Varchar,
+    message -> Nullable<Text>,
+    invited_by -> Uuid,
+    #[max_length = 255]
+    token -> Nullable<Varchar>,
+    created_at -> Timestamptz,
+    updated_at -> Nullable<Timestamptz>,
+    expires_at -> Nullable<Timestamptz>,
+    accepted_at -> Nullable<Timestamptz>,
+    accepted_by -> Nullable<Uuid>,
+    branch_id -> Nullable<Uuid>,
+    groups -> Jsonb,
+    #[max_length = 255]
+    invited_by_name -> Nullable<Varchar>,
     }
 }
+
 
 diesel::table! {
     branches (id) {
@@ -67,24 +76,38 @@ diesel::joinable!(branches -> tenants (tenant_id));
 
 diesel::table! {
     bots (id) {
-        id -> Uuid,
-        org_id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        slug -> Varchar,
-        description -> Nullable<Text>,
-        llm_provider -> Varchar,
-        llm_config -> Jsonb,
-        context_provider -> Varchar,
-        context_config -> Jsonb,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        is_active -> Nullable<Bool>,
-        database_name -> Nullable<Varchar>,
-        is_public -> Bool,
-        is_default_for_branch -> Bool,
+
+    id -> Uuid,
+    #[max_length = 255]
+    name -> Varchar,
+    description -> Nullable<Text>,
+    #[max_length = 100]
+    llm_provider -> Varchar,
+    llm_config -> Jsonb,
+    #[max_length = 100]
+    context_provider -> Varchar,
+    context_config -> Jsonb,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    is_active -> Nullable<Bool>,
+    tenant_id -> Nullable<Uuid>,
+    org_id -> Uuid,
+    is_default -> Nullable<Bool>,
+    parent_bot_id -> Nullable<Uuid>,
+    enabled_tabs_json -> Nullable<Text>,
+    inherit_parent_config -> Nullable<Bool>,
+    #[max_length = 255]
+    database_name -> Nullable<Varchar>,
+    #[max_length = 255]
+    slug -> Nullable<Varchar>,
+    is_public -> Bool,
+    branch_id -> Uuid,
+    is_default_for_branch -> Bool,
+    #[max_length = 16]
+    origin -> Varchar,
     }
 }
+
 
 diesel::joinable!(bots -> branches (branch_id));
 
@@ -218,12 +241,14 @@ diesel::table! {
 
 diesel::table! {
     clicks (id) {
-        id -> Uuid,
-        campaign_id -> Text,
-        email -> Text,
-        updated_at -> Timestamptz,
+
+    id -> Int4,
+    campaign_id -> Text,
+    email -> Text,
+    updated_at -> Nullable<Timestamptz>,
     }
 }
+
 
 diesel::table! {
     bot_memories (id) {
@@ -242,20 +267,22 @@ diesel::table! {
 
 diesel::table! {
     basic_tools (id) {
-        id -> Uuid,
-        bot_id -> Uuid,
-        tool_name -> Text,
-        file_path -> Text,
-        ast_path -> Text,
-        mcp_json -> Nullable<Text>,
-        tool_json -> Nullable<Text>,
-        compiled_at -> Text,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        branch_id -> Uuid,
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    tool_name -> Text,
+    file_path -> Text,
+    ast_path -> Text,
+    mcp_json -> Nullable<Jsonb>,
+    tool_json -> Nullable<Jsonb>,
+    compiled_at -> Timestamptz,
+    is_active -> Bool,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    branch_id -> Uuid,
     }
 }
+
 
 diesel::table! {
     session_tool_associations (id) {

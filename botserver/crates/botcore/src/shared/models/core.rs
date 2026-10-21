@@ -149,10 +149,7 @@ pub struct User {
 #[diesel(table_name = bots)]
 pub struct Bot {
     pub id: Uuid,
-    pub org_id: Uuid,
-    pub branch_id: Uuid,
     pub name: String,
-    pub slug: String,
     pub description: Option<String>,
     pub llm_provider: String,
     pub llm_config: serde_json::Value,
@@ -161,9 +158,18 @@ pub struct Bot {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub is_active: Option<bool>,
+    pub tenant_id: Option<Uuid>,
+    pub org_id: Uuid,
+    pub is_default: Option<bool>,
+    pub parent_bot_id: Option<Uuid>,
+    pub enabled_tabs_json: Option<String>,
+    pub inherit_parent_config: Option<bool>,
     pub database_name: Option<String>,
+    pub slug: Option<String>,
     pub is_public: bool,
+    pub branch_id: Uuid,
     pub is_default_for_branch: bool,
+    pub origin: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable)]

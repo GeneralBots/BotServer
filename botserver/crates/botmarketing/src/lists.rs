@@ -16,19 +16,19 @@ use crate::state::AppState;
 #[diesel(table_name = marketing_lists)]
 pub struct MarketingList {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Option<Uuid>,
+    pub bot_id: Option<Uuid>,
     pub name: String,
     pub list_type: String,
     pub query_text: Option<String>,
     pub contact_count: Option<i32>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
+    pub branch_id: Uuid,
     pub description: Option<String>,
     pub member_count: Option<i32>,
     pub is_dynamic: Option<bool>,
     pub criteria: Option<serde_json::Value>,
-    pub org_id: Option<Uuid>,
-    pub bot_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -102,8 +102,8 @@ pub async fn create_list(
         criteria: None,
         description: None,
         contact_count: Some(0),
-        created_at: now,
-        updated_at: now,
+        created_at: Some(now),
+        updated_at: Some(now),
         org_id: None,
         bot_id: None,
     };

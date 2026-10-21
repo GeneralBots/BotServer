@@ -4,19 +4,30 @@ use uuid::Uuid;
 
 diesel::table! {
     desktop_connections (id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        name -> Varchar,
-        host -> Varchar,
-        port -> Int4,
-        protocol -> Varchar,
-        auth_type -> Nullable<Varchar>,
-        auto_connect -> Bool,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        last_used_at -> Nullable<Timestamptz>,
+
+    id -> Uuid,
+    user_id -> Uuid,
+    organization_id -> Nullable<Uuid>,
+    #[max_length = 255]
+    name -> Varchar,
+    #[max_length = 255]
+    host -> Varchar,
+    port -> Int4,
+    #[max_length = 10]
+    protocol -> Varchar,
+    #[max_length = 20]
+    auth_type -> Nullable<Varchar>,
+    auto_connect -> Bool,
+    created_at -> Timestamptz,
+    updated_at -> Timestamptz,
+    last_used_at -> Nullable<Timestamptz>,
+    #[max_length = 500]
+    secrets_vault_path -> Nullable<Varchar>,
+    #[max_length = 255]
+    rdp_domain -> Nullable<Varchar>,
     }
 }
+
 
 diesel::table! {
     desktop_connection_log (id) {

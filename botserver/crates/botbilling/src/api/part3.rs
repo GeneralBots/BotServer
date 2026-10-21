@@ -87,12 +87,12 @@ pub async fn get_billing_stats(
     let mut overdue_count = 0i64;
 
     for inv in &invoices {
-        if inv.status.as_deref() == Some("paid") {
-            total_revenue += inv.total.as_ref().map_or(0.0, bd_to_f64);
+        if inv.status == "paid" {
+            total_revenue += bd_to_f64(&inv.total);
         }
-        if inv.status.as_deref() != Some("paid") && inv.status.as_deref() != Some("voided") {
+        if inv.status != "paid" && inv.status != "voided" {
             pending_amount += bd_to_f64(&inv.amount_due);
-            if inv.due_date.unwrap_or(NaiveDate::MAX) < today {
+            if inv.due_date < today {
                 overdue_amount += bd_to_f64(&inv.amount_due);
                 overdue_count += 1;
             }
@@ -107,14 +107,14 @@ pub async fn get_billing_stats(
 
     let paid_this_month: f64 = payments
         .iter()
-        .filter(|p| p.paid_at.map(|d| d.date_naive().month() == today.month() && d.date_naive().year() == today.year()).unwrap_or(false))
+        .filter(|p| p.paid_at.date_naive().month() == today.month() && p.paid_at.date_naive().year() == today.year())
         .map(|p| bd_to_f64(&p.amount))
         .sum();
 
     let revenue_this_month: f64 = invoices
         .iter()
-        .filter(|i| i.status.as_deref() == Some("paid") && i.paid_at.map(|d| d.date_naive().month() == today.month() && d.date_naive().year() == today.year()).unwrap_or(false))
-        .map(|i| i.total.as_ref().map_or(0.0, bd_to_f64))
+        .filter(|i| i.status == "paid" && i.paid_at.map(|d| d.date_naive().month() == today.month() && d.date_naive().year() == today.year()).unwrap_or(false))
+        .map(|i| bd_to_f64(&i.total))
         .sum();
 
     let stats = BillingStats {

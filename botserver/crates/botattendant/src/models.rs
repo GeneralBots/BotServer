@@ -9,7 +9,8 @@ use crate::schema::*;
 #[diesel(table_name = attendant_queues)]
 pub struct AttendantQueue {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub description: Option<String>,
     pub priority: i32,
@@ -19,13 +20,15 @@ pub struct AttendantQueue {
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = attendant_sessions)]
 pub struct AttendantSession {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub session_number: String,
     pub channel: String,
     pub customer_id: Option<Uuid>,
@@ -46,11 +49,12 @@ pub struct AttendantSession {
     pub handle_time_seconds: Option<i32>,
     pub satisfaction_rating: Option<i32>,
     pub satisfaction_comment: Option<String>,
-    pub tags: Vec<String>,
+    pub tags: Vec<Option<String>>,
     pub metadata: serde_json::Value,
     pub notes: Option<String>,
     pub transfer_count: i32,
     pub created_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 /// Metadata for a file shared inside an attendant conversation. Serialized
@@ -114,7 +118,8 @@ pub struct QueueAgent {
 #[diesel(table_name = attendant_agent_status)]
 pub struct AgentStatus {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub agent_id: Uuid,
     pub status: String,
     pub status_message: Option<String>,
@@ -126,6 +131,7 @@ pub struct AgentStatus {
     pub available_since: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
@@ -145,7 +151,8 @@ pub struct SessionTransfer {
 #[diesel(table_name = attendant_canned_responses)]
 pub struct CannedResponse {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub title: String,
     pub content: String,
     pub shortcut: Option<String>,
@@ -156,31 +163,36 @@ pub struct CannedResponse {
     pub created_by: Option<Uuid>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = attendant_tags)]
 pub struct AttendantTag {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub color: Option<String>,
     pub description: Option<String>,
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = attendant_wrap_up_codes)]
 pub struct WrapUpCode {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub code: String,
     pub name: String,
     pub description: Option<String>,
     pub requires_notes: bool,
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize)]

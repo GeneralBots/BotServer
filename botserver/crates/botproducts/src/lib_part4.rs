@@ -37,19 +37,19 @@ pub async fn adjust_stock(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, { log::error!("botproducts Update error: {e}"); "Internal server error".to_string() }))?;
 
     let movement = InventoryMovement {
-    id: Uuid::new_v4(),
-    branch_id,
-    product_id: id,
-    quantity: req.quantity,
-    movement_type: req.movement_type,
-    reference: None,
-    notes: req.notes,
-    created_at: now,
-    updated_at: chrono::Utc::now(),
-    reference_type: req.reference_type,
-    reference_id: req.reference_id,
-    created_by: None,
-};
+        id: Uuid::new_v4(),
+        org_id: org_for_branch(&state.pool, branch_id),
+        bot_id: bot_for_branch(&state.pool, branch_id),
+        product_id: id,
+        movement_type: req.movement_type,
+        quantity: req.quantity,
+        reference_type: req.reference_type,
+        reference_id: req.reference_id,
+        notes: req.notes,
+        created_by: None,
+        created_at: now,
+        branch_id,
+    };
 
     diesel::insert_into(inventory_movements::table)
         .values(&movement)

@@ -42,7 +42,8 @@ pub use botschema::ticket_tags;
 #[diesel(table_name = support_tickets)]
 pub struct SupportTicket {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub ticket_number: String,
     pub subject: String,
     pub description: Option<String>,
@@ -60,11 +61,12 @@ pub struct SupportTicket {
     pub resolved_at: Option<DateTime<Utc>>,
     pub closed_at: Option<DateTime<Utc>>,
     pub satisfaction_rating: Option<i32>,
-    pub record_type: String,
-    pub tags: Vec<String>,
+    pub tags: Vec<Option<String>>,
     pub custom_fields: serde_json::Value,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
+    pub record_type: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
@@ -85,7 +87,8 @@ pub struct TicketComment {
 #[diesel(table_name = ticket_sla_policies)]
 pub struct TicketSlaPolicy {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub priority: String,
     pub first_response_hours: i32,
@@ -94,13 +97,15 @@ pub struct TicketSlaPolicy {
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = ticket_canned_responses)]
 pub struct TicketCannedResponse {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub title: String,
     pub content: String,
     pub category: Option<String>,
@@ -109,13 +114,15 @@ pub struct TicketCannedResponse {
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = ticket_categories)]
 pub struct TicketCategory {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub description: Option<String>,
     pub parent_id: Option<Uuid>,
@@ -124,16 +131,19 @@ pub struct TicketCategory {
     pub sort_order: i32,
     pub is_active: bool,
     pub created_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
 #[diesel(table_name = ticket_tags)]
 pub struct TicketTag {
     pub id: Uuid,
-    pub branch_id: Uuid,
+    pub org_id: Uuid,
+    pub bot_id: Uuid,
     pub name: String,
     pub color: Option<String>,
     pub created_at: DateTime<Utc>,
+    pub branch_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize)]

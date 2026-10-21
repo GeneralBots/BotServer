@@ -36,7 +36,7 @@ pub(super) async fn handle_products_pricelists(
                 price_lists::customer_group,
                 price_lists::is_active,
             ))
-            .load::<(Uuid, String, Option<String>, Option<String>, bool, BigDecimal, Option<String>, Option<bool>)>(&mut conn)
+            .load::<(Uuid, String, Option<String>, String, bool, BigDecimal, Option<String>, bool)>(&mut conn)
             .ok()
     })
     .await
@@ -47,8 +47,8 @@ pub(super) async fn handle_products_pricelists(
         Some(items) if !items.is_empty() => {
             let mut html = String::new();
             for (id, name, _desc, currency, is_default, discount, customer_group, is_active) in items {
-                let currency = currency.unwrap_or_default();
-                let is_active = is_active.unwrap_or(true);
+                let currency = currency;
+                let is_active = is_active;
                 let discount_pct = bd_to_f64(&discount);
                 let discount_str = if discount_pct > 0.0 { format!("{:.1}%", discount_pct) } else { "-".to_string() };
                 let group_str = customer_group.unwrap_or_else(|| "All".to_string());

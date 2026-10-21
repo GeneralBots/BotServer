@@ -9,6 +9,17 @@ pub(crate) use crate::goals_types::*;
 pub(crate) use crate::schema::{okr_checkins, okr_key_results, okr_objectives, okr_templates};
 pub(crate) use crate::{AuthenticatedUser, DbPool, GetBotContextFn};
 
+pub(crate) fn bot_for_branch(pool: &DbPool, branch_id: Uuid) -> Uuid {
+    let Ok(mut conn) = pool.get() else {
+        return Uuid::nil();
+    };
+    botschema::bots::table
+        .filter(botschema::bots::branch_id.eq(branch_id))
+        .select(botschema::bots::id)
+        .first(&mut conn)
+        .unwrap_or(Uuid::nil())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -20,7 +31,7 @@ mod tests {
         let objective = ObjectiveRecord {
             id: Uuid::new_v4(),
             org_id: Uuid::new_v4(),
-            branch_id: Uuid::new_v4(),
+            bot_id: Uuid::new_v4(),
             owner_id: Uuid::new_v4(),
             parent_id: None,
             title: "Test Objective".to_string(),
@@ -35,7 +46,7 @@ mod tests {
             tags: vec![Some("test".to_string())],
             created_at: now,
             updated_at: now,
-            bot_id: None,
+            branch_id: Uuid::new_v4(),
         };
 
         assert_eq!(objective.title, "Test Objective");
@@ -49,7 +60,7 @@ mod tests {
         let key_result = KeyResultRecord {
             id: Uuid::new_v4(),
             org_id: Uuid::new_v4(),
-            branch_id: Uuid::new_v4(),
+            bot_id: Uuid::new_v4(),
             objective_id: Uuid::new_v4(),
             owner_id: Uuid::new_v4(),
             title: "Test Key Result".to_string(),
@@ -65,6 +76,7 @@ mod tests {
             scoring_type: "linear".to_string(),
             created_at: now,
             updated_at: now,
+            branch_id: Uuid::new_v4(),
         };
 
         assert_eq!(key_result.title, "Test Key Result");
@@ -79,7 +91,7 @@ mod tests {
         let check_in = CheckInRecord {
             id: Uuid::new_v4(),
             org_id: Uuid::new_v4(),
-            branch_id: Uuid::new_v4(),
+            bot_id: Uuid::new_v4(),
             key_result_id: Uuid::new_v4(),
             user_id: Uuid::new_v4(),
             previous_value: Some(BigDecimal::from(0)),
@@ -88,6 +100,7 @@ mod tests {
             confidence: Some("high".to_string()),
             blockers: Some("No blockers".to_string()),
             created_at: now,
+            branch_id: Uuid::new_v4(),
         };
 
         assert_eq!(check_in.new_value, BigDecimal::from(50));

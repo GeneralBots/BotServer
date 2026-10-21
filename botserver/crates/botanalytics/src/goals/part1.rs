@@ -60,10 +60,11 @@ pub async fn create_objective(
 
     let tags: Vec<Option<String>> = req.tags.unwrap_or_default().into_iter().map(Some).collect();
 
+    let bot_id = bot_for_branch(&pool, branch_id);
     let new_objective = ObjectiveRecord {
         id: Uuid::new_v4(),
         org_id,
-        branch_id,
+        bot_id,
         owner_id,
         parent_id: req.parent_id,
         title: req.title.clone(),
@@ -78,7 +79,7 @@ pub async fn create_objective(
         tags,
         created_at: now,
         updated_at: now,
-        bot_id: None,
+        branch_id,
     };
 
     let record = new_objective.clone();
@@ -231,10 +232,11 @@ pub async fn create_key_result(
 
     let start_value = req.start_value.unwrap_or(0.0);
 
+    let bot_id = bot_for_branch(&pool, branch_id);
     let new_kr = KeyResultRecord {
         id: Uuid::new_v4(),
         org_id,
-        branch_id,
+        bot_id,
         objective_id,
         owner_id,
         title: req.title.clone(),
@@ -250,6 +252,7 @@ pub async fn create_key_result(
         scoring_type: "linear".to_string(),
         created_at: now,
         updated_at: now,
+        branch_id,
     };
 
     let record = new_kr.clone();
