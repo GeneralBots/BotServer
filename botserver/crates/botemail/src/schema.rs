@@ -57,28 +57,9 @@ pub use botschema::email_nudges;
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::crm_contacts;
 
-diesel::table! {
-    email_messages (id) {
-        id -> Uuid,
-        account_id -> Uuid,
-        message_id_header -> Nullable<Varchar>,
-        in_reply_to -> Nullable<Varchar>,
-        subject -> Text,
-        normalized_subject -> Text,
-        from_address -> Varchar,
-        to_addresses -> Nullable<Text>,
-        body_text -> Nullable<Text>,
-        body_html -> Nullable<Text>,
-        has_attachments -> Bool,
-        folder -> Varchar,
-        uid -> Int8,
-        flags -> Jsonb,
-        is_read -> Bool,
-        is_flagged -> Bool,
-        received_at -> Timestamptz,
-        synced_at -> Timestamptz,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::email_messages;
+
 
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::crm_accounts;

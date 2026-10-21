@@ -98,6 +98,10 @@ pub use self::marketplace::*;
 pub mod integrations;
 #[cfg(feature = "integrations")]
 pub use self::integrations::*;
+#[cfg(feature = "autotask")]
+pub mod autotask;
+#[cfg(feature = "autotask")]
+pub use self::autotask::*;
 #[cfg(feature = "memory")]
 pub mod memory;
 #[cfg(feature = "memory")]

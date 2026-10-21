@@ -1,11 +1,4 @@
 {
-  "files": [
-    "botserver/crates/botautotask/src/schema.rs",
-    "botserver/crates/botemail/src/schema.rs",
-    "botserver/crates/botpeople/src/lib_part1.rs",
-    "botserver/crates/botproducts/src/schema.rs",
-    "botserver/crates/botsources/src/schema.rs",
-    "botserver/crates/bottasks/src/schema.rs"
-  ],
-  "total": 23
+  "files": [],
+  "total": 0
 }

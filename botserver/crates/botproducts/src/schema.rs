@@ -20,120 +20,28 @@ pub use botschema::product_variants;
 // Canonical definition lives in `botschema` (#1497).
 pub use botschema::bots;
 
-diesel::allow_tables_to_appear_in_same_query!(
-    product_variations,
-    product_stock,
-    product_price_lists,
-    product_promotions,
-    pos_sessions,
-    pos_sales,
-);
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::product_variations;
 
-diesel::table! {
-    product_variations (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        product_id -> Uuid,
-        name -> Varchar,
-        sku -> Varchar,
-        price -> Nullable<Numeric>,
-        attributes -> Nullable<Jsonb>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        cost_price -> Nullable<Numeric>,
-        barcode -> Nullable<Text>,
-        weight -> Nullable<Numeric>,
-        is_active -> Bool,
-    }
-}
 
-diesel::table! {
-    product_stock (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        product_id -> Uuid,
-        quantity -> Int4,
-        min_quantity -> Nullable<Int4>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        variation_id -> Nullable<Uuid>,
-        reserved -> Numeric,
-        reorder_point -> Nullable<Numeric>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::product_stock;
 
-diesel::table! {
-    product_price_lists (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        product_id -> Uuid,
-        price_list_id -> Uuid,
-        price -> Numeric,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        name -> Text,
-        currency -> Text,
-        is_default -> Bool,
-        valid_from -> Nullable<Date>,
-        valid_until -> Nullable<Date>,
-    }
-}
+
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::product_price_lists;
+
 
 pub use botschema::product_prices;
 
-diesel::table! {
-    product_promotions (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        product_id -> Nullable<Uuid>,
-        discount_type -> Varchar,
-        discount_value -> Numeric,
-        starts_at -> Nullable<Timestamptz>,
-        ends_at -> Nullable<Timestamptz>,
-        is_active -> Nullable<Bool>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        product_ids -> Nullable<Jsonb>,
-        min_purchase -> Nullable<Numeric>,
-        valid_from -> Date,
-        valid_until -> Date,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::product_promotions;
 
-diesel::table! {
-    pos_sessions (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        session_number -> Varchar,
-        status -> Nullable<Varchar>,
-        opened_at -> Timestamptz,
-        closed_at -> Nullable<Timestamptz>,
-        opened_by -> Nullable<Uuid>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        operator_id -> Uuid,
-        started_at -> Timestamptz,
-        opening_amount -> Numeric,
-        closing_amount -> Nullable<Numeric>,
-    }
-}
 
-diesel::table! {
-    pos_sales (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        session_id -> Nullable<Uuid>,
-        sale_number -> Varchar,
-        items -> Nullable<Jsonb>,
-        total -> Nullable<Numeric>,
-        payment_method -> Nullable<Varchar>,
-        status -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        subtotal -> Numeric,
-        discount -> Nullable<Numeric>,
-        tax -> Nullable<Numeric>,
-        nfse_id -> Nullable<Uuid>,
-    }
-}
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::pos_sessions;
+
+
+// Canonical definition lives in `botschema` (#1497).
+pub use botschema::pos_sales;
+

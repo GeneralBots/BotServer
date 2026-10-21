@@ -259,3 +259,45 @@ pub fn system_automation_branch_id(
         .select(bots::branch_id)
         .first::<uuid::Uuid>(conn)
 }
+
+// AutoTask runtime table (canonical, #1497).
+
+diesel::table! {
+    auto_tasks (id) {
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    session_id -> Nullable<Uuid>,
+    #[max_length = 500]
+    title -> Varchar,
+    intent -> Text,
+    #[max_length = 50]
+    status -> Varchar,
+    #[max_length = 50]
+    execution_mode -> Varchar,
+    #[max_length = 20]
+    priority -> Varchar,
+    plan_id -> Nullable<Uuid>,
+    basic_program -> Nullable<Text>,
+    current_step -> Nullable<Int4>,
+    total_steps -> Nullable<Int4>,
+    progress -> Nullable<Float8>,
+    step_results -> Nullable<Jsonb>,
+    manifest_json -> Nullable<Jsonb>,
+    error -> Nullable<Text>,
+    started_at -> Nullable<Timestamptz>,
+    completed_at -> Nullable<Timestamptz>,
+    created_at -> Nullable<Timestamptz>,
+    updated_at -> Nullable<Timestamptz>,
+    branch_id -> Uuid,
+    #[max_length = 500]
+    name -> Varchar,
+    #[max_length = 255]
+    schedule -> Nullable<Varchar>,
+    #[max_length = 100]
+    task_type -> Varchar,
+    config -> Nullable<Jsonb>,
+    is_active -> Bool,
+    last_run_at -> Nullable<Timestamptz>,
+    }
+}

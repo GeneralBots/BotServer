@@ -276,3 +276,92 @@ diesel::table! {
         org_id -> Nullable<Uuid>,
     }
 }
+
+// HR / time-clock tables (canonical, #1497).
+
+diesel::table! {
+    hr_clock_entries (id) {
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    person_id -> Uuid,
+    #[max_length = 20]
+    entry_type -> Varchar,
+    timestamp -> Timestamptz,
+    latitude -> Nullable<Numeric>,
+    longitude -> Nullable<Numeric>,
+    geofence_id -> Nullable<Uuid>,
+    #[max_length = 100]
+    device_id -> Nullable<Varchar>,
+    #[max_length = 64]
+    ip_address -> Nullable<Varchar>,
+    notes -> Nullable<Text>,
+    created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    hr_work_periods (id) {
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    person_id -> Uuid,
+    period_start -> Date,
+    period_end -> Date,
+    hours_worked -> Numeric,
+    hours_overtime -> Numeric,
+    hours_night -> Numeric,
+    absences -> Int4,
+    #[max_length = 30]
+    status -> Varchar,
+    created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    hr_overtime_rules (id) {
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 100]
+    name -> Varchar,
+    weekly_threshold_hours -> Numeric,
+    daily_threshold_hours -> Nullable<Numeric>,
+    overtime_multiplier -> Numeric,
+    night_shift_multiplier -> Numeric,
+    holiday_multiplier -> Numeric,
+    is_active -> Bool,
+    created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    hr_schedules (id) {
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    person_id -> Uuid,
+    weekday -> Int4,
+    start_time -> Time,
+    end_time -> Time,
+    break_minutes -> Int4,
+    effective_from -> Date,
+    effective_until -> Nullable<Date>,
+    created_at -> Timestamptz,
+    }
+}
+
+diesel::table! {
+    hr_holidays (id) {
+
+    id -> Uuid,
+    bot_id -> Uuid,
+    #[max_length = 100]
+    name -> Varchar,
+    holiday_date -> Date,
+    is_recurring -> Bool,
+    #[max_length = 50]
+    region -> Nullable<Varchar>,
+    created_at -> Timestamptz,
+    }
+}

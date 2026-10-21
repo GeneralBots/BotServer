@@ -33,12 +33,13 @@ consent = []
 marketplace = []
 integrations = []
 memory = []
+autotask = []
 channels = []
 cloud = []
 full = [
     "tasks", "mail", "people", "tickets", "billing", "attendant", "calendar",
     "goals", "canvas", "workspaces", "social", "analytics", "compliance",
-    "meet", "research", "learn", "project", "dashboards", "video", "security", "agents", "browse", "consent", "marketplace", "integrations", "memory", "channels",
+    "meet", "research", "learn", "project", "dashboards", "video", "security", "agents", "browse", "consent", "marketplace", "integrations", "memory", "channels", "autotask",
 ]
 
 [dependencies]

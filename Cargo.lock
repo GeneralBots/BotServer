@@ -1306,6 +1306,7 @@ dependencies = [
  "botbasic_core",
  "botcore",
  "botlib",
+ "botschema",
  "chrono",
  "diesel",
  "futures",

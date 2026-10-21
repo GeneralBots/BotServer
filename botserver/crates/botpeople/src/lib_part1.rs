@@ -30,88 +30,13 @@ pub use botschema::people_time_off;
 // `botschema`, whose `joinable!`/`allow_tables_to_appear_in_same_query!` rules
 // already cover them (#1497); repeating them between two foreign types breaks
 // the orphan rule (E0117).
-diesel::allow_tables_to_appear_in_same_query!(
-    hr_clock_entries,
-    hr_work_periods,
-    hr_overtime_rules,
-    hr_schedules,
-    hr_holidays,
-);
+// Canonical definitions live in `botschema` (#1497).
+pub use botschema::people::hr_clock_entries;
+pub use botschema::people::hr_work_periods;
+pub use botschema::people::hr_overtime_rules;
+pub use botschema::people::hr_schedules;
+pub use botschema::people::hr_holidays;
 
-diesel::table! {
-    hr_clock_entries (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        person_id -> Uuid,
-        entry_type -> Varchar,
-        timestamp -> Timestamptz,
-        latitude -> Nullable<Numeric>,
-        longitude -> Nullable<Numeric>,
-        geofence_id -> Nullable<Uuid>,
-        device_id -> Nullable<Varchar>,
-        ip_address -> Nullable<Varchar>,
-        notes -> Nullable<Text>,
-        created_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    hr_work_periods (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        person_id -> Uuid,
-        period_start -> Date,
-        period_end -> Date,
-        hours_worked -> Numeric,
-        hours_overtime -> Numeric,
-        hours_night -> Numeric,
-        absences -> Integer,
-        status -> Varchar,
-        created_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    hr_overtime_rules (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        weekly_threshold_hours -> Numeric,
-        daily_threshold_hours -> Nullable<Numeric>,
-        overtime_multiplier -> Numeric,
-        night_shift_multiplier -> Numeric,
-        holiday_multiplier -> Numeric,
-        is_active -> Bool,
-        created_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    hr_schedules (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        person_id -> Uuid,
-        weekday -> Integer,
-        start_time -> Time,
-        end_time -> Time,
-        break_minutes -> Integer,
-        effective_from -> Date,
-        effective_until -> Nullable<Date>,
-        created_at -> Timestamptz,
-    }
-}
-
-diesel::table! {
-    hr_holidays (id) {
-        id -> Uuid,
-        branch_id -> Uuid,
-        name -> Varchar,
-        holiday_date -> Date,
-        is_recurring -> Bool,
-        region -> Nullable<Varchar>,
-        created_at -> Timestamptz,
-    }
-}
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = people)]
 pub struct Person {

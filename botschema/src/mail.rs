@@ -245,3 +245,33 @@ diesel::table! {
         added_at -> Timestamptz,
     }
 }
+
+// Email sync (canonical, #1497).
+
+diesel::table! {
+    email_messages (id) {
+
+    id -> Uuid,
+    account_id -> Uuid,
+    #[max_length = 512]
+    message_id_header -> Nullable<Varchar>,
+    #[max_length = 512]
+    in_reply_to -> Nullable<Varchar>,
+    subject -> Text,
+    normalized_subject -> Text,
+    #[max_length = 512]
+    from_address -> Varchar,
+    to_addresses -> Nullable<Text>,
+    body_text -> Nullable<Text>,
+    body_html -> Nullable<Text>,
+    has_attachments -> Nullable<Bool>,
+    #[max_length = 255]
+    folder -> Varchar,
+    uid -> Int8,
+    flags -> Nullable<Jsonb>,
+    is_read -> Nullable<Bool>,
+    is_flagged -> Nullable<Bool>,
+    received_at -> Timestamptz,
+    synced_at -> Timestamptz,
+    }
+}

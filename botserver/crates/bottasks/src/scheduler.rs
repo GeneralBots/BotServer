@@ -171,7 +171,7 @@ pub fn update_auto_task_enabled(
         .map_err(|e| format!("Pool error: {}", e))?;
 
     diesel::update(auto_tasks::table.find(task_id))
-        .set(auto_tasks::is_active.eq(Some(enabled)))
+        .set(auto_tasks::is_active.eq(enabled))
         .execute(&mut conn)
         .map_err(|e| format!("Update error: {}", e))?;
 
