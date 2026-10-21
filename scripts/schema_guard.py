@@ -93,6 +93,18 @@ def main():
     base_total = baseline["total"]
     base_files = set(baseline["files"])
 
+    if total != base_total or set(files) != base_files:
+        # A baseline that no longer matches the tree is stale: a legitimate
+        # reduction must refresh it in the same commit, and an increase must be
+        # reverted instead of absorbed by old slack.
+        if total <= base_total and set(files) <= base_files:
+            print(
+                f"schema_guard: FAIL — baseline is stale (tree has {total} "
+                f"declarations, baseline says {base_total}); "
+                "run `python3 scripts/schema_guard.py --update`"
+            )
+            return 1
+
     if total > base_total:
         new_files = sorted(set(files) - base_files)
         print(

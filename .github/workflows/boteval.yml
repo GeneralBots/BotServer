@@ -34,6 +34,13 @@ jobs:
       - name: "Guard: no new table! outside botschema (#1520)"
         run: python3 scripts/schema_guard.py
 
+      # #1525 — artifacts must be regenerated, never hand-edited. The drift
+      # inventory runs from the tree alone (no database needed).
+      - name: "Guard: schema drift artifacts are current (#1525)"
+        run: |
+          python3 scripts/schema_drift_inventory.py
+          git diff --exit-code -- issues/schema/schema_drift.md
+
       # .cargo/config.toml links every target with `-fuse-ld=/usr/bin/mold`, so
       # the runner must provide mold (and clang) or the very first build-script
       # link dies with "clang: error: invalid linker name". libpq/libssl/liblzma

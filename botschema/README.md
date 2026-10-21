@@ -91,6 +91,31 @@ pub use botschema::bots;
    non-canonical declaration, refresh the guard baseline with
    `python3 scripts/schema_guard.py --update`.
 
+### Fresh-database verification (#1519)
+
+The migrations are not the only writer of the schema (the bootstrap path also
+creates tables), so the authority is `diesel print-schema` against a **fresh**
+database:
+
+```bash
+# throwaway cluster, e.g. port 55432
+createdb -p 55432 botserver_fresh
+cd botserver
+DATABASE_URL=postgres://postgres@localhost:55432/botserver_fresh diesel migration run
+DATABASE_URL=postgres://postgres@localhost:55432/botserver_fresh \
+  diesel print-schema --schema public > /tmp/print_schema.rs
+cd ..
+python3 scripts/schema_db_audit.py --print-schema /tmp/print_schema.rs
+python3 scripts/schema_undeclared_report.py --print-schema /tmp/print_schema.rs \
+  --markdown issues/schema/undeclared_tables.md
+```
+
+Acceptance is `mismatched: 0` (canonical) and `ghost: 0`. Tables reported as
+having **no declaration** are triaged by `schema_undeclared_report.py`: `raw
+SQL` tables are accessed through `sql_query`/string SQL and are documented with
+their call sites; `dormant` tables have no Rust reference and survive only for
+migrations or external tools.
+
 ### Repairing a canonical declaration
 
 `schema_sync_canonical.py` treats the database as the authority, but it never
