@@ -58,6 +58,20 @@ const DESTRUCTIVE_TOOL_PREFIXES: &[&str] = &[
     "browser/eval",
 ];
 
+/// True when executing `tool_name` can change the workspace or external state
+/// (`file/write`, `file/replace`, `shell/run`, `git/*`, `publish/*`, …).
+///
+/// The same prefix set drives approval decisions and the agent loop's
+/// self-verification gate: a read-only tool (`file/read`, `file/list`,
+/// `file/exists`, `web/search`) leaves nothing to verify, so asking the model
+/// "is the work complete?" right after a read made competent models answer
+/// FAILED and `MAX_VERIFY_FAILURES` ended the run before the first write.
+pub fn is_mutating_tool(tool_name: &str) -> bool {
+    DESTRUCTIVE_TOOL_PREFIXES
+        .iter()
+        .any(|prefix| tool_name.starts_with(prefix))
+}
+
 pub struct PermissionEngine {
     mode: RwLock<PermissionMode>,
 }
@@ -78,9 +92,7 @@ impl PermissionEngine {
     }
 
     pub fn is_destructive(&self, tool_name: &str) -> bool {
-        DESTRUCTIVE_TOOL_PREFIXES
-            .iter()
-            .any(|prefix| tool_name.starts_with(prefix))
+        is_mutating_tool(tool_name)
     }
 
     pub fn requires_approval(
@@ -154,6 +166,32 @@ mod tests {
         assert!(engine.is_destructive("ops/restart"));
         assert!(!engine.is_destructive("file/list"));
         assert!(!engine.is_destructive("web/search"));
+    }
+
+    #[test]
+    fn only_workspace_writers_are_mutating() {
+        // Reads and searches must never trigger self-verification: the run
+        // would be judged before anything was written.
+        for tool in [
+            "file/list",
+            "file/read",
+            "file/exists",
+            "web/search",
+            "kb/search",
+            "graph/query",
+        ] {
+            assert!(!is_mutating_tool(tool), "{tool} must not be mutating");
+        }
+        for tool in [
+            "file/write",
+            "file/replace",
+            "file/delete",
+            "shell/run",
+            "git/commit",
+            "publish/project",
+        ] {
+            assert!(is_mutating_tool(tool), "{tool} must be mutating");
+        }
     }
 
     #[tokio::test]

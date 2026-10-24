@@ -199,7 +199,16 @@ impl AgentLoop {
                     .process_tool_call(run, &mut context, tc, step, max_steps)
                     .await
                 {
-                    ToolStep::Executed => step_mutated = true,
+                    // Self-verification only makes sense after a step that can
+                    // change the workspace. Read-only tools (`file/list`,
+                    // `file/read`, `file/exists`, searches) leave nothing to
+                    // verify, and asking right after a read made competent
+                    // models answer FAILED, which ended the run through
+                    // MAX_VERIFY_FAILURES before the first write.
+                    ToolStep::Executed => {
+                        step_mutated = step_mutated
+                            || crate::permissions::is_mutating_tool(&tc.tool_name);
+                    }
                     ToolStep::Skipped => {}
                 }
             }

@@ -71,6 +71,9 @@ pub(crate) async fn preview_vm_app(
     Extension(user): Extension<AuthenticatedUser>,
     Path(project_id): Path<Uuid>,
     Query(query): Query<VmPreviewQuery>,
+    method: axum::http::Method,
+    request_headers: axum::http::HeaderMap,
+    body: axum::body::Bytes,
 ) -> Response {
     // #1340 — same iframe transport as `serve_project_file` (see
     // `resolve_iframe_user`): header-less requests authenticate via `?token=`.
@@ -120,10 +123,29 @@ pub(crate) async fn preview_vm_app(
             return (StatusCode::INTERNAL_SERVER_ERROR, "proxy client").into_response();
         }
     };
+    // The preview proxies the app's own HTTP surface: a dev app with
+    // POST/PUT/DELETE endpoints must work inside the embedded Browser, so the
+    // request method, body and content type are forwarded (a GET-only route
+    // answered 405 for every mutation the app made through the shim).
+    let upstream_method = match reqwest::Method::from_bytes(method.as_str().as_bytes()) {
+        Ok(m) => m,
+        Err(_) => reqwest::Method::GET,
+    };
+    let forwards_body = !body.is_empty() && method != axum::http::Method::HEAD;
+    let content_type = request_headers
+        .get(axum::http::header::CONTENT_TYPE)
+        .map(|v| v.as_bytes().to_vec());
     let mut last_error: Option<(String, String)> = None;
     let mut resp = None;
     for target in &candidates {
-        match client.get(target).send().await {
+        let mut request = client.request(upstream_method.clone(), target);
+        if forwards_body {
+            request = request.body(body.clone());
+        }
+        if let Some(ct) = &content_type {
+            request = request.header(reqwest::header::CONTENT_TYPE, ct.clone());
+        }
+        match request.send().await {
             Ok(r) => {
                 resp = Some(r);
                 break;

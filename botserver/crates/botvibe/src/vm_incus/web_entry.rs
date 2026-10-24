@@ -91,16 +91,19 @@ pub(crate) fn resolve_web_entry(files: &[serde_json::Value]) -> WebEntry {
             needs_static_fallback: false,
         };
     }
-    if has_index_js {
+    // `server.js` before `index.js`: the project scaffold ships a starter
+    // `index.js`, so when an agent builds the app in `server.js` (the name
+    // the node brief asks for) the untouched starter must not shadow it.
+    if has_server_js {
         return WebEntry {
-            entry: "index.js".to_string(),
+            entry: "server.js".to_string(),
             is_python: false,
             needs_static_fallback: false,
         };
     }
-    if has_server_js {
+    if has_index_js {
         return WebEntry {
-            entry: "server.js".to_string(),
+            entry: "index.js".to_string(),
             is_python: false,
             needs_static_fallback: false,
         };
@@ -177,6 +180,16 @@ pub(crate) mod entry_resolution_tests {
         let pkg = pkg_json(r#"{"scripts":{"start":"node app.js"}}"#);
         let r = resolve_web_entry(&[pkg]);
         assert_eq!(r.entry, "app.js");
+        assert!(!r.needs_static_fallback);
+    }
+
+    #[test]
+    fn server_js_wins_over_starter_index_js() {
+        // Prod regression (#custom E2E): the scaffold seeds `index.js`, the
+        // agent writes `server.js`; Run started the untouched starter and the
+        // browser showed "Vibe Node" instead of the built app.
+        let r = resolve_web_entry(&[f("index.js"), f("server.js"), f("README.md")]);
+        assert_eq!(r.entry, "server.js");
         assert!(!r.needs_static_fallback);
     }
 

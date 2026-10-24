@@ -263,7 +263,7 @@ pub fn projects_router(
     metering: Arc<VMetering>,
     lifecycle: Arc<VmLifecycle>,
 ) -> axum::Router {
-    use axum::routing::{delete, get, post, put};
+    use axum::routing::{any, delete, get, post, put};
     axum::Router::new()
         .route("/api/vibe/projects", post(create_project))
         .route("/api/vibe/projects", get(list_projects))
@@ -299,8 +299,10 @@ pub fn projects_router(
             post(bot_deploy_prod),
         )
         // #1271 — same-origin preview of the running dev VM (server-side
-        // fetch of the host proxy port, see `preview_vm_app`).
-        .route("/api/vibe/projects/:project_id/vm-preview", get(preview_vm_app))
+        // fetch of the host proxy port, see `preview_vm_app`). Any method is
+        // forwarded (a dev app with POST/DELETE endpoints is usable in the
+        // embedded Browser); a GET-only route answered 405.
+        .route("/api/vibe/projects/:project_id/vm-preview", any(preview_vm_app))
         // Branch combo over the real workspace repo (the old /api/git/*
         // endpoints resolve any non-/tmp repo to a fixed stub repo, so the
         // combo never showed the project's branches).
